@@ -137,6 +137,7 @@ export function TableView({
 
   const widthFor = (c: number): { min: number; max: number } => {
     if (boolCols.has(c)) return { min: 44, max: 56 };
+    if (statusCols.has(c)) return { min: 120, max: 160 };
     const k = colKind.get(c);
     switch (k) {
       case "url": return { min: 200, max: 320 };
