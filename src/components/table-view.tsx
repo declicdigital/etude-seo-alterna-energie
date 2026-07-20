@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ExternalLink, Plus } from "lucide-react";
 import { dataRows, getRow, headersOf, type EditsMap } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
+import { linkHref, linkify } from "@/lib/links";
 
 const TRUTHY = new Set([
   "x", "✓", "✔", "oui", "yes", "y", "ok", "done", "fait", "true", "1",
@@ -61,22 +62,6 @@ const STATUS_STYLE: Record<StatusKey, string> = {
 };
 function statusKey(s: string): StatusKey | null {
   return STATUS_MAP[normalize(s)] ?? null;
-}
-
-// Split a string into text + link segments so URLs embedded inside prose
-// remain clickable directly from the table cell.
-const URL_RE = /(https?:\/\/[^\s<>"')]+)/gi;
-function linkify(s: string): Array<{ text: string; href?: string }> {
-  const out: Array<{ text: string; href?: string }> = [];
-  let last = 0;
-  for (const m of s.matchAll(URL_RE)) {
-    const i = m.index ?? 0;
-    if (i > last) out.push({ text: s.slice(last, i) });
-    out.push({ text: m[0], href: m[0] });
-    last = i + m[0].length;
-  }
-  if (last < s.length) out.push({ text: s.slice(last) });
-  return out;
 }
 
 // Effort vocabulary: normalized value -> canonical level.
@@ -366,7 +351,7 @@ export function TableView({
                   {visibleCols.map((c) => {
                     const v = row[c];
                     const s = v == null ? "" : String(v);
-                    const isUrl = /^https?:\/\//i.test(s);
+                    const href = linkHref(s);
                     if (boolCols.has(c)) {
                       const checked = isTruthy(s);
                       return (
@@ -444,9 +429,9 @@ export function TableView({
                     }
                     return (
                       <td key={c} className="px-2 py-1 align-top leading-tight">
-                        {isUrl ? (
+                        {href ? (
                           <a
-                            href={s}
+                            href={href}
                             target="_blank"
                             rel="noreferrer"
                             title={s}

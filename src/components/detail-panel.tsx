@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, X } from "lucide-react";
 import { getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
+import { linkHref } from "@/lib/links";
 
 export function DetailPanel({
   sheet,
@@ -93,7 +94,7 @@ function Field({
   };
 
   const isLong = local.length > 60 || local.includes("\n");
-  const isUrl = /^https?:\/\//i.test(local);
+  const href = linkHref(local);
 
   return (
     <div>
@@ -101,9 +102,9 @@ function Field({
         <label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
           {label}
         </label>
-        {isUrl && (
+        {href && (
           <a
-            href={local}
+            href={href}
             target="_blank"
             rel="noreferrer"
             className="text-[11px] text-primary hover:underline inline-flex items-center gap-1"
