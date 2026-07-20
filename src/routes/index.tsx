@@ -4,6 +4,7 @@ import { z } from "zod";
 import { SheetSidebar } from "@/components/sheet-sidebar";
 import { TreeView } from "@/components/tree-view";
 import { TableView } from "@/components/table-view";
+import { WebflowView } from "@/components/webflow-view";
 import { DetailPanel } from "@/components/detail-panel";
 import { useEdits } from "@/lib/use-edits";
 import { isStructureSheet, nextRowId, SHEET_META, sheetNames } from "@/lib/workbook";
@@ -69,6 +70,12 @@ function Index() {
                 selected={selected}
                 onSelect={setSelected}
                 onAddRow={handleAddRow}
+              />
+            ) : sheet === "Webflow - fonctionnement" ? (
+              <WebflowView
+                edits={edits}
+                selected={selected}
+                onSelect={setSelected}
               />
             ) : (
               <TableView
