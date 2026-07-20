@@ -445,10 +445,7 @@ export function TableView({
                           <span
                             title={s}
                             className={cn(
-                              "text-foreground/90 block",
-                              kind === "short"
-                                ? "truncate"
-                                : "whitespace-pre-wrap break-words line-clamp-3",
+                              "text-foreground/90 block whitespace-pre-wrap break-words",
                             )}
                           >
                             {s}
