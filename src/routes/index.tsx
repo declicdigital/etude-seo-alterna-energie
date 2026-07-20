@@ -77,6 +77,7 @@ function Index() {
                 selected={selected}
                 onSelect={setSelected}
                 onAddRow={() => handleAddRow(0)}
+                onToggle={(rowId, col, value) => setCell(sheet, rowId, col, value)}
               />
             )}
           </div>
