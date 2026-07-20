@@ -310,14 +310,14 @@ export function TableView({
         </button>
       </div>
       <div className="flex-1 overflow-auto">
-        <table className="text-sm w-full border-collapse table-fixed">
+        <table className="text-sm min-w-full border-collapse table-fixed">
           <colgroup>
             {visibleCols.map((c) => {
               const w = widthFor(c);
               return (
                 <col
                   key={c}
-                  style={{ minWidth: `${w.min}px`, width: `${w.max}px` }}
+                  style={{ width: `${w.max}px` }}
                 />
               );
             })}
