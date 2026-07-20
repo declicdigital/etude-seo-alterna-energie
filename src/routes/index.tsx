@@ -1,24 +1,74 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { z } from "zod";
+import { SheetSidebar } from "@/components/sheet-sidebar";
+import { TreeView } from "@/components/tree-view";
+import { TableView } from "@/components/table-view";
+import { DetailPanel } from "@/components/detail-panel";
+import { useEdits } from "@/lib/use-edits";
+import { isStructureSheet, SHEET_META, sheetNames } from "@/lib/workbook";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+const searchSchema = z.object({
+  sheet: z.string().optional(),
+});
+
 export const Route = createFileRoute("/")({
+  validateSearch: searchSchema,
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const { sheet: sheetParam } = Route.useSearch();
+  const sheet = sheetParam && sheetNames.includes(sheetParam) ? sheetParam : "Structure RES";
+  const [selected, setSelected] = useState<number | null>(null);
+  const { edits, setCell, loading } = useEdits();
+
+  // reset selection when switching sheet
+  const [lastSheet, setLastSheet] = useState(sheet);
+  if (sheet !== lastSheet) {
+    setLastSheet(sheet);
+    setSelected(null);
+  }
+
+  const meta = SHEET_META[sheet];
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="flex min-h-screen bg-background text-foreground">
+      <SheetSidebar />
+      <main className="flex-1 flex flex-col min-w-0">
+        <header className="px-8 py-6 border-b border-border bg-card/30">
+          <div className="text-[11px] uppercase tracking-widest text-primary/80 font-semibold">
+            {meta?.group ?? "Feuille"}
+          </div>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight">
+            {meta?.label ?? sheet}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isStructureSheet(sheet)
+              ? "Cliquez sur une page dans l'arborescence pour voir et éditer ses détails."
+              : "Cliquez sur une ligne pour l'éditer."}
+            {loading && " · Chargement des modifications…"}
+          </p>
+        </header>
+        <div className="flex-1 flex min-h-0">
+          <div className="flex-1 min-w-0 flex flex-col">
+            {isStructureSheet(sheet) ? (
+              <TreeView sheet={sheet} edits={edits} selected={selected} onSelect={setSelected} />
+            ) : (
+              <TableView sheet={sheet} edits={edits} selected={selected} onSelect={setSelected} />
+            )}
+          </div>
+          {selected != null && (
+            <DetailPanel
+              sheet={sheet}
+              rowId={selected}
+              edits={edits}
+              onChange={(col, value) => setCell(sheet, selected, col, value)}
+              onClose={() => setSelected(null)}
+            />
+          )}
+        </div>
+      </main>
     </div>
   );
 }
