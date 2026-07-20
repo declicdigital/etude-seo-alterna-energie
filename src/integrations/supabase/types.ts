@@ -14,7 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      sheet_cells: {
+        Row: {
+          col: number
+          row_id: number
+          sheet: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          col: number
+          row_id: number
+          sheet: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          col?: number
+          row_id?: number
+          sheet?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
