@@ -63,6 +63,25 @@ function statusKey(s: string): StatusKey | null {
   return STATUS_MAP[normalize(s)] ?? null;
 }
 
+// Effort vocabulary: normalized value -> canonical level.
+type EffortKey = "low" | "medium" | "high";
+const EFFORT_MAP: Record<string, EffortKey> = {
+  "faible": "low", "low": "low", "petit": "low", "small": "low", "s": "low",
+  "bas": "low", "léger": "low", "leger": "low",
+  "moyen": "medium", "medium": "medium", "moyenne": "medium", "med": "medium",
+  "m": "medium", "normal": "medium",
+  "fort": "high", "élevé": "high", "eleve": "high", "haut": "high", "high": "high",
+  "grand": "high", "large": "high", "l": "high", "important": "high",
+};
+const EFFORT_STYLE: Record<EffortKey, string> = {
+  low: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-300",
+  medium: "bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-300",
+  high: "bg-red-500/15 text-red-700 border-red-500/30 dark:text-red-300",
+};
+function effortKey(s: string): EffortKey | null {
+  return EFFORT_MAP[normalize(s)] ?? null;
+}
+
 export function TableView({
   sheet,
   edits,
