@@ -50,7 +50,6 @@ export const STRUCTURE_SHEETS = new Set([
   "Structure PRO",
   "Structure (resi) (OLD V3)",
   "Structure pour migration AE-AEF",
-  "Webflow - fonctionnement",
 ]);
 
 export function isStructureSheet(name: string) {
