@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
+import symbol from "@/assets/alterna-symbol.png.asset.json";
 
 export function SheetSidebar() {
   const search = useRouterState({ select: (r) => r.location.search }) as { sheet?: string };
@@ -16,9 +17,14 @@ export function SheetSidebar() {
   return (
     <aside className="w-72 shrink-0 border-r border-border bg-card/50 backdrop-blur-sm h-screen sticky top-0 overflow-y-auto">
       <div className="p-5 border-b border-border">
-        <div className="text-xs uppercase tracking-widest text-primary/80 font-semibold">Alterna Énergie</div>
-        <h1 className="mt-1 text-lg font-semibold leading-tight">Étude SEO</h1>
-        <p className="mt-1 text-xs text-muted-foreground">Arborescence & suivi éditorial</p>
+        <div className="flex items-center gap-3">
+          <img src={symbol.url} alt="Alterna Énergie" className="size-10 rounded-full shrink-0" />
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-widest text-primary/80 font-semibold">Alterna Énergie</div>
+            <h1 className="text-base font-semibold leading-tight">Étude SEO</h1>
+          </div>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">Arborescence & suivi éditorial</p>
       </div>
       <nav className="p-3 space-y-5">
         {order.filter((g) => groups[g]?.length).map((g) => (
