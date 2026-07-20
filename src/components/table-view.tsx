@@ -63,6 +63,25 @@ function statusKey(s: string): StatusKey | null {
   return STATUS_MAP[normalize(s)] ?? null;
 }
 
+// Effort vocabulary: normalized value -> canonical level.
+type EffortKey = "low" | "medium" | "high";
+const EFFORT_MAP: Record<string, EffortKey> = {
+  "faible": "low", "low": "low", "petit": "low", "small": "low", "s": "low",
+  "bas": "low", "léger": "low", "leger": "low",
+  "moyen": "medium", "medium": "medium", "moyenne": "medium", "med": "medium",
+  "m": "medium", "normal": "medium",
+  "fort": "high", "élevé": "high", "eleve": "high", "haut": "high", "high": "high",
+  "grand": "high", "large": "high", "l": "high", "important": "high",
+};
+const EFFORT_STYLE: Record<EffortKey, string> = {
+  low: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-300",
+  medium: "bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-300",
+  high: "bg-red-500/15 text-red-700 border-red-500/30 dark:text-red-300",
+};
+function effortKey(s: string): EffortKey | null {
+  return EFFORT_MAP[normalize(s)] ?? null;
+}
+
 export function TableView({
   sheet,
   edits,
@@ -138,6 +157,7 @@ export function TableView({
   const widthFor = (c: number): { min: number; max: number } => {
     if (boolCols.has(c)) return { min: 44, max: 56 };
     if (statusCols.has(c)) return { min: 120, max: 160 };
+    if (effortCols.has(c)) return { min: 100, max: 140 };
     const k = colKind.get(c);
     switch (k) {
       case "url": return { min: 200, max: 320 };
@@ -220,6 +240,38 @@ export function TableView({
 
   // Status columns take precedence over the boolean checkbox rendering.
   for (const c of statusCols.keys()) boolCols.delete(c);
+
+  // Detect effort-like columns: every non-empty value maps to an effort
+  // level AND the column contains at least two distinct levels (so we
+  // don't turn a single-value column into a dropdown).
+  const effortCols = useMemo(() => {
+    const map = new Map<number, string[]>();
+    const rows = ids.map((id) => getRow(sheet, id, edits));
+    for (const c of visibleCols) {
+      let nonEmpty = 0;
+      let allEffort = true;
+      const seen = new Map<EffortKey, string>();
+      for (const r of rows) {
+        const s = r[c] == null ? "" : String(r[c]);
+        if (s.trim() === "") continue;
+        nonEmpty++;
+        const k = effortKey(s);
+        if (!k) { allEffort = false; break; }
+        if (!seen.has(k)) seen.set(k, s.trim());
+      }
+      if (allEffort && nonEmpty > 0 && seen.size >= 2) {
+        const DEFAULTS: Record<EffortKey, string> = {
+          low: "Faible", medium: "Moyen", high: "Fort",
+        };
+        const order: EffortKey[] = ["low", "medium", "high"];
+        map.set(c, order.map((k) => seen.get(k) ?? DEFAULTS[k]));
+      }
+    }
+    return map;
+  }, [visibleCols, ids, sheet, edits]);
+
+  // Effort columns override the other renderers.
+  for (const c of effortCols.keys()) { boolCols.delete(c); statusCols.delete(c); }
 
   // For each boolean column, pick the most common truthy marker so toggling
   // ON preserves the column's convention ("x", "✓", "oui"…).
@@ -320,6 +372,35 @@ export function TableView({
                       const opts = statusCols.get(c)!;
                       const k = statusKey(s);
                       const style = k ? STATUS_STYLE[k] : "bg-muted text-muted-foreground border-border";
+                      return (
+                        <td key={c} className="px-2 py-1 align-middle">
+                          <select
+                            value={s}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) =>
+                              onToggle(id, c, e.target.value === "" ? null : e.target.value)
+                            }
+                            className={cn(
+                              "w-full text-xs rounded-md border px-1.5 py-0.5 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer font-medium",
+                              style,
+                            )}
+                            aria-label={headers[c] || `Col ${c + 1}`}
+                          >
+                            <option value="">—</option>
+                            {opts.map((o) => (
+                              <option key={o} value={o}>{o}</option>
+                            ))}
+                            {s && !opts.includes(s) && (
+                              <option value={s}>{s}</option>
+                            )}
+                          </select>
+                        </td>
+                      );
+                    }
+                    if (effortCols.has(c)) {
+                      const opts = effortCols.get(c)!;
+                      const k = effortKey(s);
+                      const style = k ? EFFORT_STYLE[k] : "bg-muted text-muted-foreground border-border";
                       return (
                         <td key={c} className="px-2 py-1 align-middle">
                           <select
