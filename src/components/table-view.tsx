@@ -61,6 +61,50 @@ export function TableView({
     return cols;
   }, [sheet, edits, ids, headers]);
 
+  // Classify each visible column to pick a sensible width. This keeps
+  // narrow columns from stealing space from prose columns and vice-versa.
+  type ColKind = "bool" | "url" | "short" | "medium" | "long";
+  const colKind = useMemo(() => {
+    const map = new Map<number, ColKind>();
+    const rows = ids.map((id) => getRow(sheet, id, edits));
+    for (const c of visibleCols) {
+      let maxLen = 0;
+      let sum = 0;
+      let n = 0;
+      let urlHits = 0;
+      for (const r of rows) {
+        const s = r[c] == null ? "" : String(r[c]);
+        if (s.trim() === "") continue;
+        n++;
+        sum += s.length;
+        if (s.length > maxLen) maxLen = s.length;
+        if (/^https?:\/\//i.test(s.trim())) urlHits++;
+      }
+      const avg = n ? sum / n : 0;
+      let kind: ColKind;
+      if (n > 0 && urlHits / n > 0.5) kind = "url";
+      else if (maxLen <= 6) kind = "short";
+      else if (maxLen <= 24 && avg <= 18) kind = "short";
+      else if (maxLen <= 60) kind = "medium";
+      else kind = "long";
+      map.set(c, kind);
+    }
+    // Boolean cols override to a compact width.
+    return map;
+  }, [visibleCols, ids, sheet, edits]);
+
+  const widthFor = (c: number): { min: number; max: number } => {
+    if (boolCols.has(c)) return { min: 44, max: 56 };
+    const k = colKind.get(c);
+    switch (k) {
+      case "url": return { min: 200, max: 320 };
+      case "short": return { min: 90, max: 160 };
+      case "medium": return { min: 160, max: 260 };
+      case "long": return { min: 260, max: 460 };
+      default: return { min: 140, max: 320 };
+    }
+  };
+
   // Detect which visible columns are boolean-like (checkbox candidates).
   // A column qualifies if it has at least one non-empty value AND every
   // non-empty value matches our truthy/falsy vocabulary.
@@ -125,13 +169,24 @@ export function TableView({
         </button>
       </div>
       <div className="flex-1 overflow-auto">
-        <table className="text-sm w-full border-collapse">
+        <table className="text-sm w-full border-collapse table-fixed">
+          <colgroup>
+            {visibleCols.map((c) => {
+              const w = widthFor(c);
+              return (
+                <col
+                  key={c}
+                  style={{ minWidth: `${w.min}px`, width: `${w.max}px` }}
+                />
+              );
+            })}
+          </colgroup>
           <thead className="sticky top-0 bg-card z-10">
             <tr className="border-b border-border">
               {visibleCols.map((c) => (
                 <th
                   key={c}
-                  className="text-left px-2 py-1.5 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground whitespace-nowrap leading-tight"
+                  className="text-left px-2 py-1.5 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground leading-tight truncate"
                 >
                   {headers[c] || `Col ${c + 1}`}
                 </th>
@@ -158,7 +213,7 @@ export function TableView({
                     if (boolCols.has(c)) {
                       const checked = isTruthy(s);
                       return (
-                        <td key={c} className="px-2 py-1 align-middle w-10">
+                        <td key={c} className="px-2 py-1 align-middle text-center">
                           <input
                             type="checkbox"
                             checked={checked}
@@ -172,8 +227,9 @@ export function TableView({
                         </td>
                       );
                     }
+                    const kind = colKind.get(c);
                     return (
-                      <td key={c} className="px-2 py-1 align-top max-w-[320px] leading-tight">
+                      <td key={c} className="px-2 py-1 align-top leading-tight">
                         {isUrl ? (
                           <a
                             href={s}
@@ -181,14 +237,22 @@ export function TableView({
                             rel="noreferrer"
                             title={s}
                             onClick={(e) => e.stopPropagation()}
-                            className="text-primary hover:underline flex items-center gap-1 text-xs max-w-[300px]"
+                            className="text-primary hover:underline flex items-center gap-1 text-xs"
                           >
                             <span className="truncate">{s.replace(/^https?:\/\//, "")}</span>
                             <ExternalLink className="size-3 shrink-0" />
                           </a>
                         ) : (
-                          <span className="whitespace-pre-wrap break-words text-foreground/90">
-                            {s.length > 240 ? s.slice(0, 240) + "…" : s}
+                          <span
+                            title={s}
+                            className={cn(
+                              "text-foreground/90 block",
+                              kind === "short"
+                                ? "truncate"
+                                : "whitespace-pre-wrap break-words line-clamp-3",
+                            )}
+                          >
+                            {s}
                           </span>
                         )}
                       </td>
