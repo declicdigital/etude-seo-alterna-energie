@@ -65,7 +65,7 @@ export function TableView({
               {visibleCols.map((c) => (
                 <th
                   key={c}
-                  className="text-left px-3 py-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground whitespace-nowrap"
+                  className="text-left px-2 py-1.5 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground whitespace-nowrap leading-tight"
                 >
                   {headers[c] || `Col ${c + 1}`}
                 </th>
@@ -90,7 +90,7 @@ export function TableView({
                     const s = v == null ? "" : String(v);
                     const isUrl = /^https?:\/\//i.test(s);
                     return (
-                      <td key={c} className="px-3 py-2 align-top max-w-[320px]">
+                      <td key={c} className="px-2 py-1 align-top max-w-[320px] leading-tight">
                         {isUrl ? (
                           <a
                             href={s}
