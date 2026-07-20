@@ -96,10 +96,11 @@ export function TableView({
                             href={s}
                             target="_blank"
                             rel="noreferrer"
+                            title={s}
                             onClick={(e) => e.stopPropagation()}
-                            className="text-primary hover:underline inline-flex items-center gap-1 text-xs break-all"
+                            className="text-primary hover:underline flex items-center gap-1 text-xs max-w-[300px]"
                           >
-                            {s.replace(/^https?:\/\//, "").slice(0, 60)}
+                            <span className="truncate">{s.replace(/^https?:\/\//, "")}</span>
                             <ExternalLink className="size-3 shrink-0" />
                           </a>
                         ) : (
