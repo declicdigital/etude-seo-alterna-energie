@@ -63,6 +63,22 @@ function statusKey(s: string): StatusKey | null {
   return STATUS_MAP[normalize(s)] ?? null;
 }
 
+// Split a string into text + link segments so URLs embedded inside prose
+// remain clickable directly from the table cell.
+const URL_RE = /(https?:\/\/[^\s<>"')]+)/gi;
+function linkify(s: string): Array<{ text: string; href?: string }> {
+  const out: Array<{ text: string; href?: string }> = [];
+  let last = 0;
+  for (const m of s.matchAll(URL_RE)) {
+    const i = m.index ?? 0;
+    if (i > last) out.push({ text: s.slice(last, i) });
+    out.push({ text: m[0], href: m[0] });
+    last = i + m[0].length;
+  }
+  if (last < s.length) out.push({ text: s.slice(last) });
+  return out;
+}
+
 // Effort vocabulary: normalized value -> canonical level.
 type EffortKey = "low" | "medium" | "high";
 const EFFORT_MAP: Record<string, EffortKey> = {
