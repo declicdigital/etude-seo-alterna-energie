@@ -240,6 +240,38 @@ export function TableView({
   // Status columns take precedence over the boolean checkbox rendering.
   for (const c of statusCols.keys()) boolCols.delete(c);
 
+  // Detect effort-like columns: every non-empty value maps to an effort
+  // level AND the column contains at least two distinct levels (so we
+  // don't turn a single-value column into a dropdown).
+  const effortCols = useMemo(() => {
+    const map = new Map<number, string[]>();
+    const rows = ids.map((id) => getRow(sheet, id, edits));
+    for (const c of visibleCols) {
+      let nonEmpty = 0;
+      let allEffort = true;
+      const seen = new Map<EffortKey, string>();
+      for (const r of rows) {
+        const s = r[c] == null ? "" : String(r[c]);
+        if (s.trim() === "") continue;
+        nonEmpty++;
+        const k = effortKey(s);
+        if (!k) { allEffort = false; break; }
+        if (!seen.has(k)) seen.set(k, s.trim());
+      }
+      if (allEffort && nonEmpty > 0 && seen.size >= 2) {
+        const DEFAULTS: Record<EffortKey, string> = {
+          low: "Faible", medium: "Moyen", high: "Fort",
+        };
+        const order: EffortKey[] = ["low", "medium", "high"];
+        map.set(c, order.map((k) => seen.get(k) ?? DEFAULTS[k]));
+      }
+    }
+    return map;
+  }, [visibleCols, ids, sheet, edits]);
+
+  // Effort columns override the other renderers.
+  for (const c of effortCols.keys()) { boolCols.delete(c); statusCols.delete(c); }
+
   // For each boolean column, pick the most common truthy marker so toggling
   // ON preserves the column's convention ("x", "✓", "oui"…).
   const truthyMarker = useMemo(() => {
