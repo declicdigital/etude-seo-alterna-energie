@@ -397,6 +397,35 @@ export function TableView({
                         </td>
                       );
                     }
+                    if (effortCols.has(c)) {
+                      const opts = effortCols.get(c)!;
+                      const k = effortKey(s);
+                      const style = k ? EFFORT_STYLE[k] : "bg-muted text-muted-foreground border-border";
+                      return (
+                        <td key={c} className="px-2 py-1 align-middle">
+                          <select
+                            value={s}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) =>
+                              onToggle(id, c, e.target.value === "" ? null : e.target.value)
+                            }
+                            className={cn(
+                              "w-full text-xs rounded-md border px-1.5 py-0.5 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer font-medium",
+                              style,
+                            )}
+                            aria-label={headers[c] || `Col ${c + 1}`}
+                          >
+                            <option value="">—</option>
+                            {opts.map((o) => (
+                              <option key={o} value={o}>{o}</option>
+                            ))}
+                            {s && !opts.includes(s) && (
+                              <option value={s}>{s}</option>
+                            )}
+                          </select>
+                        </td>
+                      );
+                    }
                     const kind = colKind.get(c);
                     return (
                       <td key={c} className="px-2 py-1 align-top leading-tight">
