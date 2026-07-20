@@ -426,7 +426,6 @@ export function TableView({
                         </td>
                       );
                     }
-                    const kind = colKind.get(c);
                     return (
                       <td key={c} className="px-2 py-1 align-top leading-tight">
                         {isUrl ? (
