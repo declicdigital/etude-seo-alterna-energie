@@ -85,15 +85,40 @@ export function headersOf(sheet: string): string[] {
   return row.map((c) => (c == null ? "" : String(c)));
 }
 
-export function dataRows(sheet: string): number[] {
+export function dataRows(sheet: string, edits?: EditsMap): number[] {
   const meta = SHEET_META[sheet];
   const rows = workbook[sheet] ?? [];
-  if (!meta) return rows.map((_, i) => i);
   const out: number[] = [];
-  for (let i = meta.firstDataRow; i < rows.length; i++) {
-    if (rows[i].some((c) => c != null && String(c).trim() !== "")) out.push(i);
+  if (meta) {
+    for (let i = meta.firstDataRow; i < rows.length; i++) {
+      if (rows[i].some((c) => c != null && String(c).trim() !== "")) out.push(i);
+    }
+  } else {
+    for (let i = 0; i < rows.length; i++) out.push(i);
+  }
+  // Include extra rows added via edits (row_id >= base length) with any non-empty cell
+  const over = edits?.[sheet];
+  if (over) {
+    const extras: number[] = [];
+    for (const key of Object.keys(over)) {
+      const id = Number(key);
+      if (id >= rows.length) {
+        const cells = over[id];
+        if (Object.values(cells).some((v) => v != null && String(v).trim() !== "")) extras.push(id);
+      }
+    }
+    extras.sort((a, b) => a - b);
+    out.push(...extras);
   }
   return out;
+}
+
+export function nextRowId(sheet: string, edits: EditsMap): number {
+  const baseLen = workbook[sheet]?.length ?? 0;
+  let max = baseLen - 1;
+  const over = edits[sheet];
+  if (over) for (const k of Object.keys(over)) max = Math.max(max, Number(k));
+  return Math.max(baseLen, max + 1);
 }
 
 export type TreeNode = {
@@ -106,7 +131,7 @@ export type TreeNode = {
 export function buildTree(sheet: string, edits: EditsMap): TreeNode[] {
   const meta = SHEET_META[sheet];
   const cols = meta?.treeCols ?? 8;
-  const ids = dataRows(sheet);
+  const ids = dataRows(sheet, edits);
   const roots: TreeNode[] = [];
   const stack: TreeNode[] = [];
   for (const id of ids) {

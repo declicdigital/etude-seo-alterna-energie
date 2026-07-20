@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronRight, FileText, Folder } from "lucide-react";
+import { ChevronRight, FileText, Folder, Plus } from "lucide-react";
 import { buildTree, type EditsMap, type TreeNode } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 
@@ -28,11 +28,13 @@ export function TreeView({
   edits,
   selected,
   onSelect,
+  onAddRow,
 }: {
   sheet: string;
   edits: EditsMap;
   selected: number | null;
   onSelect: (rowId: number) => void;
+  onAddRow: (parentLevel: number) => void;
 }) {
   const tree = useMemo(() => buildTree(sheet, edits), [sheet, edits]);
   const [q, setQ] = useState("");
@@ -76,6 +78,12 @@ export function TreeView({
           className="h-9 px-3 rounded-md text-xs font-medium border border-input hover:bg-muted"
         >
           Tout replier
+        </button>
+        <button
+          onClick={() => onAddRow(0)}
+          className="h-9 px-3 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1.5 shadow-sm"
+        >
+          <Plus className="size-3.5" /> Ajouter
         </button>
       </div>
       <div className="flex-1 overflow-y-auto py-2">

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Plus } from "lucide-react";
 import { dataRows, getRow, headersOf, type EditsMap } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 
@@ -8,14 +8,16 @@ export function TableView({
   edits,
   selected,
   onSelect,
+  onAddRow,
 }: {
   sheet: string;
   edits: EditsMap;
   selected: number | null;
   onSelect: (rowId: number) => void;
+  onAddRow: () => void;
 }) {
   const headers = headersOf(sheet);
-  const ids = useMemo(() => dataRows(sheet), [sheet]);
+  const ids = useMemo(() => dataRows(sheet, edits), [sheet, edits]);
   const [q, setQ] = useState("");
 
   const filtered = useMemo(() => {
@@ -49,6 +51,12 @@ export function TableView({
           className="flex-1 h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <span className="text-xs text-muted-foreground">{filtered.length} lignes</span>
+        <button
+          onClick={onAddRow}
+          className="h-9 px-3 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1.5 shadow-sm"
+        >
+          <Plus className="size-3.5" /> Ajouter une ligne
+        </button>
       </div>
       <div className="flex-1 overflow-auto">
         <table className="text-sm w-full border-collapse">

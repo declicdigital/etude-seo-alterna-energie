@@ -6,7 +6,7 @@ import { TreeView } from "@/components/tree-view";
 import { TableView } from "@/components/table-view";
 import { DetailPanel } from "@/components/detail-panel";
 import { useEdits } from "@/lib/use-edits";
-import { isStructureSheet, SHEET_META, sheetNames } from "@/lib/workbook";
+import { isStructureSheet, nextRowId, SHEET_META, sheetNames } from "@/lib/workbook";
 
 const searchSchema = z.object({
   sheet: z.string().optional(),
@@ -32,6 +32,16 @@ function Index() {
 
   const meta = SHEET_META[sheet];
 
+  const handleAddRow = async (treeLevel = 0) => {
+    const id = nextRowId(sheet, edits);
+    if (isStructureSheet(sheet)) {
+      await setCell(sheet, id, treeLevel, "Nouvelle page");
+    } else {
+      await setCell(sheet, id, 0, "Nouvelle ligne");
+    }
+    setSelected(id);
+  };
+
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <SheetSidebar />
@@ -53,9 +63,21 @@ function Index() {
         <div className="flex-1 flex min-h-0">
           <div className="flex-1 min-w-0 flex flex-col">
             {isStructureSheet(sheet) ? (
-              <TreeView sheet={sheet} edits={edits} selected={selected} onSelect={setSelected} />
+              <TreeView
+                sheet={sheet}
+                edits={edits}
+                selected={selected}
+                onSelect={setSelected}
+                onAddRow={handleAddRow}
+              />
             ) : (
-              <TableView sheet={sheet} edits={edits} selected={selected} onSelect={setSelected} />
+              <TableView
+                sheet={sheet}
+                edits={edits}
+                selected={selected}
+                onSelect={setSelected}
+                onAddRow={() => handleAddRow(0)}
+              />
             )}
           </div>
           {selected != null && (
