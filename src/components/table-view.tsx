@@ -3,18 +3,38 @@ import { ExternalLink, Plus } from "lucide-react";
 import { dataRows, getRow, headersOf, type EditsMap } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 
+const TRUTHY = new Set([
+  "x", "✓", "✔", "oui", "yes", "y", "ok", "done", "fait", "true", "1",
+]);
+const FALSY = new Set([
+  "", "-", "–", "—", "✗", "✘", "non", "no", "n", "ko", "todo", "à faire", "a faire", "false", "0",
+]);
+
+function normalize(s: string) {
+  return s.trim().toLowerCase();
+}
+function isTruthy(s: string) {
+  return TRUTHY.has(normalize(s));
+}
+function isBooleanLike(s: string) {
+  const n = normalize(s);
+  return TRUTHY.has(n) || FALSY.has(n);
+}
+
 export function TableView({
   sheet,
   edits,
   selected,
   onSelect,
   onAddRow,
+  onToggle,
 }: {
   sheet: string;
   edits: EditsMap;
   selected: number | null;
   onSelect: (rowId: number) => void;
   onAddRow: () => void;
+  onToggle: (rowId: number, col: number, value: string | null) => void;
 }) {
   const headers = headersOf(sheet);
   const ids = useMemo(() => dataRows(sheet, edits), [sheet, edits]);
@@ -40,6 +60,52 @@ export function TableView({
     }
     return cols;
   }, [sheet, edits, ids, headers]);
+
+  // Detect which visible columns are boolean-like (checkbox candidates).
+  // A column qualifies if it has at least one non-empty value AND every
+  // non-empty value matches our truthy/falsy vocabulary.
+  const boolCols = useMemo(() => {
+    const set = new Set<number>();
+    const rows = ids.map((id) => getRow(sheet, id, edits));
+    for (const c of visibleCols) {
+      let nonEmpty = 0;
+      let allBool = true;
+      let truthyCount = 0;
+      for (const r of rows) {
+        const s = r[c] == null ? "" : String(r[c]);
+        if (s.trim() === "") continue;
+        nonEmpty++;
+        if (!isBooleanLike(s)) {
+          allBool = false;
+          break;
+        }
+        if (isTruthy(s)) truthyCount++;
+      }
+      // Require at least one truthy value so purely-empty or purely-dash
+      // columns don't get turned into checkboxes.
+      if (allBool && nonEmpty > 0 && truthyCount > 0) set.add(c);
+    }
+    return set;
+  }, [visibleCols, ids, sheet, edits]);
+
+  // For each boolean column, pick the most common truthy marker so toggling
+  // ON preserves the column's convention ("x", "✓", "oui"…).
+  const truthyMarker = useMemo(() => {
+    const map = new Map<number, string>();
+    const rows = ids.map((id) => getRow(sheet, id, edits));
+    for (const c of boolCols) {
+      const counts = new Map<string, number>();
+      for (const r of rows) {
+        const s = r[c] == null ? "" : String(r[c]);
+        if (isTruthy(s)) counts.set(s.trim(), (counts.get(s.trim()) ?? 0) + 1);
+      }
+      let best = "x";
+      let bestN = 0;
+      for (const [k, n] of counts) if (n > bestN) { best = k; bestN = n; }
+      map.set(c, best);
+    }
+    return map;
+  }, [boolCols, ids, sheet, edits]);
 
   return (
     <div className="flex flex-col h-full">
@@ -89,6 +155,23 @@ export function TableView({
                     const v = row[c];
                     const s = v == null ? "" : String(v);
                     const isUrl = /^https?:\/\//i.test(s);
+                    if (boolCols.has(c)) {
+                      const checked = isTruthy(s);
+                      return (
+                        <td key={c} className="px-2 py-1 align-middle w-10">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) =>
+                              onToggle(id, c, e.target.checked ? (truthyMarker.get(c) ?? "x") : null)
+                            }
+                            className="size-4 accent-primary cursor-pointer"
+                            aria-label={headers[c] || `Col ${c + 1}`}
+                          />
+                        </td>
+                      );
+                    }
                     return (
                       <td key={c} className="px-2 py-1 align-top max-w-[320px] leading-tight">
                         {isUrl ? (
