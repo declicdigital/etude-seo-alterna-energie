@@ -310,14 +310,14 @@ export function TableView({
         </button>
       </div>
       <div className="flex-1 overflow-auto">
-        <table className="text-sm w-full border-collapse table-fixed">
+        <table className="text-sm min-w-full border-collapse table-fixed">
           <colgroup>
             {visibleCols.map((c) => {
               const w = widthFor(c);
               return (
                 <col
                   key={c}
-                  style={{ minWidth: `${w.min}px`, width: `${w.max}px` }}
+                  style={{ width: `${w.max}px` }}
                 />
               );
             })}
@@ -426,7 +426,6 @@ export function TableView({
                         </td>
                       );
                     }
-                    const kind = colKind.get(c);
                     return (
                       <td key={c} className="px-2 py-1 align-top leading-tight">
                         {isUrl ? (
@@ -445,10 +444,7 @@ export function TableView({
                           <span
                             title={s}
                             className={cn(
-                              "text-foreground/90 block",
-                              kind === "short"
-                                ? "truncate"
-                                : "whitespace-pre-wrap break-words line-clamp-3",
+                              "text-foreground/90 block whitespace-pre-wrap break-words",
                             )}
                           >
                             {s}
