@@ -463,7 +463,22 @@ export function TableView({
                               "text-foreground/90 block whitespace-pre-wrap break-words",
                             )}
                           >
-                            {s}
+                            {linkify(s).map((seg, i) =>
+                              seg.href ? (
+                                <a
+                                  key={i}
+                                  href={seg.href}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-primary hover:underline break-all"
+                                >
+                                  {seg.text}
+                                </a>
+                              ) : (
+                                <span key={i}>{seg.text}</span>
+                              ),
+                            )}
                           </span>
                         )}
                       </td>
