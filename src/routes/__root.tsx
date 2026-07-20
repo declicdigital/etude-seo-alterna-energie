@@ -77,12 +77,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Étude SEO — Alterna Énergie" },
+      { title: "Étude SEO - Alterna Énergie" },
       { name: "description", content: "Arborescence, contenus et suivi éditorial d'Alterna Énergie, réunis dans une interface propre et éditable en ligne." },
-      { property: "og:title", content: "Étude SEO — Alterna Énergie" },
-      { property: "og:description", content: "Arborescence, contenus et suivi éditorial d'Alterna Énergie." },
+      { property: "og:title", content: "Étude SEO - Alterna Énergie" },
+      { property: "og:description", content: "Arborescence, contenus et suivi éditorial d'Alterna Énergie, réunis dans une interface propre et éditable en ligne." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Étude SEO - Alterna Énergie" },
+      { name: "twitter:description", content: "Arborescence, contenus et suivi éditorial d'Alterna Énergie, réunis dans une interface propre et éditable en ligne." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7763d674-43d9-4d76-bd37-1a592798f182/id-preview-0d9a5e50--8f872911-ca79-48ec-b491-06abc13b4c05.lovable.app-1784539706445.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7763d674-43d9-4d76-bd37-1a592798f182/id-preview-0d9a5e50--8f872911-ca79-48ec-b491-06abc13b4c05.lovable.app-1784539706445.png" },
     ],
     links: [
       {
