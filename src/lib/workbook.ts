@@ -50,6 +50,7 @@ export const STRUCTURE_SHEETS = new Set([
   "Structure PRO",
   "Structure (resi) (OLD V3)",
   "Structure pour migration AE-AEF",
+  "Webflow - fonctionnement",
 ]);
 
 export function isStructureSheet(name: string) {
@@ -75,7 +76,7 @@ export const SHEET_META: Record<
   "Temps passé": { headerRow: 0, firstDataRow: 1, label: "Temps passé", group: "Suivi" },
   "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon Électricité", group: "Cocons" },
   "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon Gaz", group: "Cocons" },
-  "Webflow - fonctionnement": { headerRow: 0, firstDataRow: 1, label: "Webflow — fonctionnement", group: "Docs" },
+  "Webflow - fonctionnement": { headerRow: 1, treeCols: 5, firstDataRow: 2, label: "Webflow — fonctionnement", group: "Docs" },
 };
 
 export function headersOf(sheet: string): string[] {

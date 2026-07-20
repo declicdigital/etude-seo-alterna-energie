@@ -1,7 +1,29 @@
 import { useMemo, useState } from "react";
-import { ChevronRight, FileText, Folder, Plus } from "lucide-react";
-import { buildTree, type EditsMap, type TreeNode } from "@/lib/workbook";
+import { ChevronRight, FileText, Folder, Layers, Plus } from "lucide-react";
+import { buildTree, getRow, type EditsMap, type TreeNode } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
+
+type RowMeta = { badge?: { label: string; tone: "page" | "collection" | "article" }; breadcrumb?: string };
+
+function webflowMeta(sheet: string, rowId: number, edits: EditsMap): RowMeta {
+  if (sheet !== "Webflow - fonctionnement") return {};
+  const row = getRow(sheet, rowId, edits);
+  const tech = row[5] == null ? "" : String(row[5]);
+  const bread = row[6] == null ? "" : String(row[6]);
+  const t = tech.toLowerCase();
+  let badge: RowMeta["badge"];
+  const niveau = tech.match(/niveau\s*(\d+)/i)?.[1];
+  if (t.includes("collection")) {
+    badge = { label: niveau ? `Collection · N${niveau}` : "Collection", tone: "collection" };
+  } else if (t.includes("article")) {
+    badge = { label: "Article", tone: "article" };
+  } else if (t.startsWith("page") || t === "page") {
+    badge = { label: "Page", tone: "page" };
+  } else if (niveau) {
+    badge = { label: `Collection · N${niveau}`, tone: "collection" };
+  }
+  return { badge, breadcrumb: bread || undefined };
+}
 
 function collectAll(nodes: TreeNode[], set: Set<number>) {
   for (const n of nodes) {
@@ -37,6 +59,7 @@ export function TreeView({
   onAddRow: (parentLevel: number) => void;
 }) {
   const tree = useMemo(() => buildTree(sheet, edits), [sheet, edits]);
+  const isWebflow = sheet === "Webflow - fonctionnement";
   const [q, setQ] = useState("");
   const filtered = useMemo(() => filterTree(tree, q), [tree, q]);
   const [expanded, setExpanded] = useState<Set<number>>(() => {
@@ -60,6 +83,24 @@ export function TreeView({
 
   return (
     <div className="flex flex-col h-full">
+      {isWebflow && (
+        <div className="px-6 pt-4">
+          <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-foreground/80 flex gap-3 items-start">
+            <Layers className="size-4 text-primary shrink-0 mt-0.5" />
+            <div>
+              <div className="font-medium text-foreground mb-1">Comment lire cette arborescence Webflow</div>
+              <div className="flex flex-wrap gap-2 mt-1">
+                <LegendPill tone="page">Page</LegendPill>
+                <LegendPill tone="collection">Collection (CMS)</LegendPill>
+                <LegendPill tone="article">Article</LegendPill>
+              </div>
+              <p className="mt-2 text-muted-foreground">
+                Cliquez sur une entrée pour voir le fil d'Ariane complet et la structure technique dans Webflow.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="p-4 border-b border-border bg-card/50 flex gap-2 items-center">
         <input
           value={q}
@@ -96,6 +137,8 @@ export function TreeView({
             selected={selected}
             onSelect={onSelect}
             forceExpand={!!q}
+            sheet={sheet}
+            edits={edits}
           />
         ))}
         {filtered.length === 0 && (
@@ -113,6 +156,8 @@ function TreeRow({
   selected,
   onSelect,
   forceExpand,
+  sheet,
+  edits,
 }: {
   node: TreeNode;
   expanded: Set<number>;
@@ -120,10 +165,13 @@ function TreeRow({
   selected: number | null;
   onSelect: (id: number) => void;
   forceExpand: boolean;
+  sheet: string;
+  edits: EditsMap;
 }) {
   const isOpen = forceExpand || expanded.has(node.rowId);
   const hasChildren = node.children.length > 0;
   const isSel = selected === node.rowId;
+  const meta = webflowMeta(sheet, node.rowId, edits);
 
   return (
     <div>
@@ -160,9 +208,25 @@ function TreeRow({
             isSel && "font-semibold text-primary",
             node.level === 0 && "font-medium",
           )}
+          title={meta.breadcrumb}
         >
           {node.label}
         </span>
+        {meta.badge && (
+          <span
+            className={cn(
+              "ml-2 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium border",
+              meta.badge.tone === "page" &&
+                "bg-emerald-500/10 text-emerald-700 border-emerald-500/30 dark:text-emerald-300",
+              meta.badge.tone === "collection" &&
+                "bg-primary/10 text-primary border-primary/30",
+              meta.badge.tone === "article" &&
+                "bg-amber-500/10 text-amber-700 border-amber-500/30 dark:text-amber-300",
+            )}
+          >
+            {meta.badge.label}
+          </span>
+        )}
       </div>
       {isOpen &&
         node.children.map((c) => (
@@ -174,8 +238,31 @@ function TreeRow({
             selected={selected}
             onSelect={onSelect}
             forceExpand={forceExpand}
+            sheet={sheet}
+            edits={edits}
           />
         ))}
     </div>
+  );
+}
+
+function LegendPill({
+  tone,
+  children,
+}: {
+  tone: "page" | "collection" | "article";
+  children: React.ReactNode;
+}) {
+  return (
+    <span
+      className={cn(
+        "rounded-full px-2 py-0.5 text-[10px] font-medium border",
+        tone === "page" && "bg-emerald-500/10 text-emerald-700 border-emerald-500/30 dark:text-emerald-300",
+        tone === "collection" && "bg-primary/10 text-primary border-primary/30",
+        tone === "article" && "bg-amber-500/10 text-amber-700 border-amber-500/30 dark:text-amber-300",
+      )}
+    >
+      {children}
+    </span>
   );
 }
