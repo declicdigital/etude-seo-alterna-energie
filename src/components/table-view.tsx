@@ -454,7 +454,126 @@ export function TableView({
           <Plus className="size-4 sm:size-3.5" /> <span className="hidden sm:inline">Ajouter une ligne</span><span className="sm:hidden">Ajouter</span>
         </button>
       </div>
-      <div className="flex-1 overflow-auto">
+      {/* Mobile card list — avoids horizontal scrolling on phones */}
+      <div className="md:hidden flex-1 overflow-y-auto p-3 space-y-2 bg-muted/20">
+        {sortedFiltered.map((id) => {
+          const row = getRow(sheet, id, edits);
+          const isSel = selected === id;
+          // Pick a title: first meaningful text column that isn't a widget col
+          const isWidgetCol = (c: number) =>
+            boolCols.has(c) || statusCols.has(c) || effortCols.has(c) || priorityCols.has(c);
+          let titleIdx = -1;
+          for (const c of visibleCols) {
+            if (isWidgetCol(c)) continue;
+            const s = row[c] == null ? "" : String(row[c]).trim();
+            if (s && colKind.get(c) !== "url") { titleIdx = c; break; }
+          }
+          const title = titleIdx >= 0 ? String(row[titleIdx]) : `Ligne ${id}`;
+
+          // Build up to 4 secondary fields (non-empty, non-title, non-widget-empty)
+          const secondary: { c: number; label: string; value: string }[] = [];
+          for (const c of visibleCols) {
+            if (c === titleIdx) continue;
+            const raw = row[c];
+            let s = raw == null ? "" : String(raw);
+            if (!s.trim()) {
+              const fill = filledValues.get(c)?.get(id);
+              if (fill) s = fill;
+            }
+            if (!s.trim() && !isWidgetCol(c)) continue;
+            secondary.push({ c, label: headers[c] || `Col ${c + 1}`, value: s });
+            if (secondary.length >= 5) break;
+          }
+
+          return (
+            <button
+              key={id}
+              onClick={() => onSelect(id)}
+              className={cn(
+                "w-full text-left rounded-2xl bg-card border border-border/70 p-3 shadow-sm active:scale-[0.99] transition-transform",
+                isSel && "ring-2 ring-primary/50 border-primary/40",
+              )}
+            >
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[15px] font-semibold leading-snug break-words">
+                    {title}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1 justify-end shrink-0">
+                  {secondary
+                    .filter((f) => priorityCols.has(f.c) && isPriority(f.value))
+                    .map((f) => (
+                      <span key={f.c} className="rounded-full bg-red-500/15 text-red-600 border border-red-500/40 text-[10px] font-bold px-2 py-0.5">!</span>
+                    ))}
+                  {secondary
+                    .filter((f) => statusCols.has(f.c) && f.value.trim())
+                    .map((f) => {
+                      const k = statusKey(f.value);
+                      const style = k ? STATUS_STYLE[k] : "bg-muted text-muted-foreground border-border";
+                      return (
+                        <span key={f.c} className={cn("rounded-full border text-[10px] font-medium px-2 py-0.5", style)}>{f.value}</span>
+                      );
+                    })}
+                  {secondary
+                    .filter((f) => effortCols.has(f.c) && f.value.trim())
+                    .map((f) => {
+                      const k = effortKey(f.value);
+                      const style = k ? EFFORT_STYLE[k] : "bg-muted text-muted-foreground border-border";
+                      return (
+                        <span key={f.c} className={cn("rounded-full border text-[10px] font-medium px-2 py-0.5", style)}>{f.value}</span>
+                      );
+                    })}
+                  {secondary
+                    .filter((f) => boolCols.has(f.c) && isTruthy(f.value))
+                    .map((f) => (
+                      <span key={f.c} className="rounded-full bg-emerald-500/15 text-emerald-700 border border-emerald-500/40 text-[10px] font-medium px-2 py-0.5">
+                        {headers[f.c] || "✓"}
+                      </span>
+                    ))}
+                </div>
+              </div>
+              <div className="mt-2 space-y-1">
+                {secondary
+                  .filter((f) => !boolCols.has(f.c) && !statusCols.has(f.c) && !effortCols.has(f.c) && !priorityCols.has(f.c))
+                  .slice(0, 4)
+                  .map((f) => {
+                    const href = linkHref(f.value);
+                    const isUrl = colKind.get(f.c) === "url" || !!href;
+                    return (
+                      <div key={f.c} className="text-[12px] leading-tight">
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1.5">
+                          {f.label}
+                        </span>
+                        {isUrl && href ? (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-primary underline break-all"
+                          >
+                            {f.value.replace(/^https?:\/\//, "").slice(0, 60)}
+                          </a>
+                        ) : (
+                          <span className="text-foreground/85 break-words whitespace-pre-wrap">
+                            {f.value.length > 140 ? f.value.slice(0, 140) + "…" : f.value}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            </button>
+          );
+        })}
+        {filtered.length === 0 && (
+          <div className="p-8 text-center text-sm text-muted-foreground">Aucun résultat.</div>
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block flex-1 overflow-auto">
         <table className="text-sm w-full border-collapse table-fixed">
           <colgroup>
             {visibleCols.map((c) => {
