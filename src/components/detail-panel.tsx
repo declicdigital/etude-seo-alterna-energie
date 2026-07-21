@@ -58,7 +58,7 @@ export function DetailPanel({
       </div>
       <div className="p-5 space-y-4">
         {headers.map((h, idx) => {
-          // Skip tree columns after the level column — they represent hierarchy not fields
+          // Skip tree columns after the level column - they represent hierarchy not fields
           if (treeCols && idx < treeCols && idx !== level) return null;
           if (!h && (row[idx] == null || String(row[idx]).trim() === "")) return null;
           return (

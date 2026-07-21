@@ -129,7 +129,7 @@ function NodeCard({
   const style = LEVEL_STYLE[node.level] ?? LEVEL_STYLE[0];
   const isSel = selected === node.rowId;
 
-  // A breadcrumb may include an "OU\n\n" alternative — split it out so both
+  // A breadcrumb may include an "OU\n\n" alternative - split it out so both
   // paths are readable and each ">" separator becomes an actual arrow.
   const crumbs = breadcrumb
     .split(/\n{1,}OU\n{1,}/i)

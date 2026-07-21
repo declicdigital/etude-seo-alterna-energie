@@ -8,7 +8,7 @@ const TRUTHY = new Set([
   "x", "✓", "✔", "oui", "yes", "y", "ok", "done", "fait", "true", "1",
 ]);
 const FALSY = new Set([
-  "", "-", "–", "—", "✗", "✘", "non", "no", "n", "ko", "todo", "à faire", "a faire", "false", "0",
+  "", "-", "–", "-", "✗", "✘", "non", "no", "n", "ko", "todo", "à faire", "a faire", "false", "0",
 ]);
 
 function normalize(s: string) {
@@ -476,7 +476,7 @@ export function TableView({
                             )}
                             aria-label={headers[c] || `Col ${c + 1}`}
                           >
-                            <option value="">—</option>
+                            <option value="">-</option>
                             {opts.map((o) => (
                               <option key={o} value={o}>{o}</option>
                             ))}
@@ -505,7 +505,7 @@ export function TableView({
                             )}
                             aria-label={headers[c] || `Col ${c + 1}`}
                           >
-                            <option value="">—</option>
+                            <option value="">-</option>
                             {opts.map((o) => (
                               <option key={o} value={o}>{o}</option>
                             ))}
