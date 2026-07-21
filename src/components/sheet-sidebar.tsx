@@ -1,18 +1,57 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { GripVertical } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
+
+const DEFAULT_ORDER = ["Arborescence", "Blog", "Suivi", "Cocons", "Docs", "Autres"];
+const ORDER_KEY = "sidebar.groupOrder.v1";
 
 export function SheetSidebar() {
   const search = useRouterState({ select: (r) => r.location.search }) as { sheet?: string };
   const active = search.sheet ?? "Structure RES";
 
-  const groups: Record<string, string[]> = {};
-  for (const s of sheetNames) {
-    const g = SHEET_META[s]?.group ?? "Autres";
-    (groups[g] ??= []).push(s);
-  }
-  const order = ["Arborescence", "Blog", "Suivi", "Cocons", "Docs", "Autres"];
+  const groups = useMemo(() => {
+    const g: Record<string, string[]> = {};
+    for (const s of sheetNames) {
+      const k = SHEET_META[s]?.group ?? "Autres";
+      (g[k] ??= []).push(s);
+    }
+    return g;
+  }, []);
+
+  const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ORDER_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as string[];
+        // Merge saved order with any new groups discovered later.
+        const known = new Set(saved);
+        const extras = DEFAULT_ORDER.filter((g) => !known.has(g));
+        setOrder([...saved, ...extras]);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const persist = (next: string[]) => {
+    setOrder(next);
+    try { localStorage.setItem(ORDER_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+  };
+
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState<string | null>(null);
+
+  const onDrop = (target: string) => {
+    if (!dragging || dragging === target) { setDragging(null); setDragOver(null); return; }
+    const next = order.filter((g) => g !== dragging);
+    const idx = next.indexOf(target);
+    next.splice(idx, 0, dragging);
+    persist(next);
+    setDragging(null);
+    setDragOver(null);
+  };
 
   return (
     <aside className="w-72 shrink-0 border-r border-border bg-card/50 backdrop-blur-sm h-screen sticky top-0 overflow-y-auto">
@@ -26,13 +65,30 @@ export function SheetSidebar() {
         </div>
         <p className="mt-3 text-xs text-muted-foreground">Arborescence & suivi éditorial</p>
       </div>
-      <nav className="p-3 space-y-5">
+      <nav className="p-3 space-y-3">
         {order.filter((g) => groups[g]?.length).map((g) => (
-          <div key={g}>
-            <div className="px-2 pb-2 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
-              {g}
+          <div
+            key={g}
+            onDragOver={(e) => { if (dragging) { e.preventDefault(); setDragOver(g); } }}
+            onDragLeave={() => { if (dragOver === g) setDragOver(null); }}
+            onDrop={() => onDrop(g)}
+            className={cn(
+              "rounded-lg transition-colors",
+              dragging === g && "opacity-50",
+              dragOver === g && dragging !== g && "ring-2 ring-primary/60",
+            )}
+          >
+            <div
+              draggable
+              onDragStart={(e) => { setDragging(g); e.dataTransfer.effectAllowed = "move"; }}
+              onDragEnd={() => { setDragging(null); setDragOver(null); }}
+              className="flex items-center gap-2 px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold uppercase tracking-wide shadow-sm cursor-grab active:cursor-grabbing select-none"
+              title="Glisser pour réorganiser"
+            >
+              <GripVertical className="size-4 opacity-70 shrink-0" />
+              <span className="truncate">{g}</span>
             </div>
-            <ul className="space-y-0.5">
+            <ul className="mt-1.5 space-y-0.5">
               {groups[g].map((s) => (
                 <li key={s}>
                   <Link
