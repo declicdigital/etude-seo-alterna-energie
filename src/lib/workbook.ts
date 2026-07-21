@@ -78,11 +78,20 @@ export const SHEET_META: Record<
   "Webflow - fonctionnement": { headerRow: 1, treeCols: 5, firstDataRow: 2, label: "Webflow - fonctionnement", group: "Docs" },
 };
 
-export function headersOf(sheet: string): string[] {
+export function headersOf(sheet: string, edits?: EditsMap): string[] {
   const meta = SHEET_META[sheet];
   if (!meta) return [];
   const row = workbook[sheet]?.[meta.headerRow] ?? [];
-  return row.map((c) => (c == null ? "" : String(c)));
+  const base = row.map((c) => (c == null ? "" : String(c)));
+  const over = edits?.[sheet]?.[meta.headerRow];
+  if (!over) return base;
+  const width = Math.max(base.length, ...Object.keys(over).map((k) => Number(k) + 1));
+  const out: string[] = [];
+  for (let c = 0; c < width; c++) {
+    if (c in over) out.push(over[c] == null ? "" : String(over[c]));
+    else out.push(base[c] ?? "");
+  }
+  return out;
 }
 
 export function dataRows(sheet: string, edits?: EditsMap): number[] {
