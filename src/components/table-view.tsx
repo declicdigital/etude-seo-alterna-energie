@@ -604,6 +604,17 @@ export function TableView({
                         </td>
                       );
                     }
+                    if (dateCols.has(c) && !boolCols.has(c) && !statusCols.has(c) && !effortCols.has(c) && !priorityCols.has(c)) {
+                      return (
+                        <td key={c} className="px-2 py-1 align-middle">
+                          <DateCell
+                            value={s}
+                            compact
+                            onChange={(iso) => onToggle(id, c, iso)}
+                          />
+                        </td>
+                      );
+                    }
                     return (
                       <td key={c} className="px-2 py-1 align-top leading-tight overflow-hidden">
                         {href ? (
