@@ -16,7 +16,7 @@ export function DetailPanel({
   onChange: (col: number, value: string | null) => void;
   onClose: () => void;
 }) {
-  const headers = headersOf(sheet);
+  const headers = headersOf(sheet, edits);
   const row = getRow(sheet, rowId, edits);
   const meta = SHEET_META[sheet];
   const treeCols = meta?.treeCols ?? 0;
