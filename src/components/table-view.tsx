@@ -279,12 +279,12 @@ export function TableView({
   const parseDate = (s: string): number | null => {
     const t = s.trim();
     if (!t) return null;
-    let m = t.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    let m = t.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
     if (m) {
       const d = new Date(+m[1], +m[2] - 1, +m[3]);
       return isNaN(d.getTime()) ? null : d.getTime();
     }
-    m = t.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    m = t.match(/(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
     if (m) {
       const d = new Date(+m[3], +m[2] - 1, +m[1]);
       return isNaN(d.getTime()) ? null : d.getTime();
@@ -305,7 +305,11 @@ export function TableView({
         nonEmpty++;
         if (parseDate(s) != null) parsed++;
       }
+      // Full match: every non-empty cell is a date.
       if (nonEmpty >= 2 && parsed === nonEmpty) set.add(c);
+      // Partial match: at least 2 cells contain an embedded date
+      // (e.g. "publié le 29/01/2026"). Rows without a date sort last.
+      else if (parsed >= 2 && parsed / nonEmpty >= 0.3) set.add(c);
     }
     return set;
   }, [visibleCols, ids, sheet, edits]);
