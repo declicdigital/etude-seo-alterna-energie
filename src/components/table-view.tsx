@@ -435,7 +435,11 @@ export function TableView({
                 >
                   {visibleCols.map((c) => {
                     const v = row[c];
-                    const s = v == null ? "" : String(v);
+                    let s = v == null ? "" : String(v);
+                    if (!s.trim()) {
+                      const fill = filledValues.get(c)?.get(id);
+                      if (fill) s = fill;
+                    }
                     const href = linkHref(s);
                     if (boolCols.has(c)) {
                       const checked = isTruthy(s);
