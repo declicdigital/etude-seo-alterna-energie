@@ -14,6 +14,10 @@ import { cn } from "@/lib/utils";
 import { useMeta, metaGet } from "@/lib/use-meta";
 import { EditableText } from "@/components/editable-text";
 import { useNavigate } from "@tanstack/react-router";
+import { Menu } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
+import symbol from "@/assets/alterna-symbol.png.asset.json";
 
 const searchSchema = z.object({
   sheet: z.string().optional(),
@@ -36,32 +40,24 @@ function Index() {
   const [selected, setSelected] = useState<number | null>(null);
   const { edits, setCell, loading } = useEdits();
   const { meta: metaOverrides, setMetaValue } = useMeta();
+  const isMobile = useIsMobile();
+  const [navOpen, setNavOpen] = useState(false);
 
   // reset selection when switching sheet
   const [lastSheet, setLastSheet] = useState(sheet);
   if (sheet !== lastSheet) {
     setLastSheet(sheet);
     setSelected(null);
-  }
-
-  if (isGuide) {
-    return (
-      <div className="flex min-h-screen bg-background text-foreground">
-        <SheetSidebar meta={metaOverrides} setMetaValue={setMetaValue} />
-        <main className="flex-1 flex flex-col min-w-0">
-          <GuideView
-            onOpenSheet={(s) => navigate({ to: "/", search: { sheet: s } })}
-          />
-        </main>
-      </div>
-    );
+    setNavOpen(false);
   }
 
   const sheetInfo = SHEET_META[sheet];
-  const gc = groupColorForSheet(sheet);
-  const groupName = sheetInfo?.group ?? "Feuille";
+  const gc = isGuide ? groupColorForSheet("Structure RES") : groupColorForSheet(sheet);
+  const groupName = isGuide ? "Guide" : (sheetInfo?.group ?? "Feuille");
   const groupLabel = metaGet(metaOverrides, "group", groupName, groupName);
-  const sheetLabel = metaGet(metaOverrides, "sheet", sheet, sheetInfo?.label ?? sheet);
+  const sheetLabel = isGuide
+    ? "Guide de l'outil"
+    : metaGet(metaOverrides, "sheet", sheet, sheetInfo?.label ?? sheet);
 
   const handleAddRow = async (treeLevel = 0) => {
     const id = nextRowId(sheet, edits);
@@ -73,11 +69,56 @@ function Index() {
     setSelected(id);
   };
 
+  const sidebar = <SheetSidebar meta={metaOverrides} setMetaValue={setMetaValue} />;
+
+  const detailPanel = selected != null && !isGuide ? (
+    <DetailPanel
+      sheet={sheet}
+      rowId={selected}
+      edits={edits}
+      onChange={(col, value) => setCell(sheet, selected, col, value)}
+      onClose={() => setSelected(null)}
+    />
+  ) : null;
+
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      <SheetSidebar meta={metaOverrides} setMetaValue={setMetaValue} />
+      {/* Desktop sidebar */}
+      <div className="hidden md:block">{sidebar}</div>
+
+      {/* Mobile off-canvas sidebar */}
+      <Sheet open={navOpen} onOpenChange={setNavOpen}>
+        <SheetContent side="left" className="p-0 w-[86%] max-w-sm sm:max-w-sm">
+          {sidebar}
+        </SheetContent>
+      </Sheet>
+
       <main className="flex-1 flex flex-col min-w-0">
-        <header className={cn("px-8 py-6 border-b", gc.header)}>
+        {/* iOS-style mobile top bar */}
+        <div className="md:hidden sticky top-0 z-20 flex items-center gap-3 h-14 px-3 border-b border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/70">
+          <button
+            onClick={() => setNavOpen(true)}
+            className="size-10 rounded-full flex items-center justify-center active:bg-muted -ml-1"
+            aria-label="Ouvrir le menu"
+          >
+            <Menu className="size-5" />
+          </button>
+          <img src={symbol.url} alt="" className="size-7 rounded-full shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground truncate">
+              {groupLabel}
+            </div>
+            <div className="text-sm font-semibold leading-tight truncate">{sheetLabel}</div>
+          </div>
+        </div>
+
+        {isGuide ? (
+          <GuideView
+            onOpenSheet={(s) => navigate({ to: "/", search: { sheet: s } })}
+          />
+        ) : (
+        <>
+        <header className={cn("hidden md:block px-8 py-6 border-b", gc.header)}>
           <EditableText
             as="div"
             className={cn("text-[11px] uppercase tracking-widest font-semibold", gc.chip)}
@@ -124,17 +165,26 @@ function Index() {
               />
             )}
           </div>
-          {selected != null && (
-            <DetailPanel
-              sheet={sheet}
-              rowId={selected}
-              edits={edits}
-              onChange={(col, value) => setCell(sheet, selected, col, value)}
-              onClose={() => setSelected(null)}
-            />
-          )}
+          {/* Desktop detail panel */}
+          <div className="hidden md:block">{detailPanel}</div>
         </div>
+        </>
+        )}
       </main>
+
+      {/* Mobile detail panel: iOS-style bottom sheet */}
+      <Sheet
+        open={isMobile && selected != null && !isGuide}
+        onOpenChange={(o) => { if (!o) setSelected(null); }}
+      >
+        <SheetContent
+          side="bottom"
+          className="p-0 h-[92vh] rounded-t-2xl border-t"
+        >
+          <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-muted-foreground/30" />
+          {detailPanel}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
