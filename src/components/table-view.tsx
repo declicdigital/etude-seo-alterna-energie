@@ -274,6 +274,53 @@ export function TableView({
   // Effort columns override the other renderers.
   for (const c of effortCols.keys()) { boolCols.delete(c); statusCols.delete(c); }
 
+  const parseDate = (s: string): number | null => {
+    const t = s.trim();
+    if (!t) return null;
+    let m = t.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    if (m) {
+      const d = new Date(+m[1], +m[2] - 1, +m[3]);
+      return isNaN(d.getTime()) ? null : d.getTime();
+    }
+    m = t.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    if (m) {
+      const d = new Date(+m[3], +m[2] - 1, +m[1]);
+      return isNaN(d.getTime()) ? null : d.getTime();
+    }
+    return null;
+  };
+
+  // Detect date-like columns and sort filtered rows from most recent to oldest.
+  const dateCols = useMemo(() => {
+    const set = new Set<number>();
+    const rows = ids.map((id) => getRow(sheet, id, edits));
+    for (const c of visibleCols) {
+      let nonEmpty = 0;
+      let parsed = 0;
+      for (const r of rows) {
+        const s = r[c] == null ? "" : String(r[c]);
+        if (s.trim() === "") continue;
+        nonEmpty++;
+        if (parseDate(s) != null) parsed++;
+      }
+      if (nonEmpty >= 2 && parsed === nonEmpty) set.add(c);
+    }
+    return set;
+  }, [visibleCols, ids, sheet, edits]);
+
+  // Sort rows by the first detected date column, most recent first.
+  const sortedFiltered = useMemo(() => {
+    if (dateCols.size === 0) return filtered;
+    const col = Math.min(...dateCols);
+    const key = (id: number): number => {
+      const r = getRow(sheet, id, edits);
+      const s = r[col] == null ? "" : String(r[col]);
+      const t = parseDate(s);
+      return t == null ? -Infinity : t;
+    };
+    return [...filtered].sort((a, b) => key(b) - key(a));
+  }, [filtered, dateCols, sheet, edits]);
+
   // For each boolean column, pick the most common truthy marker so toggling
   // ON preserves the column's convention ("x", "✓", "oui"…).
   const truthyMarker = useMemo(() => {
@@ -336,7 +383,7 @@ export function TableView({
             </tr>
           </thead>
           <tbody>
-            {filtered.map((id) => {
+            {sortedFiltered.map((id) => {
               const row = getRow(sheet, id, edits);
               const isSel = selected === id;
               return (
