@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { GripVertical, Minus, Plus } from "lucide-react";
+import { BookOpen, GripVertical, Minus, Plus } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
@@ -155,6 +155,19 @@ export function SheetSidebar({
         />
       </div>
       <nav className="p-3 space-y-3">
+        <Link
+          to="/"
+          search={{ sheet: "__guide" }}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors border",
+            active === "__guide"
+              ? "bg-primary/10 text-primary border-primary/40"
+              : "border-transparent text-foreground/80 hover:bg-primary/5 hover:text-primary",
+          )}
+        >
+          <BookOpen className="size-4" />
+          Guide de l'outil
+        </Link>
         {order.filter((g) => groups[g]?.length).map((g) => {
           const style = GROUP_STYLES[g] ?? FALLBACK_STYLE;
           return (
