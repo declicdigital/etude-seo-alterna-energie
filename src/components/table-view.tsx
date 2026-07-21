@@ -4,6 +4,7 @@ import { dataRows, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/wo
 import { cn } from "@/lib/utils";
 import { linkHref, linkify } from "@/lib/links";
 import { EditableText } from "@/components/editable-text";
+import { DateCell } from "@/components/date-cell";
 
 const TRUTHY = new Set([
   "x", "✓", "✔", "oui", "yes", "y", "ok", "done", "fait", "true", "1",
