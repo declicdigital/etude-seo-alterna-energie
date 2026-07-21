@@ -159,6 +159,7 @@ export function TableView({
 
   const widthFor = (c: number): { min: number; max: number } => {
     if (boolCols.has(c)) return { min: 44, max: 56 };
+    if (priorityCols.has(c)) return { min: 56, max: 72 };
     if (statusCols.has(c)) return { min: 120, max: 160 };
     if (effortCols.has(c)) return { min: 100, max: 140 };
     const k = colKind.get(c);
@@ -276,6 +277,23 @@ export function TableView({
   // Effort columns override the other renderers.
   for (const c of effortCols.keys()) { boolCols.delete(c); statusCols.delete(c); }
 
+  // Detect priority columns by header (e.g. "à prioriser", "priorité").
+  // Renders as a red "!" toggle vs "-", and prioritized rows float to top.
+  const priorityCols = useMemo(() => {
+    const set = new Set<number>();
+    for (const c of visibleCols) {
+      const h = (headers[c] || "").toLowerCase();
+      if (/(priorit|prioris)/.test(h)) set.add(c);
+    }
+    return set;
+  }, [visibleCols, headers]);
+  for (const c of priorityCols) { boolCols.delete(c); statusCols.delete(c); effortCols.delete(c); }
+  const isPriority = (s: string) => {
+    const n = s.trim().toLowerCase();
+    if (!n) return false;
+    return /!/.test(n) || ["oui","yes","x","✓","✔","1","true","high","haute","urgent","urgente","prioritaire"].includes(n);
+  };
+
   const parseDate = (s: string): number | null => {
     const t = s.trim();
     if (!t) return null;
@@ -314,18 +332,30 @@ export function TableView({
     return set;
   }, [visibleCols, ids, sheet, edits]);
 
-  // Sort rows by the first detected date column, most recent first.
+  // Sort rows: prioritized rows first, then by first date column (most recent).
   const sortedFiltered = useMemo(() => {
-    if (dateCols.size === 0) return filtered;
-    const col = Math.min(...dateCols);
-    const key = (id: number): number => {
+    const priCol = priorityCols.size > 0 ? Math.min(...priorityCols) : -1;
+    const dateCol = dateCols.size > 0 ? Math.min(...dateCols) : -1;
+    if (priCol < 0 && dateCol < 0) return filtered;
+    const priKey = (id: number): number => {
+      if (priCol < 0) return 0;
       const r = getRow(sheet, id, edits);
-      const s = r[col] == null ? "" : String(r[col]);
+      const s = r[priCol] == null ? "" : String(r[priCol]);
+      return isPriority(s) ? 1 : 0;
+    };
+    const dateKey = (id: number): number => {
+      if (dateCol < 0) return 0;
+      const r = getRow(sheet, id, edits);
+      const s = r[dateCol] == null ? "" : String(r[dateCol]);
       const t = parseDate(s);
       return t == null ? -Infinity : t;
     };
-    return [...filtered].sort((a, b) => key(b) - key(a));
-  }, [filtered, dateCols, sheet, edits]);
+    return [...filtered].sort((a, b) => {
+      const dp = priKey(b) - priKey(a);
+      if (dp !== 0) return dp;
+      return dateKey(b) - dateKey(a);
+    });
+  }, [filtered, dateCols, priorityCols, sheet, edits]);
 
   // Forward-fill "group" columns (Année/Mois-like) so each row displays
   // the current group even when the source only fills the first row.
@@ -453,6 +483,29 @@ export function TableView({
                       if (fill) s = fill;
                     }
                     const href = linkHref(s);
+                    if (priorityCols.has(c)) {
+                      const on = isPriority(s);
+                      return (
+                        <td key={c} className="px-2 py-1 align-middle text-center">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggle(id, c, on ? null : "!");
+                            }}
+                            aria-label={on ? "Retirer la priorité" : "Marquer prioritaire"}
+                            className={cn(
+                              "inline-flex items-center justify-center h-6 w-8 rounded-md border text-sm font-bold transition-colors",
+                              on
+                                ? "bg-red-500/15 text-red-600 border-red-500/40 hover:bg-red-500/25 dark:text-red-300"
+                                : "bg-muted/40 text-muted-foreground border-border hover:bg-muted",
+                            )}
+                          >
+                            {on ? "!" : "-"}
+                          </button>
+                        </td>
+                      );
+                    }
                     if (boolCols.has(c)) {
                       const checked = isTruthy(s);
                       return (
