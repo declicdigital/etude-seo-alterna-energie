@@ -274,6 +274,22 @@ export function TableView({
   // Effort columns override the other renderers.
   for (const c of effortCols.keys()) { boolCols.delete(c); statusCols.delete(c); }
 
+  const parseDate = (s: string): number | null => {
+    const t = s.trim();
+    if (!t) return null;
+    let m = t.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    if (m) {
+      const d = new Date(+m[1], +m[2] - 1, +m[3]);
+      return isNaN(d.getTime()) ? null : d.getTime();
+    }
+    m = t.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    if (m) {
+      const d = new Date(+m[3], +m[2] - 1, +m[1]);
+      return isNaN(d.getTime()) ? null : d.getTime();
+    }
+    return null;
+  };
+
   // Detect date-like columns and sort filtered rows from most recent to oldest.
   const dateCols = useMemo(() => {
     const parse = (s: string): number | null => {
