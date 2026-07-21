@@ -377,7 +377,7 @@ export function TableView({
       if (dp !== 0) return dp;
       return dateKey(b) - dateKey(a);
     });
-  }, [filtered, dateCols, priorityCols, sheet, edits]);
+  }, [filtered, dateCols, priorityCols, sheet, edits, headers]);
 
   // Forward-fill "group" columns (Année/Mois-like) so each row displays
   // the current group even when the source only fills the first row.
