@@ -10,6 +10,8 @@ import { useEdits } from "@/lib/use-edits";
 import { isStructureSheet, nextRowId, SHEET_META, sheetNames } from "@/lib/workbook";
 import { groupColorForSheet } from "@/lib/group-colors";
 import { cn } from "@/lib/utils";
+import { useMeta, metaGet } from "@/lib/use-meta";
+import { EditableText } from "@/components/editable-text";
 
 const searchSchema = z.object({
   sheet: z.string().optional(),
@@ -25,6 +27,7 @@ function Index() {
   const sheet = sheetParam && sheetNames.includes(sheetParam) ? sheetParam : "Structure RES";
   const [selected, setSelected] = useState<number | null>(null);
   const { edits, setCell, loading } = useEdits();
+  const { meta: metaOverrides, setMetaValue } = useMeta();
 
   // reset selection when switching sheet
   const [lastSheet, setLastSheet] = useState(sheet);
@@ -33,8 +36,11 @@ function Index() {
     setSelected(null);
   }
 
-  const meta = SHEET_META[sheet];
+  const sheetInfo = SHEET_META[sheet];
   const gc = groupColorForSheet(sheet);
+  const groupName = sheetInfo?.group ?? "Feuille";
+  const groupLabel = metaGet(metaOverrides, "group", groupName, groupName);
+  const sheetLabel = metaGet(metaOverrides, "sheet", sheet, sheetInfo?.label ?? sheet);
 
   const handleAddRow = async (treeLevel = 0) => {
     const id = nextRowId(sheet, edits);
@@ -48,15 +54,21 @@ function Index() {
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      <SheetSidebar />
+      <SheetSidebar meta={metaOverrides} setMetaValue={setMetaValue} />
       <main className="flex-1 flex flex-col min-w-0">
         <header className={cn("px-8 py-6 border-b", gc.header)}>
-          <div className={cn("text-[11px] uppercase tracking-widest font-semibold", gc.chip)}>
-            {meta?.group ?? "Feuille"}
-          </div>
-          <h2 className={cn("mt-1 text-2xl font-semibold tracking-tight", gc.title)}>
-            {meta?.label ?? sheet}
-          </h2>
+          <EditableText
+            as="div"
+            className={cn("text-[11px] uppercase tracking-widest font-semibold", gc.chip)}
+            value={groupLabel}
+            onCommit={(v) => setMetaValue("group", groupName, v)}
+          />
+          <EditableText
+            as="h2"
+            className={cn("mt-1 text-2xl font-semibold tracking-tight", gc.title)}
+            value={sheetLabel}
+            onCommit={(v) => setMetaValue("sheet", sheet, v)}
+          />
           <p className="mt-1 text-sm text-muted-foreground">
             {isStructureSheet(sheet)
               ? "Cliquez sur une page dans l'arborescence pour voir et éditer ses détails."
