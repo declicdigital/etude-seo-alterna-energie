@@ -321,6 +321,44 @@ export function TableView({
     return [...filtered].sort((a, b) => key(b) - key(a));
   }, [filtered, dateCols, sheet, edits]);
 
+  // Forward-fill "group" columns (Année/Mois-like) so each row displays
+  // the current group even when the source only fills the first row.
+  const MONTHS = new Set([
+    "janvier","fevrier","février","mars","avril","mai","juin","juillet",
+    "aout","août","septembre","octobre","novembre","decembre","décembre",
+    "january","february","march","april","june","july","august","september",
+    "october","november","december",
+  ]);
+  const filledValues = useMemo(() => {
+    const map = new Map<number, Map<number, string>>();
+    const rows = ids.map((id) => getRow(sheet, id, edits));
+    for (const c of visibleCols) {
+      const header = (headers[c] || "").toLowerCase();
+      const headerHit = /(année|annee|mois|year|month)/.test(header);
+      let nonEmpty = 0;
+      let yearOrMonth = 0;
+      for (const r of rows) {
+        const s = r[c] == null ? "" : String(r[c]).trim();
+        if (!s) continue;
+        nonEmpty++;
+        if (/^\d{4}$/.test(s) && +s >= 1900 && +s <= 2100) yearOrMonth++;
+        else if (MONTHS.has(s.toLowerCase())) yearOrMonth++;
+      }
+      const contentHit = nonEmpty >= 2 && yearOrMonth === nonEmpty;
+      if (!headerHit && !contentHit) continue;
+      // Forward-fill in original id order.
+      const perRow = new Map<number, string>();
+      let last = "";
+      for (let i = 0; i < ids.length; i++) {
+        const s = rows[i][c] == null ? "" : String(rows[i][c]);
+        if (s.trim() !== "") last = s;
+        else if (last) perRow.set(ids[i], last);
+      }
+      if (perRow.size > 0) map.set(c, perRow);
+    }
+    return map;
+  }, [visibleCols, ids, sheet, edits, headers]);
+
   // For each boolean column, pick the most common truthy marker so toggling
   // ON preserves the column's convention ("x", "✓", "oui"…).
   const truthyMarker = useMemo(() => {
@@ -397,7 +435,11 @@ export function TableView({
                 >
                   {visibleCols.map((c) => {
                     const v = row[c];
-                    const s = v == null ? "" : String(v);
+                    let s = v == null ? "" : String(v);
+                    if (!s.trim()) {
+                      const fill = filledValues.get(c)?.get(id);
+                      if (fill) s = fill;
+                    }
                     const href = linkHref(s);
                     if (boolCols.has(c)) {
                       const checked = isTruthy(s);
