@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
 import { ExternalLink, Plus } from "lucide-react";
-import { dataRows, getRow, headersOf, type EditsMap } from "@/lib/workbook";
+import { dataRows, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import { linkHref, linkify } from "@/lib/links";
+import { EditableText } from "@/components/editable-text";
 
 const TRUTHY = new Set([
   "x", "✓", "✔", "oui", "yes", "y", "ok", "done", "fait", "true", "1",
 ]);
 const FALSY = new Set([
-  "", "-", "–", "—", "✗", "✘", "non", "no", "n", "ko", "todo", "à faire", "a faire", "false", "0",
+  "", "-", "–", "-", "✗", "✘", "non", "no", "n", "ko", "todo", "à faire", "a faire", "false", "0",
 ]);
 
 function normalize(s: string) {
@@ -99,6 +100,7 @@ export function TableView({
   onToggle: (rowId: number, col: number, value: string | null) => void;
 }) {
   const headers = headersOf(sheet);
+  const headerRow = SHEET_META[sheet]?.headerRow ?? 0;
   const ids = useMemo(() => dataRows(sheet, edits), [sheet, edits]);
   const [q, setQ] = useState("");
 
@@ -413,9 +415,15 @@ export function TableView({
               {visibleCols.map((c) => (
                 <th
                   key={c}
-                  className="text-left px-2 py-1.5 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground leading-tight truncate"
+                  className="text-left px-2 py-1.5 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground leading-tight"
                 >
-                  {headers[c] || `Col ${c + 1}`}
+                  <EditableText
+                    className="block truncate"
+                    inputClassName="text-[11px] uppercase tracking-wider"
+                    value={headers[c] || ""}
+                    placeholder={`Col ${c + 1}`}
+                    onCommit={(v) => onToggle(headerRow, c, v.trim() === "" ? null : v)}
+                  />
                 </th>
               ))}
             </tr>
@@ -476,7 +484,7 @@ export function TableView({
                             )}
                             aria-label={headers[c] || `Col ${c + 1}`}
                           >
-                            <option value="">—</option>
+                            <option value="">-</option>
                             {opts.map((o) => (
                               <option key={o} value={o}>{o}</option>
                             ))}
@@ -505,7 +513,7 @@ export function TableView({
                             )}
                             aria-label={headers[c] || `Col ${c + 1}`}
                           >
-                            <option value="">—</option>
+                            <option value="">-</option>
                             {opts.map((o) => (
                               <option key={o} value={o}>{o}</option>
                             ))}
