@@ -184,7 +184,7 @@ function TreeRow({
           "group relative flex items-center gap-1 py-2 sm:py-1.5 pr-3 cursor-pointer text-sm transition-colors",
           isSel ? gc.activeRow : cn(tint, gc.rowTint),
         )}
-        style={{ paddingLeft: 8 + node.level * (typeof window !== "undefined" && window.innerWidth < 640 ? 12 : 18) }}
+        style={{ paddingLeft: 8 + node.level * 14 }}
         onClick={() => onSelect(node.rowId)}
       >
         <span
