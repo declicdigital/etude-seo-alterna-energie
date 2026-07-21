@@ -339,10 +339,25 @@ export function TableView({
     return set;
   }, [visibleCols, ids, sheet, edits]);
 
-  // Sort rows: prioritized rows first, then by first date column (most recent).
+  // Sort rows: prioritized rows first, then by the most relevant date column.
+  // Prefer a "dernière maj / last update / publi" column when present, else
+  // fall back to the left-most detected date column.
   const sortedFiltered = useMemo(() => {
     const priCol = priorityCols.size > 0 ? Math.min(...priorityCols) : -1;
-    const dateCol = dateCols.size > 0 ? Math.min(...dateCols) : -1;
+    const dateColsArr = [...dateCols];
+    const pickPreferred = (): number => {
+      const scored = dateColsArr.map((c) => {
+        const h = (headers[c] || "").toLowerCase();
+        let score = 0;
+        if (/derni[eè]re\s*maj|last\s*update|updated?/.test(h)) score = 3;
+        else if (/\bmaj\b|mise\s*à\s*jour|mise\s*a\s*jour/.test(h)) score = 2;
+        else if (/publi/.test(h)) score = 1;
+        return { c, score };
+      });
+      scored.sort((a, b) => b.score - a.score || a.c - b.c);
+      return scored.length ? scored[0].c : -1;
+    };
+    const dateCol = dateColsArr.length ? pickPreferred() : -1;
     if (priCol < 0 && dateCol < 0) return filtered;
     const priKey = (id: number): number => {
       if (priCol < 0) return 0;
@@ -362,7 +377,7 @@ export function TableView({
       if (dp !== 0) return dp;
       return dateKey(b) - dateKey(a);
     });
-  }, [filtered, dateCols, priorityCols, sheet, edits]);
+  }, [filtered, dateCols, priorityCols, sheet, edits, headers]);
 
   // Forward-fill "group" columns (Année/Mois-like) so each row displays
   // the current group even when the source only fills the first row.
