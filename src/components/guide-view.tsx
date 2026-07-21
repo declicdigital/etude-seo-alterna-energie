@@ -46,15 +46,7 @@ const SECTIONS: Section[] = [
     sheet: "BLOG - ARTICLES",
     accent: "border-sky-500 bg-sky-50 dark:bg-sky-500/10",
     description:
-      "Liste tous les articles en PROD sur le site. À chaque nouvel article : ajouter ici + dans l'onglet Structure correspondant. Si un article est supprimé et redirigé, il est retiré de la BDD du blog et d'ici.",
-  },
-  {
-    icon: Newspaper,
-    title: "BLOG - Suivi publication",
-    sheet: "BLOG - Suivi publication",
-    accent: "border-sky-500 bg-sky-50 dark:bg-sky-500/10",
-    description:
-      "Suivi de ce qui a été publié et quand. Utilisé par les équipes comm' pour le suivi éditorial et la newsletter.",
+      "Tous les articles du blog, publiés ou en stock. Cochez la case « Publié » pour marquer un article comme mis en ligne. Les articles non cochés sont le stock à faire valider puis publier.",
   },
   {
     icon: Link2,
@@ -91,15 +83,6 @@ const PROCESS_STEPS = [
   "Validation du contenu par le service comm'",
   "Validation du contenu par l'agence SEO",
   "Publication",
-];
-
-const STOCK = [
-  { ref: "SC-265", href: "https://soregies.atlassian.net/browse/SC-265" },
-  { ref: "SC-264", href: "https://soregies.atlassian.net/browse/SC-264" },
-  { ref: "SC-267", href: "https://soregies.atlassian.net/browse/SC-267" },
-  { ref: "SC-266", href: "https://soregies.atlassian.net/browse/SC-266" },
-  { ref: "SC-268", href: "https://soregies.atlassian.net/browse/SC-268" },
-  { ref: "SC-244", href: "https://soregies.atlassian.net/browse/SC-244" },
 ];
 
 export function GuideView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void }) {
@@ -188,28 +171,6 @@ export function GuideView({ onOpenSheet }: { onOpenSheet: (sheet: string) => voi
           </ol>
         </section>
 
-        <section>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-            Stock d'articles rédigés, non publiés
-          </h3>
-          <p className="text-xs text-muted-foreground mb-3">
-            Contenu rédigé - à faire valider par la comm', puis l'agence SEO, puis à publier.
-          </p>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {STOCK.map((s) => (
-              <a
-                key={s.ref}
-                href={s.href}
-                target="_blank"
-                rel="noreferrer"
-                className="group inline-flex items-center justify-between gap-2 rounded-md border border-border bg-card px-4 py-3 hover:border-primary/60 hover:shadow-sm transition-all"
-              >
-                <span className="font-mono text-sm font-semibold">{s.ref}</span>
-                <ExternalLink className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-              </a>
-            ))}
-          </div>
-        </section>
       </div>
     </div>
   );
