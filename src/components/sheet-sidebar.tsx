@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BookOpen, GripVertical, Minus, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, BookOpen, GripVertical, Minus, Plus } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 
-const DEFAULT_ORDER = ["Arborescence", "Blog", "Suivi", "Cocons", "Docs", "Autres"];
+const DEFAULT_ORDER = ["Arborescence", "Blog", "Suivi", "Cocons", "Docs", "Autres", "Archives"];
 const ORDER_KEY = "sidebar.groupOrder.v1";
 const COLLAPSED_KEY = "sidebar.groupCollapsed.v1";
+const GROUP_OVERRIDE_KEY = "sidebar.sheetGroup.v1";
+const DEFAULT_GROUP_OVERRIDES: Record<string, string> = {
+  "Structure (resi) (OLD V3)": "Archives",
+};
 
 // Per-group color palette. Each entry drives:
 // - the category header band
@@ -57,6 +61,12 @@ const GROUP_STYLES: Record<string, {
     hover: "hover:bg-slate-500/10 hover:text-slate-700 dark:hover:text-slate-300",
     bar: "bg-slate-500",
   },
+  Archives: {
+    header: "bg-stone-600 text-white",
+    active: "bg-stone-500/15 text-stone-800 dark:text-stone-200 font-semibold ring-1 ring-inset ring-stone-500/30",
+    hover: "hover:bg-stone-500/10 hover:text-stone-700 dark:hover:text-stone-300",
+    bar: "bg-stone-500",
+  },
 };
 const FALLBACK_STYLE = GROUP_STYLES.Autres;
 
@@ -70,14 +80,31 @@ export function SheetSidebar({
   const search = useRouterState({ select: (r) => r.location.search }) as { sheet?: string };
   const active = search.sheet ?? "Structure RES";
 
+  const [groupOverrides, setGroupOverrides] = useState<Record<string, string>>(DEFAULT_GROUP_OVERRIDES);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(GROUP_OVERRIDE_KEY);
+      if (raw) setGroupOverrides({ ...DEFAULT_GROUP_OVERRIDES, ...(JSON.parse(raw) as Record<string, string>) });
+    } catch { /* ignore */ }
+  }, []);
+  const setSheetGroup = (sheet: string, group: string | null) => {
+    setGroupOverrides((prev) => {
+      const n = { ...prev };
+      if (group == null) delete n[sheet];
+      else n[sheet] = group;
+      try { localStorage.setItem(GROUP_OVERRIDE_KEY, JSON.stringify(n)); } catch { /* ignore */ }
+      return n;
+    });
+  };
+
   const groups = useMemo(() => {
     const g: Record<string, string[]> = {};
     for (const s of sheetNames) {
-      const k = SHEET_META[s]?.group ?? "Autres";
+      const k = groupOverrides[s] ?? SHEET_META[s]?.group ?? "Autres";
       (g[k] ??= []).push(s);
     }
     return g;
-  }, []);
+  }, [groupOverrides]);
 
   const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
   useEffect(() => {
@@ -240,6 +267,33 @@ export function SheetSidebar({
                         value={metaGet(meta, "sheet", s, SHEET_META[s]?.label ?? s)}
                         onCommit={(v) => setMetaValue("sheet", s, v)}
                       />
+                      {g === "Archives" ? (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSheetGroup(s, null);
+                          }}
+                          className="ml-2 shrink-0 size-6 rounded-md flex items-center justify-center opacity-40 hover:opacity-100 hover:bg-foreground/10"
+                          aria-label="Sortir des archives"
+                          title="Sortir des archives"
+                        >
+                          <ArchiveRestore className="size-3.5" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSheetGroup(s, "Archives");
+                          }}
+                          className="ml-2 shrink-0 size-6 rounded-md flex items-center justify-center opacity-0 group-hover/item:opacity-60 hover:!opacity-100 hover:bg-foreground/10"
+                          aria-label="Archiver"
+                          title="Archiver"
+                        >
+                          <Archive className="size-3.5" />
+                        </button>
+                      )}
                     </Link>
                   </li>
                 );
