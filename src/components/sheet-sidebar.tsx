@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { GripVertical } from "lucide-react";
+import { GripVertical, Minus, Plus } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
 
 const DEFAULT_ORDER = ["Arborescence", "Blog", "Suivi", "Cocons", "Docs", "Autres"];
 const ORDER_KEY = "sidebar.groupOrder.v1";
+const COLLAPSED_KEY = "sidebar.groupCollapsed.v1";
 
 // Per-group color palette. Each entry drives:
 // - the category header band
@@ -20,37 +21,37 @@ const GROUP_STYLES: Record<string, {
 }> = {
   Arborescence: {
     header: "bg-emerald-600 text-white",
-    active: "bg-emerald-600 text-white shadow-sm",
+    active: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-semibold ring-1 ring-inset ring-emerald-500/30",
     hover: "hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300",
     bar: "bg-emerald-500",
   },
   Blog: {
     header: "bg-sky-600 text-white",
-    active: "bg-sky-600 text-white shadow-sm",
+    active: "bg-sky-500/15 text-sky-800 dark:text-sky-200 font-semibold ring-1 ring-inset ring-sky-500/30",
     hover: "hover:bg-sky-500/10 hover:text-sky-700 dark:hover:text-sky-300",
     bar: "bg-sky-500",
   },
   Suivi: {
     header: "bg-amber-500 text-white",
-    active: "bg-amber-500 text-white shadow-sm",
+    active: "bg-amber-500/20 text-amber-800 dark:text-amber-200 font-semibold ring-1 ring-inset ring-amber-500/40",
     hover: "hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-300",
     bar: "bg-amber-500",
   },
   Cocons: {
     header: "bg-violet-600 text-white",
-    active: "bg-violet-600 text-white shadow-sm",
+    active: "bg-violet-500/15 text-violet-800 dark:text-violet-200 font-semibold ring-1 ring-inset ring-violet-500/30",
     hover: "hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300",
     bar: "bg-violet-500",
   },
   Docs: {
     header: "bg-rose-500 text-white",
-    active: "bg-rose-500 text-white shadow-sm",
+    active: "bg-rose-500/15 text-rose-800 dark:text-rose-200 font-semibold ring-1 ring-inset ring-rose-500/30",
     hover: "hover:bg-rose-500/10 hover:text-rose-700 dark:hover:text-rose-300",
     bar: "bg-rose-500",
   },
   Autres: {
     header: "bg-slate-600 text-white",
-    active: "bg-slate-600 text-white shadow-sm",
+    active: "bg-slate-500/15 text-slate-800 dark:text-slate-200 font-semibold ring-1 ring-inset ring-slate-500/30",
     hover: "hover:bg-slate-500/10 hover:text-slate-700 dark:hover:text-slate-300",
     bar: "bg-slate-500",
   },
@@ -87,6 +88,22 @@ export function SheetSidebar() {
   const persist = (next: string[]) => {
     setOrder(next);
     try { localStorage.setItem(ORDER_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+  };
+
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(COLLAPSED_KEY);
+      if (raw) setCollapsed(new Set(JSON.parse(raw) as string[]));
+    } catch { /* ignore */ }
+  }, []);
+  const toggleCollapsed = (g: string) => {
+    setCollapsed((prev) => {
+      const n = new Set(prev);
+      n.has(g) ? n.delete(g) : n.add(g);
+      try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...n])); } catch { /* ignore */ }
+      return n;
+    });
   };
 
   const [dragging, setDragging] = useState<string | null>(null);
@@ -141,7 +158,18 @@ export function SheetSidebar() {
             >
               <GripVertical className="size-4 opacity-70 shrink-0" />
               <span className="truncate">{g}</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleCollapsed(g); }}
+                onMouseDown={(e) => e.stopPropagation()}
+                draggable={false}
+                className="ml-auto size-5 rounded-sm flex items-center justify-center hover:bg-white/20 transition-colors"
+                aria-label={collapsed.has(g) ? "Déplier" : "Replier"}
+                title={collapsed.has(g) ? "Déplier" : "Replier"}
+              >
+                {collapsed.has(g) ? <Plus className="size-3.5" /> : <Minus className="size-3.5" />}
+              </button>
             </div>
+            {!collapsed.has(g) && (
             <ul className="mt-1.5 space-y-0.5">
               {groups[g].map((s) => {
                 const isActive = active === s;
@@ -172,6 +200,7 @@ export function SheetSidebar() {
                 );
               })}
             </ul>
+            )}
           </div>
           );
         })}
