@@ -159,6 +159,7 @@ export function TableView({
 
   const widthFor = (c: number): { min: number; max: number } => {
     if (boolCols.has(c)) return { min: 44, max: 56 };
+    if (priorityCols.has(c)) return { min: 56, max: 72 };
     if (statusCols.has(c)) return { min: 120, max: 160 };
     if (effortCols.has(c)) return { min: 100, max: 140 };
     const k = colKind.get(c);
