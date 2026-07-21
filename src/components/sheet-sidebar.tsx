@@ -4,6 +4,8 @@ import { GripVertical, Minus, Plus } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
+import { EditableText } from "@/components/editable-text";
+import { metaGet, type MetaMap } from "@/lib/use-meta";
 
 const DEFAULT_ORDER = ["Arborescence", "Blog", "Suivi", "Cocons", "Docs", "Autres"];
 const ORDER_KEY = "sidebar.groupOrder.v1";
@@ -58,7 +60,13 @@ const GROUP_STYLES: Record<string, {
 };
 const FALLBACK_STYLE = GROUP_STYLES.Autres;
 
-export function SheetSidebar() {
+export function SheetSidebar({
+  meta,
+  setMetaValue,
+}: {
+  meta: MetaMap;
+  setMetaValue: (scope: string, key: string, value: string | null) => void;
+}) {
   const search = useRouterState({ select: (r) => r.location.search }) as { sheet?: string };
   const active = search.sheet ?? "Structure RES";
 
@@ -125,11 +133,26 @@ export function SheetSidebar() {
         <div className="flex items-center gap-3">
           <img src={symbol.url} alt="Alterna Énergie" className="size-10 rounded-full shrink-0" />
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-widest text-primary/80 font-semibold">Alterna Énergie</div>
-            <h1 className="text-base font-semibold leading-tight">Étude SEO</h1>
+            <EditableText
+              as="div"
+              className="text-[10px] uppercase tracking-widest text-primary/80 font-semibold"
+              value={metaGet(meta, "brand", "eyebrow", "Alterna Énergie")}
+              onCommit={(v) => setMetaValue("brand", "eyebrow", v)}
+            />
+            <EditableText
+              as="h1"
+              className="text-base font-semibold leading-tight"
+              value={metaGet(meta, "brand", "title", "Étude SEO")}
+              onCommit={(v) => setMetaValue("brand", "title", v)}
+            />
           </div>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">Arborescence & suivi éditorial</p>
+        <EditableText
+          as="div"
+          className="mt-3 text-xs text-muted-foreground"
+          value={metaGet(meta, "brand", "tagline", "Arborescence & suivi éditorial")}
+          onCommit={(v) => setMetaValue("brand", "tagline", v)}
+        />
       </div>
       <nav className="p-3 space-y-3">
         {order.filter((g) => groups[g]?.length).map((g) => {
@@ -157,7 +180,12 @@ export function SheetSidebar() {
               title="Glisser pour réorganiser"
             >
               <GripVertical className="size-4 opacity-70 shrink-0" />
-              <span className="truncate">{g}</span>
+              <EditableText
+                className="truncate flex-1"
+                inputClassName="uppercase tracking-wide text-sm font-semibold text-foreground"
+                value={metaGet(meta, "group", g, g)}
+                onCommit={(v) => setMetaValue("group", g, v)}
+              />
               <button
                 onClick={(e) => { e.stopPropagation(); toggleCollapsed(g); }}
                 onMouseDown={(e) => e.stopPropagation()}
@@ -194,7 +222,12 @@ export function SheetSidebar() {
                             : "opacity-30 group-hover/item:opacity-90",
                         )}
                       />
-                      <span className="truncate">{SHEET_META[s]?.label ?? s}</span>
+                      <EditableText
+                        className="truncate flex-1"
+                        value={metaGet(meta, "sheet", s, SHEET_META[s]?.label ?? s)}
+                        onCommit={(v) => setMetaValue("sheet", s, v)}
+                        onClickCapture={(e) => e.preventDefault ? undefined : undefined}
+                      />
                     </Link>
                   </li>
                 );
