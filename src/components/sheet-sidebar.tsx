@@ -226,7 +226,6 @@ export function SheetSidebar({
                         className="truncate flex-1"
                         value={metaGet(meta, "sheet", s, SHEET_META[s]?.label ?? s)}
                         onCommit={(v) => setMetaValue("sheet", s, v)}
-                        onClickCapture={(e) => e.preventDefault ? undefined : undefined}
                       />
                     </Link>
                   </li>
