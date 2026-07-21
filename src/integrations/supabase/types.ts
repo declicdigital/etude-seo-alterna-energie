@@ -38,6 +38,27 @@ export type Database = {
         }
         Relationships: []
       }
+      sheet_meta: {
+        Row: {
+          key: string
+          scope: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          scope: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          scope?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
