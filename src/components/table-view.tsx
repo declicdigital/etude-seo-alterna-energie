@@ -483,6 +483,29 @@ export function TableView({
                       if (fill) s = fill;
                     }
                     const href = linkHref(s);
+                    if (priorityCols.has(c)) {
+                      const on = isPriority(s);
+                      return (
+                        <td key={c} className="px-2 py-1 align-middle text-center">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggle(id, c, on ? null : "!");
+                            }}
+                            aria-label={on ? "Retirer la priorité" : "Marquer prioritaire"}
+                            className={cn(
+                              "inline-flex items-center justify-center h-6 w-8 rounded-md border text-sm font-bold transition-colors",
+                              on
+                                ? "bg-red-500/15 text-red-600 border-red-500/40 hover:bg-red-500/25 dark:text-red-300"
+                                : "bg-muted/40 text-muted-foreground border-border hover:bg-muted",
+                            )}
+                          >
+                            {on ? "!" : "-"}
+                          </button>
+                        </td>
+                      );
+                    }
                     if (boolCols.has(c)) {
                       const checked = isTruthy(s);
                       return (
