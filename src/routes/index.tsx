@@ -5,6 +5,7 @@ import { SheetSidebar } from "@/components/sheet-sidebar";
 import { TreeView } from "@/components/tree-view";
 import { TableView } from "@/components/table-view";
 import { WebflowView } from "@/components/webflow-view";
+import { GuideView } from "@/components/guide-view";
 import { DetailPanel } from "@/components/detail-panel";
 import { useEdits } from "@/lib/use-edits";
 import { isStructureSheet, nextRowId, SHEET_META, sheetNames } from "@/lib/workbook";
@@ -12,6 +13,7 @@ import { groupColorForSheet } from "@/lib/group-colors";
 import { cn } from "@/lib/utils";
 import { useMeta, metaGet } from "@/lib/use-meta";
 import { EditableText } from "@/components/editable-text";
+import { useNavigate } from "@tanstack/react-router";
 
 const searchSchema = z.object({
   sheet: z.string().optional(),
@@ -24,7 +26,13 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { sheet: sheetParam } = Route.useSearch();
-  const sheet = sheetParam && sheetNames.includes(sheetParam) ? sheetParam : "Structure RES";
+  const navigate = useNavigate();
+  const isGuide = sheetParam === "__guide";
+  const sheet = isGuide
+    ? "__guide"
+    : sheetParam && sheetNames.includes(sheetParam)
+      ? sheetParam
+      : "Structure RES";
   const [selected, setSelected] = useState<number | null>(null);
   const { edits, setCell, loading } = useEdits();
   const { meta: metaOverrides, setMetaValue } = useMeta();
@@ -34,6 +42,19 @@ function Index() {
   if (sheet !== lastSheet) {
     setLastSheet(sheet);
     setSelected(null);
+  }
+
+  if (isGuide) {
+    return (
+      <div className="flex min-h-screen bg-background text-foreground">
+        <SheetSidebar meta={metaOverrides} setMetaValue={setMetaValue} />
+        <main className="flex-1 flex flex-col min-w-0">
+          <GuideView
+            onOpenSheet={(s) => navigate({ to: "/", search: { sheet: s } })}
+          />
+        </main>
+      </div>
+    );
   }
 
   const sheetInfo = SHEET_META[sheet];
