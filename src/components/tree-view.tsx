@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ChevronRight, FileText, Folder, Layers, Plus } from "lucide-react";
 import { buildTree, getRow, type EditsMap, type TreeNode } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
+import { LEVEL_TINTS, LEVEL_ACCENTS, groupColorForSheet } from "@/lib/group-colors";
 
 type RowMeta = { badge?: { label: string; tone: "page" | "collection" | "article" }; breadcrumb?: string };
 
@@ -172,17 +173,23 @@ function TreeRow({
   const hasChildren = node.children.length > 0;
   const isSel = selected === node.rowId;
   const meta = webflowMeta(sheet, node.rowId, edits);
+  const tint = LEVEL_TINTS[Math.min(node.level, LEVEL_TINTS.length - 1)];
+  const accent = LEVEL_ACCENTS[Math.min(node.level, LEVEL_ACCENTS.length - 1)];
+  const gc = groupColorForSheet(sheet);
 
   return (
     <div>
       <div
         className={cn(
-          "group flex items-center gap-1 py-1.5 pr-3 cursor-pointer text-sm hover:bg-muted/50 transition-colors",
-          isSel && "bg-primary/10 hover:bg-primary/15",
+          "group relative flex items-center gap-1 py-1.5 pr-3 cursor-pointer text-sm transition-colors",
+          isSel ? gc.activeRow : cn(tint, gc.rowTint),
         )}
         style={{ paddingLeft: 8 + node.level * 18 }}
         onClick={() => onSelect(node.rowId)}
       >
+        <span
+          className={cn("absolute left-0 top-1 bottom-1 w-1 rounded-r", accent, isSel ? "opacity-100" : "opacity-60")}
+        />
         <button
           onClick={(e) => {
             e.stopPropagation();

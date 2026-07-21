@@ -8,6 +8,8 @@ import { WebflowView } from "@/components/webflow-view";
 import { DetailPanel } from "@/components/detail-panel";
 import { useEdits } from "@/lib/use-edits";
 import { isStructureSheet, nextRowId, SHEET_META, sheetNames } from "@/lib/workbook";
+import { groupColorForSheet } from "@/lib/group-colors";
+import { cn } from "@/lib/utils";
 
 const searchSchema = z.object({
   sheet: z.string().optional(),
@@ -32,6 +34,7 @@ function Index() {
   }
 
   const meta = SHEET_META[sheet];
+  const gc = groupColorForSheet(sheet);
 
   const handleAddRow = async (treeLevel = 0) => {
     const id = nextRowId(sheet, edits);
@@ -47,11 +50,11 @@ function Index() {
     <div className="flex min-h-screen bg-background text-foreground">
       <SheetSidebar />
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="px-8 py-6 border-b border-border bg-card/30">
-          <div className="text-[11px] uppercase tracking-widest text-primary/80 font-semibold">
+        <header className={cn("px-8 py-6 border-b", gc.header)}>
+          <div className={cn("text-[11px] uppercase tracking-widest font-semibold", gc.chip)}>
             {meta?.group ?? "Feuille"}
           </div>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight">
+          <h2 className={cn("mt-1 text-2xl font-semibold tracking-tight", gc.title)}>
             {meta?.label ?? sheet}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
