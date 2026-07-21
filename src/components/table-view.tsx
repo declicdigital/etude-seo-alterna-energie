@@ -182,6 +182,8 @@ export function TableView({
     const set = new Set<number>();
     const rows = ids.map((id) => getRow(sheet, id, edits));
     for (const c of visibleCols) {
+      const h = (headers[c] || "").trim().toLowerCase();
+      const headerIsBool = /^(publi(é|e)|publish(ed)?|en\s*ligne|fait|done|actif|active|coch(é|e))$/.test(h);
       let nonEmpty = 0;
       let allBool = true;
       let truthyCount = 0;
@@ -195,12 +197,14 @@ export function TableView({
         }
         if (isTruthy(s)) truthyCount++;
       }
-      // Require at least one truthy value so purely-empty or purely-dash
+      // Header-based detection always wins (empty checkbox columns).
+      if (headerIsBool && allBool) set.add(c);
+      // Otherwise require at least one truthy value so purely-empty or purely-dash
       // columns don't get turned into checkboxes.
-      if (allBool && nonEmpty > 0 && truthyCount > 0) set.add(c);
+      else if (allBool && nonEmpty > 0 && truthyCount > 0) set.add(c);
     }
     return set;
-  }, [visibleCols, ids, sheet, edits]);
+  }, [visibleCols, ids, sheet, edits, headers]);
 
   // Detect status-like columns: every non-empty value must map to a known
   // status key AND at least one value must be a multi-state marker (so we
