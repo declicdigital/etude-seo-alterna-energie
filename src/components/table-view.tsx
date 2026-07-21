@@ -158,7 +158,7 @@ export function TableView({
     }
     // Boolean cols override to a compact width.
     return map;
-  }, [visibleCols, ids, sheet, edits]);
+  }, [visibleCols, ids, sheet, edits, headers]);
 
   const widthFor = (c: number): { min: number; max: number } => {
     if (boolCols.has(c)) return { min: 44, max: 56 };
@@ -435,7 +435,7 @@ export function TableView({
         </button>
       </div>
       <div className="flex-1 overflow-auto">
-        <table className="text-sm min-w-full border-collapse table-fixed">
+        <table className="text-sm w-full border-collapse table-fixed">
           <colgroup>
             {visibleCols.map((c) => {
               const w = widthFor(c);
@@ -585,7 +585,7 @@ export function TableView({
                       );
                     }
                     return (
-                      <td key={c} className="px-2 py-1 align-top leading-tight">
+                      <td key={c} className="px-2 py-1 align-top leading-tight overflow-hidden">
                         {href ? (
                           <a
                             href={href}
@@ -593,9 +593,9 @@ export function TableView({
                             rel="noreferrer"
                             title={s}
                             onClick={(e) => e.stopPropagation()}
-                            className="text-primary hover:underline flex items-center gap-1 text-xs"
+                            className="text-primary hover:underline inline-flex items-center gap-1 text-xs max-w-full min-w-0"
                           >
-                            <span className="truncate">{s.replace(/^https?:\/\//, "")}</span>
+                            <span className="truncate min-w-0">{s.replace(/^https?:\/\//, "")}</span>
                             <ExternalLink className="size-3 shrink-0" />
                           </a>
                         ) : (
