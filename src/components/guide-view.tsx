@@ -171,28 +171,6 @@ export function GuideView({ onOpenSheet }: { onOpenSheet: (sheet: string) => voi
           </ol>
         </section>
 
-        <section>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-            Stock d'articles rédigés, non publiés
-          </h3>
-          <p className="text-xs text-muted-foreground mb-3">
-            Contenu rédigé - à faire valider par la comm', puis l'agence SEO, puis à publier.
-          </p>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {STOCK.map((s) => (
-              <a
-                key={s.ref}
-                href={s.href}
-                target="_blank"
-                rel="noreferrer"
-                className="group inline-flex items-center justify-between gap-2 rounded-md border border-border bg-card px-4 py-3 hover:border-primary/60 hover:shadow-sm transition-all"
-              >
-                <span className="font-mono text-sm font-semibold">{s.ref}</span>
-                <ExternalLink className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-              </a>
-            ))}
-          </div>
-        </section>
       </div>
     </div>
   );
