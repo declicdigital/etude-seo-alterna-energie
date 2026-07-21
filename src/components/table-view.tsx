@@ -383,7 +383,7 @@ export function TableView({
             </tr>
           </thead>
           <tbody>
-            {filtered.map((id) => {
+            {sortedFiltered.map((id) => {
               const row = getRow(sheet, id, edits);
               const isSel = selected === id;
               return (
