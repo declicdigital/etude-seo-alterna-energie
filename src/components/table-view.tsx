@@ -145,8 +145,11 @@ export function TableView({
         if (/^https?:\/\//i.test(s.trim())) urlHits++;
       }
       const avg = n ? sum / n : 0;
+      const header = (headers[c] || "").toString().trim().toLowerCase();
+      const headerIsLink = /^(lien|liens|url|link|address|adresse)$/.test(header);
       let kind: ColKind;
-      if (n > 0 && urlHits / n > 0.5) kind = "url";
+      if (headerIsLink) kind = "url";
+      else if (n > 0 && urlHits / n > 0.5) kind = "url";
       else if (maxLen <= 6) kind = "short";
       else if (maxLen <= 24 && avg <= 18) kind = "short";
       else if (maxLen <= 60) kind = "medium";
@@ -164,7 +167,7 @@ export function TableView({
     if (effortCols.has(c)) return { min: 100, max: 140 };
     const k = colKind.get(c);
     switch (k) {
-      case "url": return { min: 90, max: 140 };
+      case "url": return { min: 70, max: 110 };
       case "short": return { min: 90, max: 160 };
       case "medium": return { min: 160, max: 260 };
       case "long": return { min: 260, max: 460 };
