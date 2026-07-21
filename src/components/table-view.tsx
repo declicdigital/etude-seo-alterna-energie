@@ -164,7 +164,7 @@ export function TableView({
     if (effortCols.has(c)) return { min: 100, max: 140 };
     const k = colKind.get(c);
     switch (k) {
-      case "url": return { min: 200, max: 320 };
+      case "url": return { min: 90, max: 140 };
       case "short": return { min: 90, max: 160 };
       case "medium": return { min: 160, max: 260 };
       case "long": return { min: 260, max: 460 };
