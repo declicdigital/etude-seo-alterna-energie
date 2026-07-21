@@ -439,19 +439,19 @@ export function TableView({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border bg-card/50 flex gap-2 items-center">
+      <div className="p-3 sm:p-4 border-b border-border bg-card/50 flex flex-wrap gap-2 items-center">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Rechercher…"
-          className="flex-1 h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="flex-1 min-w-0 h-10 sm:h-9 rounded-full sm:rounded-md border border-input bg-background px-4 sm:px-3 text-[15px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
-        <span className="text-xs text-muted-foreground">{filtered.length} lignes</span>
+        <span className="hidden sm:inline text-xs text-muted-foreground">{filtered.length} lignes</span>
         <button
           onClick={onAddRow}
-          className="h-9 px-3 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1.5 shadow-sm"
+          className="h-10 sm:h-9 px-3 rounded-full sm:rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1.5 shadow-sm shrink-0"
         >
-          <Plus className="size-3.5" /> Ajouter une ligne
+          <Plus className="size-4 sm:size-3.5" /> <span className="hidden sm:inline">Ajouter une ligne</span><span className="sm:hidden">Ajouter</span>
         </button>
       </div>
       <div className="flex-1 overflow-auto">

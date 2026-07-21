@@ -102,30 +102,30 @@ export function TreeView({
           </div>
         </div>
       )}
-      <div className="p-4 border-b border-border bg-card/50 flex gap-2 items-center">
+      <div className="p-3 sm:p-4 border-b border-border bg-card/50 flex flex-wrap gap-2 items-center">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Rechercher une page…"
-          className="flex-1 h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="flex-1 min-w-0 basis-full sm:basis-auto h-10 sm:h-9 rounded-full sm:rounded-md border border-input bg-background px-4 sm:px-3 text-[15px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <button
           onClick={expandAll}
-          className="h-9 px-3 rounded-md text-xs font-medium border border-input hover:bg-muted"
+          className="h-10 sm:h-9 px-3 rounded-full sm:rounded-md text-xs font-medium border border-input hover:bg-muted"
         >
           Tout déplier
         </button>
         <button
           onClick={() => setExpanded(new Set())}
-          className="h-9 px-3 rounded-md text-xs font-medium border border-input hover:bg-muted"
+          className="h-10 sm:h-9 px-3 rounded-full sm:rounded-md text-xs font-medium border border-input hover:bg-muted"
         >
           Tout replier
         </button>
         <button
           onClick={() => onAddRow(0)}
-          className="h-9 px-3 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1.5 shadow-sm"
+          className="h-10 sm:h-9 px-3 rounded-full sm:rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1.5 shadow-sm ml-auto sm:ml-0"
         >
-          <Plus className="size-3.5" /> Ajouter
+          <Plus className="size-4 sm:size-3.5" /> Ajouter
         </button>
       </div>
       <div className="flex-1 overflow-y-auto py-2">
@@ -181,10 +181,10 @@ function TreeRow({
     <div>
       <div
         className={cn(
-          "group relative flex items-center gap-1 py-1.5 pr-3 cursor-pointer text-sm transition-colors",
+          "group relative flex items-center gap-1 py-2 sm:py-1.5 pr-3 cursor-pointer text-sm transition-colors",
           isSel ? gc.activeRow : cn(tint, gc.rowTint),
         )}
-        style={{ paddingLeft: 8 + node.level * 18 }}
+        style={{ paddingLeft: 8 + node.level * (typeof window !== "undefined" && window.innerWidth < 640 ? 12 : 18) }}
         onClick={() => onSelect(node.rowId)}
       >
         <span
