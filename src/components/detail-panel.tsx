@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ExternalLink, X } from "lucide-react";
 import { getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { linkHref } from "@/lib/links";
+import { DateCell, parseDateValue } from "@/components/date-cell";
 
 export function DetailPanel({
   sheet,
@@ -95,6 +96,9 @@ function Field({
 
   const isLong = local.length > 60 || local.includes("\n");
   const href = linkHref(local);
+  const labelLower = label.toLowerCase();
+  const headerLooksLikeDate = /(date|derni[eè]re\s*maj|\bmaj\b|mise\s*à\s*jour|mise\s*a\s*jour|publi)/.test(labelLower);
+  const isDate = (headerLooksLikeDate || parseDateValue(local) != null) && !isLong;
 
   return (
     <div>
@@ -113,7 +117,9 @@ function Field({
           </a>
         )}
       </div>
-      {isLong ? (
+      {isDate ? (
+        <DateCell value={local} onChange={(iso) => { setLocal(iso ?? ""); onChange(iso); }} />
+      ) : isLong ? (
         <textarea
           value={local}
           onChange={(e) => setLocal(e.target.value)}

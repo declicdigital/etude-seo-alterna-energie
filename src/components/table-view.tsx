@@ -4,6 +4,7 @@ import { dataRows, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/wo
 import { cn } from "@/lib/utils";
 import { linkHref, linkify } from "@/lib/links";
 import { EditableText } from "@/components/editable-text";
+import { DateCell } from "@/components/date-cell";
 
 const TRUTHY = new Set([
   "x", "✓", "✔", "oui", "yes", "y", "ok", "done", "fait", "true", "1",
@@ -600,6 +601,17 @@ export function TableView({
                               <option value={s}>{s}</option>
                             )}
                           </select>
+                        </td>
+                      );
+                    }
+                    if (dateCols.has(c) && !boolCols.has(c) && !statusCols.has(c) && !effortCols.has(c) && !priorityCols.has(c)) {
+                      return (
+                        <td key={c} className="px-2 py-1 align-middle">
+                          <DateCell
+                            value={s}
+                            compact
+                            onChange={(iso) => onToggle(id, c, iso)}
+                          />
                         </td>
                       );
                     }
