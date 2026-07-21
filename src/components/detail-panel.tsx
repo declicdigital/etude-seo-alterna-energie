@@ -37,7 +37,7 @@ export function DetailPanel({
   if (!title) title = String(row.find((v) => v != null && String(v).trim() !== "") ?? "Ligne " + rowId);
 
   return (
-    <aside className="w-[440px] shrink-0 border-l border-border bg-card h-screen sticky top-0 overflow-y-auto">
+    <aside className="w-full md:w-[440px] shrink-0 md:border-l border-border bg-card md:h-screen md:sticky md:top-0 overflow-y-auto">
       <div className="p-5 border-b border-border sticky top-0 bg-card z-10">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">

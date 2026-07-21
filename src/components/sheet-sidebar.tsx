@@ -128,7 +128,7 @@ export function SheetSidebar({
   };
 
   return (
-    <aside className="w-72 shrink-0 border-r border-border bg-card/50 backdrop-blur-sm h-screen sticky top-0 overflow-y-auto">
+    <aside className="w-full md:w-72 shrink-0 border-r border-border bg-card/50 backdrop-blur-sm md:h-screen md:sticky md:top-0 overflow-y-auto">
       <div className="p-5 border-b border-border">
         <div className="flex items-center gap-3">
           <img src={symbol.url} alt="Alterna Énergie" className="size-10 rounded-full shrink-0" />
