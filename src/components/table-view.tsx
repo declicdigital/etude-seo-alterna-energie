@@ -106,6 +106,56 @@ export function TableView({
   const ids = useMemo(() => dataRows(sheet, edits), [sheet, edits]);
   const [q, setQ] = useState("");
 
+  // ---------- Excel-like resizable columns (per-sheet, persisted) ----------
+  const widthsKey = `col-widths::${sheet}`;
+  const [userWidths, setUserWidths] = useState<Record<number, number>>({});
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(widthsKey);
+      setUserWidths(raw ? JSON.parse(raw) : {});
+    } catch {
+      setUserWidths({});
+    }
+  }, [widthsKey]);
+  const dragRef = useRef<{ col: number; startX: number; startW: number } | null>(null);
+  const startResize = (col: number, startW: number) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragRef.current = { col, startX: e.clientX, startW };
+    const onMove = (ev: MouseEvent) => {
+      const d = dragRef.current;
+      if (!d) return;
+      const next = Math.max(48, Math.round(d.startW + (ev.clientX - d.startX)));
+      setUserWidths((prev) => ({ ...prev, [d.col]: next }));
+    };
+    const onUp = () => {
+      const d = dragRef.current;
+      dragRef.current = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      if (d) {
+        setUserWidths((prev) => {
+          try { localStorage.setItem(widthsKey, JSON.stringify(prev)); } catch {}
+          return prev;
+        });
+      }
+    };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+  const resetColumn = (col: number) => {
+    setUserWidths((prev) => {
+      const next = { ...prev };
+      delete next[col];
+      try { localStorage.setItem(widthsKey, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
   const filtered = useMemo(() => {
     if (!q) return ids;
     const ql = q.toLowerCase();
