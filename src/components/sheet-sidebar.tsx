@@ -538,7 +538,7 @@ function SheetItem({
         )}
         {group === "Archives" ? (
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.setSheetGroup(sheet, null); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.setSheetGroup(sheet.split("::")[0], null); }}
             className="ml-1 shrink-0 size-6 rounded-md flex items-center justify-center opacity-40 hover:opacity-100 hover:bg-foreground/10"
             aria-label="Sortir des archives"
             title="Sortir des archives"
@@ -547,7 +547,7 @@ function SheetItem({
           </button>
         ) : (
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.setSheetGroup(sheet, "Archives"); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.setSheetGroup(sheet.split("::")[0], "Archives"); }}
             className="ml-1 shrink-0 size-6 rounded-md flex items-center justify-center opacity-0 group-hover/item:opacity-60 hover:!opacity-100 hover:bg-foreground/10"
             aria-label="Archiver"
             title="Archiver"
