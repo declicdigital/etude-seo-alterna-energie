@@ -492,8 +492,22 @@ function SheetItem({
           >
             (Aucune)
           </button>
+          <button
+            className="w-full text-left px-3 py-1.5 hover:bg-muted"
+            onClick={() => { ctx.setSheetSubpath(sheet, "*"); setMenuOpen(false); }}
+          >
+            Partout
+          </button>
           {structure.flatMap((sub) =>
-            sub.subs.map((ss) => (
+            sub.subs.length === 0 ? [(
+              <button
+                key={sub.name}
+                className="w-full text-left px-3 py-1.5 hover:bg-muted"
+                onClick={() => { ctx.setSheetSubpath(sheet, sub.name); setMenuOpen(false); }}
+              >
+                {sub.name}
+              </button>
+            )] : sub.subs.map((ss) => (
               <button
                 key={`${sub.name}/${ss}`}
                 className="w-full text-left px-3 py-1.5 hover:bg-muted"
