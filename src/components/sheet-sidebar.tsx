@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Archive, ArchiveRestore, BookOpen, GripVertical, Minus, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, BookOpen, ChevronDown, ChevronRight, GripVertical, Minus, Plus } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
@@ -372,47 +372,119 @@ function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
         </ul>
       )}
       {structure.map((sub) => (
-        <div key={sub.name} className="ml-1">
-          <div className={cn(
-            "px-2 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wide",
-            ctx.style.active,
-          )}>
-            {sub.name}
-          </div>
-          {sub.subs.length === 0 ? (
-            <ul className="mt-1 ml-2 space-y-0.5 border-l border-border/60 pl-2">
-              {(buckets.get(sub.name) ?? []).map((s) => (
-                <SheetItem key={s} sheet={s} group={group} ctx={ctx} showSubMove structure={structure} />
-              ))}
-              {(buckets.get(sub.name) ?? []).length === 0 && (
-                <li className="px-3 py-1 text-[11px] text-muted-foreground/60 italic">Vide</li>
-              )}
-            </ul>
-          ) : (
-          <div className="mt-1 ml-2 space-y-1.5 border-l border-border/60 pl-2">
-            {sub.subs.map((ss) => {
-              const key = `${sub.name}/${ss}`;
-              const items = buckets.get(key) ?? [];
-              return (
-                <div key={ss}>
-                  <div className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {ss}
-                  </div>
-                  <ul className="space-y-0.5">
-                    {items.map((s) => (
-                      <SheetItem key={s} sheet={s} group={group} ctx={ctx} showSubMove structure={structure} />
-                    ))}
-                    {items.length === 0 && (
-                      <li className="px-3 py-1 text-[11px] text-muted-foreground/60 italic">Vide</li>
-                    )}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
+        <SubGroup
+          key={sub.name}
+          group={group}
+          sub={sub}
+          buckets={buckets}
+          ctx={ctx}
+          structure={structure}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SubGroup({
+  group,
+  sub,
+  buckets,
+  ctx,
+  structure,
+}: {
+  group: string;
+  sub: { name: string; subs: string[] };
+  buckets: Map<string, string[]>;
+  ctx: RenderCtx;
+  structure: { name: string; subs: string[] }[];
+}) {
+  // Auto-open if the active sheet lives under this sub.
+  const activeUnder = (() => {
+    if (sub.subs.length === 0) return (buckets.get(sub.name) ?? []).includes(ctx.active);
+    return sub.subs.some((ss) => (buckets.get(`${sub.name}/${ss}`) ?? []).includes(ctx.active));
+  })();
+  const [open, setOpen] = useState(activeUnder);
+  useEffect(() => { if (activeUnder) setOpen(true); }, [activeUnder]);
+
+  return (
+    <div className="ml-1">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "w-full flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wide",
+          ctx.style.active,
+        )}
+      >
+        {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+        <span className="flex-1 text-left">{sub.name}</span>
+      </button>
+      {open && (sub.subs.length === 0 ? (
+        <ul className="mt-1 ml-2 space-y-0.5 border-l border-border/60 pl-2">
+          {(buckets.get(sub.name) ?? []).map((s) => (
+            <SheetItem key={s} sheet={s} group={group} ctx={ctx} showSubMove structure={structure} />
+          ))}
+          {(buckets.get(sub.name) ?? []).length === 0 && (
+            <li className="px-3 py-1 text-[11px] text-muted-foreground/60 italic">Vide</li>
           )}
+        </ul>
+      ) : (
+        <div className="mt-1 ml-2 space-y-1 border-l border-border/60 pl-2">
+          {sub.subs.map((ss) => (
+            <SubSubGroup
+              key={ss}
+              group={group}
+              subName={sub.name}
+              ss={ss}
+              items={buckets.get(`${sub.name}/${ss}`) ?? []}
+              ctx={ctx}
+              structure={structure}
+            />
+          ))}
         </div>
       ))}
+    </div>
+  );
+}
+
+function SubSubGroup({
+  group,
+  subName,
+  ss,
+  items,
+  ctx,
+  structure,
+}: {
+  group: string;
+  subName: string;
+  ss: string;
+  items: string[];
+  ctx: RenderCtx;
+  structure: { name: string; subs: string[] }[];
+}) {
+  const activeUnder = items.includes(ctx.active);
+  const [open, setOpen] = useState(activeUnder);
+  useEffect(() => { if (activeUnder) setOpen(true); }, [activeUnder]);
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground"
+      >
+        {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+        <span className="flex-1 text-left">{ss}</span>
+      </button>
+      {open && (
+        <ul className="space-y-0.5">
+          {items.map((s) => (
+            <SheetItem key={s} sheet={s} group={group} ctx={ctx} showSubMove structure={structure} />
+          ))}
+          {items.length === 0 && (
+            <li className="px-3 py-1 text-[11px] text-muted-foreground/60 italic">Vide</li>
+          )}
+        </ul>
+      )}
     </div>
   );
 }
