@@ -476,7 +476,7 @@ function SubSubGroup({
     <div>
       {singleLeaf ? (
         <ul className="space-y-0.5">
-          <SheetItem sheet={items[0]} group={group} ctx={ctx} showSubMove structure={structure} labelOverride={ss} />
+          <SheetItem sheet={items[0]} group={group} ctx={ctx} showSubMove structure={structure} />
         </ul>
       ) : (
         <>
