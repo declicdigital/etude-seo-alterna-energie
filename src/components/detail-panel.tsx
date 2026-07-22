@@ -62,6 +62,8 @@ export function DetailPanel({
           // Skip tree columns after the level column - they represent hierarchy not fields
           if (treeCols && idx < treeCols && idx !== level) return null;
           if (!h && (row[idx] == null || String(row[idx]).trim() === "")) return null;
+          const hn = (h || "").trim().toLowerCase();
+          if (hn === "tags" || hn === "noindex") return null;
           return (
             <Field
               key={idx}
