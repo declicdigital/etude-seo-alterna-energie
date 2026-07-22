@@ -7,12 +7,32 @@ import symbol from "@/assets/alterna-symbol.png.asset.json";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 
-const DEFAULT_ORDER = ["Arborescence", "Blog", "Suivi", "Cocons", "Docs", "Autres", "Archives"];
+const DEFAULT_ORDER = ["Arborescence", "Blog", "Suivi", "Stratégie édito", "Docs", "Autres", "Archives"];
 const ORDER_KEY = "sidebar.groupOrder.v1";
 const COLLAPSED_KEY = "sidebar.groupCollapsed.v1";
 const GROUP_OVERRIDE_KEY = "sidebar.sheetGroup.v1";
+const SUBPATH_KEY = "sidebar.sheetSubpath.v1";
 const DEFAULT_GROUP_OVERRIDES: Record<string, string> = {
   "Structure (resi) (OLD V3)": "Archives",
+};
+
+// Nested substructure for specific groups. Each group has a list of
+// subcategories (level 1) and each subcategory a list of sub-subs (level 2).
+const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
+  Blog: [
+    { name: "Particulier", subs: ["Elec", "Gaz"] },
+    { name: "Professionnel", subs: ["Elec", "Gaz"] },
+  ],
+  "Stratégie édito": [
+    { name: "Particulier", subs: ["Elec", "Gaz"] },
+    { name: "Professionnel", subs: ["Elec", "Gaz"] },
+  ],
+};
+
+// Default sub-path assignments for existing sheets. Format: "Subcat/Subsub".
+const DEFAULT_SUBPATHS: Record<string, string> = {
+  "Articles cocon éléctricité": "Particulier/Elec",
+  "Articles cocon Gaz": "Particulier/Gaz",
 };
 
 // Per-group color palette. Each entry drives:
@@ -44,6 +64,12 @@ const GROUP_STYLES: Record<string, {
     bar: "bg-amber-500",
   },
   Cocons: {
+    header: "bg-violet-600 text-white",
+    active: "bg-violet-500/15 text-violet-800 dark:text-violet-200 font-semibold ring-1 ring-inset ring-violet-500/30",
+    hover: "hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300",
+    bar: "bg-violet-500",
+  },
+  "Stratégie édito": {
     header: "bg-violet-600 text-white",
     active: "bg-violet-500/15 text-violet-800 dark:text-violet-200 font-semibold ring-1 ring-inset ring-violet-500/30",
     hover: "hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300",
