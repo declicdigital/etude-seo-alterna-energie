@@ -58,7 +58,7 @@ export function EditableText({
   }
   return (
     <As
-      className={cn("cursor-text", className)}
+      className={cn(className)}
       title={title ?? "Double-cliquez pour renommer"}
       onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
       onClick={onClickCapture}
