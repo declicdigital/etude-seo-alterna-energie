@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { SheetSidebar } from "@/components/sheet-sidebar";
@@ -18,6 +18,7 @@ import { Menu } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
+import { isUnlocked } from "@/lib/gate.functions";
 
 const searchSchema = z.object({
   sheet: z.string().optional(),
@@ -25,6 +26,10 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/")({
   validateSearch: searchSchema,
+  beforeLoad: async () => {
+    const { unlocked } = await isUnlocked();
+    if (!unlocked) throw redirect({ to: "/unlock" });
+  },
   component: Index,
 });
 
