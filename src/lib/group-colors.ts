@@ -37,7 +37,7 @@ const MAP: Record<string, GroupColor> = {
     activeRow: "bg-amber-500/15 hover:bg-amber-500/20",
     accent: "bg-amber-500",
   },
-  Cocons: {
+  "Stratégie édito": {
     header:
       "bg-gradient-to-r from-violet-500/15 via-violet-500/5 to-transparent border-violet-500/30",
     chip: "text-violet-700 dark:text-violet-300",
