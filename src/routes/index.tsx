@@ -69,10 +69,12 @@ function Index() {
     const id = nextRowId(sheet, edits);
     if (isStructureSheet(sheet)) {
       await setCell(sheet, id, treeLevel, "Nouvelle page");
+      setSelected(id);
     } else {
-      await setCell(sheet, id, 0, "Nouvelle ligne");
+      // Seed an empty override so the row appears in the list, then let the
+      // user fill fields inline directly in the table.
+      await setCell(sheet, id, 0, "");
     }
-    setSelected(id);
   };
 
   const sidebar = <SheetSidebar meta={metaOverrides} setMetaValue={setMetaValue} />;

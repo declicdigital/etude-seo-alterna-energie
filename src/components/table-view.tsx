@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { linkHref, linkify } from "@/lib/links";
 import { EditableText } from "@/components/editable-text";
 import { DateCell } from "@/components/date-cell";
+import { workbook, baseSheetOf } from "@/lib/workbook";
 
 const TRUTHY = new Set([
   "x", "✓", "✔", "oui", "yes", "y", "ok", "done", "fait", "true", "1",
@@ -118,8 +119,12 @@ export function TableView({
     const cols: number[] = [];
     const rows = ids.map((id) => getRow(sheet, id, edits));
     const width = Math.max(headers.length, ...rows.map((r) => r.length));
+    const isScoped = sheet.includes("::");
     for (let c = 0; c < width; c++) {
       const h = headers[c];
+      // In a scoped view, hide the "Audience" column — the scope already
+      // isolates the audience, so the column would be redundant.
+      if (isScoped && (h || "").trim().toLowerCase() === "audience") continue;
       const hasData = rows.some((r) => r[c] != null && String(r[c]).trim() !== "");
       if ((h && h.trim()) || hasData) cols.push(c);
     }
@@ -344,6 +349,8 @@ export function TableView({
   // Prefer a "dernière maj / last update / publi" column when present, else
   // fall back to the left-most detected date column.
   const sortedFiltered = useMemo(() => {
+    const baseLen = workbook[baseSheetOf(sheet)]?.length ?? 0;
+    const isAdded = (id: number) => id >= baseLen;
     const priCol = priorityCols.size > 0 ? Math.min(...priorityCols) : -1;
     const dateColsArr = [...dateCols];
     const pickPreferred = (): number => {
@@ -359,7 +366,9 @@ export function TableView({
       return scored.length ? scored[0].c : -1;
     };
     const dateCol = dateColsArr.length ? pickPreferred() : -1;
-    if (priCol < 0 && dateCol < 0) return filtered;
+    if (priCol < 0 && dateCol < 0) {
+      return [...filtered].sort((a, b) => Number(isAdded(b)) - Number(isAdded(a)));
+    }
     const priKey = (id: number): number => {
       if (priCol < 0) return 0;
       const r = getRow(sheet, id, edits);
@@ -374,6 +383,9 @@ export function TableView({
       return t == null ? -Infinity : t;
     };
     return [...filtered].sort((a, b) => {
+      // Newly added rows always float to the very top.
+      const na = Number(isAdded(b)) - Number(isAdded(a));
+      if (na !== 0) return na;
       const dp = priKey(b) - priKey(a);
       if (dp !== 0) return dp;
       return dateKey(b) - dateKey(a);
@@ -749,29 +761,37 @@ export function TableView({
                             <ExternalLink className="size-3 shrink-0" />
                           </a>
                         ) : (
-                          <span
-                            title={s}
-                            className={cn(
-                              "text-foreground/90 block whitespace-pre-wrap break-words",
-                            )}
-                          >
-                            {linkify(s).map((seg, i) =>
-                              seg.href ? (
-                                <a
-                                  key={i}
-                                  href={seg.href}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-primary hover:underline break-all"
-                                >
-                                  {seg.text}
-                                </a>
-                              ) : (
-                                <span key={i}>{seg.text}</span>
-                              ),
-                            )}
-                          </span>
+                          s.trim() === "" || !/https?:\/\//i.test(s) ? (
+                            <EditableText
+                              value={s}
+                              onCommit={(v) => onToggle(id, c, v === "" ? null : v)}
+                              className="text-foreground/90 block whitespace-pre-wrap break-words cursor-text"
+                              placeholder="—"
+                              title={s || "Double-cliquez pour éditer"}
+                            />
+                          ) : (
+                            <span
+                              title={s}
+                              className="text-foreground/90 block whitespace-pre-wrap break-words"
+                            >
+                              {linkify(s).map((seg, i) =>
+                                seg.href ? (
+                                  <a
+                                    key={i}
+                                    href={seg.href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-primary hover:underline break-all"
+                                  >
+                                    {seg.text}
+                                  </a>
+                                ) : (
+                                  <span key={i}>{seg.text}</span>
+                                ),
+                              )}
+                            </span>
+                          )
                         )}
                       </td>
                     );
