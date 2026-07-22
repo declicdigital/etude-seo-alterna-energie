@@ -55,9 +55,15 @@ function Index() {
   const gc = isGuide ? groupColorForSheet("Structure RES") : groupColorForSheet(sheet);
   const groupName = isGuide ? "Guide" : (sheetInfo?.group ?? "Feuille");
   const groupLabel = metaGet(metaOverrides, "group", groupName, groupName);
+  const baseSheet = baseSheetOf(sheet);
+  const scope = sheet.includes("::") ? sheet.split("::")[1] : null;
+  const baseLabel = metaGet(metaOverrides, "sheet", baseSheet, sheetInfo?.label ?? baseSheet);
+  const scopeLabel = scope ? scope.replace("/", " › ") : "";
   const sheetLabel = isGuide
     ? "Guide de l'outil"
-    : metaGet(metaOverrides, "sheet", sheet, sheetInfo?.label ?? sheet);
+    : scope
+      ? `${baseLabel} — ${scopeLabel}`
+      : baseLabel;
 
   const handleAddRow = async (treeLevel = 0) => {
     const id = nextRowId(sheet, edits);
