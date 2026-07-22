@@ -349,8 +349,8 @@ function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
     const p = ctx.subpaths[s];
     if (p === "*") {
       for (const sc of structure) {
-        if (sc.subs.length === 0) pushBucket(sc.name, s);
-        else for (const ss of sc.subs) pushBucket(`${sc.name}/${ss}`, s);
+        if (sc.subs.length === 0) pushBucket(sc.name, `${s}::${sc.name}`);
+        else for (const ss of sc.subs) pushBucket(`${sc.name}/${ss}`, `${s}::${sc.name}/${ss}`);
       }
     } else if (p && structure.some((sc) => p === sc.name || p.startsWith(sc.name + "/"))) {
       pushBucket(p, s);
@@ -519,7 +519,7 @@ function SheetItem({
         />
         <EditableText
           className="truncate flex-1"
-          value={metaGet(ctx.meta, "sheet", sheet, SHEET_META[sheet]?.label ?? sheet)}
+          value={metaGet(ctx.meta, "sheet", sheet, SHEET_META[sheet.split("::")[0]]?.label ?? sheet)}
           onCommit={(v) => ctx.setMetaValue("sheet", sheet, v)}
         />
         {showSubMove && structure && (
@@ -538,7 +538,7 @@ function SheetItem({
         )}
         {group === "Archives" ? (
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.setSheetGroup(sheet, null); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.setSheetGroup(sheet.split("::")[0], null); }}
             className="ml-1 shrink-0 size-6 rounded-md flex items-center justify-center opacity-40 hover:opacity-100 hover:bg-foreground/10"
             aria-label="Sortir des archives"
             title="Sortir des archives"
@@ -547,7 +547,7 @@ function SheetItem({
           </button>
         ) : (
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.setSheetGroup(sheet, "Archives"); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.setSheetGroup(sheet.split("::")[0], "Archives"); }}
             className="ml-1 shrink-0 size-6 rounded-md flex items-center justify-center opacity-0 group-hover/item:opacity-60 hover:!opacity-100 hover:bg-foreground/10"
             aria-label="Archiver"
             title="Archiver"

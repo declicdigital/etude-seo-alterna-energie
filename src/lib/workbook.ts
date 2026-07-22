@@ -6,6 +6,17 @@ export type Workbook = Record<string, Row[]>;
 export const workbook = raw as unknown as Workbook;
 export const sheetNames = Object.keys(workbook);
 
+/** A sheet key may be "base" or "base::scope". Returns { base, scope }. */
+export function parseSheetKey(sheet: string): { base: string; scope: string | null } {
+  const i = sheet.indexOf("::");
+  if (i < 0) return { base: sheet, scope: null };
+  return { base: sheet.slice(0, i), scope: sheet.slice(i + 2) };
+}
+
+export function baseSheetOf(sheet: string): string {
+  return parseSheetKey(sheet).base;
+}
+
 export type CellEdit = {
   sheet: string;
   row_id: number;
@@ -32,15 +43,21 @@ export function getCell(
 ): string | number | null {
   const override = edits[sheet]?.[rowId]?.[col];
   if (override !== undefined) return override;
-  const row = workbook[sheet]?.[rowId];
+  const { base, scope } = parseSheetKey(sheet);
+  if (scope) return null;
+  const row = workbook[base]?.[rowId];
   return row ? row[col] ?? null : null;
 }
 
 export function getRow(sheet: string, rowId: number, edits: EditsMap): Row {
-  const base = workbook[sheet]?.[rowId] ?? [];
+  const { base: b, scope } = parseSheetKey(sheet);
+  const base = scope ? [] : (workbook[b]?.[rowId] ?? []);
   const over = edits[sheet]?.[rowId];
   if (!over) return base;
-  return base.map((v, i) => (over[i] !== undefined ? over[i] : v));
+  const width = Math.max(base.length, ...Object.keys(over).map((k) => Number(k) + 1));
+  const out: (string | number | null)[] = [];
+  for (let i = 0; i < width; i++) out.push(over[i] !== undefined ? over[i] : (base[i] ?? null));
+  return out;
 }
 
 /** Sheets where columns N0..N7 encode a hierarchical tree. */
@@ -53,7 +70,7 @@ export const STRUCTURE_SHEETS = new Set([
 ]);
 
 export function isStructureSheet(name: string) {
-  return STRUCTURE_SHEETS.has(name);
+  return STRUCTURE_SHEETS.has(baseSheetOf(name));
 }
 
 /** Header row index for each sheet (auto-detected best guess). */
@@ -62,27 +79,28 @@ export const SHEET_META: Record<
   { headerRow: number; treeCols?: number; firstDataRow: number; label: string; group: string }
 > = {
   "Structure proposée (V2)": { headerRow: 4, treeCols: 8, firstDataRow: 6, label: "Structure proposée V2", group: "Arborescence" },
-  "Structure RES": { headerRow: 0, treeCols: 8, firstDataRow: 2, label: "Structure Particulier", group: "Arborescence" },
-  "Structure PRO": { headerRow: 5, treeCols: 8, firstDataRow: 7, label: "Structure Professionnel", group: "Arborescence" },
+  "Structure RES": { headerRow: 0, treeCols: 8, firstDataRow: 2, label: "Particulier", group: "Arborescence" },
+  "Structure PRO": { headerRow: 5, treeCols: 8, firstDataRow: 7, label: "Professionnel", group: "Arborescence" },
   "Structure (resi) (OLD V3)": { headerRow: 0, treeCols: 8, firstDataRow: 2, label: "Structure Particulier (V3 archivée)", group: "Arborescence" },
   "Structure pour migration AE-AEF": { headerRow: 0, treeCols: 8, firstDataRow: 2, label: "Migration AE → AEF", group: "Arborescence" },
   "TODO GENERALE": { headerRow: 0, firstDataRow: 1, label: "TODO générale", group: "Suivi" },
-  "BLOG - IDEE": { headerRow: 1, firstDataRow: 2, label: "Blog - Idées", group: "Blog" },
-  "BLOG - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Blog - Articles & publication", group: "Blog" },
+  "BLOG - IDEE": { headerRow: 1, firstDataRow: 2, label: "Idées", group: "Blog" },
+  "BLOG - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Articles & publication", group: "Blog" },
   "Netlinking": { headerRow: 1, firstDataRow: 2, label: "Netlinking", group: "Suivi" },
   "Roadmap 2026 - WIP": { headerRow: 1, firstDataRow: 2, label: "Roadmap 2026", group: "Suivi" },
   "Temps passé": { headerRow: 0, firstDataRow: 1, label: "Temps passé", group: "Suivi" },
-  "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon Électricité", group: "Stratégie édito" },
-  "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon Gaz", group: "Stratégie édito" },
+  "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Électricité", group: "Stratégie édito" },
+  "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Gaz", group: "Stratégie édito" },
   "Webflow - fonctionnement": { headerRow: 1, treeCols: 5, firstDataRow: 2, label: "Webflow - fonctionnement", group: "Docs" },
 };
 
 export function headersOf(sheet: string, edits?: EditsMap): string[] {
-  const meta = SHEET_META[sheet];
+  const { base: bs, scope } = parseSheetKey(sheet);
+  const meta = SHEET_META[bs];
   if (!meta) return [];
-  const row = workbook[sheet]?.[meta.headerRow] ?? [];
+  const row = workbook[bs]?.[meta.headerRow] ?? [];
   const base = row.map((c) => (c == null ? "" : String(c)));
-  const over = edits?.[sheet]?.[meta.headerRow];
+  const over = edits?.[bs]?.[meta.headerRow] ?? (scope ? edits?.[sheet]?.[meta.headerRow] : undefined);
   if (!over) return base;
   const width = Math.max(base.length, ...Object.keys(over).map((k) => Number(k) + 1));
   const out: string[] = [];
@@ -94,23 +112,25 @@ export function headersOf(sheet: string, edits?: EditsMap): string[] {
 }
 
 export function dataRows(sheet: string, edits?: EditsMap): number[] {
-  const meta = SHEET_META[sheet];
-  const rows = workbook[sheet] ?? [];
+  const { base: bs, scope } = parseSheetKey(sheet);
+  const meta = SHEET_META[bs];
+  const rows = scope ? [] : (workbook[bs] ?? []);
   const out: number[] = [];
-  if (meta) {
+  if (meta && !scope) {
     for (let i = meta.firstDataRow; i < rows.length; i++) {
       if (rows[i].some((c) => c != null && String(c).trim() !== "")) out.push(i);
     }
-  } else {
+  } else if (!scope) {
     for (let i = 0; i < rows.length; i++) out.push(i);
   }
   // Include extra rows added via edits (row_id >= base length) with any non-empty cell
   const over = edits?.[sheet];
   if (over) {
+    const baseLen = scope ? 0 : rows.length;
     const extras: number[] = [];
     for (const key of Object.keys(over)) {
       const id = Number(key);
-      if (id >= rows.length) {
+      if (id >= baseLen) {
         const cells = over[id];
         if (Object.values(cells).some((v) => v != null && String(v).trim() !== "")) extras.push(id);
       }
@@ -122,7 +142,8 @@ export function dataRows(sheet: string, edits?: EditsMap): number[] {
 }
 
 export function nextRowId(sheet: string, edits: EditsMap): number {
-  const baseLen = workbook[sheet]?.length ?? 0;
+  const { base: bs, scope } = parseSheetKey(sheet);
+  const baseLen = scope ? 0 : (workbook[bs]?.length ?? 0);
   let max = baseLen - 1;
   const over = edits[sheet];
   if (over) for (const k of Object.keys(over)) max = Math.max(max, Number(k));
@@ -137,7 +158,7 @@ export type TreeNode = {
 };
 
 export function buildTree(sheet: string, edits: EditsMap): TreeNode[] {
-  const meta = SHEET_META[sheet];
+  const meta = SHEET_META[baseSheetOf(sheet)];
   const cols = meta?.treeCols ?? 8;
   const ids = dataRows(sheet, edits);
   const roots: TreeNode[] = [];

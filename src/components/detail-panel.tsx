@@ -19,7 +19,7 @@ export function DetailPanel({
 }) {
   const headers = headersOf(sheet, edits);
   const row = getRow(sheet, rowId, edits);
-  const meta = SHEET_META[sheet];
+  const meta = SHEET_META[sheet.split("::")[0]];
   const treeCols = meta?.treeCols ?? 0;
 
   // Determine title from tree level or first non-empty cell

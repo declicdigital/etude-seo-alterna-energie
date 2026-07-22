@@ -67,7 +67,7 @@ const MAP: Record<string, GroupColor> = {
 };
 
 export function groupColorForSheet(sheet: string): GroupColor {
-  const g = SHEET_META[sheet]?.group ?? "Autres";
+  const g = SHEET_META[sheet.split("::")[0]]?.group ?? "Autres";
   return MAP[g] ?? MAP.Autres;
 }
 

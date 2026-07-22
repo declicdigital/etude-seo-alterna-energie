@@ -8,7 +8,7 @@ import { WebflowView } from "@/components/webflow-view";
 import { GuideView } from "@/components/guide-view";
 import { DetailPanel } from "@/components/detail-panel";
 import { useEdits } from "@/lib/use-edits";
-import { isStructureSheet, nextRowId, SHEET_META, sheetNames } from "@/lib/workbook";
+import { baseSheetOf, isStructureSheet, nextRowId, SHEET_META, sheetNames } from "@/lib/workbook";
 import { groupColorForSheet } from "@/lib/group-colors";
 import { cn } from "@/lib/utils";
 import { useMeta, metaGet } from "@/lib/use-meta";
@@ -34,7 +34,7 @@ function Index() {
   const isGuide = sheetParam === "__guide";
   const sheet = isGuide
     ? "__guide"
-    : sheetParam && sheetNames.includes(sheetParam)
+    : sheetParam && sheetNames.includes(baseSheetOf(sheetParam))
       ? sheetParam
       : "Structure RES";
   const [selected, setSelected] = useState<number | null>(null);
@@ -51,13 +51,19 @@ function Index() {
     setNavOpen(false);
   }
 
-  const sheetInfo = SHEET_META[sheet];
+  const sheetInfo = SHEET_META[baseSheetOf(sheet)];
   const gc = isGuide ? groupColorForSheet("Structure RES") : groupColorForSheet(sheet);
   const groupName = isGuide ? "Guide" : (sheetInfo?.group ?? "Feuille");
   const groupLabel = metaGet(metaOverrides, "group", groupName, groupName);
+  const baseSheet = baseSheetOf(sheet);
+  const scope = sheet.includes("::") ? sheet.split("::")[1] : null;
+  const baseLabel = metaGet(metaOverrides, "sheet", baseSheet, sheetInfo?.label ?? baseSheet);
+  const scopeLabel = scope ? scope.replace("/", " › ") : "";
   const sheetLabel = isGuide
     ? "Guide de l'outil"
-    : metaGet(metaOverrides, "sheet", sheet, sheetInfo?.label ?? sheet);
+    : scope
+      ? `${baseLabel} — ${scopeLabel}`
+      : baseLabel;
 
   const handleAddRow = async (treeLevel = 0) => {
     const id = nextRowId(sheet, edits);
