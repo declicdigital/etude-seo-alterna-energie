@@ -303,3 +303,180 @@ export function SheetSidebar({
     </aside>
   );
 }
+
+type RenderCtx = {
+  style: (typeof GROUP_STYLES)[string];
+  active: string;
+  meta: MetaMap;
+  setMetaValue: (scope: string, key: string, value: string | null) => void;
+  subpaths: Record<string, string>;
+  setSheetSubpath: (sheet: string, path: string | null) => void;
+  setSheetGroup: (sheet: string, group: string | null) => void;
+};
+
+function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
+  const structure = SUB_STRUCTURE[group];
+  if (!structure) {
+    return (
+      <ul className="space-y-0.5">
+        {sheets.map((s) => (
+          <SheetItem key={s} sheet={s} group={group} ctx={ctx} />
+        ))}
+      </ul>
+    );
+  }
+  // Split sheets: unassigned first, then buckets by "Sub/SubSub"
+  const buckets = new Map<string, string[]>();
+  const unassigned: string[] = [];
+  for (const s of sheets) {
+    const p = ctx.subpaths[s];
+    if (p && structure.some((sc) => p.startsWith(sc.name + "/"))) {
+      const arr = buckets.get(p) ?? [];
+      arr.push(s);
+      buckets.set(p, arr);
+    } else {
+      unassigned.push(s);
+    }
+  }
+  return (
+    <div className="space-y-2">
+      {unassigned.length > 0 && (
+        <ul className="space-y-0.5">
+          {unassigned.map((s) => (
+            <SheetItem key={s} sheet={s} group={group} ctx={ctx} showSubMove structure={structure} />
+          ))}
+        </ul>
+      )}
+      {structure.map((sub) => (
+        <div key={sub.name} className="ml-1">
+          <div className={cn(
+            "px-2 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wide",
+            ctx.style.active,
+          )}>
+            {sub.name}
+          </div>
+          <div className="mt-1 ml-2 space-y-1.5 border-l border-border/60 pl-2">
+            {sub.subs.map((ss) => {
+              const key = `${sub.name}/${ss}`;
+              const items = buckets.get(key) ?? [];
+              return (
+                <div key={ss}>
+                  <div className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {ss}
+                  </div>
+                  <ul className="space-y-0.5">
+                    {items.map((s) => (
+                      <SheetItem key={s} sheet={s} group={group} ctx={ctx} showSubMove structure={structure} />
+                    ))}
+                    {items.length === 0 && (
+                      <li className="px-3 py-1 text-[11px] text-muted-foreground/60 italic">Vide</li>
+                    )}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SheetItem({
+  sheet,
+  group,
+  ctx,
+  showSubMove,
+  structure,
+}: {
+  sheet: string;
+  group: string;
+  ctx: RenderCtx;
+  showSubMove?: boolean;
+  structure?: { name: string; subs: string[] }[];
+}) {
+  const isActive = ctx.active === sheet;
+  const [menuOpen, setMenuOpen] = useState(false);
+  return (
+    <li className="relative">
+      <Link
+        to="/"
+        search={{ sheet }}
+        className={cn(
+          "group/item relative flex items-center rounded-md pl-4 pr-2 py-2 text-sm transition-colors",
+          isActive ? cn("font-medium", ctx.style.active) : cn("text-foreground/80", ctx.style.hover),
+        )}
+      >
+        <span
+          className={cn(
+            "absolute left-1 top-1.5 bottom-1.5 w-1 rounded-full transition-opacity",
+            ctx.style.bar,
+            isActive ? "opacity-0" : "opacity-30 group-hover/item:opacity-90",
+          )}
+        />
+        <EditableText
+          className="truncate flex-1"
+          value={metaGet(ctx.meta, "sheet", sheet, SHEET_META[sheet]?.label ?? sheet)}
+          onCommit={(v) => ctx.setMetaValue("sheet", sheet, v)}
+        />
+        {showSubMove && structure && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setMenuOpen((v) => !v);
+            }}
+            className="ml-1 shrink-0 size-6 rounded-md flex items-center justify-center opacity-40 hover:opacity-100 hover:bg-foreground/10 text-xs"
+            aria-label="Déplacer"
+            title="Déplacer dans une sous-catégorie"
+          >
+            ⋯
+          </button>
+        )}
+        {group === "Archives" ? (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.setSheetGroup(sheet, null); }}
+            className="ml-1 shrink-0 size-6 rounded-md flex items-center justify-center opacity-40 hover:opacity-100 hover:bg-foreground/10"
+            aria-label="Sortir des archives"
+            title="Sortir des archives"
+          >
+            <ArchiveRestore className="size-3.5" />
+          </button>
+        ) : (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.setSheetGroup(sheet, "Archives"); }}
+            className="ml-1 shrink-0 size-6 rounded-md flex items-center justify-center opacity-0 group-hover/item:opacity-60 hover:!opacity-100 hover:bg-foreground/10"
+            aria-label="Archiver"
+            title="Archiver"
+          >
+            <Archive className="size-3.5" />
+          </button>
+        )}
+      </Link>
+      {menuOpen && structure && (
+        <div
+          className="absolute right-2 top-full mt-1 z-30 rounded-md border border-border bg-popover shadow-lg py-1 min-w-[160px] text-xs"
+          onMouseLeave={() => setMenuOpen(false)}
+        >
+          <button
+            className="w-full text-left px-3 py-1.5 hover:bg-muted"
+            onClick={() => { ctx.setSheetSubpath(sheet, null); setMenuOpen(false); }}
+          >
+            (Aucune)
+          </button>
+          {structure.flatMap((sub) =>
+            sub.subs.map((ss) => (
+              <button
+                key={`${sub.name}/${ss}`}
+                className="w-full text-left px-3 py-1.5 hover:bg-muted"
+                onClick={() => { ctx.setSheetSubpath(sheet, `${sub.name}/${ss}`); setMenuOpen(false); }}
+              >
+                {sub.name} › {ss}
+              </button>
+            )),
+          )}
+        </div>
+      )}
+    </li>
+  );
+}
