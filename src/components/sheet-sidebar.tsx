@@ -349,8 +349,8 @@ function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
     const p = ctx.subpaths[s];
     if (p === "*") {
       for (const sc of structure) {
-        if (sc.subs.length === 0) pushBucket(sc.name, s);
-        else for (const ss of sc.subs) pushBucket(`${sc.name}/${ss}`, s);
+        if (sc.subs.length === 0) pushBucket(sc.name, `${s}::${sc.name}`);
+        else for (const ss of sc.subs) pushBucket(`${sc.name}/${ss}`, `${s}::${sc.name}/${ss}`);
       }
     } else if (p && structure.some((sc) => p === sc.name || p.startsWith(sc.name + "/"))) {
       pushBucket(p, s);
