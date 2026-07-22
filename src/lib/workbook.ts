@@ -174,13 +174,14 @@ export function dataRows(sheet: string, edits?: EditsMap): number[] {
   const { base: bs, scope } = parseSheetKey(sheet);
   const meta = SHEET_META[bs];
   const allRows = workbook[bs] ?? [];
+  const showsBase = scopeShowsBase(bs, scope);
   const scopedFilter = scope && AUDIENCE_FILTER[bs] ? true : false;
-  const rows = scope ? (scopedFilter ? allRows : []) : allRows;
+  const rows = showsBase ? allRows : [];
   const out: number[] = [];
-  if (meta && (!scope || scopedFilter)) {
+  if (meta && showsBase) {
     for (let i = meta.firstDataRow; i < rows.length; i++) {
       if (!rows[i].some((c) => c != null && String(c).trim() !== "")) continue;
-      if (scope && !rowMatchesScope(bs, scope, rows[i])) continue;
+      if (scope && scopedFilter && !rowMatchesScope(bs, scope, rows[i])) continue;
       out.push(i);
     }
   } else if (!scope) {
@@ -189,7 +190,7 @@ export function dataRows(sheet: string, edits?: EditsMap): number[] {
   // Include extra rows added via edits (row_id >= base length) with any non-empty cell
   const over = edits?.[sheet];
   if (over) {
-    const baseLen = scope && !scopedFilter ? 0 : allRows.length;
+    const baseLen = showsBase ? allRows.length : 0;
     const extras: number[] = [];
     for (const key of Object.keys(over)) {
       const id = Number(key);
@@ -208,8 +209,8 @@ export function dataRows(sheet: string, edits?: EditsMap): number[] {
 
 export function nextRowId(sheet: string, edits: EditsMap): number {
   const { base: bs, scope } = parseSheetKey(sheet);
-  const scopedFilter = scope && AUDIENCE_FILTER[bs] ? true : false;
-  const baseLen = scope && !scopedFilter ? 0 : (workbook[bs]?.length ?? 0);
+  const showsBase = scopeShowsBase(bs, scope);
+  const baseLen = showsBase ? (workbook[bs]?.length ?? 0) : 0;
   let max = baseLen - 1;
   const over = edits[sheet];
   if (over) for (const k of Object.keys(over)) max = Math.max(max, Number(k));
