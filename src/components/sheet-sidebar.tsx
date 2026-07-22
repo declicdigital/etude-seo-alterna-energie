@@ -123,6 +123,23 @@ export function SheetSidebar({
     });
   };
 
+  const [subpaths, setSubpaths] = useState<Record<string, string>>(DEFAULT_SUBPATHS);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SUBPATH_KEY);
+      if (raw) setSubpaths({ ...DEFAULT_SUBPATHS, ...(JSON.parse(raw) as Record<string, string>) });
+    } catch { /* ignore */ }
+  }, []);
+  const setSheetSubpath = (sheet: string, path: string | null) => {
+    setSubpaths((prev) => {
+      const n = { ...prev };
+      if (!path) delete n[sheet];
+      else n[sheet] = path;
+      try { localStorage.setItem(SUBPATH_KEY, JSON.stringify(n)); } catch { /* ignore */ }
+      return n;
+    });
+  };
+
   const groups = useMemo(() => {
     const g: Record<string, string[]> = {};
     for (const s of sheetNames) {
@@ -264,67 +281,17 @@ export function SheetSidebar({
               </button>
             </div>
             {!collapsed.has(g) && (
-            <ul className="mt-1.5 space-y-0.5">
-              {groups[g].map((s) => {
-                const isActive = active === s;
-                return (
-                  <li key={s}>
-                    <Link
-                      to="/"
-                      search={{ sheet: s }}
-                      className={cn(
-                        "group/item relative flex items-center rounded-md pl-4 pr-3 py-2 text-sm transition-colors",
-                        isActive
-                          ? cn("font-medium", style.active)
-                          : cn("text-foreground/80", style.hover),
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "absolute left-1 top-1.5 bottom-1.5 w-1 rounded-full transition-opacity",
-                          style.bar,
-                          isActive
-                            ? "opacity-0"
-                            : "opacity-30 group-hover/item:opacity-90",
-                        )}
-                      />
-                      <EditableText
-                        className="truncate flex-1"
-                        value={metaGet(meta, "sheet", s, SHEET_META[s]?.label ?? s)}
-                        onCommit={(v) => setMetaValue("sheet", s, v)}
-                      />
-                      {g === "Archives" ? (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setSheetGroup(s, null);
-                          }}
-                          className="ml-2 shrink-0 size-6 rounded-md flex items-center justify-center opacity-40 hover:opacity-100 hover:bg-foreground/10"
-                          aria-label="Sortir des archives"
-                          title="Sortir des archives"
-                        >
-                          <ArchiveRestore className="size-3.5" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setSheetGroup(s, "Archives");
-                          }}
-                          className="ml-2 shrink-0 size-6 rounded-md flex items-center justify-center opacity-0 group-hover/item:opacity-60 hover:!opacity-100 hover:bg-foreground/10"
-                          aria-label="Archiver"
-                          title="Archiver"
-                        >
-                          <Archive className="size-3.5" />
-                        </button>
-                      )}
-                    </Link>
-                  </li>
-                );
+            <div className="mt-1.5">
+              {renderGroupBody(g, groups[g], {
+                style,
+                active,
+                meta,
+                setMetaValue,
+                subpaths,
+                setSheetSubpath,
+                setSheetGroup,
               })}
-            </ul>
+            </div>
             )}
           </div>
           );
