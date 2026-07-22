@@ -15,7 +15,7 @@ export const isUnlocked = createServerFn({ method: "GET" }).handler(async () => 
     password: process.env.SESSION_SECRET!,
     name: "site-gate",
     maxAge: 60 * 60 * 24 * 30,
-    cookie: { httpOnly: true, secure: true, sameSite: "lax" as const, path: "/" },
+    cookie: { httpOnly: true, secure: true, sameSite: "none" as const, path: "/" },
   };
   const session = await useSession<GateSession>(sessionConfig);
   return { unlocked: session.data.unlocked === true };
@@ -34,7 +34,7 @@ export const unlockSite = createServerFn({ method: "POST" })
       password: sessionSecret,
       name: "site-gate",
       maxAge: 60 * 60 * 24 * 30,
-      cookie: { httpOnly: true, secure: true, sameSite: "lax" as const, path: "/" },
+      cookie: { httpOnly: true, secure: true, sameSite: "none" as const, path: "/" },
     };
     const session = await useSession<GateSession>(sessionConfig);
     await session.update({ unlocked: true });
@@ -46,7 +46,7 @@ export const lockSite = createServerFn({ method: "POST" }).handler(async () => {
     password: process.env.SESSION_SECRET!,
     name: "site-gate",
     maxAge: 60 * 60 * 24 * 30,
-    cookie: { httpOnly: true, secure: true, sameSite: "lax" as const, path: "/" },
+    cookie: { httpOnly: true, secure: true, sameSite: "none" as const, path: "/" },
   };
   const session = await useSession<GateSession>(sessionConfig);
   await session.clear();
