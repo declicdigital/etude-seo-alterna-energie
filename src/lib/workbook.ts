@@ -23,6 +23,17 @@ const AUDIENCE_FILTER: Record<string, { col: number; particulier: string[]; pro:
   "BLOG - ARTICLES": { col: 5, particulier: ["résident", "resident", "particulier"], pro: ["pro"] },
 };
 
+/**
+ * Sheets that don't have an "Audience" column but whose Excel content already
+ * targets a specific audience. When the scope matches, the full base sheet
+ * is shown; other scopes start empty (user fills them from scratch, edits
+ * remain scoped independently).
+ */
+const DEFAULT_AUDIENCE: Record<string, "particulier" | "pro"> = {
+  "Articles cocon éléctricité": "particulier",
+  "Articles cocon Gaz": "particulier",
+};
+
 function scopeAudience(scope: string | null): "particulier" | "pro" | null {
   if (!scope) return null;
   const s = scope.toLowerCase();
@@ -31,10 +42,23 @@ function scopeAudience(scope: string | null): "particulier" | "pro" | null {
   return null;
 }
 
+/** True when the scoped view should surface the base sheet's rows. */
+function scopeShowsBase(base: string, scope: string | null): boolean {
+  if (!scope) return true;
+  if (AUDIENCE_FILTER[base]) return true; // filtered per row
+  const def = DEFAULT_AUDIENCE[base];
+  if (def && scopeAudience(scope) === def) return true;
+  return false;
+}
+
 function rowMatchesScope(base: string, scope: string | null, row: Row | undefined): boolean {
   if (!scope || !row) return false;
   const filter = AUDIENCE_FILTER[base];
-  if (!filter) return false;
+  if (!filter) {
+    // No audience column: either the scope matches the default audience
+    // (show every base row) or it doesn't (base is hidden).
+    return scopeShowsBase(base, scope);
+  }
   const aud = scopeAudience(scope);
   if (!aud) return false;
   const v = row[filter.col];
