@@ -171,7 +171,9 @@ export function dataRows(sheet: string, edits?: EditsMap): number[] {
       const id = Number(key);
       if (id >= baseLen) {
         const cells = over[id];
-        if (Object.values(cells).some((v) => v != null && String(v).trim() !== "")) extras.push(id);
+        // Include added rows even when values are empty strings, so newly
+        // created rows show up immediately for inline editing.
+        if (Object.values(cells).some((v) => v !== null && v !== undefined)) extras.push(id);
       }
     }
     extras.sort((a, b) => a - b);
