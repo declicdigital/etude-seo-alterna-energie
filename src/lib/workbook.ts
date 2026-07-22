@@ -17,6 +17,33 @@ export function baseSheetOf(sheet: string): string {
   return parseSheetKey(sheet).base;
 }
 
+/** Sheets whose base data is filtered by an "Audience" column into scoped views. */
+const AUDIENCE_FILTER: Record<string, { col: number; particulier: string[]; pro: string[] }> = {
+  "BLOG - IDEE": { col: 2, particulier: ["résident", "resident", "particulier"], pro: ["pro"] },
+  "BLOG - ARTICLES": { col: 5, particulier: ["résident", "resident", "particulier"], pro: ["pro"] },
+};
+
+function scopeAudience(scope: string | null): "particulier" | "pro" | null {
+  if (!scope) return null;
+  const s = scope.toLowerCase();
+  if (s.startsWith("particulier")) return "particulier";
+  if (s.startsWith("pro")) return "pro";
+  return null;
+}
+
+function rowMatchesScope(base: string, scope: string | null, row: Row | undefined): boolean {
+  if (!scope || !row) return false;
+  const filter = AUDIENCE_FILTER[base];
+  if (!filter) return false;
+  const aud = scopeAudience(scope);
+  if (!aud) return false;
+  const v = row[filter.col];
+  if (v == null) return false;
+  const s = String(v).toLowerCase();
+  const list = aud === "particulier" ? filter.particulier : filter.pro;
+  return list.some((k) => s.includes(k));
+}
+
 export type CellEdit = {
   sheet: string;
   row_id: number;
@@ -44,14 +71,22 @@ export function getCell(
   const override = edits[sheet]?.[rowId]?.[col];
   if (override !== undefined) return override;
   const { base, scope } = parseSheetKey(sheet);
-  if (scope) return null;
+  if (scope) {
+    const row = workbook[base]?.[rowId];
+    if (row && rowMatchesScope(base, scope, row)) return row[col] ?? null;
+    return null;
+  }
   const row = workbook[base]?.[rowId];
   return row ? row[col] ?? null : null;
 }
 
 export function getRow(sheet: string, rowId: number, edits: EditsMap): Row {
   const { base: b, scope } = parseSheetKey(sheet);
-  const base = scope ? [] : (workbook[b]?.[rowId] ?? []);
+  const baseRow = workbook[b]?.[rowId];
+  const base =
+    scope
+      ? baseRow && rowMatchesScope(b, scope, baseRow) ? baseRow : []
+      : (baseRow ?? []);
   const over = edits[sheet]?.[rowId];
   if (!over) return base;
   const width = Math.max(base.length, ...Object.keys(over).map((k) => Number(k) + 1));
@@ -114,11 +149,15 @@ export function headersOf(sheet: string, edits?: EditsMap): string[] {
 export function dataRows(sheet: string, edits?: EditsMap): number[] {
   const { base: bs, scope } = parseSheetKey(sheet);
   const meta = SHEET_META[bs];
-  const rows = scope ? [] : (workbook[bs] ?? []);
+  const allRows = workbook[bs] ?? [];
+  const scopedFilter = scope && AUDIENCE_FILTER[bs] ? true : false;
+  const rows = scope ? (scopedFilter ? allRows : []) : allRows;
   const out: number[] = [];
-  if (meta && !scope) {
+  if (meta && (!scope || scopedFilter)) {
     for (let i = meta.firstDataRow; i < rows.length; i++) {
-      if (rows[i].some((c) => c != null && String(c).trim() !== "")) out.push(i);
+      if (!rows[i].some((c) => c != null && String(c).trim() !== "")) continue;
+      if (scope && !rowMatchesScope(bs, scope, rows[i])) continue;
+      out.push(i);
     }
   } else if (!scope) {
     for (let i = 0; i < rows.length; i++) out.push(i);
@@ -126,7 +165,7 @@ export function dataRows(sheet: string, edits?: EditsMap): number[] {
   // Include extra rows added via edits (row_id >= base length) with any non-empty cell
   const over = edits?.[sheet];
   if (over) {
-    const baseLen = scope ? 0 : rows.length;
+    const baseLen = scope && !scopedFilter ? 0 : allRows.length;
     const extras: number[] = [];
     for (const key of Object.keys(over)) {
       const id = Number(key);
@@ -143,7 +182,8 @@ export function dataRows(sheet: string, edits?: EditsMap): number[] {
 
 export function nextRowId(sheet: string, edits: EditsMap): number {
   const { base: bs, scope } = parseSheetKey(sheet);
-  const baseLen = scope ? 0 : (workbook[bs]?.length ?? 0);
+  const scopedFilter = scope && AUDIENCE_FILTER[bs] ? true : false;
+  const baseLen = scope && !scopedFilter ? 0 : (workbook[bs]?.length ?? 0);
   let max = baseLen - 1;
   const over = edits[sheet];
   if (over) for (const k of Object.keys(over)) max = Math.max(max, Number(k));
