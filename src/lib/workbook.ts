@@ -72,8 +72,8 @@ export const SHEET_META: Record<
   "Netlinking": { headerRow: 1, firstDataRow: 2, label: "Netlinking", group: "Suivi" },
   "Roadmap 2026 - WIP": { headerRow: 1, firstDataRow: 2, label: "Roadmap 2026", group: "Suivi" },
   "Temps passé": { headerRow: 0, firstDataRow: 1, label: "Temps passé", group: "Suivi" },
-  "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon Électricité", group: "Cocons" },
-  "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon Gaz", group: "Cocons" },
+  "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon Électricité", group: "Stratégie édito" },
+  "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon Gaz", group: "Stratégie édito" },
   "Webflow - fonctionnement": { headerRow: 1, treeCols: 5, firstDataRow: 2, label: "Webflow - fonctionnement", group: "Docs" },
 };
 
