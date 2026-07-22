@@ -519,7 +519,7 @@ function SheetItem({
         />
         <EditableText
           className="truncate flex-1"
-          value={metaGet(ctx.meta, "sheet", sheet, SHEET_META[sheet]?.label ?? sheet)}
+          value={metaGet(ctx.meta, "sheet", sheet, SHEET_META[sheet.split("::")[0]]?.label ?? sheet)}
           onCommit={(v) => ctx.setMetaValue("sheet", sheet, v)}
         />
         {showSubMove && structure && (
