@@ -20,19 +20,28 @@ const DEFAULT_GROUP_OVERRIDES: Record<string, string> = {
 // subcategories (level 1) and each subcategory a list of sub-subs (level 2).
 const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
   Blog: [
-    { name: "Particulier", subs: ["Elec", "Gaz"] },
-    { name: "Professionnel", subs: ["Elec", "Gaz"] },
+    { name: "Particulier", subs: ["Électricité", "Gaz"] },
+    { name: "Professionnel", subs: ["Électricité", "Gaz"] },
   ],
   "Stratégie édito": [
-    { name: "Particulier", subs: ["Elec", "Gaz"] },
-    { name: "Professionnel", subs: ["Elec", "Gaz"] },
+    { name: "Particulier", subs: ["Électricité", "Gaz"] },
+    { name: "Professionnel", subs: ["Électricité", "Gaz"] },
+  ],
+  Arborescence: [
+    { name: "Particulier", subs: [] },
+    { name: "Professionnel", subs: [] },
   ],
 };
 
 // Default sub-path assignments for existing sheets. Format: "Subcat/Subsub".
+// A value of "*" means the sheet should appear in every leaf of the group.
 const DEFAULT_SUBPATHS: Record<string, string> = {
-  "Articles cocon éléctricité": "Particulier/Elec",
+  "Articles cocon éléctricité": "Particulier/Électricité",
   "Articles cocon Gaz": "Particulier/Gaz",
+  "BLOG - IDEE": "*",
+  "BLOG - ARTICLES": "*",
+  "Structure RES": "Particulier",
+  "Structure PRO": "Professionnel",
 };
 
 // Per-group color palette. Each entry drives:
