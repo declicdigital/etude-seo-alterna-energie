@@ -6,6 +6,17 @@ export type Workbook = Record<string, Row[]>;
 export const workbook = raw as unknown as Workbook;
 export const sheetNames = Object.keys(workbook);
 
+/** A sheet key may be "base" or "base::scope". Returns { base, scope }. */
+export function parseSheetKey(sheet: string): { base: string; scope: string | null } {
+  const i = sheet.indexOf("::");
+  if (i < 0) return { base: sheet, scope: null };
+  return { base: sheet.slice(0, i), scope: sheet.slice(i + 2) };
+}
+
+export function baseSheetOf(sheet: string): string {
+  return parseSheetKey(sheet).base;
+}
+
 export type CellEdit = {
   sheet: string;
   row_id: number;
@@ -32,15 +43,21 @@ export function getCell(
 ): string | number | null {
   const override = edits[sheet]?.[rowId]?.[col];
   if (override !== undefined) return override;
-  const row = workbook[sheet]?.[rowId];
+  const { base, scope } = parseSheetKey(sheet);
+  if (scope) return null;
+  const row = workbook[base]?.[rowId];
   return row ? row[col] ?? null : null;
 }
 
 export function getRow(sheet: string, rowId: number, edits: EditsMap): Row {
-  const base = workbook[sheet]?.[rowId] ?? [];
+  const { base: b, scope } = parseSheetKey(sheet);
+  const base = scope ? [] : (workbook[b]?.[rowId] ?? []);
   const over = edits[sheet]?.[rowId];
   if (!over) return base;
-  return base.map((v, i) => (over[i] !== undefined ? over[i] : v));
+  const width = Math.max(base.length, ...Object.keys(over).map((k) => Number(k) + 1));
+  const out: (string | number | null)[] = [];
+  for (let i = 0; i < width; i++) out.push(over[i] !== undefined ? over[i] : (base[i] ?? null));
+  return out;
 }
 
 /** Sheets where columns N0..N7 encode a hierarchical tree. */
@@ -53,7 +70,7 @@ export const STRUCTURE_SHEETS = new Set([
 ]);
 
 export function isStructureSheet(name: string) {
-  return STRUCTURE_SHEETS.has(name);
+  return STRUCTURE_SHEETS.has(baseSheetOf(name));
 }
 
 /** Header row index for each sheet (auto-detected best guess). */
