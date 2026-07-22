@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { unlockSite } from "@/lib/gate.functions";
@@ -16,23 +16,24 @@ export const Route = createFileRoute("/unlock")({
 });
 
 function UnlockPage() {
-  const router = useRouter();
   const unlock = useServerFn(unlockSite);
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError(false);
+    setError("");
     setLoading(true);
     try {
       const { ok } = await unlock({ data: { password } });
       if (ok) {
         window.location.assign("/");
       } else {
-        setError(true);
+        setError("Mot de passe incorrect.");
       }
+    } catch {
+      setError("Impossible de vérifier le mot de passe. Réessayez dans un instant.");
     } finally {
       setLoading(false);
     }
@@ -64,9 +65,7 @@ function UnlockPage() {
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-emerald-950 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
         />
-        {error && (
-          <p className="mt-2 text-xs text-red-600">Mot de passe incorrect.</p>
-        )}
+        {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
         <button
           type="submit"
           disabled={loading || password.length === 0}
