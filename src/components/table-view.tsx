@@ -125,6 +125,9 @@ export function TableView({
       // In a scoped view, hide the "Audience" column — the scope already
       // isolates the audience, so the column would be redundant.
       if (isScoped && (h || "").trim().toLowerCase() === "audience") continue;
+      // Hide the "Tags" and "Noindex" columns everywhere — not useful in this tool.
+      const hn = (h || "").trim().toLowerCase();
+      if (hn === "tags" || hn === "noindex") continue;
       const hasData = rows.some((r) => r[c] != null && String(r[c]).trim() !== "");
       if ((h && h.trim()) || hasData) cols.push(c);
     }
