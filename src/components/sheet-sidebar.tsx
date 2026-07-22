@@ -452,11 +452,17 @@ function SubSubGroup({
   ctx: RenderCtx;
   structure: { name: string; subs: string[] }[];
 }) {
+  // When a single sheet lives under this leaf, its label already says
+  // "Électricité" / "Gaz" — avoid printing the same word twice by hiding
+  // the small header above it.
+  const hideHeader = items.length === 1;
   return (
     <div>
-      <div className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {ss}
-      </div>
+      {!hideHeader && (
+        <div className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {ss}
+        </div>
+      )}
       <ul className="space-y-0.5">
           {items.map((s) => (
             <SheetItem key={s} sheet={s} group={group} ctx={ctx} showSubMove structure={structure} />
