@@ -32,8 +32,8 @@ const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
 // Default sub-path assignments for existing sheets. Format: "Subcat/Subsub".
 // A value of "*" means the sheet should appear in every leaf of the group.
 const DEFAULT_SUBPATHS: Record<string, string> = {
-  "Articles cocon éléctricité": "Particulier/Électricité",
-  "Articles cocon Gaz": "Particulier/Gaz",
+  "Articles cocon éléctricité": "*/Électricité",
+  "Articles cocon Gaz": "*/Gaz",
   "BLOG - IDEE": "*",
   "BLOG - ARTICLES": "*",
   "Structure RES": "Particulier",
@@ -351,6 +351,11 @@ function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
       for (const sc of structure) {
         if (sc.subs.length === 0) pushBucket(sc.name, `${s}::${sc.name}`);
         else for (const ss of sc.subs) pushBucket(`${sc.name}/${ss}`, `${s}::${sc.name}/${ss}`);
+      }
+    } else if (p && p.startsWith("*/")) {
+      const suffix = p.slice(2);
+      for (const sc of structure) {
+        if (sc.subs.includes(suffix)) pushBucket(`${sc.name}/${suffix}`, `${s}::${sc.name}/${suffix}`);
       }
     } else if (p && structure.some((sc) => p === sc.name || p.startsWith(sc.name + "/"))) {
       pushBucket(p, s);
