@@ -19,19 +19,19 @@ const SECTIONS: Section[] = [
   },
   {
     icon: FolderTree,
-    title: "Structure RES",
+    title: "Structure Particulier",
     sheet: "Structure RES",
     accent: "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10",
     description:
-      "Liste l'ensemble des pages et articles côté résidentiel, leur arborescence et la façon dont ils sont introduits dans la structure. Le maillage et l'arborescence étant un élément fondamental du SEO, cela permet de structurer et de savoir où en est le site.",
+      "Liste l'ensemble des pages et articles côté particulier, leur arborescence et la façon dont ils sont introduits dans la structure. Le maillage et l'arborescence étant un élément fondamental du SEO, cela permet de structurer et de savoir où en est le site.",
   },
   {
     icon: FolderTree,
-    title: "Structure PRO",
+    title: "Structure Professionnel",
     sheet: "Structure PRO",
     accent: "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10",
     description:
-      "Le pendant \"Pros\" de Structure RES - à mettre au propre.",
+      "Le pendant \"Professionnel\" de Structure Particulier - à mettre au propre.",
   },
   {
     icon: FileText,
