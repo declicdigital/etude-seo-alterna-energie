@@ -29,8 +29,7 @@ function UnlockPage() {
     try {
       const { ok } = await unlock({ data: { password } });
       if (ok) {
-        await router.invalidate();
-        await router.navigate({ to: "/" });
+        window.location.assign("/");
       } else {
         setError(true);
       }
