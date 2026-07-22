@@ -158,7 +158,7 @@ export type TreeNode = {
 };
 
 export function buildTree(sheet: string, edits: EditsMap): TreeNode[] {
-  const meta = SHEET_META[sheet];
+  const meta = SHEET_META[baseSheetOf(sheet)];
   const cols = meta?.treeCols ?? 8;
   const ids = dataRows(sheet, edits);
   const roots: TreeNode[] = [];
