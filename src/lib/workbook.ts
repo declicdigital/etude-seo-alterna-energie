@@ -62,9 +62,9 @@ export const SHEET_META: Record<
   { headerRow: number; treeCols?: number; firstDataRow: number; label: string; group: string }
 > = {
   "Structure proposée (V2)": { headerRow: 4, treeCols: 8, firstDataRow: 6, label: "Structure proposée V2", group: "Arborescence" },
-  "Structure RES": { headerRow: 0, treeCols: 8, firstDataRow: 2, label: "Structure Résidentiels", group: "Arborescence" },
-  "Structure PRO": { headerRow: 5, treeCols: 8, firstDataRow: 7, label: "Structure Pros", group: "Arborescence" },
-  "Structure (resi) (OLD V3)": { headerRow: 0, treeCols: 8, firstDataRow: 2, label: "Structure Résidentiels (V3 archivée)", group: "Arborescence" },
+  "Structure RES": { headerRow: 0, treeCols: 8, firstDataRow: 2, label: "Structure Particulier", group: "Arborescence" },
+  "Structure PRO": { headerRow: 5, treeCols: 8, firstDataRow: 7, label: "Structure Professionnel", group: "Arborescence" },
+  "Structure (resi) (OLD V3)": { headerRow: 0, treeCols: 8, firstDataRow: 2, label: "Structure Particulier (V3 archivée)", group: "Arborescence" },
   "Structure pour migration AE-AEF": { headerRow: 0, treeCols: 8, firstDataRow: 2, label: "Migration AE → AEF", group: "Arborescence" },
   "TODO GENERALE": { headerRow: 0, firstDataRow: 1, label: "TODO générale", group: "Suivi" },
   "BLOG - IDEE": { headerRow: 1, firstDataRow: 2, label: "Blog - Idées", group: "Blog" },
