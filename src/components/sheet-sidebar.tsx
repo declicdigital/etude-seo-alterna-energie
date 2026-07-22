@@ -20,19 +20,28 @@ const DEFAULT_GROUP_OVERRIDES: Record<string, string> = {
 // subcategories (level 1) and each subcategory a list of sub-subs (level 2).
 const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
   Blog: [
-    { name: "Particulier", subs: ["Elec", "Gaz"] },
-    { name: "Professionnel", subs: ["Elec", "Gaz"] },
+    { name: "Particulier", subs: ["Électricité", "Gaz"] },
+    { name: "Professionnel", subs: ["Électricité", "Gaz"] },
   ],
   "Stratégie édito": [
-    { name: "Particulier", subs: ["Elec", "Gaz"] },
-    { name: "Professionnel", subs: ["Elec", "Gaz"] },
+    { name: "Particulier", subs: ["Électricité", "Gaz"] },
+    { name: "Professionnel", subs: ["Électricité", "Gaz"] },
+  ],
+  Arborescence: [
+    { name: "Particulier", subs: [] },
+    { name: "Professionnel", subs: [] },
   ],
 };
 
 // Default sub-path assignments for existing sheets. Format: "Subcat/Subsub".
+// A value of "*" means the sheet should appear in every leaf of the group.
 const DEFAULT_SUBPATHS: Record<string, string> = {
-  "Articles cocon éléctricité": "Particulier/Elec",
+  "Articles cocon éléctricité": "Particulier/Électricité",
   "Articles cocon Gaz": "Particulier/Gaz",
+  "BLOG - IDEE": "*",
+  "BLOG - ARTICLES": "*",
+  "Structure RES": "Particulier",
+  "Structure PRO": "Professionnel",
 };
 
 // Per-group color palette. Each entry drives:
@@ -127,7 +136,14 @@ export function SheetSidebar({
   useEffect(() => {
     try {
       const raw = localStorage.getItem(SUBPATH_KEY);
-      if (raw) setSubpaths({ ...DEFAULT_SUBPATHS, ...(JSON.parse(raw) as Record<string, string>) });
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, string>;
+        // Migrate old "Elec" label to "Électricité".
+        for (const k of Object.keys(parsed)) {
+          if (parsed[k]?.endsWith("/Elec")) parsed[k] = parsed[k].replace(/\/Elec$/, "/Électricité");
+        }
+        setSubpaths({ ...DEFAULT_SUBPATHS, ...parsed });
+      }
     } catch { /* ignore */ }
   }, []);
   const setSheetSubpath = (sheet: string, path: string | null) => {
@@ -328,12 +344,20 @@ function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
   // Split sheets: unassigned first, then buckets by "Sub/SubSub"
   const buckets = new Map<string, string[]>();
   const unassigned: string[] = [];
+  const pushBucket = (key: string, sheet: string) => {
+    const arr = buckets.get(key) ?? [];
+    arr.push(sheet);
+    buckets.set(key, arr);
+  };
   for (const s of sheets) {
     const p = ctx.subpaths[s];
-    if (p && structure.some((sc) => p.startsWith(sc.name + "/"))) {
-      const arr = buckets.get(p) ?? [];
-      arr.push(s);
-      buckets.set(p, arr);
+    if (p === "*") {
+      for (const sc of structure) {
+        if (sc.subs.length === 0) pushBucket(sc.name, s);
+        else for (const ss of sc.subs) pushBucket(`${sc.name}/${ss}`, s);
+      }
+    } else if (p && structure.some((sc) => p === sc.name || p.startsWith(sc.name + "/"))) {
+      pushBucket(p, s);
     } else {
       unassigned.push(s);
     }
@@ -355,6 +379,16 @@ function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
           )}>
             {sub.name}
           </div>
+          {sub.subs.length === 0 ? (
+            <ul className="mt-1 ml-2 space-y-0.5 border-l border-border/60 pl-2">
+              {(buckets.get(sub.name) ?? []).map((s) => (
+                <SheetItem key={s} sheet={s} group={group} ctx={ctx} showSubMove structure={structure} />
+              ))}
+              {(buckets.get(sub.name) ?? []).length === 0 && (
+                <li className="px-3 py-1 text-[11px] text-muted-foreground/60 italic">Vide</li>
+              )}
+            </ul>
+          ) : (
           <div className="mt-1 ml-2 space-y-1.5 border-l border-border/60 pl-2">
             {sub.subs.map((ss) => {
               const key = `${sub.name}/${ss}`;
@@ -376,6 +410,7 @@ function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
               );
             })}
           </div>
+          )}
         </div>
       ))}
     </div>
@@ -464,8 +499,22 @@ function SheetItem({
           >
             (Aucune)
           </button>
+          <button
+            className="w-full text-left px-3 py-1.5 hover:bg-muted"
+            onClick={() => { ctx.setSheetSubpath(sheet, "*"); setMenuOpen(false); }}
+          >
+            Partout
+          </button>
           {structure.flatMap((sub) =>
-            sub.subs.map((ss) => (
+            sub.subs.length === 0 ? [(
+              <button
+                key={sub.name}
+                className="w-full text-left px-3 py-1.5 hover:bg-muted"
+                onClick={() => { ctx.setSheetSubpath(sheet, sub.name); setMenuOpen(false); }}
+              >
+                {sub.name}
+              </button>
+            )] : sub.subs.map((ss) => (
               <button
                 key={`${sub.name}/${ss}`}
                 className="w-full text-left px-3 py-1.5 hover:bg-muted"
