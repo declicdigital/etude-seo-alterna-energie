@@ -101,7 +101,7 @@ export function TableView({
   onToggle: (rowId: number, col: number, value: string | null) => void;
 }) {
   const headers = headersOf(sheet, edits);
-  const headerRow = SHEET_META[sheet]?.headerRow ?? 0;
+  const headerRow = SHEET_META[sheet.split("::")[0]]?.headerRow ?? 0;
   const ids = useMemo(() => dataRows(sheet, edits), [sheet, edits]);
   const [q, setQ] = useState("");
 
