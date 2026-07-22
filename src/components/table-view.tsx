@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ExternalLink, Plus } from "lucide-react";
 import { dataRows, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
@@ -105,6 +105,56 @@ export function TableView({
   const headerRow = SHEET_META[sheet.split("::")[0]]?.headerRow ?? 0;
   const ids = useMemo(() => dataRows(sheet, edits), [sheet, edits]);
   const [q, setQ] = useState("");
+
+  // ---------- Excel-like resizable columns (per-sheet, persisted) ----------
+  const widthsKey = `col-widths::${sheet}`;
+  const [userWidths, setUserWidths] = useState<Record<number, number>>({});
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(widthsKey);
+      setUserWidths(raw ? JSON.parse(raw) : {});
+    } catch {
+      setUserWidths({});
+    }
+  }, [widthsKey]);
+  const dragRef = useRef<{ col: number; startX: number; startW: number } | null>(null);
+  const startResize = (col: number, startW: number) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragRef.current = { col, startX: e.clientX, startW };
+    const onMove = (ev: MouseEvent) => {
+      const d = dragRef.current;
+      if (!d) return;
+      const next = Math.max(48, Math.round(d.startW + (ev.clientX - d.startX)));
+      setUserWidths((prev) => ({ ...prev, [d.col]: next }));
+    };
+    const onUp = () => {
+      const d = dragRef.current;
+      dragRef.current = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      if (d) {
+        setUserWidths((prev) => {
+          try { localStorage.setItem(widthsKey, JSON.stringify(prev)); } catch {}
+          return prev;
+        });
+      }
+    };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+  const resetColumn = (col: number) => {
+    setUserWidths((prev) => {
+      const next = { ...prev };
+      delete next[col];
+      try { localStorage.setItem(widthsKey, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
 
   const filtered = useMemo(() => {
     if (!q) return ids;
@@ -593,10 +643,11 @@ export function TableView({
           <colgroup>
             {visibleCols.map((c) => {
               const w = widthFor(c);
+              const eff = userWidths[c] ?? w.max;
               return (
                 <col
                   key={c}
-                  style={{ width: `${w.max}px` }}
+                  style={{ width: `${eff}px` }}
                 />
               );
             })}
@@ -606,7 +657,7 @@ export function TableView({
               {visibleCols.map((c) => (
                 <th
                   key={c}
-                  className="text-left px-2 py-1.5 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground leading-tight"
+                  className="relative text-left px-2 py-1.5 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground leading-tight"
                 >
                   <EditableText
                     className="block truncate"
@@ -615,6 +666,17 @@ export function TableView({
                     placeholder={`Col ${c + 1}`}
                     onCommit={(v) => onToggle(headerRow, c, v.trim() === "" ? null : v)}
                   />
+                  <span
+                    role="separator"
+                    aria-label="Redimensionner la colonne"
+                    title="Glisser pour redimensionner · double-clic pour réinitialiser"
+                    onMouseDown={startResize(c, userWidths[c] ?? widthFor(c).max)}
+                    onDoubleClick={(e) => { e.stopPropagation(); resetColumn(c); }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute top-0 right-0 h-full w-1.5 -mr-[3px] cursor-col-resize select-none group z-10"
+                  >
+                    <span className="block h-full w-px mx-auto bg-border group-hover:bg-primary group-hover:w-[2px] transition-colors" />
+                  </span>
                 </th>
               ))}
             </tr>
