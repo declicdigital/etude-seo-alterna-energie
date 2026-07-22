@@ -337,12 +337,20 @@ function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
   // Split sheets: unassigned first, then buckets by "Sub/SubSub"
   const buckets = new Map<string, string[]>();
   const unassigned: string[] = [];
+  const pushBucket = (key: string, sheet: string) => {
+    const arr = buckets.get(key) ?? [];
+    arr.push(sheet);
+    buckets.set(key, arr);
+  };
   for (const s of sheets) {
     const p = ctx.subpaths[s];
-    if (p && structure.some((sc) => p.startsWith(sc.name + "/"))) {
-      const arr = buckets.get(p) ?? [];
-      arr.push(s);
-      buckets.set(p, arr);
+    if (p === "*") {
+      for (const sc of structure) {
+        if (sc.subs.length === 0) pushBucket(sc.name, s);
+        else for (const ss of sc.subs) pushBucket(`${sc.name}/${ss}`, s);
+      }
+    } else if (p && structure.some((sc) => p === sc.name || p.startsWith(sc.name + "/"))) {
+      pushBucket(p, s);
     } else {
       unassigned.push(s);
     }
@@ -364,6 +372,16 @@ function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
           )}>
             {sub.name}
           </div>
+          {sub.subs.length === 0 ? (
+            <ul className="mt-1 ml-2 space-y-0.5 border-l border-border/60 pl-2">
+              {(buckets.get(sub.name) ?? []).map((s) => (
+                <SheetItem key={s} sheet={s} group={group} ctx={ctx} showSubMove structure={structure} />
+              ))}
+              {(buckets.get(sub.name) ?? []).length === 0 && (
+                <li className="px-3 py-1 text-[11px] text-muted-foreground/60 italic">Vide</li>
+              )}
+            </ul>
+          ) : (
           <div className="mt-1 ml-2 space-y-1.5 border-l border-border/60 pl-2">
             {sub.subs.map((ss) => {
               const key = `${sub.name}/${ss}`;
@@ -385,6 +403,7 @@ function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
               );
             })}
           </div>
+          )}
         </div>
       ))}
     </div>
