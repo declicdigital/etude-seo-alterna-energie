@@ -399,17 +399,27 @@ function SubGroup({
   ctx: RenderCtx;
   structure: { name: string; subs: string[] }[];
 }) {
+  // Auto-open when the active sheet belongs to this subcategory.
+  const activeScope = ctx.active.includes("::") ? ctx.active.split("::")[1] : "";
+  const activeSub = activeScope.split("/")[0] ?? "";
+  const [open, setOpen] = useState(activeSub === sub.name);
+  useEffect(() => {
+    if (activeSub === sub.name) setOpen(true);
+  }, [activeSub, sub.name]);
   return (
     <div className="ml-1">
-      <div
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
         className={cn(
-          "px-2 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wide",
+          "w-full flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wide cursor-pointer",
           ctx.style.active,
         )}
       >
-        {sub.name}
-      </div>
-      {sub.subs.length === 0 ? (
+        {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+        <span className="truncate">{sub.name}</span>
+      </button>
+      {open && (sub.subs.length === 0 ? (
         <ul className="mt-1 ml-2 space-y-0.5 border-l border-border/60 pl-2">
           {(buckets.get(sub.name) ?? []).map((s) => (
             <SheetItem key={s} sheet={s} group={group} ctx={ctx} showSubMove structure={structure} />
@@ -432,7 +442,7 @@ function SubGroup({
             />
           ))}
         </div>
-      )}
+      ))}
     </div>
   );
 }
@@ -452,25 +462,44 @@ function SubSubGroup({
   ctx: RenderCtx;
   structure: { name: string; subs: string[] }[];
 }) {
-  // When a single sheet lives under this leaf, its label already says
-  // "Électricité" / "Gaz" — avoid printing the same word twice by hiding
-  // the small header above it.
-  const hideHeader = items.length === 1;
+  const activeScope = ctx.active.includes("::") ? ctx.active.split("::")[1] : "";
+  const activeSubSub = activeScope.split("/")[1] ?? "";
+  const activeSub = activeScope.split("/")[0] ?? "";
+  const [open, setOpen] = useState(activeSub === subName && activeSubSub === ss);
+  useEffect(() => {
+    if (activeSub === subName && activeSubSub === ss) setOpen(true);
+  }, [activeSub, activeSubSub, subName, ss]);
+  // When a single sheet lives under this leaf, its label already matches
+  // the header name — collapse into a direct link.
+  const singleLeaf = items.length === 1;
   return (
     <div>
-      {!hideHeader && (
-        <div className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {ss}
-        </div>
-      )}
-      <ul className="space-y-0.5">
-          {items.map((s) => (
-            <SheetItem key={s} sheet={s} group={group} ctx={ctx} showSubMove structure={structure} />
-          ))}
-          {items.length === 0 && (
-            <li className="px-3 py-1 text-[11px] text-muted-foreground/60 italic">Vide</li>
-          )}
+      {singleLeaf ? (
+        <ul className="space-y-0.5">
+          <SheetItem sheet={items[0]} group={group} ctx={ctx} showSubMove structure={structure} />
         </ul>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            className="w-full flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted/50 cursor-pointer"
+          >
+            {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+            <span className="truncate">{ss}</span>
+          </button>
+          {open && (
+            <ul className="space-y-0.5 ml-2 border-l border-border/60 pl-2">
+              {items.map((s) => (
+                <SheetItem key={s} sheet={s} group={group} ctx={ctx} showSubMove structure={structure} />
+              ))}
+              {items.length === 0 && (
+                <li className="px-3 py-1 text-[11px] text-muted-foreground/60 italic">Vide</li>
+              )}
+            </ul>
+          )}
+        </>
+      )}
     </div>
   );
 }
