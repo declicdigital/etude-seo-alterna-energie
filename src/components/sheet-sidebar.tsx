@@ -27,10 +27,6 @@ const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
     { name: "Particulier", subs: ["Électricité", "Gaz"] },
     { name: "Professionnel", subs: ["Électricité", "Gaz"] },
   ],
-  Arborescence: [
-    { name: "Particulier", subs: [] },
-    { name: "Professionnel", subs: [] },
-  ],
 };
 
 // Default sub-path assignments for existing sheets. Format: "Subcat/Subsub".
