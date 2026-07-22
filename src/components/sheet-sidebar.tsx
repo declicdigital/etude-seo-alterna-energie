@@ -136,7 +136,14 @@ export function SheetSidebar({
   useEffect(() => {
     try {
       const raw = localStorage.getItem(SUBPATH_KEY);
-      if (raw) setSubpaths({ ...DEFAULT_SUBPATHS, ...(JSON.parse(raw) as Record<string, string>) });
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, string>;
+        // Migrate old "Elec" label to "Électricité".
+        for (const k of Object.keys(parsed)) {
+          if (parsed[k]?.endsWith("/Elec")) parsed[k] = parsed[k].replace(/\/Elec$/, "/Électricité");
+        }
+        setSubpaths({ ...DEFAULT_SUBPATHS, ...parsed });
+      }
     } catch { /* ignore */ }
   }, []);
   const setSheetSubpath = (sheet: string, path: string | null) => {
