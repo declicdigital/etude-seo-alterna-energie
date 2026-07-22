@@ -95,11 +95,12 @@ export const SHEET_META: Record<
 };
 
 export function headersOf(sheet: string, edits?: EditsMap): string[] {
-  const meta = SHEET_META[sheet];
+  const { base: bs, scope } = parseSheetKey(sheet);
+  const meta = SHEET_META[bs];
   if (!meta) return [];
-  const row = workbook[sheet]?.[meta.headerRow] ?? [];
+  const row = workbook[bs]?.[meta.headerRow] ?? [];
   const base = row.map((c) => (c == null ? "" : String(c)));
-  const over = edits?.[sheet]?.[meta.headerRow];
+  const over = edits?.[bs]?.[meta.headerRow] ?? (scope ? edits?.[sheet]?.[meta.headerRow] : undefined);
   if (!over) return base;
   const width = Math.max(base.length, ...Object.keys(over).map((k) => Number(k) + 1));
   const out: string[] = [];
@@ -111,23 +112,25 @@ export function headersOf(sheet: string, edits?: EditsMap): string[] {
 }
 
 export function dataRows(sheet: string, edits?: EditsMap): number[] {
-  const meta = SHEET_META[sheet];
-  const rows = workbook[sheet] ?? [];
+  const { base: bs, scope } = parseSheetKey(sheet);
+  const meta = SHEET_META[bs];
+  const rows = scope ? [] : (workbook[bs] ?? []);
   const out: number[] = [];
-  if (meta) {
+  if (meta && !scope) {
     for (let i = meta.firstDataRow; i < rows.length; i++) {
       if (rows[i].some((c) => c != null && String(c).trim() !== "")) out.push(i);
     }
-  } else {
+  } else if (!scope) {
     for (let i = 0; i < rows.length; i++) out.push(i);
   }
   // Include extra rows added via edits (row_id >= base length) with any non-empty cell
   const over = edits?.[sheet];
   if (over) {
+    const baseLen = scope ? 0 : rows.length;
     const extras: number[] = [];
     for (const key of Object.keys(over)) {
       const id = Number(key);
-      if (id >= rows.length) {
+      if (id >= baseLen) {
         const cells = over[id];
         if (Object.values(cells).some((v) => v != null && String(v).trim() !== "")) extras.push(id);
       }
@@ -139,7 +142,8 @@ export function dataRows(sheet: string, edits?: EditsMap): number[] {
 }
 
 export function nextRowId(sheet: string, edits: EditsMap): number {
-  const baseLen = workbook[sheet]?.length ?? 0;
+  const { base: bs, scope } = parseSheetKey(sheet);
+  const baseLen = scope ? 0 : (workbook[bs]?.length ?? 0);
   let max = baseLen - 1;
   const over = edits[sheet];
   if (over) for (const k of Object.keys(over)) max = Math.max(max, Number(k));
