@@ -182,10 +182,14 @@ export function dataRows(sheet: string, edits?: EditsMap): number[] {
     for (let i = meta.firstDataRow; i < rows.length; i++) {
       if (!rows[i].some((c) => c != null && String(c).trim() !== "")) continue;
       if (scope && scopedFilter && !rowMatchesScope(bs, scope, rows[i])) continue;
+      if (edits?.[sheet]?.[i]?.[-1] === "__deleted__") continue;
       out.push(i);
     }
   } else if (!scope) {
-    for (let i = 0; i < rows.length; i++) out.push(i);
+    for (let i = 0; i < rows.length; i++) {
+      if (edits?.[sheet]?.[i]?.[-1] === "__deleted__") continue;
+      out.push(i);
+    }
   }
   // Include extra rows added via edits (row_id >= base length) with any non-empty cell
   const over = edits?.[sheet];
@@ -196,6 +200,7 @@ export function dataRows(sheet: string, edits?: EditsMap): number[] {
       const id = Number(key);
       if (id >= baseLen) {
         const cells = over[id];
+        if (cells[-1] === "__deleted__") continue;
         // Include added rows even when values are empty strings, so newly
         // created rows show up immediately for inline editing.
         if (Object.values(cells).some((v) => v !== null && v !== undefined)) extras.push(id);

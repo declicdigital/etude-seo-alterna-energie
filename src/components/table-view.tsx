@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, Plus } from "lucide-react";
+import { ExternalLink, Plus, Trash2 } from "lucide-react";
 import { dataRows, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import { linkHref, linkify } from "@/lib/links";
@@ -93,6 +93,7 @@ export function TableView({
   onSelect,
   onAddRow,
   onToggle,
+  onDeleteRow,
 }: {
   sheet: string;
   edits: EditsMap;
@@ -100,6 +101,7 @@ export function TableView({
   onSelect: (rowId: number) => void;
   onAddRow: () => void;
   onToggle: (rowId: number, col: number, value: string | null) => void;
+  onDeleteRow?: (rowId: number) => void;
 }) {
   const headers = headersOf(sheet, edits);
   const headerRow = SHEET_META[sheet.split("::")[0]]?.headerRow ?? 0;
@@ -551,14 +553,30 @@ export function TableView({
           }
 
           return (
-            <button
+            <div
               key={id}
+              role="button"
+              tabIndex={0}
               onClick={() => onSelect(id)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(id); } }}
               className={cn(
-                "w-full text-left rounded-2xl bg-card border border-border/70 p-3 shadow-sm active:scale-[0.99] transition-transform",
+                "relative w-full text-left rounded-2xl bg-card border border-border/70 p-3 shadow-sm active:scale-[0.99] transition-transform cursor-pointer",
                 isSel && "ring-2 ring-primary/50 border-primary/40",
               )}
             >
+              {onDeleteRow && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm("Supprimer cette ligne ?")) onDeleteRow(id);
+                  }}
+                  className="absolute top-2 right-2 size-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-red-500/10 hover:text-red-600"
+                  aria-label="Supprimer"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              )}
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="text-[15px] font-semibold leading-snug break-words">
@@ -629,7 +647,7 @@ export function TableView({
                     );
                   })}
               </div>
-            </button>
+            </div>
           );
         })}
         {filtered.length === 0 && (
@@ -651,6 +669,7 @@ export function TableView({
                 />
               );
             })}
+            {onDeleteRow && <col style={{ width: "36px" }} />}
           </colgroup>
           <thead className="sticky top-0 bg-card z-10">
             <tr className="border-b border-border">
@@ -679,6 +698,7 @@ export function TableView({
                   </span>
                 </th>
               ))}
+              {onDeleteRow && <th aria-label="Actions" className="w-9" />}
             </tr>
           </thead>
           <tbody>
@@ -690,7 +710,7 @@ export function TableView({
                   key={id}
                   onClick={() => onSelect(id)}
                   className={cn(
-                    "border-b border-border/60 cursor-pointer hover:bg-muted/40 transition-colors",
+                    "group border-b border-border/60 cursor-pointer hover:bg-muted/40 transition-colors",
                     isSel && "bg-primary/10 hover:bg-primary/15",
                   )}
                 >
@@ -861,6 +881,22 @@ export function TableView({
                       </td>
                     );
                   })}
+                  {onDeleteRow && (
+                    <td className="px-1 align-middle text-center">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm("Supprimer cette ligne ?")) onDeleteRow(id);
+                        }}
+                        className="size-7 rounded-md inline-flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-red-500/10 hover:text-red-600"
+                        aria-label="Supprimer"
+                        title="Supprimer cette ligne"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               );
             })}

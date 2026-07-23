@@ -57,5 +57,23 @@ export function useEdits() {
     [],
   );
 
-  return { edits, setCell, loading };
+  const deleteRow = useCallback(
+    async (sheet: string, rowId: number) => {
+      // Sentinel marker on col=-1 hides the row from every view.
+      setEdits((prev) => {
+        const next: EditsMap = { ...prev, [sheet]: { ...(prev[sheet] ?? {}) } };
+        next[sheet][rowId] = { ...(next[sheet][rowId] ?? {}), [-1]: "__deleted__" };
+        return next;
+      });
+      await supabase
+        .from("sheet_cells" as never)
+        .upsert(
+          { sheet, row_id: rowId, col: -1, value: "__deleted__", updated_at: new Date().toISOString() } as never,
+          { onConflict: "sheet,row_id,col" },
+        );
+    },
+    [],
+  );
+
+  return { edits, setCell, deleteRow, loading };
 }

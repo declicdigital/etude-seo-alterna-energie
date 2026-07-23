@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronRight, FileText, Folder, Layers, Plus } from "lucide-react";
+import { ChevronRight, FileText, Folder, Layers, Plus, Trash2 } from "lucide-react";
 import { buildTree, getRow, type EditsMap, type TreeNode } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import { LEVEL_TINTS, LEVEL_ACCENTS, groupColorForSheet } from "@/lib/group-colors";
@@ -52,12 +52,14 @@ export function TreeView({
   selected,
   onSelect,
   onAddRow,
+  onDeleteRow,
 }: {
   sheet: string;
   edits: EditsMap;
   selected: number | null;
   onSelect: (rowId: number) => void;
   onAddRow: (parentLevel: number) => void;
+  onDeleteRow?: (rowId: number) => void;
 }) {
   const tree = useMemo(() => buildTree(sheet, edits), [sheet, edits]);
   const isWebflow = sheet === "Webflow - fonctionnement";
@@ -140,6 +142,7 @@ export function TreeView({
             forceExpand={!!q}
             sheet={sheet}
             edits={edits}
+            onDeleteRow={onDeleteRow}
           />
         ))}
         {filtered.length === 0 && (
@@ -159,6 +162,7 @@ function TreeRow({
   forceExpand,
   sheet,
   edits,
+  onDeleteRow,
 }: {
   node: TreeNode;
   expanded: Set<number>;
@@ -168,6 +172,7 @@ function TreeRow({
   forceExpand: boolean;
   sheet: string;
   edits: EditsMap;
+  onDeleteRow?: (id: number) => void;
 }) {
   const isOpen = forceExpand || expanded.has(node.rowId);
   const hasChildren = node.children.length > 0;
@@ -234,6 +239,27 @@ function TreeRow({
             {meta.badge.label}
           </span>
         )}
+        {onDeleteRow && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const msg = hasChildren
+                ? `Supprimer "${node.label}" et tous ses éléments enfants ?`
+                : `Supprimer "${node.label}" ?`;
+              if (confirm(msg)) {
+                const ids: number[] = [];
+                const walk = (n: TreeNode) => { ids.push(n.rowId); n.children.forEach(walk); };
+                walk(node);
+                ids.forEach(onDeleteRow);
+              }
+            }}
+            className="ml-auto shrink-0 size-6 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-red-500/10 hover:text-red-600 text-muted-foreground"
+            aria-label="Supprimer"
+            title="Supprimer"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
+        )}
       </div>
       {isOpen &&
         node.children.map((c) => (
@@ -247,6 +273,7 @@ function TreeRow({
             forceExpand={forceExpand}
             sheet={sheet}
             edits={edits}
+            onDeleteRow={onDeleteRow}
           />
         ))}
     </div>
