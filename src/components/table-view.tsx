@@ -669,6 +669,7 @@ export function TableView({
                 />
               );
             })}
+            {onDeleteRow && <col style={{ width: "36px" }} />}
           </colgroup>
           <thead className="sticky top-0 bg-card z-10">
             <tr className="border-b border-border">
@@ -697,6 +698,7 @@ export function TableView({
                   </span>
                 </th>
               ))}
+              {onDeleteRow && <th aria-label="Actions" className="w-9" />}
             </tr>
           </thead>
           <tbody>
@@ -708,7 +710,7 @@ export function TableView({
                   key={id}
                   onClick={() => onSelect(id)}
                   className={cn(
-                    "border-b border-border/60 cursor-pointer hover:bg-muted/40 transition-colors",
+                    "group border-b border-border/60 cursor-pointer hover:bg-muted/40 transition-colors",
                     isSel && "bg-primary/10 hover:bg-primary/15",
                   )}
                 >
