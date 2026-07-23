@@ -553,14 +553,30 @@ export function TableView({
           }
 
           return (
-            <button
+            <div
               key={id}
+              role="button"
+              tabIndex={0}
               onClick={() => onSelect(id)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(id); } }}
               className={cn(
-                "w-full text-left rounded-2xl bg-card border border-border/70 p-3 shadow-sm active:scale-[0.99] transition-transform",
+                "relative w-full text-left rounded-2xl bg-card border border-border/70 p-3 shadow-sm active:scale-[0.99] transition-transform cursor-pointer",
                 isSel && "ring-2 ring-primary/50 border-primary/40",
               )}
             >
+              {onDeleteRow && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm("Supprimer cette ligne ?")) onDeleteRow(id);
+                  }}
+                  className="absolute top-2 right-2 size-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-red-500/10 hover:text-red-600"
+                  aria-label="Supprimer"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              )}
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="text-[15px] font-semibold leading-snug break-words">
@@ -631,7 +647,7 @@ export function TableView({
                     );
                   })}
               </div>
-            </button>
+            </div>
           );
         })}
         {filtered.length === 0 && (
