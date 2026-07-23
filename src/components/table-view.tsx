@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, Plus } from "lucide-react";
+import { ExternalLink, Plus, Trash2 } from "lucide-react";
 import { dataRows, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import { linkHref, linkify } from "@/lib/links";
@@ -93,6 +93,7 @@ export function TableView({
   onSelect,
   onAddRow,
   onToggle,
+  onDeleteRow,
 }: {
   sheet: string;
   edits: EditsMap;
@@ -100,6 +101,7 @@ export function TableView({
   onSelect: (rowId: number) => void;
   onAddRow: () => void;
   onToggle: (rowId: number, col: number, value: string | null) => void;
+  onDeleteRow?: (rowId: number) => void;
 }) {
   const headers = headersOf(sheet, edits);
   const headerRow = SHEET_META[sheet.split("::")[0]]?.headerRow ?? 0;
