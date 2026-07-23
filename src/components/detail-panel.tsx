@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ExternalLink, X } from "lucide-react";
+import { ExternalLink, Trash2, X } from "lucide-react";
 import { getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { linkHref } from "@/lib/links";
 import { DateCell, parseDateValue } from "@/components/date-cell";
@@ -10,12 +10,14 @@ export function DetailPanel({
   edits,
   onChange,
   onClose,
+  onDelete,
 }: {
   sheet: string;
   rowId: number;
   edits: EditsMap;
   onChange: (col: number, value: string | null) => void;
   onClose: () => void;
+  onDelete?: () => void;
 }) {
   const headers = headersOf(sheet, edits);
   const row = getRow(sheet, rowId, edits);
@@ -48,13 +50,30 @@ export function DetailPanel({
             )}
             <h2 className="text-base font-semibold leading-tight break-words">{title}</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="size-8 rounded-md hover:bg-muted flex items-center justify-center shrink-0"
-            aria-label="Fermer"
-          >
-            <X className="size-4" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            {onDelete && (
+              <button
+                onClick={() => {
+                  if (confirm("Supprimer définitivement cette ligne ?")) {
+                    onDelete();
+                    onClose();
+                  }
+                }}
+                className="size-8 rounded-md hover:bg-red-500/10 hover:text-red-600 text-muted-foreground flex items-center justify-center"
+                aria-label="Supprimer"
+                title="Supprimer cette ligne"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="size-8 rounded-md hover:bg-muted flex items-center justify-center"
+              aria-label="Fermer"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
         </div>
       </div>
       <div className="p-5 space-y-4">
