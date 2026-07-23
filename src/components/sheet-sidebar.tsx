@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Archive, ArchiveRestore, BookOpen, ChevronDown, ChevronRight, GripVertical, Minus, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, BookOpen, ChevronDown, ChevronRight, GripVertical, Minus, Plus, Trash2, RotateCcw } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
@@ -111,6 +111,14 @@ export function SheetSidebar({
   const search = useRouterState({ select: (r) => r.location.search }) as { sheet?: string };
   const active = search.sheet ?? "Structure RES";
 
+  const hiddenSheets = useMemo(() => {
+    const set = new Set<string>();
+    const bag = meta["hidden_sheet"] ?? {};
+    for (const k of Object.keys(bag)) if (bag[k] === "1") set.add(k);
+    return set;
+  }, [meta]);
+  const [showHidden, setShowHidden] = useState(false);
+
   const [groupOverrides, setGroupOverrides] = useState<Record<string, string>>(DEFAULT_GROUP_OVERRIDES);
   useEffect(() => {
     try {
@@ -155,11 +163,12 @@ export function SheetSidebar({
   const groups = useMemo(() => {
     const g: Record<string, string[]> = {};
     for (const s of sheetNames) {
+      if (!showHidden && hiddenSheets.has(s)) continue;
       const k = groupOverrides[s] ?? SHEET_META[s]?.group ?? "Autres";
       (g[k] ??= []).push(s);
     }
     return g;
-  }, [groupOverrides]);
+  }, [groupOverrides, hiddenSheets, showHidden]);
 
   const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
   useEffect(() => {
@@ -302,6 +311,7 @@ export function SheetSidebar({
                 subpaths,
                 setSheetSubpath,
                 setSheetGroup,
+                hiddenSheets,
               })}
             </div>
             )}
@@ -312,6 +322,16 @@ export function SheetSidebar({
       <div className="p-4 text-[11px] text-muted-foreground border-t border-border">
         Toutes vos modifications sont enregistrées automatiquement en ligne.
       </div>
+      {hiddenSheets.size > 0 && (
+        <div className="px-4 pb-4 -mt-2">
+          <button
+            onClick={() => setShowHidden((v) => !v)}
+            className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2"
+          >
+            {showHidden ? "Masquer les feuilles supprimées" : `Afficher les feuilles supprimées (${hiddenSheets.size})`}
+          </button>
+        </div>
+      )}
     </aside>
   );
 }
@@ -324,6 +344,7 @@ type RenderCtx = {
   subpaths: Record<string, string>;
   setSheetSubpath: (sheet: string, path: string | null) => void;
   setSheetGroup: (sheet: string, group: string | null) => void;
+  hiddenSheets: Set<string>;
 };
 
 function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
@@ -572,6 +593,33 @@ function SheetItem({
             title="Archiver"
           >
             <Archive className="size-3.5" />
+          </button>
+        )}
+        {ctx.hiddenSheets.has(sheet) ? (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.setMetaValue("hidden_sheet", sheet.split("::")[0], null); }}
+            className="ml-1 shrink-0 size-6 rounded-md flex items-center justify-center opacity-60 hover:opacity-100 hover:bg-foreground/10"
+            aria-label="Restaurer"
+            title="Restaurer cette feuille"
+          >
+            <RotateCcw className="size-3.5" />
+          </button>
+        ) : (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const base = sheet.split("::")[0];
+              const label = SHEET_META[base]?.label ?? base;
+              if (confirm(`Supprimer la feuille "${label}" ? Vous pourrez la restaurer via "Afficher masquées".`)) {
+                ctx.setMetaValue("hidden_sheet", base, "1");
+              }
+            }}
+            className="ml-1 shrink-0 size-6 rounded-md flex items-center justify-center opacity-0 group-hover/item:opacity-60 hover:!opacity-100 hover:bg-red-500/10 hover:text-red-600"
+            aria-label="Supprimer"
+            title="Supprimer cette feuille"
+          >
+            <Trash2 className="size-3.5" />
           </button>
         )}
       </Link>
