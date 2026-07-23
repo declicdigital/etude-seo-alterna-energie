@@ -881,6 +881,22 @@ export function TableView({
                       </td>
                     );
                   })}
+                  {onDeleteRow && (
+                    <td className="px-1 align-middle text-center">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm("Supprimer cette ligne ?")) onDeleteRow(id);
+                        }}
+                        className="size-7 rounded-md inline-flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-red-500/10 hover:text-red-600"
+                        aria-label="Supprimer"
+                        title="Supprimer cette ligne"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               );
             })}

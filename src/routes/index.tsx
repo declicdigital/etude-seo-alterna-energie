@@ -43,7 +43,7 @@ function Index() {
       ? sheetParam
       : "Structure RES";
   const [selected, setSelected] = useState<number | null>(null);
-  const { edits, setCell, loading } = useEdits();
+  const { edits, setCell, deleteRow, loading } = useEdits();
   const { meta: metaOverrides, setMetaValue } = useMeta();
   const isMobile = useIsMobile();
   const [navOpen, setNavOpen] = useState(false);
@@ -91,6 +91,7 @@ function Index() {
       edits={edits}
       onChange={(col, value) => setCell(sheet, selected, col, value)}
       onClose={() => setSelected(null)}
+      onDelete={() => { deleteRow(sheet, selected); setSelected(null); }}
     />
   ) : null;
 
@@ -160,6 +161,7 @@ function Index() {
                 selected={selected}
                 onSelect={setSelected}
                 onAddRow={handleAddRow}
+                onDeleteRow={(id) => { deleteRow(sheet, id); if (selected === id) setSelected(null); }}
               />
             ) : sheet === "Webflow - fonctionnement" ? (
               <WebflowView
@@ -175,6 +177,7 @@ function Index() {
                 onSelect={setSelected}
                 onAddRow={() => handleAddRow(0)}
                 onToggle={(rowId, col, value) => setCell(sheet, rowId, col, value)}
+                onDeleteRow={(id) => { deleteRow(sheet, id); if (selected === id) setSelected(null); }}
               />
             )}
           </div>
