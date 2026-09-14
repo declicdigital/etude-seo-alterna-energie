@@ -775,6 +775,26 @@ export function TableView({
                         </td>
                       );
                     }
+                    if (optionCols.has(c)) {
+                      const opts = optionCols.get(c)!;
+                      return (
+                        <td key={c} className="px-2 py-1 align-middle">
+                          <select
+                            value={s}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => onToggle(id, c, e.target.value === "" ? null : e.target.value)}
+                            className="w-full text-xs rounded-md border border-border bg-background px-1.5 py-0.5 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer font-medium"
+                            aria-label={headers[c] || `Col ${c + 1}`}
+                          >
+                            <option value="">-</option>
+                            {opts.map((o) => (
+                              <option key={o} value={o}>{o}</option>
+                            ))}
+                            {s && !opts.includes(s) && <option value={s}>{s}</option>}
+                          </select>
+                        </td>
+                      );
+                    }
                     if (boolCols.has(c)) {
                       const checked = isTruthy(s);
                       return (
