@@ -964,6 +964,25 @@ document.getElementById('cfgRows').addEventListener('click', async (e) => {
 });
 
 document.getElementById('articlesContainer').addEventListener('click', async (e) => {
+  const collapseBtn = e.target.closest('[data-action="toggle-collapse"]');
+  if(collapseBtn){
+    const id = collapseBtn.dataset.articleId;
+    if(collapsed[id]) delete collapsed[id]; else collapsed[id] = true;
+    saveCollapsed();
+    renderArticles();
+    return;
+  }
+
+  const pick = e.target.closest('[data-action="pick-assignee"]');
+  if(pick){
+    const article = getArticle(pick.dataset.articleId);
+    const step = article.steps.find(s => s.key === pick.dataset.stepKey);
+    step.assignee = (step.assignee === pick.dataset.value) ? '' : pick.dataset.value;
+    await saveArticle(article);
+    renderArticles();
+    return;
+  }
+
   const delBtn = e.target.closest('[data-action="delete-article"]');
   if(delBtn){
     const id = delBtn.dataset.articleId;
