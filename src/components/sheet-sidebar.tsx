@@ -426,6 +426,29 @@ function SubGroup({
   useEffect(() => {
     if (activeSub === sub.name) setOpen(true);
   }, [activeSub, sub.name]);
+
+  // A subcategory holding exactly one sheet becomes a direct link: no
+  // extra level to unfold.
+  const direct = sub.subs.length === 0 ? (buckets.get(sub.name) ?? []) : [];
+  if (direct.length === 1) {
+    const target = direct[0];
+    const isActive = ctx.active === target;
+    return (
+      <div className="ml-1">
+        <Link
+          to="/"
+          search={{ sheet: target }}
+          className={cn(
+            "w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wide transition-colors",
+            isActive ? ctx.style.active : cn("text-foreground/70", ctx.style.hover),
+          )}
+        >
+          <span className="truncate">{sub.name}</span>
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="ml-1">
       <button
