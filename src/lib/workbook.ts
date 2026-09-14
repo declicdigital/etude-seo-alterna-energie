@@ -30,6 +30,10 @@ export const EXTRA_COLUMNS: Record<
         "Économies d'énergie",
         "Transition bas carbone",
         "Vert l'avenir",
+        "Comprendre l'énergie",
+        "Transition énergétique",
+        "Comprendre votre facture",
+
       ],
     },
     { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
