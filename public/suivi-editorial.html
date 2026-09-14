@@ -547,11 +547,27 @@ const storage = {
 const DEFAULT_CONFIG = [
   { key:'idee', label:'Idée', assignee:'', skippable:true },
   { key:'brief', label:'Brief SEO', assignee:'Primelis', skippable:false },
-  { key:'redaction', label:'Rédaction', assignee:'Caroline ou Marina', skippable:false },
-  { key:'validation', label:'Validation (relecture)', assignee:'', skippable:false },
+  { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae','Marina'], skippable:false },
+  { key:'validation', label:'Validation (relecture)', assignee:'Service Communication', skippable:false },
   { key:'image', label:'Image', assignee:'Service Communication', skippable:false },
   { key:'integration', label:'Intégration', assignee:'Marick', skippable:false }
 ];
+
+/* Règles imposées sur le pipeline, appliquées même sur une config déjà enregistrée. */
+function normalizeConfig(){
+  let changed = false;
+  const red = config.find(c => c.key === 'redaction');
+  if(red){
+    const want = ['Aurorae','Marina'];
+    if(JSON.stringify(red.options || []) !== JSON.stringify(want)){ red.options = want; changed = true; }
+    if(red.assignee && !want.includes(red.assignee)){ red.assignee = ''; changed = true; }
+  }
+  for(const key of ['validation','image']){
+    const c = config.find(x => x.key === key);
+    if(c && c.assignee !== 'Service Communication'){ c.assignee = 'Service Communication'; changed = true; }
+  }
+  return changed;
+}
 
 const ACCENTS = ['green', 'blue', 'yellow'];
 function accentFor(i){ return ACCENTS[i % ACCENTS.length]; }
