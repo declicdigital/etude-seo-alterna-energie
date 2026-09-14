@@ -594,6 +594,9 @@ async function loadConfig(){
   try{
     const r = await storage.get('pipeline-config', false);
     config = JSON.parse(r.value);
+    if(normalizeConfig()){
+      try{ await storage.set('pipeline-config', JSON.stringify(config), false); }catch(e2){}
+    }
   }catch(e){
     config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
     try{ await storage.set('pipeline-config', JSON.stringify(config), false); }catch(e2){}
