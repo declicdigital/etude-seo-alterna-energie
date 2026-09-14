@@ -143,7 +143,26 @@ function Field({
           </a>
         )}
       </div>
-      {isDate ? (
+      {options ? (
+        <select
+          value={local}
+          onChange={(e) => { setLocal(e.target.value); onChange(e.target.value === "" ? null : e.target.value); }}
+          className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="">-</option>
+          {options.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+          {local && !options.includes(local) && <option value={local}>{local}</option>}
+        </select>
+      ) : isCheck ? (
+        <input
+          type="checkbox"
+          checked={local.trim() !== "" && !["-", "non", "no", "0", "false"].includes(local.trim().toLowerCase())}
+          onChange={(e) => { const v = e.target.checked ? "x" : ""; setLocal(v); onChange(v === "" ? null : v); }}
+          className="size-4 accent-primary cursor-pointer"
+        />
+      ) : isDate ? (
         <DateCell value={local} onChange={(iso) => { setLocal(iso ?? ""); onChange(iso); }} />
       ) : isLong ? (
         <textarea
