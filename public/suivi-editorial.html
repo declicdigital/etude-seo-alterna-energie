@@ -161,10 +161,42 @@ button{ font-family: inherit; cursor:pointer; }
 .article-head{
   display:flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 26px;
 }
+
+.collapse-btn{
+  border: 1.5px solid var(--line);
+  background: var(--bg);
+  color: var(--ink-60);
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.collapse-btn:hover{ color: var(--ink); border-color: var(--ink-30); }
+
+.article-card.collapsed .article-head{ margin-bottom: 0; }
+.article-card.collapsed .article-body{ display: none; }
+.article-card.collapsed{ padding: 14px 20px; margin-bottom: 12px; }
+
+.assignee-options{ display:flex; flex-wrap: wrap; gap: 8px; }
+.assignee-option{
+  display:inline-flex; align-items:center; gap: 7px;
+  border: 1.5px solid var(--line);
+  background: var(--bg);
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-60);
+  cursor: pointer;
+}
+.assignee-option.checked{ border-color: var(--ink); color: var(--ink); background: var(--lgreen-bg); }
+.assignee-option input{ accent-color: var(--ink); cursor: pointer; }
 
 .title-input{
   font-family: 'Poppins', sans-serif;
@@ -490,6 +522,8 @@ button{ font-family: inherit; cursor:pointer; }
       </div>
     </div>
     <div class="top-actions">
+      <button class="btn" id="collapseAllBtn">Tout réduire</button>
+      <button class="btn" id="expandAllBtn">Tout déplier</button>
       <button class="btn" id="toggleConfigBtn">Réglages du pipeline</button>
       <button class="btn-primary btn" id="addArticleBtn">+ Nouvel article</button>
     </div>
@@ -547,11 +581,27 @@ const storage = {
 const DEFAULT_CONFIG = [
   { key:'idee', label:'Idée', assignee:'', skippable:true },
   { key:'brief', label:'Brief SEO', assignee:'Primelis', skippable:false },
-  { key:'redaction', label:'Rédaction', assignee:'Caroline ou Marina', skippable:false },
-  { key:'validation', label:'Validation (relecture)', assignee:'', skippable:false },
+  { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae','Marina'], skippable:false },
+  { key:'validation', label:'Validation (relecture)', assignee:'Service Communication', skippable:false },
   { key:'image', label:'Image', assignee:'Service Communication', skippable:false },
   { key:'integration', label:'Intégration', assignee:'Marick', skippable:false }
 ];
+
+/* Règles imposées sur le pipeline, appliquées même sur une config déjà enregistrée. */
+function normalizeConfig(){
+  let changed = false;
+  const red = config.find(c => c.key === 'redaction');
+  if(red){
+    const want = ['Aurorae','Marina'];
+    if(JSON.stringify(red.options || []) !== JSON.stringify(want)){ red.options = want; changed = true; }
+    if(red.assignee && !want.includes(red.assignee)){ red.assignee = ''; changed = true; }
+  }
+  for(const key of ['validation','image']){
+    const c = config.find(x => x.key === key);
+    if(c && c.assignee !== 'Service Communication'){ c.assignee = 'Service Communication'; changed = true; }
+  }
+  return changed;
+}
 
 const ACCENTS = ['green', 'blue', 'yellow'];
 function accentFor(i){ return ACCENTS[i % ACCENTS.length]; }
@@ -562,6 +612,13 @@ let config = [];
 let articles = [];
 let openPanels = {};
 let confirmingDelete = null;
+const COLLAPSE_KEY = 'editorial-collapsed';
+let collapsed = (() => {
+  try{ return JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '{}'); }catch(e){ return {}; }
+})();
+function saveCollapsed(){
+  try{ localStorage.setItem(COLLAPSE_KEY, JSON.stringify(collapsed)); }catch(e){}
+}
 
 function uid(){
   return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
@@ -578,6 +635,9 @@ async function loadConfig(){
   try{
     const r = await storage.get('pipeline-config', false);
     config = JSON.parse(r.value);
+    if(normalizeConfig()){
+      try{ await storage.set('pipeline-config', JSON.stringify(config), false); }catch(e2){}
+    }
   }catch(e){
     config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
     try{ await storage.set('pipeline-config', JSON.stringify(config), false); }catch(e2){}
@@ -763,7 +823,15 @@ function renderArticleCard(article){
           </div>
           <div class="field">
             <label>Responsable</label>
-            <input type="text" data-action="edit-assignee" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.assignee)}" placeholder="Nom">
+            ${(cfg.options && cfg.options.length) ? `
+              <div class="assignee-options">
+                ${cfg.options.map(o => `
+                  <label class="assignee-option ${step.assignee === o ? 'checked' : ''}">
+                    <input type="checkbox" data-action="pick-assignee" data-article-id="${article.id}" data-step-key="${step.key}" data-value="${escapeAttr(o)}" ${step.assignee === o ? 'checked' : ''}>
+                    ${escapeHtml(o)}
+                  </label>`).join('')}
+              </div>`
+            : `<input type="text" data-action="edit-assignee" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.assignee)}" placeholder="Nom">`}
           </div>
           <div class="field">
             <label>Date</label>
@@ -791,22 +859,26 @@ function renderArticleCard(article){
   }
 
   const isConfirming = confirmingDelete === article.id;
+  const isCollapsed = !!collapsed[article.id];
 
   return `
-    <div class="article-card" data-article-id="${article.id}">
+    <div class="article-card ${isCollapsed ? 'collapsed' : ''}" data-article-id="${article.id}">
       <div class="article-head">
+        <button class="collapse-btn" data-action="toggle-collapse" data-article-id="${article.id}" title="${isCollapsed ? 'Déplier' : 'Réduire'}" aria-label="${isCollapsed ? 'Déplier' : 'Réduire'}">${isCollapsed ? '▸' : '▾'}</button>
         <input class="title-input" data-action="edit-title" data-article-id="${article.id}" value="${escapeAttr(article.title)}" placeholder="Titre de l'article">
         <div class="article-meta">
           <span class="progress-tag">${doneCount}/${total} étapes</span>
           <button class="delete-btn ${isConfirming?'confirming':''}" data-action="delete-article" data-article-id="${article.id}">${isConfirming ? 'Confirmer la suppression' : 'Supprimer'}</button>
         </div>
       </div>
-      <div class="links-row">
-        ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Docx', 'Coller le lien du document Docx')}
-        ${renderLinkField(article.id, 'final-link', article.finalLink, 'Article publié', "Coller le lien de l'article publié")}
+      <div class="article-body">
+        <div class="links-row">
+          ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Docx', 'Coller le lien du document Docx')}
+          ${renderLinkField(article.id, 'final-link', article.finalLink, 'Article publié', "Coller le lien de l'article publié")}
+        </div>
+        <div class="schema">${schemaHtml}</div>
+        ${panelHtml}
       </div>
-      <div class="schema">${schemaHtml}</div>
-      ${panelHtml}
     </div>`;
 }
 
@@ -874,6 +946,18 @@ async function addArticle(){
 
 document.getElementById('addArticleBtn').addEventListener('click', addArticle);
 
+document.getElementById('collapseAllBtn').addEventListener('click', () => {
+  collapsed = {};
+  articles.forEach(a => collapsed[a.id] = true);
+  saveCollapsed();
+  renderArticles();
+});
+document.getElementById('expandAllBtn').addEventListener('click', () => {
+  collapsed = {};
+  saveCollapsed();
+  renderArticles();
+});
+
 document.getElementById('toggleConfigBtn').addEventListener('click', () => {
   document.getElementById('configPanel').classList.toggle('open');
 });
@@ -926,6 +1010,25 @@ document.getElementById('cfgRows').addEventListener('click', async (e) => {
 });
 
 document.getElementById('articlesContainer').addEventListener('click', async (e) => {
+  const collapseBtn = e.target.closest('[data-action="toggle-collapse"]');
+  if(collapseBtn){
+    const id = collapseBtn.dataset.articleId;
+    if(collapsed[id]) delete collapsed[id]; else collapsed[id] = true;
+    saveCollapsed();
+    renderArticles();
+    return;
+  }
+
+  const pick = e.target.closest('[data-action="pick-assignee"]');
+  if(pick){
+    const article = getArticle(pick.dataset.articleId);
+    const step = article.steps.find(s => s.key === pick.dataset.stepKey);
+    step.assignee = (step.assignee === pick.dataset.value) ? '' : pick.dataset.value;
+    await saveArticle(article);
+    renderArticles();
+    return;
+  }
+
   const delBtn = e.target.closest('[data-action="delete-article"]');
   if(delBtn){
     const id = delBtn.dataset.articleId;
