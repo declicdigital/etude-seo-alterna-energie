@@ -356,6 +356,16 @@ export function TableView({
     return set;
   }, [visibleCols, headers]);
   for (const c of priorityCols) { boolCols.delete(c); statusCols.delete(c); effortCols.delete(c); }
+
+  // Tool-defined choice columns (e.g. "Énergie": Électricité / Gaz / Les deux).
+  const optionCols = useMemo(() => {
+    const map = new Map<number, string[]>();
+    for (const ec of extraColumnsOf(sheet)) map.set(ec.col, ec.options);
+    return map;
+  }, [sheet]);
+  for (const c of optionCols.keys()) {
+    boolCols.delete(c); statusCols.delete(c); effortCols.delete(c); priorityCols.delete(c);
+  }
   const isPriority = (s: string) => {
     const n = s.trim().toLowerCase();
     if (!n) return false;
