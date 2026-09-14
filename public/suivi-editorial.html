@@ -596,8 +596,9 @@ function normalizeConfig(){
     if(red.assignee && !want.includes(red.assignee)){ red.assignee = ''; changed = true; }
   }
   // Relecture et Image sont fusionnées en une seule étape.
-  if(config.some(c => c.key === 'image')){
-    config = config.filter(c => c.key !== 'image');
+  const drop = ['image', 'validation_geoffrey'];
+  if(config.some(c => drop.includes(c.key))){
+    config = config.filter(c => !drop.includes(c.key));
     changed = true;
   }
   const val = config.find(c => c.key === 'validation');
