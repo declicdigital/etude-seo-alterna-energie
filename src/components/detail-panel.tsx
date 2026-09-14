@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, Trash2, X } from "lucide-react";
-import { getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
+import { extraColumnsOf, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { linkHref } from "@/lib/links";
 import { DateCell, parseDateValue } from "@/components/date-cell";
 
@@ -22,6 +22,7 @@ export function DetailPanel({
   const headers = headersOf(sheet, edits);
   const row = getRow(sheet, rowId, edits);
   const meta = SHEET_META[sheet.split("::")[0]];
+  const extras = extraColumnsOf(sheet);
   const treeCols = meta?.treeCols ?? 0;
 
   // Determine title from tree level or first non-empty cell
@@ -88,6 +89,7 @@ export function DetailPanel({
               key={idx}
               label={h || `Colonne ${idx + 1}`}
               value={row[idx]}
+              options={extras.find((e) => e.col === idx)?.options}
               onChange={(v) => onChange(idx, v)}
             />
           );
@@ -100,10 +102,12 @@ export function DetailPanel({
 function Field({
   label,
   value,
+  options,
   onChange,
 }: {
   label: string;
   value: string | number | null;
+  options?: string[];
   onChange: (v: string | null) => void;
 }) {
   const [local, setLocal] = useState<string>(value == null ? "" : String(value));
@@ -118,8 +122,9 @@ function Field({
   const isLong = local.length > 60 || local.includes("\n");
   const href = linkHref(local);
   const labelLower = label.toLowerCase();
-  const headerLooksLikeDate = /(date|derni[eè]re\s*maj|\bmaj\b|mise\s*à\s*jour|mise\s*a\s*jour|publi)/.test(labelLower);
-  const isDate = (headerLooksLikeDate || parseDateValue(local) != null) && !isLong;
+  const isCheck = /^(publi(é|e)|publi(é|e)\s*\?|fait|done|actif)$/.test(labelLower.trim());
+  const headerLooksLikeDate = /(date|derni[eè]re\s*maj|\bmaj\b|mise\s*à\s*jour|mise\s*a\s*jour|date\s*de\s*publi)/.test(labelLower);
+  const isDate = !isCheck && !options && (headerLooksLikeDate || parseDateValue(local) != null) && !isLong;
 
   return (
     <div>
@@ -138,7 +143,26 @@ function Field({
           </a>
         )}
       </div>
-      {isDate ? (
+      {options ? (
+        <select
+          value={local}
+          onChange={(e) => { setLocal(e.target.value); onChange(e.target.value === "" ? null : e.target.value); }}
+          className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="">-</option>
+          {options.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+          {local && !options.includes(local) && <option value={local}>{local}</option>}
+        </select>
+      ) : isCheck ? (
+        <input
+          type="checkbox"
+          checked={local.trim() !== "" && !["-", "non", "no", "0", "false"].includes(local.trim().toLowerCase())}
+          onChange={(e) => { const v = e.target.checked ? "x" : ""; setLocal(v); onChange(v === "" ? null : v); }}
+          className="size-4 accent-primary cursor-pointer"
+        />
+      ) : isDate ? (
         <DateCell value={local} onChange={(iso) => { setLocal(iso ?? ""); onChange(iso); }} />
       ) : isLong ? (
         <textarea

@@ -4,7 +4,28 @@ export type Row = (string | number | null)[];
 export type Workbook = Record<string, Row[]>;
 
 export const workbook = raw as unknown as Workbook;
-export const sheetNames = Object.keys(workbook);
+
+/** Sheets retired from the tool (kept in the raw data, hidden everywhere). */
+export const RETIRED_SHEETS = new Set(["BLOG - IDEE"]);
+
+export const sheetNames = Object.keys(workbook).filter((n) => !RETIRED_SHEETS.has(n));
+
+/**
+ * Columns that don't exist in the Excel source but are added by the tool.
+ * `col` is the index right after the last source column of the sheet.
+ */
+export const EXTRA_COLUMNS: Record<
+  string,
+  { col: number; label: string; options: string[] }[]
+> = {
+  "BLOG - ARTICLES": [
+    { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
+  ],
+};
+
+export function extraColumnsOf(sheet: string) {
+  return EXTRA_COLUMNS[baseSheetOf(sheet)] ?? [];
+}
 
 /** A sheet key may be "base" or "base::scope". Returns { base, scope }. */
 export function parseSheetKey(sheet: string): { base: string; scope: string | null } {
@@ -160,12 +181,15 @@ export function headersOf(sheet: string, edits?: EditsMap): string[] {
   const row = workbook[bs]?.[meta.headerRow] ?? [];
   const base = row.map((c) => (c == null ? "" : String(c)));
   const over = edits?.[bs]?.[meta.headerRow] ?? (scope ? edits?.[sheet]?.[meta.headerRow] : undefined);
-  if (!over) return base;
-  const width = Math.max(base.length, ...Object.keys(over).map((k) => Number(k) + 1));
+  const width = Math.max(base.length, ...Object.keys(over ?? {}).map((k) => Number(k) + 1));
   const out: string[] = [];
   for (let c = 0; c < width; c++) {
-    if (c in over) out.push(over[c] == null ? "" : String(over[c]));
+    if (over && c in over) out.push(over[c] == null ? "" : String(over[c]));
     else out.push(base[c] ?? "");
+  }
+  for (const ec of extraColumnsOf(sheet)) {
+    while (out.length <= ec.col) out.push("");
+    if (!out[ec.col].trim()) out[ec.col] = ec.label;
   }
   return out;
 }

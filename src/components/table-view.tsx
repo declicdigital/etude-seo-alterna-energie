@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ExternalLink, Plus, Trash2 } from "lucide-react";
-import { dataRows, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
+import { dataRows, extraColumnsOf, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import { linkHref, linkify } from "@/lib/links";
 import { EditableText } from "@/components/editable-text";
@@ -91,7 +91,7 @@ export function TableView({
   edits,
   selected,
   onSelect,
-  onAddRow,
+  onCreateRow,
   onToggle,
   onDeleteRow,
 }: {
@@ -99,10 +99,11 @@ export function TableView({
   edits: EditsMap;
   selected: number | null;
   onSelect: (rowId: number) => void;
-  onAddRow: () => void;
+  onCreateRow: (values: Record<number, string>) => void | Promise<void>;
   onToggle: (rowId: number, col: number, value: string | null) => void;
   onDeleteRow?: (rowId: number) => void;
 }) {
+  const [adding, setAdding] = useState(false);
   const headers = headersOf(sheet, edits);
   const headerRow = SHEET_META[sheet.split("::")[0]]?.headerRow ?? 0;
   const ids = useMemo(() => dataRows(sheet, edits), [sheet, edits]);
@@ -356,6 +357,16 @@ export function TableView({
     return set;
   }, [visibleCols, headers]);
   for (const c of priorityCols) { boolCols.delete(c); statusCols.delete(c); effortCols.delete(c); }
+
+  // Tool-defined choice columns (e.g. "Énergie": Électricité / Gaz / Les deux).
+  const optionCols = useMemo(() => {
+    const map = new Map<number, string[]>();
+    for (const ec of extraColumnsOf(sheet)) map.set(ec.col, ec.options);
+    return map;
+  }, [sheet]);
+  for (const c of optionCols.keys()) {
+    boolCols.delete(c); statusCols.delete(c); effortCols.delete(c); priorityCols.delete(c);
+  }
   const isPriority = (s: string) => {
     const n = s.trim().toLowerCase();
     if (!n) return false;
@@ -515,12 +526,31 @@ export function TableView({
         />
         <span className="hidden sm:inline text-xs text-muted-foreground">{filtered.length} lignes</span>
         <button
-          onClick={onAddRow}
+          onClick={() => setAdding(true)}
           className="h-10 sm:h-9 px-3 rounded-full sm:rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1.5 shadow-sm shrink-0"
         >
           <Plus className="size-4 sm:size-3.5" /> <span className="hidden sm:inline">Ajouter une ligne</span><span className="sm:hidden">Ajouter</span>
         </button>
       </div>
+      {adding && (
+        <AddRowForm
+          headers={headers}
+          cols={visibleCols}
+          boolCols={boolCols}
+          choiceCols={
+            new Map<number, string[]>([
+              ...[...statusCols].map(([c, o]) => [c, o] as [number, string[]]),
+              ...[...effortCols].map(([c, o]) => [c, o] as [number, string[]]),
+              ...[...optionCols].map(([c, o]) => [c, o] as [number, string[]]),
+            ])
+          }
+          onCancel={() => setAdding(false)}
+          onSubmit={async (values) => {
+            await onCreateRow(values);
+            setAdding(false);
+          }}
+        />
+      )}
       {/* Mobile card list — avoids horizontal scrolling on phones */}
       <div className="md:hidden flex-1 overflow-y-auto p-3 space-y-2 bg-muted/20">
         {sortedFiltered.map((id) => {
@@ -745,6 +775,26 @@ export function TableView({
                         </td>
                       );
                     }
+                    if (optionCols.has(c)) {
+                      const opts = optionCols.get(c)!;
+                      return (
+                        <td key={c} className="px-2 py-1 align-middle">
+                          <select
+                            value={s}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => onToggle(id, c, e.target.value === "" ? null : e.target.value)}
+                            className="w-full text-xs rounded-md border border-border bg-background px-1.5 py-0.5 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer font-medium"
+                            aria-label={headers[c] || `Col ${c + 1}`}
+                          >
+                            <option value="">-</option>
+                            {opts.map((o) => (
+                              <option key={o} value={o}>{o}</option>
+                            ))}
+                            {s && !opts.includes(s) && <option value={s}>{s}</option>}
+                          </select>
+                        </td>
+                      );
+                    }
                     if (boolCols.has(c)) {
                       const checked = isTruthy(s);
                       return (
@@ -906,6 +956,107 @@ export function TableView({
           <div className="p-8 text-center text-sm text-muted-foreground">Aucun résultat.</div>
         )}
       </div>
+    </div>
+  );
+}
+/** Modal form used to create a new row: fill the fields, then click Valider. */
+function AddRowForm({
+  headers,
+  cols,
+  boolCols,
+  choiceCols,
+  onSubmit,
+  onCancel,
+}: {
+  headers: string[];
+  cols: number[];
+  boolCols: Set<number>;
+  choiceCols: Map<number, string[]>;
+  onSubmit: (values: Record<number, string>) => void | Promise<void>;
+  onCancel: () => void;
+}) {
+  const [values, setValues] = useState<Record<number, string>>({});
+  const [busy, setBusy] = useState(false);
+  const set = (c: number, v: string) => setValues((p) => ({ ...p, [c]: v }));
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-6"
+      onClick={onCancel}
+    >
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          await onSubmit(values);
+          setBusy(false);
+        }}
+        className="bg-card w-full sm:max-w-lg rounded-t-2xl sm:rounded-xl border border-border shadow-xl max-h-[90vh] flex flex-col"
+      >
+        <div className="px-5 py-4 border-b border-border">
+          <h3 className="text-base font-semibold">Nouvelle ligne</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Remplissez les champs puis cliquez sur Valider.
+          </p>
+        </div>
+        <div className="p-5 space-y-3 overflow-y-auto">
+          {cols.map((c) => {
+            const label = headers[c] || `Colonne ${c + 1}`;
+            const v = values[c] ?? "";
+            return (
+              <div key={c}>
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                  {label}
+                </label>
+                {boolCols.has(c) ? (
+                  <div className="mt-1">
+                    <input
+                      type="checkbox"
+                      checked={v !== ""}
+                      onChange={(e) => set(c, e.target.checked ? "x" : "")}
+                      className="size-4 accent-primary cursor-pointer"
+                    />
+                  </div>
+                ) : choiceCols.has(c) ? (
+                  <select
+                    value={v}
+                    onChange={(e) => set(c, e.target.value)}
+                    className="mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">-</option>
+                    {choiceCols.get(c)!.map((o) => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    value={v}
+                    onChange={(e) => set(c, e.target.value)}
+                    className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="px-5 py-4 border-t border-border flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-9 px-4 rounded-md text-sm border border-border hover:bg-muted"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            disabled={busy}
+            className="h-9 px-4 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            {busy ? "Enregistrement…" : "Valider"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

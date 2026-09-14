@@ -20,8 +20,8 @@ const DEFAULT_GROUP_OVERRIDES: Record<string, string> = {
 // subcategories (level 1) and each subcategory a list of sub-subs (level 2).
 const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
   Blog: [
-    { name: "Particulier", subs: ["Électricité", "Gaz"] },
-    { name: "Professionnel", subs: ["Électricité", "Gaz"] },
+    { name: "Particulier", subs: [] },
+    { name: "Professionnel", subs: [] },
   ],
   "Stratégie édito": [
     { name: "Particulier", subs: ["Électricité", "Gaz"] },
@@ -34,7 +34,6 @@ const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
 const DEFAULT_SUBPATHS: Record<string, string> = {
   "Articles cocon éléctricité": "*/Électricité",
   "Articles cocon Gaz": "*/Gaz",
-  "BLOG - IDEE": "*",
   "BLOG - ARTICLES": "*",
   "Structure RES": "Particulier",
   "Structure PRO": "Professionnel",

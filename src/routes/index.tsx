@@ -72,14 +72,19 @@ function Index() {
 
   const handleAddRow = async (treeLevel = 0) => {
     const id = nextRowId(sheet, edits);
-    if (isStructureSheet(sheet)) {
-      await setCell(sheet, id, treeLevel, "Nouvelle page");
-      setSelected(id);
-    } else {
-      // Seed an empty override so the row appears in the list, then let the
-      // user fill fields inline directly in the table.
+    await setCell(sheet, id, treeLevel, "Nouvelle page");
+    setSelected(id);
+  };
+
+  // Create a table row from the "Nouvelle ligne" form (Valider).
+  const handleCreateRow = async (values: Record<number, string>) => {
+    const id = nextRowId(sheet, edits);
+    const entries = Object.entries(values).filter(([, v]) => v.trim() !== "");
+    if (entries.length === 0) {
       await setCell(sheet, id, 0, "");
+      return;
     }
+    for (const [c, v] of entries) await setCell(sheet, id, Number(c), v);
   };
 
   const sidebar = <SheetSidebar meta={metaOverrides} setMetaValue={setMetaValue} />;
@@ -175,7 +180,7 @@ function Index() {
                 edits={edits}
                 selected={selected}
                 onSelect={setSelected}
-                onAddRow={() => handleAddRow(0)}
+                onCreateRow={handleCreateRow}
                 onToggle={(rowId, col, value) => setCell(sheet, rowId, col, value)}
                 onDeleteRow={(id) => { deleteRow(sheet, id); if (selected === id) setSelected(null); }}
               />
