@@ -829,7 +829,8 @@ function renderArticleCard(article){
           </div>
           <div class="field">
             <label>Responsable</label>
-            ${(cfg.options && cfg.options.length) ? `
+            ${step.key === 'validation' ? `<span class="step-name">Service Communication</span>`
+            : (cfg.options && cfg.options.length) ? `
               <div class="assignee-options">
                 ${cfg.options.map(o => `
                   <label class="assignee-option ${step.assignee === o ? 'checked' : ''}">
