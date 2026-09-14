@@ -1315,6 +1315,15 @@ document.getElementById('articlesContainer').addEventListener('keydown', async (
 });
 
 document.getElementById('articlesContainer').addEventListener('change', async (e) => {
+  const act = e.target.dataset && e.target.dataset.action;
+  if(act === 'pick-category' || act === 'pick-energy'){
+    const article = getArticle(e.target.dataset.articleId);
+    if(act === 'pick-category') article.category = e.target.value;
+    else article.energy = e.target.value;
+    await saveArticle(article);
+    renderArticles();
+    return;
+  }
   if(e.target.classList.contains('attach-file-input')){
     const file = e.target.files && e.target.files[0];
     if(!file) return;
