@@ -4,7 +4,28 @@ export type Row = (string | number | null)[];
 export type Workbook = Record<string, Row[]>;
 
 export const workbook = raw as unknown as Workbook;
-export const sheetNames = Object.keys(workbook);
+
+/** Sheets retired from the tool (kept in the raw data, hidden everywhere). */
+export const RETIRED_SHEETS = new Set(["BLOG - IDEE"]);
+
+export const sheetNames = Object.keys(workbook).filter((n) => !RETIRED_SHEETS.has(n));
+
+/**
+ * Columns that don't exist in the Excel source but are added by the tool.
+ * `col` is the index right after the last source column of the sheet.
+ */
+export const EXTRA_COLUMNS: Record<
+  string,
+  { col: number; label: string; options: string[] }[]
+> = {
+  "BLOG - ARTICLES": [
+    { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
+  ],
+};
+
+export function extraColumnsOf(sheet: string) {
+  return EXTRA_COLUMNS[baseSheetOf(sheet)] ?? [];
+}
 
 /** A sheet key may be "base" or "base::scope". Returns { base, scope }. */
 export function parseSheetKey(sheet: string): { base: string; scope: string | null } {
