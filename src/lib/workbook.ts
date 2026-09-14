@@ -19,6 +19,19 @@ export const EXTRA_COLUMNS: Record<
   { col: number; label: string; options: string[] }[]
 > = {
   "BLOG - ARTICLES": [
+    {
+      col: 6,
+      label: "Catégorie",
+      options: [
+        "Actualités",
+        "Le B.A-BA de l'énergie",
+        "Guides pratiques",
+        "Aides et réglementations",
+        "Économies d'énergie",
+        "Transition bas carbone",
+        "Vert l'avenir",
+      ],
+    },
     { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
   ],
 };
