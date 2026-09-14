@@ -509,6 +509,18 @@ button{ font-family: inherit; cursor:pointer; }
   padding: 7px 14px; border-radius: 100px;
 }
 .save-indicator.show{ opacity: 1; }
+.field select, .field input[type="text"].req-input{
+  font: inherit; font-size: 0.85rem; padding: 6px 10px;
+  border:1.5px solid var(--line); border-radius: 8px; background:#fff; color: var(--ink);
+  min-width: 190px;
+}
+.field select:focus, .field input.req-input:focus{ outline:none; border-color: var(--blue); }
+.req-hint{ font-size:0.72rem; color:#9a5b00; font-weight:600; }
+.blog-badge{
+  font-size:0.7rem; font-weight:700; padding:4px 10px; border-radius:100px;
+  background: var(--lgreen-bg); border:1.5px solid var(--lgreen); color: var(--ink);
+}
+
 </style>
 </head>
 <body>
@@ -550,6 +562,29 @@ button{ font-family: inherit; cursor:pointer; }
 const SUPABASE_URL = 'https://wbcjhhvowxhscszoviqu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_vpTPnvXvF187auoe0m7Vjg_BQcAJxDx';
 const REST = SUPABASE_URL + '/rest/v1/editorial_kv';
+const CELLS_REST = SUPABASE_URL + '/rest/v1/sheet_cells';
+
+/* Publication automatique vers l'onglet Blog de l'outil. */
+const BLOG_SHEET = 'BLOG - ARTICLES';
+const BLOG_BASE_LEN = 424;
+const AUDIENCES = ['Particulier', 'Professionnel'];
+const BLOG_CATEGORIES = {
+  'Particulier': [
+    'Actualités',
+    "Le B.A-BA de l'énergie",
+    'Guides pratiques',
+    'Aides et réglementations',
+    "Économies d'énergie",
+    'Transition bas carbone',
+    "Vert l'avenir"
+  ],
+  'Professionnel': [
+    "Comprendre l'énergie",
+    'Transition énergétique',
+    'Comprendre votre facture'
+  ]
+};
+const ENERGIES = ['Électricité', 'Gaz', 'Les deux'];
 const HEADERS = {
   'apikey': SUPABASE_KEY,
   'Authorization': 'Bearer ' + SUPABASE_KEY,
@@ -699,8 +734,78 @@ function newArticle(title){
     createdAt: new Date().toISOString(),
     docxLink: '',
     finalLink: '',
+    audience: '',
+    category: '',
+    energy: '',
+    blogRowId: null,
     steps: config.map(c => ({ key: c.key, status: 'pending', assignee: c.assignee || '', date: '', attachments: [] }))
   };
+}
+
+/* Champs obligatoires avant de pouvoir valider une étape. */
+function missingFields(article, stepKey){
+  const step = article.steps.find(s => s.key === stepKey);
+  const out = [];
+  if(stepKey === 'redaction'){
+    if(!article.audience) out.push('Particulier / Professionnel');
+    if(!(article.title||'').trim() || article.title.trim() === 'Nouvel article') out.push("le titre de l'article");
+    if(!article.category) out.push('la catégorie');
+    if(!article.energy) out.push("l'énergie");
+  }
+  if(stepKey === 'integration'){
+    if(!step || !step.date) out.push('la date');
+    if(!(article.finalLink||'').trim()) out.push("le lien de l'article publié");
+  }
+  return out;
+}
+
+function categoriesFor(audience){
+  return BLOG_CATEGORIES[audience] || [];
+}
+
+/* Crée la ligne correspondante tout en haut de Blog > Particulier / Professionnel. */
+async function nextBlogRowId(sheet){
+  let max = BLOG_BASE_LEN - 1;
+  try{
+    const res = await fetch(CELLS_REST + '?select=row_id&sheet=eq.' + encodeURIComponent(sheet) + '&order=row_id.desc&limit=1', { headers: HEADERS });
+    if(res.ok){
+      const rows = await res.json();
+      if(rows.length) max = Math.max(max, rows[0].row_id);
+    }
+  }catch(e){}
+  return Math.max(BLOG_BASE_LEN, max + 1);
+}
+
+async function pushToBlog(article){
+  if(article.blogRowId) return;
+  const audience = article.audience === 'Professionnel' ? 'Professionnel' : 'Particulier';
+  const sheet = BLOG_SHEET + '::' + audience;
+  const step = article.steps.find(s => s.key === 'integration');
+  const rowId = await nextBlogRowId(sheet);
+  const now = new Date().toISOString();
+  const values = [
+    [0, 'x'],
+    [1, (article.title||'').trim()],
+    [4, (step && step.date) || ''],
+    [5, audience === 'Professionnel' ? 'professionnels' : 'particuliers'],
+    [6, article.category || ''],
+    [9, normalizeUrl(article.finalLink)],
+    [10, article.energy || '']
+  ];
+  const body = values.map(v => ({ sheet, row_id: rowId, col: v[0], value: String(v[1]), updated_at: now }));
+  try{
+    const res = await fetch(CELLS_REST + '?on_conflict=sheet,row_id,col', {
+      method: 'POST',
+      headers: Object.assign({}, HEADERS, { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+      body: JSON.stringify(body)
+    });
+    if(!res.ok) throw new Error('insert');
+    article.blogRowId = rowId;
+    article.blogSheet = sheet;
+    await saveArticle(article);
+  }catch(e){
+    alert("L'article n'a pas pu être ajouté au blog. Réessaie dans un instant.");
+  }
 }
 
 function normalizeUrl(v){
@@ -766,6 +871,40 @@ function escapeAttr(s){
 }
 function escapeHtml(s){
   return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* Étape Rédaction : infos indispensables avant validation. */
+function renderRedactionFields(article){
+  const cats = categoriesFor(article.audience);
+  return `
+    <div class="field">
+      <label>Cible</label>
+      <div class="assignee-options">
+        ${AUDIENCES.map(a => `
+          <label class="assignee-option ${article.audience === a ? 'checked' : ''}">
+            <input type="checkbox" data-action="pick-audience" data-article-id="${article.id}" data-value="${escapeAttr(a)}" ${article.audience === a ? 'checked' : ''}>
+            ${escapeHtml(a)}
+          </label>`).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label>Titre</label>
+      <input type="text" class="req-input" data-action="edit-title" data-article-id="${article.id}" value="${escapeAttr(article.title)}" placeholder="Titre de l'article">
+    </div>
+    <div class="field">
+      <label>Catégorie</label>
+      <select data-action="pick-category" data-article-id="${article.id}" ${article.audience ? '' : 'disabled'}>
+        <option value="">${article.audience ? '— Choisir —' : "— Choisis d'abord la cible —"}</option>
+        ${cats.map(c => `<option value="${escapeAttr(c)}" ${article.category === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field">
+      <label>Énergie</label>
+      <select data-action="pick-energy" data-article-id="${article.id}">
+        <option value="">— Choisir —</option>
+        ${ENERGIES.map(c => `<option value="${escapeAttr(c)}" ${article.energy === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
+      </select>
+    </div>`;
 }
 
 function renderArticles(){
@@ -841,10 +980,17 @@ function renderArticleCard(article){
               </div>`
             : `<input type="text" data-action="edit-assignee" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.assignee)}" placeholder="Nom">`}
           </div>
+          ${step.key === 'redaction' ? renderRedactionFields(article) : ''}
           <div class="field">
             <label>Date</label>
             <input type="date" data-action="edit-date" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.date)}">
           </div>
+          ${step.key === 'integration' ? `
+          <div class="field">
+            <label>Lien publié</label>
+            <input type="text" class="req-input" data-action="edit-final-link" data-article-id="${article.id}" value="${escapeAttr(article.finalLink)}" placeholder="https://www.alterna-energie.fr/blog-article/...">
+          </div>` : ''}
+          ${missingFields(article, step.key).length && !isDone ? `<div class="field"><label></label><span class="req-hint">À compléter : ${escapeHtml(missingFields(article, step.key).join(', '))}</span></div>` : ''}
           <div class="panel-actions">
             ${!isDone ? `<button class="btn btn-primary" data-action="validate-step" data-article-id="${article.id}" data-step-key="${step.key}">Marquer validée</button>` : ''}
             ${cfg.skippable && !isSkipped && !isDone ? `<button class="btn" data-action="skip-step" data-article-id="${article.id}" data-step-key="${step.key}">Passer cette étape</button>` : ''}
@@ -875,6 +1021,7 @@ function renderArticleCard(article){
         <button class="collapse-btn" data-action="toggle-collapse" data-article-id="${article.id}" title="${isCollapsed ? 'Déplier' : 'Réduire'}" aria-label="${isCollapsed ? 'Déplier' : 'Réduire'}">${isCollapsed ? '▸' : '▾'}</button>
         <input class="title-input" data-action="edit-title" data-article-id="${article.id}" value="${escapeAttr(article.title)}" placeholder="Titre de l'article">
         <div class="article-meta">
+          ${article.blogRowId ? `<span class="blog-badge">Ajouté au blog</span>` : ''}
           <span class="progress-tag">${doneCount}/${total} étapes</span>
           <button class="delete-btn ${isConfirming?'confirming':''}" data-action="delete-article" data-article-id="${article.id}">${isConfirming ? 'Confirmer la suppression' : 'Supprimer'}</button>
         </div>
@@ -1037,6 +1184,17 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     return;
   }
 
+  const pickAud = e.target.closest('[data-action="pick-audience"]');
+  if(pickAud){
+    const article = getArticle(pickAud.dataset.articleId);
+    const value = pickAud.dataset.value;
+    article.audience = (article.audience === value) ? '' : value;
+    if(!categoriesFor(article.audience).includes(article.category)) article.category = '';
+    await saveArticle(article);
+    renderArticles();
+    return;
+  }
+
   const delBtn = e.target.closest('[data-action="delete-article"]');
   if(delBtn){
     const id = delBtn.dataset.articleId;
@@ -1072,8 +1230,14 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     const key = validateBtn.dataset.stepKey;
     const article = getArticle(id);
     const step = article.steps.find(s => s.key === key);
+    const missing = missingFields(article, key);
+    if(missing.length){
+      alert('Avant de valider cette étape, complète : ' + missing.join(', ') + '.');
+      return;
+    }
     step.status = 'done';
     await saveArticle(article);
+    if(key === 'integration') await pushToBlog(article);
     const idx = article.steps.findIndex(s => s.key === key);
     const nextStep = article.steps[idx+1];
     openPanels[id] = nextStep ? nextStep.key : null;
@@ -1152,6 +1316,15 @@ document.getElementById('articlesContainer').addEventListener('keydown', async (
 });
 
 document.getElementById('articlesContainer').addEventListener('change', async (e) => {
+  const act = e.target.dataset && e.target.dataset.action;
+  if(act === 'pick-category' || act === 'pick-energy'){
+    const article = getArticle(e.target.dataset.articleId);
+    if(act === 'pick-category') article.category = e.target.value;
+    else article.energy = e.target.value;
+    await saveArticle(article);
+    renderArticles();
+    return;
+  }
   if(e.target.classList.contains('attach-file-input')){
     const file = e.target.files && e.target.files[0];
     if(!file) return;
@@ -1219,7 +1392,7 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
   }
 });
 
-const REFRESH_ON_BLUR = ['edit-assignee', 'edit-docx-link', 'edit-final-link'];
+const REFRESH_ON_BLUR = ['edit-assignee', 'edit-docx-link', 'edit-final-link', 'edit-title'];
 document.getElementById('articlesContainer').addEventListener('change', (e) => {
   const t = e.target;
   if(t && t.dataset && t.dataset.action === 'edit-date'){
