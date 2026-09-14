@@ -122,8 +122,9 @@ function Field({
   const isLong = local.length > 60 || local.includes("\n");
   const href = linkHref(local);
   const labelLower = label.toLowerCase();
-  const headerLooksLikeDate = /(date|derni[eè]re\s*maj|\bmaj\b|mise\s*à\s*jour|mise\s*a\s*jour|publi)/.test(labelLower);
-  const isDate = (headerLooksLikeDate || parseDateValue(local) != null) && !isLong;
+  const isCheck = /^(publi(é|e)|publi(é|e)\s*\?|fait|done|actif)$/.test(labelLower.trim());
+  const headerLooksLikeDate = /(date|derni[eè]re\s*maj|\bmaj\b|mise\s*à\s*jour|mise\s*a\s*jour|date\s*de\s*publi)/.test(labelLower);
+  const isDate = !isCheck && !options && (headerLooksLikeDate || parseDateValue(local) != null) && !isLong;
 
   return (
     <div>
