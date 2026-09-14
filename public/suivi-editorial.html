@@ -946,10 +946,17 @@ function renderArticleCard(article){
               </div>`
             : `<input type="text" data-action="edit-assignee" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.assignee)}" placeholder="Nom">`}
           </div>
+          ${step.key === 'redaction' ? renderRedactionFields(article) : ''}
           <div class="field">
             <label>Date</label>
             <input type="date" data-action="edit-date" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.date)}">
           </div>
+          ${step.key === 'integration' ? `
+          <div class="field">
+            <label>Lien publié</label>
+            <input type="text" class="req-input" data-action="edit-final-link" data-article-id="${article.id}" value="${escapeAttr(article.finalLink)}" placeholder="https://www.alterna-energie.fr/blog-article/...">
+          </div>` : ''}
+          ${missingFields(article, step.key).length && !isDone ? `<div class="field"><label></label><span class="req-hint">À compléter : ${escapeHtml(missingFields(article, step.key).join(', '))}</span></div>` : ''}
           <div class="panel-actions">
             ${!isDone ? `<button class="btn btn-primary" data-action="validate-step" data-article-id="${article.id}" data-step-key="${step.key}">Marquer validée</button>` : ''}
             ${cfg.skippable && !isSkipped && !isDone ? `<button class="btn" data-action="skip-step" data-article-id="${article.id}" data-step-key="${step.key}">Passer cette étape</button>` : ''}
