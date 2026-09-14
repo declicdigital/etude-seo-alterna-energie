@@ -734,8 +734,78 @@ function newArticle(title){
     createdAt: new Date().toISOString(),
     docxLink: '',
     finalLink: '',
+    audience: '',
+    category: '',
+    energy: '',
+    blogRowId: null,
     steps: config.map(c => ({ key: c.key, status: 'pending', assignee: c.assignee || '', date: '', attachments: [] }))
   };
+}
+
+/* Champs obligatoires avant de pouvoir valider une étape. */
+function missingFields(article, stepKey){
+  const step = article.steps.find(s => s.key === stepKey);
+  const out = [];
+  if(stepKey === 'redaction'){
+    if(!article.audience) out.push('Particulier / Professionnel');
+    if(!(article.title||'').trim() || article.title.trim() === 'Nouvel article') out.push("le titre de l'article");
+    if(!article.category) out.push('la catégorie');
+    if(!article.energy) out.push("l'énergie");
+  }
+  if(stepKey === 'integration'){
+    if(!step || !step.date) out.push('la date');
+    if(!(article.finalLink||'').trim()) out.push("le lien de l'article publié");
+  }
+  return out;
+}
+
+function categoriesFor(audience){
+  return BLOG_CATEGORIES[audience] || [];
+}
+
+/* Crée la ligne correspondante tout en haut de Blog > Particulier / Professionnel. */
+async function nextBlogRowId(sheet){
+  let max = BLOG_BASE_LEN - 1;
+  try{
+    const res = await fetch(CELLS_REST + '?select=row_id&sheet=eq.' + encodeURIComponent(sheet) + '&order=row_id.desc&limit=1', { headers: HEADERS });
+    if(res.ok){
+      const rows = await res.json();
+      if(rows.length) max = Math.max(max, rows[0].row_id);
+    }
+  }catch(e){}
+  return Math.max(BLOG_BASE_LEN, max + 1);
+}
+
+async function pushToBlog(article){
+  if(article.blogRowId) return;
+  const audience = article.audience === 'Professionnel' ? 'Professionnel' : 'Particulier';
+  const sheet = BLOG_SHEET + '::' + audience;
+  const step = article.steps.find(s => s.key === 'integration');
+  const rowId = await nextBlogRowId(sheet);
+  const now = new Date().toISOString();
+  const values = [
+    [0, 'x'],
+    [1, (article.title||'').trim()],
+    [4, (step && step.date) || ''],
+    [5, audience === 'Professionnel' ? 'professionnels' : 'particuliers'],
+    [6, article.category || ''],
+    [9, normalizeUrl(article.finalLink)],
+    [10, article.energy || '']
+  ];
+  const body = values.map(v => ({ sheet, row_id: rowId, col: v[0], value: String(v[1]), updated_at: now }));
+  try{
+    const res = await fetch(CELLS_REST + '?on_conflict=sheet,row_id,col', {
+      method: 'POST',
+      headers: Object.assign({}, HEADERS, { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+      body: JSON.stringify(body)
+    });
+    if(!res.ok) throw new Error('insert');
+    article.blogRowId = rowId;
+    article.blogSheet = sheet;
+    await saveArticle(article);
+  }catch(e){
+    alert("L'article n'a pas pu être ajouté au blog. Réessaie dans un instant.");
+  }
 }
 
 function normalizeUrl(v){
