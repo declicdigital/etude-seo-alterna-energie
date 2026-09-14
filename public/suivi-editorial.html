@@ -873,6 +873,40 @@ function escapeHtml(s){
   return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+/* Étape Rédaction : infos indispensables avant validation. */
+function renderRedactionFields(article){
+  const cats = categoriesFor(article.audience);
+  return `
+    <div class="field">
+      <label>Cible</label>
+      <div class="assignee-options">
+        ${AUDIENCES.map(a => `
+          <label class="assignee-option ${article.audience === a ? 'checked' : ''}">
+            <input type="checkbox" data-action="pick-audience" data-article-id="${article.id}" data-value="${escapeAttr(a)}" ${article.audience === a ? 'checked' : ''}>
+            ${escapeHtml(a)}
+          </label>`).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label>Titre</label>
+      <input type="text" class="req-input" data-action="edit-title" data-article-id="${article.id}" value="${escapeAttr(article.title)}" placeholder="Titre de l'article">
+    </div>
+    <div class="field">
+      <label>Catégorie</label>
+      <select data-action="pick-category" data-article-id="${article.id}" ${article.audience ? '' : 'disabled'}>
+        <option value="">${article.audience ? '— Choisir —' : "— Choisis d'abord la cible —"}</option>
+        ${cats.map(c => `<option value="${escapeAttr(c)}" ${article.category === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field">
+      <label>Énergie</label>
+      <select data-action="pick-energy" data-article-id="${article.id}">
+        <option value="">— Choisir —</option>
+        ${ENERGIES.map(c => `<option value="${escapeAttr(c)}" ${article.energy === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
+      </select>
+    </div>`;
+}
+
 function renderArticles(){
   const container = document.getElementById('articlesContainer');
   if(articles.length === 0){
