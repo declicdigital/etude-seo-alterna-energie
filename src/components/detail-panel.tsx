@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, Trash2, X } from "lucide-react";
-import { getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
+import { extraColumnsOf, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { linkHref } from "@/lib/links";
 import { DateCell, parseDateValue } from "@/components/date-cell";
 
@@ -22,6 +22,7 @@ export function DetailPanel({
   const headers = headersOf(sheet, edits);
   const row = getRow(sheet, rowId, edits);
   const meta = SHEET_META[sheet.split("::")[0]];
+  const extras = extraColumnsOf(sheet);
   const treeCols = meta?.treeCols ?? 0;
 
   // Determine title from tree level or first non-empty cell
@@ -88,6 +89,7 @@ export function DetailPanel({
               key={idx}
               label={h || `Colonne ${idx + 1}`}
               value={row[idx]}
+              options={extras.find((e) => e.col === idx)?.options}
               onChange={(v) => onChange(idx, v)}
             />
           );
@@ -100,10 +102,12 @@ export function DetailPanel({
 function Field({
   label,
   value,
+  options,
   onChange,
 }: {
   label: string;
   value: string | number | null;
+  options?: string[];
   onChange: (v: string | null) => void;
 }) {
   const [local, setLocal] = useState<string>(value == null ? "" : String(value));
