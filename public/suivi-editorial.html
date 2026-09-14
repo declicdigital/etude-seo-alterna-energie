@@ -727,6 +727,7 @@ function syncArticleSteps(article){
     const s = existing[c.key] || { key: c.key, status: 'pending', assignee: c.assignee || '', date: '', attachments: [] };
     if(!s.attachments) s.attachments = [];
     if(c.key === 'validation') s.assignee = 'Service Communication';
+    if(c.key === 'validation_geoffrey') s.assignee = 'Geoffrey';
     return s;
   });
 }
@@ -760,7 +761,7 @@ function renderConfigPanel(){
     <div class="cfg-row">
       <div class="cfg-num">${i+1}</div>
       <input type="text" data-action="cfg-label" data-key="${c.key}" value="${escapeAttr(c.label)}" placeholder="Nom de l'étape">
-      <input type="text" data-action="cfg-assignee" data-key="${c.key}" value="${escapeAttr(c.assignee)}" placeholder="Responsable par défaut" ${c.key === 'validation' ? 'readonly' : ''}>
+      <input type="text" data-action="cfg-assignee" data-key="${c.key}" value="${escapeAttr(c.assignee)}" placeholder="Responsable par défaut" ${(c.key === 'validation' || c.key === 'validation_geoffrey') ? 'readonly' : ''}>
       <label class="cfg-skip-label">
         <input type="checkbox" data-action="cfg-skippable" data-key="${c.key}" ${c.skippable ? 'checked' : ''}>
         Facultative
@@ -839,7 +840,7 @@ function renderArticleCard(article){
           </div>
           <div class="field">
             <label>Responsable</label>
-            ${step.key === 'validation' ? `<span class="step-name">Service Communication</span>`
+            ${(step.key === 'validation' || step.key === 'validation_geoffrey') ? `<span class="step-name">${escapeHtml(step.assignee || cfg.assignee)}</span>`
             : (cfg.options && cfg.options.length) ? `
               <div class="assignee-options">
                 ${cfg.options.map(o => `
