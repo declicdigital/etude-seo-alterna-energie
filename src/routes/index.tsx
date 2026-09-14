@@ -137,6 +137,12 @@ function Index() {
           <GuideView
             onOpenSheet={(s) => navigate({ to: "/", search: { sheet: s } })}
           />
+        ) : embedSrc ? (
+          <iframe
+            src={embedSrc}
+            title={sheetLabel}
+            className="flex-1 w-full border-0 min-h-0"
+          />
         ) : (
         <>
         <header className={cn("hidden md:block px-8 py-6 border-b", gc.header)}>
