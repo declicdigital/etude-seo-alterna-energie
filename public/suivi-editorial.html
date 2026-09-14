@@ -1183,6 +1183,17 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     return;
   }
 
+  const pickAud = e.target.closest('[data-action="pick-audience"]');
+  if(pickAud){
+    const article = getArticle(pickAud.dataset.articleId);
+    const value = pickAud.dataset.value;
+    article.audience = (article.audience === value) ? '' : value;
+    if(!categoriesFor(article.audience).includes(article.category)) article.category = '';
+    await saveArticle(article);
+    renderArticles();
+    return;
+  }
+
   const delBtn = e.target.closest('[data-action="delete-article"]');
   if(delBtn){
     const id = delBtn.dataset.articleId;
