@@ -818,22 +818,26 @@ function renderArticleCard(article){
   }
 
   const isConfirming = confirmingDelete === article.id;
+  const isCollapsed = !!collapsed[article.id];
 
   return `
-    <div class="article-card" data-article-id="${article.id}">
+    <div class="article-card ${isCollapsed ? 'collapsed' : ''}" data-article-id="${article.id}">
       <div class="article-head">
+        <button class="collapse-btn" data-action="toggle-collapse" data-article-id="${article.id}" title="${isCollapsed ? 'Déplier' : 'Réduire'}" aria-label="${isCollapsed ? 'Déplier' : 'Réduire'}">${isCollapsed ? '▸' : '▾'}</button>
         <input class="title-input" data-action="edit-title" data-article-id="${article.id}" value="${escapeAttr(article.title)}" placeholder="Titre de l'article">
         <div class="article-meta">
           <span class="progress-tag">${doneCount}/${total} étapes</span>
           <button class="delete-btn ${isConfirming?'confirming':''}" data-action="delete-article" data-article-id="${article.id}">${isConfirming ? 'Confirmer la suppression' : 'Supprimer'}</button>
         </div>
       </div>
-      <div class="links-row">
-        ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Docx', 'Coller le lien du document Docx')}
-        ${renderLinkField(article.id, 'final-link', article.finalLink, 'Article publié', "Coller le lien de l'article publié")}
+      <div class="article-body">
+        <div class="links-row">
+          ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Docx', 'Coller le lien du document Docx')}
+          ${renderLinkField(article.id, 'final-link', article.finalLink, 'Article publié', "Coller le lien de l'article publié")}
+        </div>
+        <div class="schema">${schemaHtml}</div>
+        ${panelHtml}
       </div>
-      <div class="schema">${schemaHtml}</div>
-      ${panelHtml}
     </div>`;
 }
 
