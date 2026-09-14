@@ -181,12 +181,15 @@ export function headersOf(sheet: string, edits?: EditsMap): string[] {
   const row = workbook[bs]?.[meta.headerRow] ?? [];
   const base = row.map((c) => (c == null ? "" : String(c)));
   const over = edits?.[bs]?.[meta.headerRow] ?? (scope ? edits?.[sheet]?.[meta.headerRow] : undefined);
-  if (!over) return base;
-  const width = Math.max(base.length, ...Object.keys(over).map((k) => Number(k) + 1));
+  const width = Math.max(base.length, ...Object.keys(over ?? {}).map((k) => Number(k) + 1));
   const out: string[] = [];
   for (let c = 0; c < width; c++) {
-    if (c in over) out.push(over[c] == null ? "" : String(over[c]));
+    if (over && c in over) out.push(over[c] == null ? "" : String(over[c]));
     else out.push(base[c] ?? "");
+  }
+  for (const ec of extraColumnsOf(sheet)) {
+    while (out.length <= ec.col) out.push("");
+    if (!out[ec.col].trim()) out[ec.col] = ec.label;
   }
   return out;
 }
