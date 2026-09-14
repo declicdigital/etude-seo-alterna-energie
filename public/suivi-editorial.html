@@ -562,6 +562,29 @@ button{ font-family: inherit; cursor:pointer; }
 const SUPABASE_URL = 'https://wbcjhhvowxhscszoviqu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_vpTPnvXvF187auoe0m7Vjg_BQcAJxDx';
 const REST = SUPABASE_URL + '/rest/v1/editorial_kv';
+const CELLS_REST = SUPABASE_URL + '/rest/v1/sheet_cells';
+
+/* Publication automatique vers l'onglet Blog de l'outil. */
+const BLOG_SHEET = 'BLOG - ARTICLES';
+const BLOG_BASE_LEN = 424;
+const AUDIENCES = ['Particulier', 'Professionnel'];
+const BLOG_CATEGORIES = {
+  'Particulier': [
+    'Actualités',
+    "Le B.A-BA de l'énergie",
+    'Guides pratiques',
+    'Aides et réglementations',
+    "Économies d'énergie",
+    'Transition bas carbone',
+    "Vert l'avenir"
+  ],
+  'Professionnel': [
+    "Comprendre l'énergie",
+    'Transition énergétique',
+    'Comprendre votre facture'
+  ]
+};
+const ENERGIES = ['Électricité', 'Gaz', 'Les deux'];
 const HEADERS = {
   'apikey': SUPABASE_KEY,
   'Authorization': 'Bearer ' + SUPABASE_KEY,
