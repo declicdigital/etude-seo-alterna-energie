@@ -1218,8 +1218,14 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     const key = validateBtn.dataset.stepKey;
     const article = getArticle(id);
     const step = article.steps.find(s => s.key === key);
+    const missing = missingFields(article, key);
+    if(missing.length){
+      alert('Avant de valider cette étape, complète : ' + missing.join(', ') + '.');
+      return;
+    }
     step.status = 'done';
     await saveArticle(article);
+    if(key === 'integration') await pushToBlog(article);
     const idx = article.steps.findIndex(s => s.key === key);
     const nextStep = article.steps[idx+1];
     openPanels[id] = nextStep ? nextStep.key : null;
