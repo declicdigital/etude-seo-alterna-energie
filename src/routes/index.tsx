@@ -8,7 +8,7 @@ import { WebflowView } from "@/components/webflow-view";
 import { GuideView } from "@/components/guide-view";
 import { DetailPanel } from "@/components/detail-panel";
 import { useEdits } from "@/lib/use-edits";
-import { baseSheetOf, isStructureSheet, nextRowId, SHEET_META, sheetNames } from "@/lib/workbook";
+import { baseSheetOf, embedSrcOf, isStructureSheet, nextRowId, SHEET_META, sheetNames } from "@/lib/workbook";
 import { groupColorForSheet } from "@/lib/group-colors";
 import { cn } from "@/lib/utils";
 import { useMeta, metaGet } from "@/lib/use-meta";
@@ -87,6 +87,8 @@ function Index() {
     for (const [c, v] of entries) await setCell(sheet, id, Number(c), v);
   };
 
+  const embedSrc = isGuide ? null : embedSrcOf(sheet);
+
   const sidebar = <SheetSidebar meta={metaOverrides} setMetaValue={setMetaValue} />;
 
   const detailPanel = selected != null && !isGuide ? (
@@ -134,6 +136,12 @@ function Index() {
         {isGuide ? (
           <GuideView
             onOpenSheet={(s) => navigate({ to: "/", search: { sheet: s } })}
+          />
+        ) : embedSrc ? (
+          <iframe
+            src={embedSrc}
+            title={sheetLabel}
+            className="flex-1 w-full border-0 min-h-0"
           />
         ) : (
         <>

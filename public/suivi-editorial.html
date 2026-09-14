@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Suivi éditorial — Alterna énergie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+
+:root{
+  --bg: #FFFBF4;
+  --card: #FFFFFF;
+  --ink: #003838;
+  --ink-60: #4C6C6C;
+  --ink-30: #B9C9C9;
+  --line: #E6E0D2;
+
+  --lgreen: #54D89C;
+  --lgreen-bg: #E4FAF0;
+  --yellow: #E1EC64;
+  --yellow-bg: #F8FBDF;
+  --blue: #639AFF;
+  --blue-bg: #EAF1FF;
+
+  --danger: #C24A3B;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin:0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  min-height:100vh;
+  padding: 34px 24px 90px;
+}
+
+h1, h2, .heading{
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+
+.wrap{ max-width: 1040px; margin: 0 auto; }
+
+.brand-lockup{ display:flex; align-items:center; gap:28px; }
+.brand-logo{ width:176px; height:auto; display:block; }
+header.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap: 20px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+h1{ font-size: 2rem; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--ink); }
+.subtitle{ color: var(--ink-60); font-size: 0.95rem; margin:0; font-weight: 500; }
+
+.top-actions{ display:flex; gap: 10px; }
+
+button{ font-family: inherit; cursor:pointer; }
+
+.btn{
+  border: 1.5px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  padding: 10px 18px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background .15s, color .15s, transform .1s;
+}
+.btn:hover{ background: var(--ink); color: var(--bg); }
+.btn:active{ transform: scale(0.97); }
+
+.btn-primary{
+  border: 1.5px solid var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+}
+.btn-primary:hover{ background: #002828; color: var(--lgreen); }
+
+.btn-ghost{
+  border: none;
+  background: none;
+  color: var(--ink-60);
+  padding: 6px 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.btn-ghost:hover{ color: var(--ink); }
+
+/* ---- Config panel ---- */
+.config-panel{
+  display:none;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  padding: 26px 28px;
+  margin-bottom: 34px;
+}
+.config-panel.open{ display:block; }
+.config-panel h2{ font-size: 1.15rem; margin: 0 0 4px; }
+.config-panel p.hint{ color: var(--ink-60); font-size: 0.85rem; margin: 0 0 18px; font-weight: 500; }
+
+.cfg-row{
+  display:grid;
+  grid-template-columns: 24px 1.2fr 1fr auto auto;
+  gap: 10px;
+  align-items:center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+.cfg-row:last-of-type{ border-bottom:none; }
+.cfg-num{ color: var(--ink-30); font-size: 0.85rem; font-weight: 600; }
+.cfg-row input[type=text]{
+  font-family: inherit; font-weight: 500;
+  font-size: 0.88rem;
+  padding: 8px 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  width: 100%;
+}
+.cfg-row input[type=text]:focus{ outline: none; border-color: var(--blue); }
+.cfg-skip-label{
+  display:flex; align-items:center; gap:6px;
+  font-size: 0.8rem; color: var(--ink-60); white-space: nowrap; font-weight: 500;
+}
+.config-panel-footer{
+  display:flex; justify-content: space-between; align-items:center;
+  margin-top: 18px;
+}
+
+/* ---- Empty state ---- */
+.empty{
+  text-align:center;
+  padding: 80px 20px;
+  color: var(--ink-60);
+  background: var(--card);
+  border: 1.5px dashed var(--line);
+  border-radius: 20px;
+}
+.empty p{ margin: 0 0 18px; font-size: 0.95rem; font-weight: 500; }
+
+/* ---- Articles ---- */
+.article-card{
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+  padding: 24px 28px 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 0 rgba(0,56,56,0.02);
+}
+
+.article-head{
+  display:flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.title-input{
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  padding: 3px 0;
+  width: 100%;
+  border-bottom: 1.5px solid transparent;
+}
+.title-input:hover{ border-bottom-color: var(--line); }
+.title-input:focus{ border-bottom-color: var(--blue); outline: none; }
+
+.links-row{
+  display:flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: -10px 0 22px;
+}
+.link-field{
+  display:flex;
+  align-items:center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: 100px;
+  padding: 5px 6px 5px 14px;
+  flex: 1 1 240px;
+  max-width: 380px;
+}
+.link-field .link-tag{
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-60);
+  white-space: nowrap;
+}
+.link-field input[type=text]{
+  border: none;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--ink);
+  flex: 1;
+  min-width: 60px;
+  padding: 4px 0;
+}
+.link-field input[type=text]:focus{ outline: none; }
+.link-open-btn{
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display:flex; align-items:center; justify-content:center;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  color: var(--ink-30);
+  flex-shrink: 0;
+  text-decoration: none;
+  font-size: 0.75rem;
+  transition: background .15s, color .15s;
+}
+.link-field.has-link .link-open-btn{
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--lgreen);
+}
+.link-open-btn:hover{ background: var(--ink); color: var(--lgreen); }
+
+.article-meta{ display:flex; align-items:center; gap: 14px; flex-shrink:0; }
+.progress-tag{
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--lgreen-bg);
+  padding: 5px 12px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+.delete-btn{
+  border:none; background:none; color: var(--ink-30);
+  font-size: 0.78rem; font-weight: 600; padding: 5px 10px; border-radius: 100px;
+}
+.delete-btn:hover{ color: var(--danger); }
+.delete-btn.confirming{ color: #fff; background: var(--danger); }
+
+/* ---- Schema: boxes + connectors ---- */
+.schema{
+  display:flex;
+  align-items: stretch;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.step-box{
+  flex: 1 1 150px;
+  min-width: 138px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--bg);
+  padding: 13px 14px 12px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, transform .1s;
+  position: relative;
+}
+.step-box:hover{ transform: translateY(-2px); }
+
+.step-box .num{
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ink-30);
+  margin-bottom: 6px;
+  display:block;
+}
+.step-box .label{
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 8px;
+  min-height: 30px;
+}
+.step-box .assignee{ font-size: 0.73rem; color: var(--ink-60); font-weight: 500; }
+.step-box .date{ font-size: 0.73rem; color: var(--ink-60); font-weight: 500; margin-top: 2px; }
+.step-box .status-icon{
+  position:absolute; top: 12px; right: 12px;
+  width: 20px; height:20px; border-radius: 50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size: 0.68rem; font-weight: 700;
+  background: var(--card); border: 1.5px solid var(--line); color: var(--ink-30);
+}
+
+/* accent variants cycle */
+.step-box.accent-green{ }
+.step-box.accent-green.active{ border-color: var(--lgreen); background: var(--lgreen-bg); }
+.step-box.accent-green.done{ border-color: var(--lgreen); background: var(--lgreen); }
+.step-box.accent-yellow.active{ border-color: var(--yellow); background: var(--yellow-bg); }
+.step-box.accent-yellow.done{ border-color: var(--yellow); background: var(--yellow); }
+.step-box.accent-blue.active{ border-color: var(--blue); background: var(--blue-bg); }
+.step-box.accent-blue.done{ border-color: var(--blue); background: var(--blue); }
+
+.step-box.done .status-icon{ background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.step-box.active .status-icon{ border-color: var(--ink); color: var(--ink); }
+
+.step-box.skipped{ background: var(--card); border-style: dashed; opacity: 0.7; }
+.step-box.skipped .status-icon{ background: var(--card); border-color: var(--ink-30); color: var(--ink-30); }
+
+.step-box.open{ border-color: var(--ink); box-shadow: 0 0 0 2px rgba(0,56,56,0.08); }
+
+.connector{
+  flex: 0 0 26px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color: var(--ink-30);
+  transition: color .15s;
+}
+.connector.filled{ color: var(--lgreen); }
+.connector svg{ width: 20px; height: 14px; display:block; }
+
+/* Panel */
+.step-panel{
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: 16px 16px 0 0;
+  padding: 18px 20px;
+  margin: 16px 0 0;
+  display:flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+.field{ display:flex; flex-direction:column; gap:6px; }
+.field label{ font-size: 0.72rem; color: var(--ink-60); font-weight: 600; }
+.field .step-name{ font-family: 'Poppins', sans-serif; font-size: 0.95rem; }
+.field input[type=text], .field input[type=date]{
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.88rem;
+  padding: 9px 11px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  min-width: 180px;
+}
+.field input:focus{ outline: none; border-color: var(--blue); }
+.panel-actions{ display:flex; gap:8px; margin-left:auto; flex-wrap: wrap; }
+
+.status-pill{
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 100px;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.status-pill.pending{ background: var(--ink-30); color: #fff; }
+.status-pill.done{ background: var(--lgreen); color: var(--ink); }
+.status-pill.skipped{ background: var(--line); color: var(--ink-60); }
+
+@media (max-width: 700px){
+  body{ padding:24px 16px 72px; }
+  .brand-lockup{ align-items:flex-start; flex-direction:column; gap:18px; }
+  .brand-logo{ width:150px; }
+  header.top{ align-items:stretch; margin-bottom:28px; }
+  .top-actions{ width:100%; }
+  .top-actions .btn{ flex:1; padding-inline:12px; }
+  .article-card{ padding:20px 16px 16px; border-radius:14px; }
+  .article-meta{ width:100%; justify-content:space-between; }
+  .config-panel{ padding:20px 16px; border-radius:14px; }
+  .cfg-row input, .cfg-row label, .cfg-row button{ grid-column:2; }
+  .panel-actions{ margin-left:0; width:100%; }
+  .step-panel{ padding:16px; }
+  .attachments-block{ padding:14px 16px 18px; }
+
+  .schema{ flex-direction: column; overflow-x: visible; }
+  .connector{ flex: 0 0 26px; }
+  .connector svg{ transform: rotate(90deg); }
+  .step-box{ width: 100%; }
+  .article-head{ flex-direction:column; }
+  .cfg-row{ grid-template-columns: 20px 1fr; row-gap: 6px; }
+}
+
+.attachments-block{
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+  padding: 14px 20px 18px;
+  margin: 0 0 6px;
+}
+.attachments-label{
+  display:block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ink-60);
+  text-transform: none;
+  margin-bottom: 10px;
+}
+.attachments-list{
+  display:flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.attachments-list:not(:empty){ margin-bottom: 12px; }
+
+.attachment-chip{
+  display:flex;
+  align-items:center;
+  gap: 6px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 100px;
+  padding: 6px 8px 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  max-width: 260px;
+}
+.attachment-chip a{ color: var(--ink); text-decoration: none; }
+.attachment-chip a:hover{ text-decoration: underline; }
+.attachment-chip span{ white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+.attachment-link{ background: var(--blue-bg); border-color: var(--blue); }
+.attachment-note{ background: var(--yellow-bg); border-color: var(--yellow); }
+.attachment-remove{
+  border:none; background: transparent; color: var(--ink-30);
+  font-size: 0.9rem; line-height:1; cursor:pointer; padding: 2px 4px; flex-shrink:0;
+}
+.attachment-remove:hover{ color: var(--danger); }
+
+.attachment-image{
+  padding: 4px;
+  border-radius: 14px;
+  border-color: var(--lgreen);
+}
+.attachment-image img{
+  width: 44px; height: 44px;
+  object-fit: cover;
+  border-radius: 10px;
+  display:block;
+}
+
+.attachments-add{
+  display:flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items:center;
+}
+.attach-input{
+  flex: 1 1 220px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.82rem;
+  padding: 9px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+}
+.attach-input:focus{ outline:none; border-color: var(--blue); }
+.attach-image-label{ position: relative; }
+.save-indicator{
+  position: fixed; bottom: 20px; right: 24px;
+  font-size: 0.75rem; font-weight: 600; color: var(--ink);
+  opacity: 0; transition: opacity .3s;
+  background: var(--lgreen-bg); border:1.5px solid var(--lgreen);
+  padding: 7px 14px; border-radius: 100px;
+}
+.save-indicator.show{ opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand-lockup">
+      <img class="brand-logo" src="/__l5e/assets-v1/5f350033-4f58-45ad-b67a-0f4a3018876c/alterna-logo.png" alt="Alterna énergie">
+      <div>
+        <h1>Suivi éditorial</h1>
+        <p class="subtitle">Pipeline de publication des articles de blog</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn" id="toggleConfigBtn">Réglages du pipeline</button>
+      <button class="btn-primary btn" id="addArticleBtn">+ Nouvel article</button>
+    </div>
+  </header>
+
+  <section class="config-panel" id="configPanel">
+    <h2>Étapes du pipeline</h2>
+    <p class="hint">Ces réglages s'appliquent à tous les articles. Renomme une étape, change le responsable par défaut, ou marque une étape comme facultative.</p>
+    <div id="cfgRows"></div>
+    <div class="config-panel-footer">
+      <button class="btn-ghost" id="cfgAddStep">+ Ajouter une étape</button>
+      <button class="btn" id="cfgCloseBtn">Fermer</button>
+    </div>
+  </section>
+
+  <div id="articlesContainer"></div>
+</div>
+
+<div class="save-indicator" id="saveIndicator">Enregistré</div>
+
+<script>
+(function(){
+
+const SUPABASE_URL = 'https://wbcjhhvowxhscszoviqu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_vpTPnvXvF187auoe0m7Vjg_BQcAJxDx';
+const REST = SUPABASE_URL + '/rest/v1/editorial_kv';
+const HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Content-Type': 'application/json'
+};
+
+const storage = {
+  async get(key){
+    const res = await fetch(REST + '?select=value&key=eq.' + encodeURIComponent(key), { headers: HEADERS });
+    if(!res.ok) throw new Error('Erreur de lecture');
+    const rows = await res.json();
+    if(!rows.length) throw new Error('Clé absente');
+    return { value: rows[0].value };
+  },
+  async set(key, value){
+    const res = await fetch(REST + '?on_conflict=key', {
+      method: 'POST',
+      headers: Object.assign({}, HEADERS, { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+      body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
+    });
+    if(!res.ok) throw new Error('Erreur d\'enregistrement');
+  },
+  async delete(key){
+    await fetch(REST + '?key=eq.' + encodeURIComponent(key), { method: 'DELETE', headers: HEADERS });
+  }
+};
+
+
+const DEFAULT_CONFIG = [
+  { key:'idee', label:'Idée', assignee:'', skippable:true },
+  { key:'brief', label:'Brief SEO', assignee:'Primelis', skippable:false },
+  { key:'redaction', label:'Rédaction', assignee:'Caroline ou Marina', skippable:false },
+  { key:'validation', label:'Validation (relecture)', assignee:'', skippable:false },
+  { key:'image', label:'Image', assignee:'Service Communication', skippable:false },
+  { key:'integration', label:'Intégration', assignee:'Marick', skippable:false }
+];
+
+const ACCENTS = ['green', 'blue', 'yellow'];
+function accentFor(i){ return ACCENTS[i % ACCENTS.length]; }
+
+const ARROW_SVG = '<svg viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 7H19M19 7L13 1M19 7L13 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+let config = [];
+let articles = [];
+let openPanels = {};
+let confirmingDelete = null;
+
+function uid(){
+  return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
+}
+
+function showSaved(){
+  const el = document.getElementById('saveIndicator');
+  el.classList.add('show');
+  clearTimeout(showSaved._t);
+  showSaved._t = setTimeout(()=> el.classList.remove('show'), 900);
+}
+
+async function loadConfig(){
+  try{
+    const r = await storage.get('pipeline-config', false);
+    config = JSON.parse(r.value);
+  }catch(e){
+    config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    try{ await storage.set('pipeline-config', JSON.stringify(config), false); }catch(e2){}
+  }
+}
+
+async function saveConfig(){
+  try{
+    await storage.set('pipeline-config', JSON.stringify(config), false);
+    showSaved();
+  }catch(e){ console.error('Erreur de sauvegarde config', e); }
+}
+
+async function loadArticles(){
+  try{
+    const idxRes = await storage.get('articles-index', false);
+    const ids = JSON.parse(idxRes.value);
+    const out = [];
+    for(const id of ids){
+      try{
+        const r = await storage.get('article:' + id, false);
+        out.push(JSON.parse(r.value));
+      }catch(e){}
+    }
+    out.sort((a,b)=> (a.createdAt||'').localeCompare(b.createdAt||''));
+    articles = out;
+  }catch(e){
+    articles = [];
+  }
+}
+
+async function saveIndex(){
+  try{
+    await storage.set('articles-index', JSON.stringify(articles.map(a=>a.id)), false);
+  }catch(e){ console.error('Erreur de sauvegarde index', e); }
+}
+
+async function saveArticle(article){
+  try{
+    await storage.set('article:' + article.id, JSON.stringify(article), false);
+    showSaved();
+  }catch(e){ console.error('Erreur de sauvegarde article', e); }
+}
+
+async function deleteArticleStorage(id){
+  try{ await storage.delete('article:' + id, false); }catch(e){}
+}
+
+function newArticle(title){
+  return {
+    id: uid(),
+    title: title || 'Nouvel article',
+    createdAt: new Date().toISOString(),
+    docxLink: '',
+    finalLink: '',
+    steps: config.map(c => ({ key: c.key, status: 'pending', assignee: c.assignee || '', date: '', attachments: [] }))
+  };
+}
+
+function normalizeUrl(v){
+  if(!v) return '';
+  v = v.trim();
+  if(!v) return '';
+  if(!/^https?:\/\//i.test(v)) return 'https://' + v;
+  return v;
+}
+
+function syncArticleSteps(article){
+  const existing = {};
+  article.steps.forEach(s => existing[s.key] = s);
+  article.steps = config.map(c => {
+    const s = existing[c.key] || { key: c.key, status: 'pending', assignee: c.assignee || '', date: '', attachments: [] };
+    if(!s.attachments) s.attachments = [];
+    return s;
+  });
+}
+
+function getArticle(id){ return articles.find(a => a.id === id); }
+function getConfigFor(key){ return config.find(c => c.key === key); }
+
+function currentActiveIndex(article){
+  for(let i=0;i<article.steps.length;i++){
+    if(article.steps[i].status === 'pending') return i;
+  }
+  return article.steps.length;
+}
+
+function fmtDate(d){
+  if(!d) return '';
+  const parts = d.split('-');
+  if(parts.length !== 3) return d;
+  const months = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  return parseInt(parts[2],10) + ' ' + months[parseInt(parts[1],10)-1];
+}
+
+function render(){
+  renderConfigPanel();
+  renderArticles();
+}
+
+function renderConfigPanel(){
+  const rows = document.getElementById('cfgRows');
+  rows.innerHTML = config.map((c, i) => `
+    <div class="cfg-row">
+      <div class="cfg-num">${i+1}</div>
+      <input type="text" data-action="cfg-label" data-key="${c.key}" value="${escapeAttr(c.label)}" placeholder="Nom de l'étape">
+      <input type="text" data-action="cfg-assignee" data-key="${c.key}" value="${escapeAttr(c.assignee)}" placeholder="Responsable par défaut">
+      <label class="cfg-skip-label">
+        <input type="checkbox" data-action="cfg-skippable" data-key="${c.key}" ${c.skippable ? 'checked' : ''}>
+        Facultative
+      </label>
+      <button class="btn-ghost" data-action="cfg-remove" data-key="${c.key}" ${config.length<=1?'disabled':''}>Supprimer</button>
+    </div>
+  `).join('');
+}
+
+function escapeAttr(s){
+  return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+function escapeHtml(s){
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderArticles(){
+  const container = document.getElementById('articlesContainer');
+  if(articles.length === 0){
+    container.innerHTML = `
+      <div class="empty">
+        <p>Aucun article en cours. Ajoute ton premier article pour démarrer le suivi.</p>
+        <button class="btn btn-primary" id="emptyAddBtn">+ Nouvel article</button>
+      </div>`;
+    document.getElementById('emptyAddBtn').addEventListener('click', addArticle);
+    return;
+  }
+
+  container.innerHTML = articles.map(article => renderArticleCard(article)).join('');
+}
+
+function renderArticleCard(article){
+  const activeIdx = currentActiveIndex(article);
+  const doneCount = article.steps.filter(s => s.status !== 'pending').length;
+  const total = article.steps.length;
+  const openKey = openPanels[article.id];
+
+  let schemaHtml = '';
+  article.steps.forEach((step, i) => {
+    const cfg = getConfigFor(step.key) || { label: step.key, skippable:false };
+    let cls = 'step-box accent-' + accentFor(i);
+    let iconContent = i+1;
+    if(step.status === 'done'){ cls += ' done'; iconContent = '✓'; }
+    else if(step.status === 'skipped'){ cls += ' skipped'; iconContent = '–'; }
+    else if(i === activeIdx){ cls += ' active'; }
+    if(openKey === step.key) cls += ' open';
+
+    schemaHtml += `
+      <div class="${cls}" data-action="toggle-step" data-article-id="${article.id}" data-step-key="${step.key}">
+        <span class="num">Étape ${i+1}</span>
+        <span class="status-icon">${iconContent}</span>
+        <div class="label">${escapeHtml(cfg.label)}</div>
+        <div class="assignee">${escapeHtml(step.assignee) || '—'}</div>
+        <div class="date">${fmtDate(step.date) || ''}</div>
+      </div>`;
+
+    if(i < article.steps.length - 1){
+      const filled = step.status !== 'pending';
+      schemaHtml += `<div class="connector ${filled ? 'filled' : ''}">${ARROW_SVG}</div>`;
+    }
+  });
+
+  let panelHtml = '';
+  if(openKey){
+    const step = article.steps.find(s => s.key === openKey);
+    const cfg = getConfigFor(openKey);
+    if(step && cfg){
+      const isDone = step.status === 'done';
+      const isSkipped = step.status === 'skipped';
+      panelHtml = `
+        <div class="step-panel">
+          <div class="field">
+            <label>Étape</label>
+            <span class="step-name heading">${escapeHtml(cfg.label)}</span>
+            <span class="status-pill ${step.status}">${step.status === 'done' ? 'Validée' : step.status === 'skipped' ? 'Passée' : 'En attente'}</span>
+          </div>
+          <div class="field">
+            <label>Responsable</label>
+            <input type="text" data-action="edit-assignee" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.assignee)}" placeholder="Nom">
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <input type="date" data-action="edit-date" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.date)}">
+          </div>
+          <div class="panel-actions">
+            ${!isDone ? `<button class="btn btn-primary" data-action="validate-step" data-article-id="${article.id}" data-step-key="${step.key}">Marquer validée</button>` : ''}
+            ${cfg.skippable && !isSkipped && !isDone ? `<button class="btn" data-action="skip-step" data-article-id="${article.id}" data-step-key="${step.key}">Passer cette étape</button>` : ''}
+            ${(isDone || isSkipped) ? `<button class="btn" data-action="unvalidate-step" data-article-id="${article.id}" data-step-key="${step.key}">Repasser en attente</button>` : ''}
+          </div>
+        </div>
+        <div class="attachments-block">
+          <label class="attachments-label">Pièces jointes</label>
+          <div class="attachments-list">${renderAttachments(article.id, step)}</div>
+          <div class="attachments-add">
+            <input type="text" class="attach-input" data-article-id="${article.id}" data-step-key="${step.key}" placeholder="Coller un lien ou écrire une note, puis Entrée">
+            <button class="btn-ghost" data-action="add-text-attachment" data-article-id="${article.id}" data-step-key="${step.key}">Ajouter</button>
+            <label class="btn-ghost attach-image-label">
+              Ajouter une image
+              <input type="file" accept="image/*" class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" hidden>
+            </label>
+          </div>
+        </div>`;
+    }
+  }
+
+  const isConfirming = confirmingDelete === article.id;
+
+  return `
+    <div class="article-card" data-article-id="${article.id}">
+      <div class="article-head">
+        <input class="title-input" data-action="edit-title" data-article-id="${article.id}" value="${escapeAttr(article.title)}" placeholder="Titre de l'article">
+        <div class="article-meta">
+          <span class="progress-tag">${doneCount}/${total} étapes</span>
+          <button class="delete-btn ${isConfirming?'confirming':''}" data-action="delete-article" data-article-id="${article.id}">${isConfirming ? 'Confirmer la suppression' : 'Supprimer'}</button>
+        </div>
+      </div>
+      <div class="links-row">
+        ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Docx', 'Coller le lien du document Docx')}
+        ${renderLinkField(article.id, 'final-link', article.finalLink, 'Article publié', "Coller le lien de l'article publié")}
+      </div>
+      <div class="schema">${schemaHtml}</div>
+      ${panelHtml}
+    </div>`;
+}
+
+function renderAttachments(articleId, step){
+  const items = step.attachments || [];
+  if(items.length === 0) return '';
+  return items.map(a => {
+    if(a.type === 'image'){
+      return `
+        <div class="attachment-chip attachment-image">
+          <a href="${escapeAttr(a.value)}" target="_blank" rel="noopener noreferrer" title="${escapeAttr(a.name||'Image')}">
+            <img src="${escapeAttr(a.value)}" alt="${escapeAttr(a.name||'Image')}">
+          </a>
+          <button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>
+        </div>`;
+    }
+    if(a.type === 'link'){
+      return `
+        <div class="attachment-chip attachment-link">
+          <a href="${escapeAttr(normalizeUrl(a.value))}" target="_blank" rel="noopener noreferrer">${escapeHtml(shortenUrl(a.value))}</a>
+          <button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>
+        </div>`;
+    }
+    return `
+      <div class="attachment-chip attachment-note">
+        <span>${escapeHtml(a.value)}</span>
+        <button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>
+      </div>`;
+  }).join('');
+}
+
+function shortenUrl(u){
+  let s = (u||'').replace(/^https?:\/\//i,'').replace(/^www\./i,'');
+  if(s.length > 38) s = s.slice(0,35) + '…';
+  return s;
+}
+
+function looksLikeLink(v){
+  return /^https?:\/\//i.test(v) || /^www\./i.test(v) || /^[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i.test(v.trim());
+}
+
+function renderLinkField(articleId, action, value, tag, placeholder){
+  const hasLink = !!(value && value.trim());
+  const href = hasLink ? normalizeUrl(value) : '';
+  return `
+    <div class="link-field ${hasLink ? 'has-link' : ''}">
+      <span class="link-tag">${escapeHtml(tag)}</span>
+      <input type="text" data-action="edit-${action}" data-article-id="${articleId}" value="${escapeAttr(value)}" placeholder="${escapeAttr(placeholder)}">
+      ${hasLink
+        ? `<a class="link-open-btn" href="${escapeAttr(href)}" target="_blank" rel="noopener noreferrer" title="Ouvrir le lien">↗</a>`
+        : `<span class="link-open-btn" title="Aucun lien">↗</span>`}
+    </div>`;
+}
+
+async function addArticle(){
+  const article = newArticle('Nouvel article');
+  articles.push(article);
+  openPanels[article.id] = null;
+  await saveArticle(article);
+  await saveIndex();
+  render();
+  const input = document.querySelector(`.title-input[data-article-id="${article.id}"]`);
+  if(input){ input.focus(); input.select(); }
+}
+
+document.getElementById('addArticleBtn').addEventListener('click', addArticle);
+
+document.getElementById('toggleConfigBtn').addEventListener('click', () => {
+  document.getElementById('configPanel').classList.toggle('open');
+});
+document.getElementById('cfgCloseBtn').addEventListener('click', () => {
+  document.getElementById('configPanel').classList.remove('open');
+});
+
+document.getElementById('cfgAddStep').addEventListener('click', async () => {
+  const key = 'step-' + uid();
+  config.push({ key, label: 'Nouvelle étape', assignee: '', skippable: false });
+  articles.forEach(syncArticleSteps);
+  await saveConfig();
+  for(const a of articles) await saveArticle(a);
+  render();
+});
+
+document.getElementById('cfgRows').addEventListener('input', async (e) => {
+  const t = e.target;
+  const action = t.dataset.action;
+  const key = t.dataset.key;
+  if(!action) return;
+  const cfg = getConfigFor(key);
+  if(!cfg) return;
+  if(action === 'cfg-label') cfg.label = t.value;
+  if(action === 'cfg-assignee') cfg.assignee = t.value;
+  await saveConfig();
+  renderArticles();
+});
+
+document.getElementById('cfgRows').addEventListener('change', async (e) => {
+  const t = e.target;
+  const action = t.dataset.action;
+  const key = t.dataset.key;
+  if(action === 'cfg-skippable'){
+    const cfg = getConfigFor(key);
+    if(cfg){ cfg.skippable = t.checked; await saveConfig(); renderArticles(); }
+  }
+});
+
+document.getElementById('cfgRows').addEventListener('click', async (e) => {
+  const t = e.target.closest('[data-action="cfg-remove"]');
+  if(!t) return;
+  const key = t.dataset.key;
+  if(config.length <= 1) return;
+  config = config.filter(c => c.key !== key);
+  articles.forEach(syncArticleSteps);
+  await saveConfig();
+  for(const a of articles) await saveArticle(a);
+  render();
+});
+
+document.getElementById('articlesContainer').addEventListener('click', async (e) => {
+  const delBtn = e.target.closest('[data-action="delete-article"]');
+  if(delBtn){
+    const id = delBtn.dataset.articleId;
+    if(confirmingDelete === id){
+      articles = articles.filter(a => a.id !== id);
+      delete openPanels[id];
+      confirmingDelete = null;
+      await deleteArticleStorage(id);
+      await saveIndex();
+      render();
+    } else {
+      confirmingDelete = id;
+      renderArticles();
+      setTimeout(() => {
+        if(confirmingDelete === id){ confirmingDelete = null; renderArticles(); }
+      }, 3000);
+    }
+    return;
+  }
+
+  const stepBox = e.target.closest('[data-action="toggle-step"]');
+  if(stepBox){
+    const id = stepBox.dataset.articleId;
+    const key = stepBox.dataset.stepKey;
+    openPanels[id] = (openPanels[id] === key) ? null : key;
+    renderArticles();
+    return;
+  }
+
+  const validateBtn = e.target.closest('[data-action="validate-step"]');
+  if(validateBtn){
+    const id = validateBtn.dataset.articleId;
+    const key = validateBtn.dataset.stepKey;
+    const article = getArticle(id);
+    const step = article.steps.find(s => s.key === key);
+    step.status = 'done';
+    await saveArticle(article);
+    const idx = article.steps.findIndex(s => s.key === key);
+    const nextStep = article.steps[idx+1];
+    openPanels[id] = nextStep ? nextStep.key : null;
+    renderArticles();
+    return;
+  }
+
+  const skipBtn = e.target.closest('[data-action="skip-step"]');
+  if(skipBtn){
+    const id = skipBtn.dataset.articleId;
+    const key = skipBtn.dataset.stepKey;
+    const article = getArticle(id);
+    const step = article.steps.find(s => s.key === key);
+    step.status = 'skipped';
+    await saveArticle(article);
+    const idx = article.steps.findIndex(s => s.key === key);
+    const nextStep = article.steps[idx+1];
+    openPanels[id] = nextStep ? nextStep.key : null;
+    renderArticles();
+    return;
+  }
+
+  const unvalidateBtn = e.target.closest('[data-action="unvalidate-step"]');
+  if(unvalidateBtn){
+    const id = unvalidateBtn.dataset.articleId;
+    const key = unvalidateBtn.dataset.stepKey;
+    const article = getArticle(id);
+    const step = article.steps.find(s => s.key === key);
+    step.status = 'pending';
+    await saveArticle(article);
+    renderArticles();
+    return;
+  }
+
+  const removeAttach = e.target.closest('[data-action="remove-attachment"]');
+  if(removeAttach){
+    const id = removeAttach.dataset.articleId;
+    const key = removeAttach.dataset.stepKey;
+    const attachId = removeAttach.dataset.attachId;
+    const article = getArticle(id);
+    const step = article.steps.find(s => s.key === key);
+    step.attachments = (step.attachments||[]).filter(a => a.id !== attachId);
+    await saveArticle(article);
+    renderArticles();
+    return;
+  }
+
+  const addTextBtn = e.target.closest('[data-action="add-text-attachment"]');
+  if(addTextBtn){
+    const id = addTextBtn.dataset.articleId;
+    const key = addTextBtn.dataset.stepKey;
+    const input = document.querySelector(`.attach-input[data-article-id="${id}"][data-step-key="${key}"]`);
+    await addTextAttachment(id, key, input ? input.value : '');
+    return;
+  }
+});
+
+async function addTextAttachment(articleId, stepKey, rawValue){
+  const value = (rawValue||'').trim();
+  if(!value) return;
+  const article = getArticle(articleId);
+  const step = article.steps.find(s => s.key === stepKey);
+  if(!step.attachments) step.attachments = [];
+  step.attachments.push({ id: uid(), type: looksLikeLink(value) ? 'link' : 'note', value });
+  await saveArticle(article);
+  renderArticles();
+}
+
+document.getElementById('articlesContainer').addEventListener('keydown', async (e) => {
+  if(e.key === 'Enter' && e.target.classList.contains('attach-input')){
+    e.preventDefault();
+    const id = e.target.dataset.articleId;
+    const key = e.target.dataset.stepKey;
+    await addTextAttachment(id, key, e.target.value);
+  }
+});
+
+document.getElementById('articlesContainer').addEventListener('change', async (e) => {
+  if(e.target.classList.contains('attach-file-input')){
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    if(!file.type.startsWith('image/')){
+      alert('Merci de choisir un fichier image.');
+      e.target.value = '';
+      return;
+    }
+    if(file.size > 3 * 1024 * 1024){
+      alert('Image trop volumineuse (3 Mo maximum).');
+      e.target.value = '';
+      return;
+    }
+    const articleId = e.target.dataset.articleId;
+    const stepKey = e.target.dataset.stepKey;
+    try{
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const article = getArticle(articleId);
+      const step = article.steps.find(s => s.key === stepKey);
+      if(!step.attachments) step.attachments = [];
+      step.attachments.push({ id: uid(), type: 'image', value: dataUrl, name: file.name });
+      await saveArticle(article);
+      renderArticles();
+    }catch(err){
+      console.error('Erreur de lecture du fichier', err);
+      alert("Impossible de charger cette image.");
+    }
+  }
+});
+
+document.getElementById('articlesContainer').addEventListener('input', async (e) => {
+  const t = e.target;
+  const action = t.dataset.action;
+  if(action === 'edit-title'){
+    const article = getArticle(t.dataset.articleId);
+    article.title = t.value;
+    await saveArticle(article);
+  }
+  if(action === 'edit-docx-link'){
+    const article = getArticle(t.dataset.articleId);
+    article.docxLink = t.value;
+    await saveArticle(article);
+  }
+  if(action === 'edit-final-link'){
+    const article = getArticle(t.dataset.articleId);
+    article.finalLink = t.value;
+    await saveArticle(article);
+  }
+  if(action === 'edit-assignee'){
+    const article = getArticle(t.dataset.articleId);
+    const step = article.steps.find(s => s.key === t.dataset.stepKey);
+    step.assignee = t.value;
+    await saveArticle(article);
+  }
+  if(action === 'edit-date'){
+    const article = getArticle(t.dataset.articleId);
+    const step = article.steps.find(s => s.key === t.dataset.stepKey);
+    step.date = t.value;
+    await saveArticle(article);
+  }
+});
+
+const REFRESH_ON_BLUR = ['edit-assignee', 'edit-docx-link', 'edit-final-link'];
+document.getElementById('articlesContainer').addEventListener('change', (e) => {
+  const t = e.target;
+  if(t && t.dataset && t.dataset.action === 'edit-date'){
+    renderArticles();
+  }
+});
+document.getElementById('articlesContainer').addEventListener('blur', (e) => {
+  const t = e.target;
+  if(t && t.dataset && REFRESH_ON_BLUR.includes(t.dataset.action)){
+    renderArticles();
+  }
+}, true);
+
+async function init(){
+  document.getElementById('articlesContainer').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
+  await loadConfig();
+  await loadArticles();
+  articles.forEach(syncArticleSteps);
+  render();
+}
+
+init();
+
+})();
+</script>
+</body>
+</html>

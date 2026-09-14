@@ -8,7 +8,19 @@ export const workbook = raw as unknown as Workbook;
 /** Sheets retired from the tool (kept in the raw data, hidden everywhere). */
 export const RETIRED_SHEETS = new Set(["BLOG - IDEE"]);
 
-export const sheetNames = Object.keys(workbook).filter((n) => !RETIRED_SHEETS.has(n));
+/** Sheets that aren't Excel data but standalone tools embedded in the app. */
+export const EMBED_SHEETS: Record<string, string> = {
+  "SUIVI EDITORIAL": "/suivi-editorial.html",
+};
+
+export const sheetNames = [
+  ...Object.keys(workbook).filter((n) => !RETIRED_SHEETS.has(n)),
+  ...Object.keys(EMBED_SHEETS),
+];
+
+export function embedSrcOf(sheet: string): string | null {
+  return EMBED_SHEETS[sheet.split("::")[0]] ?? null;
+}
 
 /**
  * Columns that don't exist in the Excel source but are added by the tool.
@@ -189,6 +201,7 @@ export const SHEET_META: Record<
   "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Électricité", group: "Stratégie édito" },
   "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Gaz", group: "Stratégie édito" },
   "Webflow - fonctionnement": { headerRow: 1, treeCols: 5, firstDataRow: 2, label: "Webflow - fonctionnement", group: "Docs" },
+  "SUIVI EDITORIAL": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Blog" },
 };
 
 export function headersOf(sheet: string, edits?: EditsMap): string[] {
