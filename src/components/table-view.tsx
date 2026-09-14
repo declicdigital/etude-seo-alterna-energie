@@ -526,12 +526,31 @@ export function TableView({
         />
         <span className="hidden sm:inline text-xs text-muted-foreground">{filtered.length} lignes</span>
         <button
-          onClick={onAddRow}
+          onClick={() => setAdding(true)}
           className="h-10 sm:h-9 px-3 rounded-full sm:rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1.5 shadow-sm shrink-0"
         >
           <Plus className="size-4 sm:size-3.5" /> <span className="hidden sm:inline">Ajouter une ligne</span><span className="sm:hidden">Ajouter</span>
         </button>
       </div>
+      {adding && (
+        <AddRowForm
+          headers={headers}
+          cols={visibleCols}
+          boolCols={boolCols}
+          choiceCols={
+            new Map<number, string[]>([
+              ...[...statusCols].map(([c, o]) => [c, o] as [number, string[]]),
+              ...[...effortCols].map(([c, o]) => [c, o] as [number, string[]]),
+              ...[...optionCols].map(([c, o]) => [c, o] as [number, string[]]),
+            ])
+          }
+          onCancel={() => setAdding(false)}
+          onSubmit={async (values) => {
+            await onCreateRow(values);
+            setAdding(false);
+          }}
+        />
+      )}
       {/* Mobile card list — avoids horizontal scrolling on phones */}
       <div className="md:hidden flex-1 overflow-y-auto p-3 space-y-2 bg-muted/20">
         {sortedFiltered.map((id) => {
