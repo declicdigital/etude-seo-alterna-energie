@@ -1,4 +1,4 @@
-import { BookOpen, ExternalLink, ListChecks, FileText, Newspaper, Link2, FolderTree, Layers } from "lucide-react";
+import { BookOpen, ExternalLink, ListChecks, Newspaper, Link2, FolderTree, Layers } from "lucide-react";
 
 type Section = {
   icon: React.ComponentType<{ className?: string }>;
@@ -32,13 +32,6 @@ const SECTIONS: Section[] = [
     accent: "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10",
     description:
       "Le pendant \"Professionnel\" de Structure Particulier - à mettre au propre.",
-  },
-  {
-    icon: FileText,
-    title: "BLOG - IDEE",
-    sheet: "BLOG - IDEE",
-    accent: "border-sky-500 bg-sky-50 dark:bg-sky-500/10",
-    description: "Liste d'idées potentielles d'articles à explorer.",
   },
   {
     icon: Newspaper,
