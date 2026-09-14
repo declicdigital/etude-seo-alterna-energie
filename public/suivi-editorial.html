@@ -578,6 +578,13 @@ let config = [];
 let articles = [];
 let openPanels = {};
 let confirmingDelete = null;
+const COLLAPSE_KEY = 'editorial-collapsed';
+let collapsed = (() => {
+  try{ return JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '{}'); }catch(e){ return {}; }
+})();
+function saveCollapsed(){
+  try{ localStorage.setItem(COLLAPSE_KEY, JSON.stringify(collapsed)); }catch(e){}
+}
 
 function uid(){
   return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
