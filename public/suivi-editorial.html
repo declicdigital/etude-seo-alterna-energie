@@ -716,6 +716,7 @@ function syncArticleSteps(article){
   article.steps = config.map(c => {
     const s = existing[c.key] || { key: c.key, status: 'pending', assignee: c.assignee || '', date: '', attachments: [] };
     if(!s.attachments) s.attachments = [];
+    if(c.key === 'validation') s.assignee = 'Service Communication';
     return s;
   });
 }
