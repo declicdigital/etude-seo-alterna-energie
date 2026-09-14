@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ExternalLink, Plus, Trash2 } from "lucide-react";
-import { dataRows, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
+import { dataRows, extraColumnsOf, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import { linkHref, linkify } from "@/lib/links";
 import { EditableText } from "@/components/editable-text";
@@ -91,7 +91,7 @@ export function TableView({
   edits,
   selected,
   onSelect,
-  onAddRow,
+  onCreateRow,
   onToggle,
   onDeleteRow,
 }: {
@@ -99,10 +99,11 @@ export function TableView({
   edits: EditsMap;
   selected: number | null;
   onSelect: (rowId: number) => void;
-  onAddRow: () => void;
+  onCreateRow: (values: Record<number, string>) => void | Promise<void>;
   onToggle: (rowId: number, col: number, value: string | null) => void;
   onDeleteRow?: (rowId: number) => void;
 }) {
+  const [adding, setAdding] = useState(false);
   const headers = headersOf(sheet, edits);
   const headerRow = SHEET_META[sheet.split("::")[0]]?.headerRow ?? 0;
   const ids = useMemo(() => dataRows(sheet, edits), [sheet, edits]);
