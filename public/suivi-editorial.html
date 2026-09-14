@@ -914,6 +914,18 @@ async function addArticle(){
 
 document.getElementById('addArticleBtn').addEventListener('click', addArticle);
 
+document.getElementById('collapseAllBtn').addEventListener('click', () => {
+  collapsed = {};
+  articles.forEach(a => collapsed[a.id] = true);
+  saveCollapsed();
+  renderArticles();
+});
+document.getElementById('expandAllBtn').addEventListener('click', () => {
+  collapsed = {};
+  saveCollapsed();
+  renderArticles();
+});
+
 document.getElementById('toggleConfigBtn').addEventListener('click', () => {
   document.getElementById('configPanel').classList.toggle('open');
 });
