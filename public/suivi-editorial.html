@@ -782,7 +782,15 @@ function renderArticleCard(article){
           </div>
           <div class="field">
             <label>Responsable</label>
-            <input type="text" data-action="edit-assignee" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.assignee)}" placeholder="Nom">
+            ${(cfg.options && cfg.options.length) ? `
+              <div class="assignee-options">
+                ${cfg.options.map(o => `
+                  <label class="assignee-option ${step.assignee === o ? 'checked' : ''}">
+                    <input type="checkbox" data-action="pick-assignee" data-article-id="${article.id}" data-step-key="${step.key}" data-value="${escapeAttr(o)}" ${step.assignee === o ? 'checked' : ''}>
+                    ${escapeHtml(o)}
+                  </label>`).join('')}
+              </div>`
+            : `<input type="text" data-action="edit-assignee" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.assignee)}" placeholder="Nom">`}
           </div>
           <div class="field">
             <label>Date</label>
