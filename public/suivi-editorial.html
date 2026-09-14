@@ -509,6 +509,18 @@ button{ font-family: inherit; cursor:pointer; }
   padding: 7px 14px; border-radius: 100px;
 }
 .save-indicator.show{ opacity: 1; }
+.field select, .field input[type="text"].req-input{
+  font: inherit; font-size: 0.85rem; padding: 6px 10px;
+  border:1.5px solid var(--line); border-radius: 8px; background:#fff; color: var(--ink);
+  min-width: 190px;
+}
+.field select:focus, .field input.req-input:focus{ outline:none; border-color: var(--blue); }
+.req-hint{ font-size:0.72rem; color:#9a5b00; font-weight:600; }
+.blog-badge{
+  font-size:0.7rem; font-weight:700; padding:4px 10px; border-radius:100px;
+  background: var(--lgreen-bg); border:1.5px solid var(--lgreen); color: var(--ink);
+}
+
 </style>
 </head>
 <body>
