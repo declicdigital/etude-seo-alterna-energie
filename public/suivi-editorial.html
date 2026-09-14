@@ -1391,7 +1391,7 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
   }
 });
 
-const REFRESH_ON_BLUR = ['edit-assignee', 'edit-docx-link', 'edit-final-link'];
+const REFRESH_ON_BLUR = ['edit-assignee', 'edit-docx-link', 'edit-final-link', 'edit-title'];
 document.getElementById('articlesContainer').addEventListener('change', (e) => {
   const t = e.target;
   if(t && t.dataset && t.dataset.action === 'edit-date'){
