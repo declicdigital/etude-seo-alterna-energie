@@ -750,7 +750,7 @@ function renderConfigPanel(){
     <div class="cfg-row">
       <div class="cfg-num">${i+1}</div>
       <input type="text" data-action="cfg-label" data-key="${c.key}" value="${escapeAttr(c.label)}" placeholder="Nom de l'étape">
-      <input type="text" data-action="cfg-assignee" data-key="${c.key}" value="${escapeAttr(c.assignee)}" placeholder="Responsable par défaut">
+      <input type="text" data-action="cfg-assignee" data-key="${c.key}" value="${escapeAttr(c.assignee)}" placeholder="Responsable par défaut" ${c.key === 'validation' ? 'readonly' : ''}>
       <label class="cfg-skip-label">
         <input type="checkbox" data-action="cfg-skippable" data-key="${c.key}" ${c.skippable ? 'checked' : ''}>
         Facultative
