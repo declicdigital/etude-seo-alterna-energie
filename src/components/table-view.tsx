@@ -959,3 +959,104 @@ export function TableView({
     </div>
   );
 }
+/** Modal form used to create a new row: fill the fields, then click Valider. */
+function AddRowForm({
+  headers,
+  cols,
+  boolCols,
+  choiceCols,
+  onSubmit,
+  onCancel,
+}: {
+  headers: string[];
+  cols: number[];
+  boolCols: Set<number>;
+  choiceCols: Map<number, string[]>;
+  onSubmit: (values: Record<number, string>) => void | Promise<void>;
+  onCancel: () => void;
+}) {
+  const [values, setValues] = useState<Record<number, string>>({});
+  const [busy, setBusy] = useState(false);
+  const set = (c: number, v: string) => setValues((p) => ({ ...p, [c]: v }));
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-6"
+      onClick={onCancel}
+    >
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          await onSubmit(values);
+          setBusy(false);
+        }}
+        className="bg-card w-full sm:max-w-lg rounded-t-2xl sm:rounded-xl border border-border shadow-xl max-h-[90vh] flex flex-col"
+      >
+        <div className="px-5 py-4 border-b border-border">
+          <h3 className="text-base font-semibold">Nouvelle ligne</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Remplissez les champs puis cliquez sur Valider.
+          </p>
+        </div>
+        <div className="p-5 space-y-3 overflow-y-auto">
+          {cols.map((c) => {
+            const label = headers[c] || `Colonne ${c + 1}`;
+            const v = values[c] ?? "";
+            return (
+              <div key={c}>
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                  {label}
+                </label>
+                {boolCols.has(c) ? (
+                  <div className="mt-1">
+                    <input
+                      type="checkbox"
+                      checked={v !== ""}
+                      onChange={(e) => set(c, e.target.checked ? "x" : "")}
+                      className="size-4 accent-primary cursor-pointer"
+                    />
+                  </div>
+                ) : choiceCols.has(c) ? (
+                  <select
+                    value={v}
+                    onChange={(e) => set(c, e.target.value)}
+                    className="mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">-</option>
+                    {choiceCols.get(c)!.map((o) => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    value={v}
+                    onChange={(e) => set(c, e.target.value)}
+                    className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="px-5 py-4 border-t border-border flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-9 px-4 rounded-md text-sm border border-border hover:bg-muted"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            disabled={busy}
+            className="h-9 px-4 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            {busy ? "Enregistrement…" : "Valider"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
