@@ -575,6 +575,41 @@ export function TableView({
           <Plus className="size-4 sm:size-3.5" /> <span className="hidden sm:inline">Ajouter une ligne</span><span className="sm:hidden">Ajouter</span>
         </button>
       </div>
+      {filterCols.length > 0 && (
+        <div className="px-3 sm:px-4 py-2 border-b border-border bg-card/30 flex flex-wrap gap-2 items-center">
+          {filterCols.map((f) => (
+            <select
+              key={f.col}
+              value={colFilters[f.col] ?? ""}
+              onChange={(e) =>
+                setColFilters((prev) => ({ ...prev, [f.col]: e.target.value }))
+              }
+              className={cn(
+                "h-9 rounded-full border px-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-ring",
+                colFilters[f.col]
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-input bg-background text-muted-foreground",
+              )}
+            >
+              <option value="">{f.label} : tout</option>
+              {f.options.map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+              <option value="__empty__">(vide)</option>
+            </select>
+          ))}
+          {Object.values(colFilters).some(Boolean) && (
+            <button
+              onClick={() => setColFilters({})}
+              className="h-9 px-3 rounded-full text-xs font-medium border border-input hover:bg-muted"
+            >
+              Réinitialiser
+            </button>
+          )}
+          <span className="text-xs text-muted-foreground ml-auto">{filtered.length} lignes</span>
+        </div>
+      )}
+      </div>
       {adding && (
         <AddRowForm
           headers={headers}
