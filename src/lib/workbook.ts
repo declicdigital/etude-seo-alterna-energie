@@ -52,8 +52,33 @@ export const EXTRA_COLUMNS: Record<
   ],
 };
 
+/** Catégories du blog par audience. */
+const BLOG_CATEGORIES_PARTICULIER = [
+  "Actualités",
+  "Le B.A-BA de l'énergie",
+  "Guides pratiques",
+  "Aides et réglementations",
+  "Économies d'énergie",
+  "Transition bas carbone",
+  "Vert l'avenir",
+];
+
+const BLOG_CATEGORIES_PRO = [
+  "Comprendre l'énergie",
+  "Transition énergétique",
+  "Comprendre votre facture",
+];
+
 export function extraColumnsOf(sheet: string) {
-  return EXTRA_COLUMNS[baseSheetOf(sheet)] ?? [];
+  const { base, scope } = parseSheetKey(sheet);
+  const cols = EXTRA_COLUMNS[base] ?? [];
+  if (base !== "BLOG - ARTICLES" || !scope) return cols;
+  const isPro = scope.toLowerCase().startsWith("pro");
+  return cols.map((c) =>
+    c.label === "Catégorie"
+      ? { ...c, options: isPro ? BLOG_CATEGORIES_PRO : BLOG_CATEGORIES_PARTICULIER }
+      : c,
+  );
 }
 
 /** A sheet key may be "base" or "base::scope". Returns { base, scope }. */
