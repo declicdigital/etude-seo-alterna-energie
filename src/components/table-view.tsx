@@ -376,8 +376,6 @@ export function TableView({
   // statut, effort). Options combine the declared list and the values in use.
   const filterCols = useMemo(() => {
     const out: { col: number; label: string; options: string[] }[] = [];
-    const rows = searched.length ? null : null; // values are read from all ids
-    void rows;
     const declared = new Map<number, string[]>([
       ...[...optionCols].map(([c, o]) => [c, o] as [number, string[]]),
       ...[...statusCols].map(([c, o]) => [c, o] as [number, string[]]),
