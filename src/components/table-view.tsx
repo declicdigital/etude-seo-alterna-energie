@@ -159,13 +159,17 @@ export function TableView({
     });
   };
 
-  const filtered = useMemo(() => {
+  const [colFilters, setColFilters] = useState<Record<number, string>>({});
+  useEffect(() => { setColFilters({}); }, [sheet]);
+
+  const searched = useMemo(() => {
     if (!q) return ids;
     const ql = q.toLowerCase();
     return ids.filter((id) =>
       getRow(sheet, id, edits).some((c) => c != null && String(c).toLowerCase().includes(ql)),
     );
   }, [ids, q, sheet, edits]);
+
 
   // Only show columns that have any header text OR any data
   const visibleCols = useMemo(() => {
@@ -367,6 +371,45 @@ export function TableView({
   for (const c of optionCols.keys()) {
     boolCols.delete(c); statusCols.delete(c); effortCols.delete(c); priorityCols.delete(c);
   }
+
+  // Columns the user can filter on (choice-like columns: catégorie, énergie,
+  // statut, effort). Options combine the declared list and the values in use.
+  const filterCols = useMemo(() => {
+    const out: { col: number; label: string; options: string[] }[] = [];
+    const declared = new Map<number, string[]>([
+      ...[...optionCols].map(([c, o]) => [c, o] as [number, string[]]),
+      ...[...statusCols].map(([c, o]) => [c, o] as [number, string[]]),
+      ...[...effortCols].map(([c, o]) => [c, o] as [number, string[]]),
+    ]);
+    for (const c of visibleCols) {
+      if (!declared.has(c)) continue;
+      const seen = new Set<string>();
+      for (const id of ids) {
+        const v = getRow(sheet, id, edits)[c];
+        const s = v == null ? "" : String(v).trim();
+        if (s) seen.add(s);
+      }
+      const options = [...new Set([...(declared.get(c) ?? []), ...seen])].sort((a, b) =>
+        a.localeCompare(b, "fr"),
+      );
+      if (options.length > 1) out.push({ col: c, label: headers[c] || `Colonne ${c + 1}`, options });
+    }
+    return out;
+  }, [visibleCols, optionCols, statusCols, effortCols, ids, sheet, edits, headers, searched]);
+
+  const filtered = useMemo(() => {
+    const active = Object.entries(colFilters).filter(([, v]) => v);
+    if (active.length === 0) return searched;
+    return searched.filter((id) => {
+      const row = getRow(sheet, id, edits);
+      return active.every(([c, v]) => {
+        const cell = row[Number(c)];
+        const s = cell == null ? "" : String(cell).trim().toLowerCase();
+        return v === "__empty__" ? s === "" : s === v.toLowerCase();
+      });
+    });
+  }, [searched, colFilters, sheet, edits]);
+
   const isPriority = (s: string) => {
     const n = s.trim().toLowerCase();
     if (!n) return false;
@@ -532,6 +575,40 @@ export function TableView({
           <Plus className="size-4 sm:size-3.5" /> <span className="hidden sm:inline">Ajouter une ligne</span><span className="sm:hidden">Ajouter</span>
         </button>
       </div>
+      {filterCols.length > 0 && (
+        <div className="px-3 sm:px-4 py-2 border-b border-border bg-card/30 flex flex-wrap gap-2 items-center">
+          {filterCols.map((f) => (
+            <select
+              key={f.col}
+              value={colFilters[f.col] ?? ""}
+              onChange={(e) =>
+                setColFilters((prev) => ({ ...prev, [f.col]: e.target.value }))
+              }
+              className={cn(
+                "h-9 rounded-full border px-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-ring",
+                colFilters[f.col]
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-input bg-background text-muted-foreground",
+              )}
+            >
+              <option value="">{f.label} : tout</option>
+              {f.options.map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+              <option value="__empty__">(vide)</option>
+            </select>
+          ))}
+          {Object.values(colFilters).some(Boolean) && (
+            <button
+              onClick={() => setColFilters({})}
+              className="h-9 px-3 rounded-full text-xs font-medium border border-input hover:bg-muted"
+            >
+              Réinitialiser
+            </button>
+          )}
+          <span className="text-xs text-muted-foreground ml-auto">{filtered.length} lignes</span>
+        </div>
+      )}
       {adding && (
         <AddRowForm
           headers={headers}
