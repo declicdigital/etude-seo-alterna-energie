@@ -159,13 +159,17 @@ export function TableView({
     });
   };
 
-  const filtered = useMemo(() => {
+  const [colFilters, setColFilters] = useState<Record<number, string>>({});
+  useEffect(() => { setColFilters({}); }, [sheet]);
+
+  const searched = useMemo(() => {
     if (!q) return ids;
     const ql = q.toLowerCase();
     return ids.filter((id) =>
       getRow(sheet, id, edits).some((c) => c != null && String(c).toLowerCase().includes(ql)),
     );
   }, [ids, q, sheet, edits]);
+
 
   // Only show columns that have any header text OR any data
   const visibleCols = useMemo(() => {
