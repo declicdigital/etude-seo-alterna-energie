@@ -371,6 +371,47 @@ export function TableView({
   for (const c of optionCols.keys()) {
     boolCols.delete(c); statusCols.delete(c); effortCols.delete(c); priorityCols.delete(c);
   }
+
+  // Columns the user can filter on (choice-like columns: catégorie, énergie,
+  // statut, effort). Options combine the declared list and the values in use.
+  const filterCols = useMemo(() => {
+    const out: { col: number; label: string; options: string[] }[] = [];
+    const rows = searched.length ? null : null; // values are read from all ids
+    void rows;
+    const declared = new Map<number, string[]>([
+      ...[...optionCols].map(([c, o]) => [c, o] as [number, string[]]),
+      ...[...statusCols].map(([c, o]) => [c, o] as [number, string[]]),
+      ...[...effortCols].map(([c, o]) => [c, o] as [number, string[]]),
+    ]);
+    for (const c of visibleCols) {
+      if (!declared.has(c)) continue;
+      const seen = new Set<string>();
+      for (const id of ids) {
+        const v = getRow(sheet, id, edits)[c];
+        const s = v == null ? "" : String(v).trim();
+        if (s) seen.add(s);
+      }
+      const options = [...new Set([...(declared.get(c) ?? []), ...seen])].sort((a, b) =>
+        a.localeCompare(b, "fr"),
+      );
+      if (options.length > 1) out.push({ col: c, label: headers[c] || `Colonne ${c + 1}`, options });
+    }
+    return out;
+  }, [visibleCols, optionCols, statusCols, effortCols, ids, sheet, edits, headers, searched]);
+
+  const filtered = useMemo(() => {
+    const active = Object.entries(colFilters).filter(([, v]) => v);
+    if (active.length === 0) return searched;
+    return searched.filter((id) => {
+      const row = getRow(sheet, id, edits);
+      return active.every(([c, v]) => {
+        const cell = row[Number(c)];
+        const s = cell == null ? "" : String(cell).trim().toLowerCase();
+        return v === "__empty__" ? s === "" : s === v.toLowerCase();
+      });
+    });
+  }, [searched, colFilters, sheet, edits]);
+
   const isPriority = (s: string) => {
     const n = s.trim().toLowerCase();
     if (!n) return false;
