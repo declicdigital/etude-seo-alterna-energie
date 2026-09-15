@@ -609,7 +609,6 @@ export function TableView({
           <span className="text-xs text-muted-foreground ml-auto">{filtered.length} lignes</span>
         </div>
       )}
-      </div>
       {adding && (
         <AddRowForm
           headers={headers}
