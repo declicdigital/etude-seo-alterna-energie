@@ -18,7 +18,9 @@ import { Menu } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
-import { isUnlocked } from "@/lib/gate.functions";
+import { getAccess, signOutAndGoToAuth } from "@/lib/access";
+import { LogOut, ShieldCheck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 const searchSchema = z.object({
   sheet: z.string().optional(),
@@ -26,15 +28,19 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/")({
   validateSearch: searchSchema,
+  ssr: false,
   beforeLoad: async () => {
-    const { unlocked } = await isUnlocked();
-    if (!unlocked) throw redirect({ to: "/unlock" });
+    const access = await getAccess();
+    if (!access.userId) throw redirect({ to: "/auth" });
+    if (access.status !== "approved") throw redirect({ to: "/en-attente" });
+    return { access };
   },
   component: Index,
 });
 
 function Index() {
   const { sheet: sheetParam } = Route.useSearch();
+  const { access } = Route.useRouteContext();
   const navigate = useNavigate();
   const isGuide = sheetParam === "__guide";
   const sheet = isGuide
@@ -113,6 +119,27 @@ function Index() {
           {sidebar}
         </SheetContent>
       </Sheet>
+
+      <div className="fixed top-2 right-3 z-50 flex items-center gap-1.5">
+        {access.isAdmin && (
+          <Link
+            to="/demandes"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur hover:bg-muted"
+            title="Demandes d'accès"
+          >
+            <ShieldCheck className="size-3.5" />
+            <span className="hidden sm:inline">Demandes</span>
+          </Link>
+        )}
+        <button
+          onClick={signOutAndGoToAuth}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur hover:bg-muted"
+          title="Se déconnecter"
+        >
+          <LogOut className="size-3.5" />
+          <span className="hidden sm:inline">Déconnexion</span>
+        </button>
+      </div>
 
       <main className="flex-1 flex flex-col min-w-0">
         {/* iOS-style mobile top bar */}

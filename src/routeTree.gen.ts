@@ -9,12 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UnlockRouteImport } from './routes/unlock'
+import { Route as EnAttenteRouteImport } from './routes/en-attente'
+import { Route as DemandesRouteImport } from './routes/demandes'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 
-const UnlockRoute = UnlockRouteImport.update({
-  id: '/unlock',
-  path: '/unlock',
+const EnAttenteRoute = EnAttenteRouteImport.update({
+  id: '/en-attente',
+  path: '/en-attente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemandesRoute = DemandesRouteImport.update({
+  id: '/demandes',
+  path: '/demandes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,37 +37,59 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/unlock': typeof UnlockRoute
+  '/auth': typeof AuthRoute
+  '/demandes': typeof DemandesRoute
+  '/en-attente': typeof EnAttenteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/unlock': typeof UnlockRoute
+  '/auth': typeof AuthRoute
+  '/demandes': typeof DemandesRoute
+  '/en-attente': typeof EnAttenteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/unlock': typeof UnlockRoute
+  '/auth': typeof AuthRoute
+  '/demandes': typeof DemandesRoute
+  '/en-attente': typeof EnAttenteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/unlock'
+  fullPaths: '/' | '/auth' | '/demandes' | '/en-attente'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/unlock'
-  id: '__root__' | '/' | '/unlock'
+  to: '/' | '/auth' | '/demandes' | '/en-attente'
+  id: '__root__' | '/' | '/auth' | '/demandes' | '/en-attente'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  UnlockRoute: typeof UnlockRoute
+  AuthRoute: typeof AuthRoute
+  DemandesRoute: typeof DemandesRoute
+  EnAttenteRoute: typeof EnAttenteRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/unlock': {
-      id: '/unlock'
-      path: '/unlock'
-      fullPath: '/unlock'
-      preLoaderRoute: typeof UnlockRouteImport
+    '/en-attente': {
+      id: '/en-attente'
+      path: '/en-attente'
+      fullPath: '/en-attente'
+      preLoaderRoute: typeof EnAttenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demandes': {
+      id: '/demandes'
+      path: '/demandes'
+      fullPath: '/demandes'
+      preLoaderRoute: typeof DemandesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,7 +104,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  UnlockRoute: UnlockRoute,
+  AuthRoute: AuthRoute,
+  DemandesRoute: DemandesRoute,
+  EnAttenteRoute: EnAttenteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
