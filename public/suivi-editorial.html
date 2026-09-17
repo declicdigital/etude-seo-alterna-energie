@@ -919,7 +919,7 @@ function renderArticles(){
     return;
   }
 
-  container.innerHTML = articles.map(article => renderArticleCard(article)).join('');
+  container.innerHTML = sortedArticles().map(article => renderArticleCard(article)).join('');
 }
 
 function renderArticleCard(article){
