@@ -106,6 +106,18 @@ function AuthPage() {
           </p>
         </div>
 
+        <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-left">
+          <p className="text-xs font-semibold text-amber-900">
+            Nouveau : l'accès a changé
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-amber-800">
+            Le mot de passe unique n'existe plus. À votre première venue, cliquez sur
+            « Créer un compte » : votre demande est envoyée à l'administrateur, qui la
+            valide. Ensuite, vous vous connectez normalement avec votre email ou Google,
+            et vous restez connecté.
+          </p>
+        </div>
+
         <button
           type="button"
           onClick={onGoogle}
