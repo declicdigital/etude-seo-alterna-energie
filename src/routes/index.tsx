@@ -120,6 +120,27 @@ function Index() {
         </SheetContent>
       </Sheet>
 
+      <div className="fixed top-2 right-3 z-50 flex items-center gap-1.5">
+        {access.isAdmin && (
+          <Link
+            to="/demandes"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur hover:bg-muted"
+            title="Demandes d'accès"
+          >
+            <ShieldCheck className="size-3.5" />
+            <span className="hidden sm:inline">Demandes</span>
+          </Link>
+        )}
+        <button
+          onClick={signOutAndGoToAuth}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur hover:bg-muted"
+          title="Se déconnecter"
+        >
+          <LogOut className="size-3.5" />
+          <span className="hidden sm:inline">Déconnexion</span>
+        </button>
+      </div>
+
       <main className="flex-1 flex flex-col min-w-0">
         {/* iOS-style mobile top bar */}
         <div className="md:hidden sticky top-0 z-20 flex items-center gap-3 h-14 px-3 border-b border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/70">
