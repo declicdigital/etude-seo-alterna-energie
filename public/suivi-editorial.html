@@ -907,6 +907,26 @@ function renderRedactionFields(article){
     </div>`;
 }
 
+/** Date de publication d'un article : date de l'étape Intégration, sinon la date la plus récente. */
+function pubDateOf(article){
+  const steps = article.steps || [];
+  const integ = steps.find(s => s.key === 'integration');
+  if(integ && integ.date) return integ.date;
+  const dates = steps.map(s => s.date).filter(Boolean).sort();
+  return dates.length ? dates[dates.length - 1] : '';
+}
+
+/** Articles triés par date de publication décroissante (sans date en dernier). */
+function sortedArticles(){
+  return articles.slice().sort((a, b) => {
+    const da = pubDateOf(a), db = pubDateOf(b);
+    if(da && db) return da < db ? 1 : da > db ? -1 : 0;
+    if(da) return -1;
+    if(db) return 1;
+    return 0;
+  });
+}
+
 function renderArticles(){
   const container = document.getElementById('articlesContainer');
   if(articles.length === 0){
