@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnlockRouteImport } from './routes/unlock'
+import { Route as EnAttenteRouteImport } from './routes/en-attente'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 
 const UnlockRoute = UnlockRouteImport.update({
   id: '/unlock',
   path: '/unlock',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnAttenteRoute = EnAttenteRouteImport.update({
+  id: '/en-attente',
+  path: '/en-attente',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -32,30 +38,34 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/en-attente': typeof EnAttenteRoute
   '/unlock': typeof UnlockRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/en-attente': typeof EnAttenteRoute
   '/unlock': typeof UnlockRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/en-attente': typeof EnAttenteRoute
   '/unlock': typeof UnlockRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/unlock'
+  fullPaths: '/' | '/auth' | '/en-attente' | '/unlock'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/unlock'
-  id: '__root__' | '/' | '/auth' | '/unlock'
+  to: '/' | '/auth' | '/en-attente' | '/unlock'
+  id: '__root__' | '/' | '/auth' | '/en-attente' | '/unlock'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  EnAttenteRoute: typeof EnAttenteRoute
   UnlockRoute: typeof UnlockRoute
 }
 
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/unlock'
       fullPath: '/unlock'
       preLoaderRoute: typeof UnlockRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/en-attente': {
+      id: '/en-attente'
+      path: '/en-attente'
+      fullPath: '/en-attente'
+      preLoaderRoute: typeof EnAttenteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  EnAttenteRoute: EnAttenteRoute,
   UnlockRoute: UnlockRoute,
 }
 export const routeTree = rootRouteImport
