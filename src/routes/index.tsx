@@ -40,6 +40,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { sheet: sheetParam } = Route.useSearch();
+  const { access } = Route.useRouteContext();
   const navigate = useNavigate();
   const isGuide = sheetParam === "__guide";
   const sheet = isGuide
