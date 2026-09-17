@@ -18,7 +18,9 @@ import { Menu } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
-import { isUnlocked } from "@/lib/gate.functions";
+import { getAccess, signOutAndGoToAuth } from "@/lib/access";
+import { LogOut, ShieldCheck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 const searchSchema = z.object({
   sheet: z.string().optional(),
@@ -26,9 +28,12 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/")({
   validateSearch: searchSchema,
+  ssr: false,
   beforeLoad: async () => {
-    const { unlocked } = await isUnlocked();
-    if (!unlocked) throw redirect({ to: "/unlock" });
+    const access = await getAccess();
+    if (!access.userId) throw redirect({ to: "/auth" });
+    if (access.status !== "approved") throw redirect({ to: "/en-attente" });
+    return { access };
   },
   component: Index,
 });
