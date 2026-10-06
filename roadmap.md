@@ -1,6 +1,6 @@
 - [x] Icône supprimer sur les messages/tags du suivi éditorial (article_comments)
 - [x] Bouton « Enregistrer » dans À rédiger : crée l'article, enlève la ligne, ouvre la fiche
 - [x] Étape Brief SEO supprimée du pipeline (config + articles existants)
-- [ ] Unifier partout les catégories « Guide pratique » et « Guides pratiques » sous « Guide pratique »
-- [ ] Reconnecter Gmail dans le nouvel espace de travail
-- [ ] Classer les articles en cours au-dessus des articles finalisés, puis du plus récent au plus ancien
+- [x] Unifier partout les catégories « Guide pratique » et « Guides pratiques » sous « Guide pratique »
+- [x] Reconnecter Gmail dans le nouvel espace de travail
+- [x] Classer les articles en cours au-dessus des articles finalisés, puis du plus récent au plus ancien
