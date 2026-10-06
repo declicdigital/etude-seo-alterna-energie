@@ -1440,6 +1440,14 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     return;
   }
 
+  const sendBtn = e.target.closest('[data-action="send-comment"]');
+  if(sendBtn){
+    const id = sendBtn.dataset.articleId;
+    const textarea = document.querySelector(`.comment-input[data-article-id="${id}"]`);
+    if(textarea) await sendComment(id, textarea);
+    return;
+  }
+
   const stepBox = e.target.closest('[data-action="toggle-step"]');
   if(stepBox){
     const id = stepBox.dataset.articleId;
