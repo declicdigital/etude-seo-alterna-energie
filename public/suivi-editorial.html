@@ -594,10 +594,15 @@ button{ font-family: inherit; cursor:pointer; }
 
   <section class="todo-block" id="todoBlock">
     <div class="todo-head">
-      <h2>À rédiger</h2>
+      <div class="todo-head-left">
+        <button class="todo-toggle" id="todoToggleBtn" title="Réduire / déplier" aria-label="Réduire ou déplier le bloc À rédiger">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <h2>À rédiger</h2>
+      </div>
       <button class="btn" id="todoAddBtn">+ Ajouter une ligne</button>
     </div>
-    <p class="hint">Dès que Sujet, Nom de l'article, Éditrice et Lien du docx sont remplis, l'article est créé automatiquement dans le suivi (étape Rédaction).</p>
+    <p class="hint todo-hint">Dès que Sujet, Nom de l'article, Éditrice et Lien du docx sont remplis, l'article est créé automatiquement dans le suivi (étape Rédaction).</p>
     <div class="todo-scroll"><table class="todo-table">
       <thead><tr><th>Sujet</th><th>Nom de l'article (H1)</th><th>Éditrice</th><th>Deadline</th><th>Lien du docx</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
