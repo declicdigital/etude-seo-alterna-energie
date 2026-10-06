@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { SheetSidebar } from "@/components/sheet-sidebar";
 import { TreeView } from "@/components/tree-view";
@@ -54,6 +55,17 @@ function Index() {
   const { meta: metaOverrides, setMetaValue } = useMeta();
   const isMobile = useIsMobile();
   const [navOpen, setNavOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  useEffect(() => {
+    if (!access.isAdmin) return;
+    const load = async () => {
+      const { count } = await supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "pending");
+      setPendingCount(count ?? 0);
+    };
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, [access.isAdmin]);
 
   // reset selection when switching sheet
   const [lastSheet, setLastSheet] = useState(sheet);
