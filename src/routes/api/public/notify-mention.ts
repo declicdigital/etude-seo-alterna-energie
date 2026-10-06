@@ -94,7 +94,7 @@ export const Route = createFileRoute("/api/public/notify-mention")({
           .from("profiles")
           .select("email, full_name")
           .eq("status", "approved")
-          .in("email", payload.mentions);
+          .in("email", payload.mentions.map((m) => m.toLowerCase()));
         if (profilesError) {
           console.error("profiles lookup failed", profilesError);
           return Response.json({ error: "profiles_lookup_failed" }, { status: 500 });
