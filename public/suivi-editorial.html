@@ -868,7 +868,6 @@ const storage = {
 
 const DEFAULT_CONFIG = [
   { key:'idee', label:'Idée', assignee:'', skippable:true },
-  { key:'brief', label:'Brief SEO', assignee:'Primelis', skippable:true },
   { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae','Marina'], skippable:false },
   { key:'validation', label:'Relecture + Image', assignee:'Service Communication', skippable:false },
   { key:'integration', label:'Intégration', assignee:'Marick', skippable:false }
@@ -883,11 +882,8 @@ function normalizeConfig(){
     if(JSON.stringify(red.options || []) !== JSON.stringify(want)){ red.options = want; changed = true; }
     if(red.assignee && !want.includes(red.assignee)){ red.assignee = ''; changed = true; }
   }
-  // L'étape Brief SEO est facultative : elle peut toujours être sautée.
-  const brief = config.find(c => c.key === 'brief');
-  if(brief && !brief.skippable){ brief.skippable = true; changed = true; }
-  // Relecture et Image sont fusionnées en une seule étape.
-  const drop = ['image', 'validation_geoffrey'];
+  // Brief SEO est supprimée ; Relecture et Image sont fusionnées en une seule étape.
+  const drop = ['brief', 'image', 'validation_geoffrey'];
   if(config.some(c => drop.includes(c.key))){
     config = config.filter(c => !drop.includes(c.key));
     changed = true;
@@ -956,7 +952,13 @@ async function loadArticles(){
     for(const id of ids){
       try{
         const r = await storage.get('article:' + id, false);
-        out.push(JSON.parse(r.value));
+        const a = JSON.parse(r.value);
+        // Retire l'étape Brief SEO des articles existants.
+        if(Array.isArray(a.steps) && a.steps.some(s => s.key === 'brief')){
+          a.steps = a.steps.filter(s => s.key !== 'brief');
+          await saveArticle(a);
+        }
+        out.push(a);
       }catch(e){}
     }
     out.sort((a,b)=> (a.createdAt||'').localeCompare(b.createdAt||''));
