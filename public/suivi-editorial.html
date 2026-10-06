@@ -1830,14 +1830,133 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
   await saveTodos(); renderTodos();
 });
 
+/* ===== Commentaires du bloc « À rédiger » ===== */
+const TODO_ARTICLE_ID = '__todo__';
+function renderTodoComments(){
+  const el = document.getElementById('todoComments');
+  if(el) el.innerHTML = renderComments(TODO_ARTICLE_ID);
+}
+const todoBlockEl = document.getElementById('todoBlock');
+todoBlockEl.addEventListener('click', async (e) => {
+  const sendBtn = e.target.closest('[data-action="send-comment"]');
+  if(sendBtn){
+    const id = sendBtn.dataset.articleId;
+    const textarea = document.querySelector(`.comment-input[data-article-id="${id}"]`);
+    if(textarea) await sendComment(id, textarea);
+    return;
+  }
+  const delCommentBtn = e.target.closest('[data-action="delete-comment"]');
+  if(delCommentBtn){
+    await deleteComment(delCommentBtn.dataset.articleId, delCommentBtn.dataset.commentId);
+  }
+});
+todoBlockEl.addEventListener('input', (e) => {
+  if(e.target.classList && e.target.classList.contains('comment-input')){
+    const q = mentionQueryAt(e.target);
+    if(q === null) closeMentionMenu();
+    else openMentionMenu(e.target, q);
+  }
+});
+todoBlockEl.addEventListener('blur', (e) => {
+  if(e.target && e.target.classList && e.target.classList.contains('comment-input')){
+    setTimeout(closeMentionMenu, 150);
+  }
+}, true);
+
+/* ===== Notifications (cloche) ===== */
+let notifSeen = '';
+function notifSeenKey(){ return 'editorial-notif-seen-' + (currentUserEmail() || 'anon'); }
+function loadNotifSeen(){
+  try{ notifSeen = localStorage.getItem(notifSeenKey()) || ''; }catch(e){ notifSeen = ''; }
+}
+function myNotifications(){
+  const email = currentUserEmail();
+  if(!email) return [];
+  const out = [];
+  Object.keys(commentsByArticle).forEach(aid => {
+    (commentsByArticle[aid] || []).forEach(c => {
+      if((c.mentions || []).includes(email) && c.author_email !== email) out.push(c);
+    });
+  });
+  out.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  return out;
+}
+function updateBell(){
+  const bell = document.getElementById('notifBell');
+  if(!bell) return;
+  const email = currentUserEmail();
+  if(!email){ bell.hidden = true; return; }
+  bell.hidden = false;
+  const fresh = myNotifications().filter(c => !notifSeen || new Date(c.created_at) > new Date(notifSeen));
+  const badge = document.getElementById('notifBadge');
+  badge.hidden = fresh.length === 0;
+  badge.textContent = String(fresh.length);
+}
+function renderNotifDropdown(){
+  const dd = document.getElementById('notifDropdown');
+  const list = myNotifications().slice(0, 30);
+  if(!list.length){ dd.innerHTML = '<div class="notif-empty">Aucune notification.</div>'; return; }
+  dd.innerHTML = list.map(c => {
+    const where = c.article_id === TODO_ARTICLE_ID ? 'À rédiger' : ((getArticle(c.article_id) || {}).title || 'Article');
+    return `<button class="notif-item" data-notif-article="${c.article_id}">
+      <strong>${escapeHtml(c.author_name || c.author_email)}</strong> vous a tagué dans « ${escapeHtml(where)} »
+      <span class="n-meta">${fmtDateTime(c.created_at)}</span>
+    </button>`;
+  }).join('');
+}
+document.getElementById('notifBell').addEventListener('click', () => {
+  const dd = document.getElementById('notifDropdown');
+  if(dd.hidden){ renderNotifDropdown(); dd.hidden = false; }
+  else dd.hidden = true;
+});
+document.addEventListener('click', (e) => {
+  const dd = document.getElementById('notifDropdown');
+  if(dd && !dd.hidden && !e.target.closest('#notifWrap')) dd.hidden = true;
+});
+document.getElementById('notifDropdown').addEventListener('click', (e) => {
+  const item = e.target.closest('[data-notif-article]');
+  if(!item) return;
+  const aid = item.dataset.notifArticle;
+  document.getElementById('notifDropdown').hidden = true;
+  notifSeen = new Date().toISOString();
+  try{ localStorage.setItem(notifSeenKey(), notifSeen); }catch(err){}
+  updateBell();
+  if(aid === TODO_ARTICLE_ID){
+    const blk = document.getElementById('todoBlock');
+    blk.classList.remove('collapsed');
+    try{ localStorage.setItem('editorial-todo-collapsed', 'false'); }catch(err){}
+    blk.scrollIntoView({ behavior:'smooth', block:'start' });
+    blk.classList.add('notif-flash');
+    setTimeout(() => blk.classList.remove('notif-flash'), 3500);
+  } else {
+    if(collapsed[aid]){ delete collapsed[aid]; saveCollapsed(); }
+    renderArticles();
+    const card = document.querySelector(`.article-card[data-article-id="${aid}"]`);
+    if(card){
+      card.scrollIntoView({ behavior:'smooth', block:'start' });
+      card.classList.add('notif-flash');
+      setTimeout(() => card.classList.remove('notif-flash'), 3500);
+    }
+  }
+});
+
 async function init(){
   document.getElementById('articlesContainer').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
   await loadConfig();
   await loadArticles();
   await Promise.all([loadComments(), loadApprovedUsers(), loadTodos()]);
   renderTodos();
+  renderTodoComments();
+  loadNotifSeen();
+  updateBell();
   articles.forEach(syncArticleSteps);
   render();
+  setInterval(async () => {
+    await loadComments();
+    updateBell();
+    const ta = document.querySelector('#todoComments .comment-input');
+    if(!ta || document.activeElement !== ta) renderTodoComments();
+  }, 30000);
 }
 
 init();
