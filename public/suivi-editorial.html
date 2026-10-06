@@ -1174,15 +1174,11 @@ function pubDateOf(article){
   return dates.length ? dates[dates.length - 1] : '';
 }
 
-/** Articles triés par date de publication décroissante (sans date en dernier). */
+/** Articles triés du plus récemment ajouté au plus ancien. */
 function sortedArticles(){
-  return articles.slice().sort((a, b) => {
-    const da = pubDateOf(a), db = pubDateOf(b);
-    if(da && db) return da < db ? 1 : da > db ? -1 : 0;
-    if(da) return -1;
-    if(db) return 1;
-    return 0;
-  });
+  return articles.slice().sort((a, b) =>
+    (b.createdAt || '').localeCompare(a.createdAt || '')
+  );
 }
 
 function renderArticles(){
