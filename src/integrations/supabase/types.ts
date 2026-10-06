@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      article_comments: {
+        Row: {
+          article_id: string
+          author_email: string
+          author_name: string | null
+          body: string
+          created_at: string
+          id: string
+          mentions: string[]
+          step_key: string | null
+        }
+        Insert: {
+          article_id: string
+          author_email: string
+          author_name?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          mentions?: string[]
+          step_key?: string | null
+        }
+        Update: {
+          article_id?: string
+          author_email?: string
+          author_name?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          mentions?: string[]
+          step_key?: string | null
+        }
+        Relationships: []
+      }
       editorial_kv: {
         Row: {
           created_at: string
@@ -136,6 +169,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approved_users: {
+        Args: never
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

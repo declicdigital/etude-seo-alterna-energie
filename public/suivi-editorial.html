@@ -521,6 +521,28 @@ button{ font-family: inherit; cursor:pointer; }
   background: var(--lgreen-bg); border:1.5px solid var(--lgreen); color: var(--ink);
 }
 
+/* Commentaires + mentions */
+.comments-block{ padding: 4px 16px 18px; border-top: 1px dashed var(--line); margin-top: 6px; }
+.comments-label{ display:block; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin: 10px 0 8px; }
+.comment-item{ background:#f7faf8; border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin-bottom:8px; }
+.comment-meta{ font-size:0.7rem; color:var(--muted); font-weight:600; margin-bottom:2px; }
+.comment-body{ font-size:0.85rem; color:var(--ink); white-space:pre-wrap; word-break:break-word; }
+.comment-body .mention{ color:var(--green); font-weight:700; }
+.comment-input-wrap{ position:relative; display:flex; gap:8px; align-items:flex-start; }
+.comment-input{
+  flex:1; font:inherit; font-size:0.85rem; padding:8px 12px; min-height:38px; resize:vertical;
+  border:1.5px solid var(--line); border-radius:10px; background:#fff; color:var(--ink);
+}
+.comment-input:focus{ outline:none; border-color:var(--blue); }
+.comment-send{ flex-shrink:0; }
+.mention-dropdown{
+  position:absolute; left:0; bottom:calc(100% + 4px); z-index:50; min-width:220px; max-height:200px; overflow:auto;
+  background:#fff; border:1.5px solid var(--line); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.12);
+}
+.mention-option{ display:block; width:100%; text-align:left; padding:8px 12px; font:inherit; font-size:0.82rem; background:none; border:none; cursor:pointer; color:var(--ink); }
+.mention-option:hover, .mention-option.active{ background:var(--lgreen-bg); }
+.mention-option .m-mail{ display:block; font-size:0.7rem; color:var(--muted); }
+
 </style>
 </head>
 <body>
@@ -590,6 +612,188 @@ const HEADERS = {
   'Authorization': 'Bearer ' + SUPABASE_KEY,
   'Content-Type': 'application/json'
 };
+
+/* Session utilisateur (partagée avec l'outil, même origine) pour les commentaires. */
+function currentSession(){
+  try{
+    const raw = localStorage.getItem('sb-wbcjhhvowxhscszoviqu-auth-token');
+    if(!raw) return null;
+    const s = JSON.parse(raw);
+    if(!s || !s.access_token) return null;
+    return s;
+  }catch(e){ return null; }
+}
+function authHeaders(){
+  const s = currentSession();
+  return {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + (s ? s.access_token : SUPABASE_KEY),
+    'Content-Type': 'application/json'
+  };
+}
+function currentUserEmail(){
+  const s = currentSession();
+  return (s && s.user && s.user.email) ? s.user.email : '';
+}
+function currentUserName(){
+  const s = currentSession();
+  const meta = s && s.user && s.user.user_metadata;
+  return (meta && meta.full_name) || currentUserEmail();
+}
+
+/* Commentaires + mentions */
+const COMMENTS_REST = SUPABASE_URL + '/rest/v1/article_comments';
+const USERS_RPC = SUPABASE_URL + '/rest/v1/rpc/approved_users';
+let commentsByArticle = {};
+let approvedUsers = [];
+
+async function loadComments(){
+  try{
+    const res = await fetch(COMMENTS_REST + '?select=*&order=created_at.asc', { headers: authHeaders() });
+    if(!res.ok) return;
+    const rows = await res.json();
+    commentsByArticle = {};
+    rows.forEach(r => {
+      (commentsByArticle[r.article_id] = commentsByArticle[r.article_id] || []).push(r);
+    });
+  }catch(e){}
+}
+
+async function loadApprovedUsers(){
+  try{
+    const res = await fetch(USERS_RPC, { method: 'POST', headers: authHeaders(), body: '{}' });
+    if(!res.ok) return;
+    approvedUsers = await res.json();
+  }catch(e){}
+}
+
+function mentionNameOf(email){
+  const u = approvedUsers.find(u => u.email === email);
+  return (u && (u.full_name || u.email)) || email;
+}
+
+function renderCommentBody(body){
+  let html = escapeHtml(body);
+  approvedUsers.forEach(u => {
+    const name = u.full_name || u.email;
+    if(!name) return;
+    html = html.split('@' + name).join('<span class="mention">@' + escapeHtml(name) + '</span>');
+  });
+  return html;
+}
+
+function renderComments(articleId){
+  const list = commentsByArticle[articleId] || [];
+  const items = list.map(c => `
+    <div class="comment-item">
+      <div class="comment-meta">${escapeHtml(c.author_name || c.author_email)} · ${fmtDateTime(c.created_at)}</div>
+      <div class="comment-body">${renderCommentBody(c.body)}</div>
+    </div>`).join('');
+  return `
+    <div class="comments-block">
+      <label class="comments-label">Messages — taguez quelqu'un avec @</label>
+      <div class="comments-list">${items}</div>
+      <div class="comment-input-wrap">
+        <textarea class="comment-input" data-article-id="${articleId}" rows="1" placeholder="Écrire un message… utilisez @ pour taguer une personne"></textarea>
+        <button class="btn btn-primary comment-send" data-action="send-comment" data-article-id="${articleId}">Envoyer</button>
+      </div>
+    </div>`;
+}
+
+function fmtDateTime(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d)) return '';
+  return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' }) + ' ' +
+         d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+}
+
+/* Autocomplétion @ dans les zones de message */
+let mentionMenu = null;
+function closeMentionMenu(){
+  if(mentionMenu){ mentionMenu.remove(); mentionMenu = null; }
+}
+function mentionQueryAt(textarea){
+  const upto = textarea.value.slice(0, textarea.selectionStart);
+  const m = upto.match(/@([^\s@]*)$/);
+  return m ? m[1].toLowerCase() : null;
+}
+function openMentionMenu(textarea, query){
+  closeMentionMenu();
+  const matches = approvedUsers.filter(u => {
+    const name = (u.full_name || '').toLowerCase();
+    const mail = (u.email || '').toLowerCase();
+    return name.includes(query) || mail.includes(query);
+  }).slice(0, 6);
+  if(!matches.length) return;
+  mentionMenu = document.createElement('div');
+  mentionMenu.className = 'mention-dropdown';
+  matches.forEach(u => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mention-option';
+    b.innerHTML = escapeHtml(u.full_name || u.email) + '<span class="m-mail">' + escapeHtml(u.email) + '</span>';
+    b.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      insertMention(textarea, u.full_name || u.email);
+    });
+    mentionMenu.appendChild(b);
+  });
+  textarea.parentElement.appendChild(mentionMenu);
+}
+function insertMention(textarea, name){
+  const upto = textarea.value.slice(0, textarea.selectionStart);
+  const rest = textarea.value.slice(textarea.selectionStart);
+  const replaced = upto.replace(/@[^\s@]*$/, '@' + name + ' ');
+  textarea.value = replaced + rest;
+  textarea.focus();
+  textarea.selectionStart = textarea.selectionEnd = replaced.length;
+  closeMentionMenu();
+}
+
+async function sendComment(articleId, textarea){
+  const body = textarea.value.trim();
+  if(!body) return;
+  const email = currentUserEmail();
+  if(!email){ alert('Vous devez être connecté pour envoyer un message.'); return; }
+  const mentioned = approvedUsers.filter(u => {
+    const name = u.full_name || u.email;
+    return name && body.includes('@' + name);
+  });
+  const article = getArticle(articleId);
+  const row = {
+    article_id: articleId,
+    author_email: email,
+    author_name: currentUserName(),
+    body,
+    mentions: mentioned.map(u => u.email)
+  };
+  const res = await fetch(COMMENTS_REST, {
+    method: 'POST',
+    headers: Object.assign({}, authHeaders(), { 'Prefer': 'return=representation' }),
+    body: JSON.stringify(row)
+  });
+  if(!res.ok){ alert('Le message n\'a pas pu être enregistré.'); return; }
+  const inserted = await res.json();
+  (commentsByArticle[articleId] = commentsByArticle[articleId] || []).push(inserted[0]);
+  showSaved();
+  if(mentioned.length){
+    try{
+      await fetch('/api/public/notify-mention', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          articleTitle: article ? article.title : 'Article',
+          message: body,
+          authorName: currentUserName(),
+          authorEmail: email,
+          mentions: mentioned.map(u => u.email)
+        })
+      });
+    }catch(e){}
+  }
+  renderArticles();
+}
 
 const storage = {
   async get(key){
@@ -1053,6 +1257,7 @@ function renderArticleCard(article){
         </div>
         <div class="schema">${schemaHtml}</div>
         ${panelHtml}
+        ${renderComments(article.id)}
       </div>
     </div>`;
 }
@@ -1235,6 +1440,14 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     return;
   }
 
+  const sendBtn = e.target.closest('[data-action="send-comment"]');
+  if(sendBtn){
+    const id = sendBtn.dataset.articleId;
+    const textarea = document.querySelector(`.comment-input[data-article-id="${id}"]`);
+    if(textarea) await sendComment(id, textarea);
+    return;
+  }
+
   const stepBox = e.target.closest('[data-action="toggle-step"]');
   if(stepBox){
     const id = stepBox.dataset.articleId;
@@ -1383,6 +1596,12 @@ document.getElementById('articlesContainer').addEventListener('change', async (e
 document.getElementById('articlesContainer').addEventListener('input', async (e) => {
   const t = e.target;
   const action = t.dataset.action;
+  if(t.classList && t.classList.contains('comment-input')){
+    const q = mentionQueryAt(t);
+    if(q === null) closeMentionMenu();
+    else openMentionMenu(t, q);
+    return;
+  }
   if(action === 'edit-title'){
     const article = getArticle(t.dataset.articleId);
     article.title = t.value;
@@ -1415,6 +1634,9 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
 const REFRESH_ON_BLUR = ['edit-assignee', 'edit-docx-link', 'edit-final-link', 'edit-title', 'edit-date'];
 document.getElementById('articlesContainer').addEventListener('blur', (e) => {
   const t = e.target;
+  if(t && t.classList && t.classList.contains('comment-input')){
+    setTimeout(closeMentionMenu, 150);
+  }
   if(t && t.dataset && REFRESH_ON_BLUR.includes(t.dataset.action)){
     renderArticles();
   }
@@ -1425,6 +1647,7 @@ async function init(){
   document.getElementById('articlesContainer').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
   await loadConfig();
   await loadArticles();
+  await Promise.all([loadComments(), loadApprovedUsers()]);
   articles.forEach(syncArticleSteps);
   render();
 }
