@@ -1783,6 +1783,7 @@ document.getElementById('todoBody').addEventListener('change', async (e) => {
   const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
   t[f] = e.target.value;
   await saveTodos();
+  if(f === 'editrice') renderTodos();
 });
 document.getElementById('todoBody').addEventListener('click', async (e) => {
   const tr = e.target.closest('tr[data-todo-id]');
