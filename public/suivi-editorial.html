@@ -868,7 +868,6 @@ const storage = {
 
 const DEFAULT_CONFIG = [
   { key:'idee', label:'Idée', assignee:'', skippable:true },
-  { key:'brief', label:'Brief SEO', assignee:'Primelis', skippable:false },
   { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae','Marina'], skippable:false },
   { key:'validation', label:'Relecture + Image', assignee:'Service Communication', skippable:false },
   { key:'integration', label:'Intégration', assignee:'Marick', skippable:false }
@@ -883,8 +882,8 @@ function normalizeConfig(){
     if(JSON.stringify(red.options || []) !== JSON.stringify(want)){ red.options = want; changed = true; }
     if(red.assignee && !want.includes(red.assignee)){ red.assignee = ''; changed = true; }
   }
-  // Relecture et Image sont fusionnées en une seule étape.
-  const drop = ['image', 'validation_geoffrey'];
+  // Brief SEO est supprimée ; Relecture et Image sont fusionnées en une seule étape.
+  const drop = ['brief', 'image', 'validation_geoffrey'];
   if(config.some(c => drop.includes(c.key))){
     config = config.filter(c => !drop.includes(c.key));
     changed = true;
@@ -953,7 +952,13 @@ async function loadArticles(){
     for(const id of ids){
       try{
         const r = await storage.get('article:' + id, false);
-        out.push(JSON.parse(r.value));
+        const a = JSON.parse(r.value);
+        // Retire l'étape Brief SEO des articles existants.
+        if(Array.isArray(a.steps) && a.steps.some(s => s.key === 'brief')){
+          a.steps = a.steps.filter(s => s.key !== 'brief');
+          await saveArticle(a);
+        }
+        out.push(a);
       }catch(e){}
     }
     out.sort((a,b)=> (a.createdAt||'').localeCompare(b.createdAt||''));
@@ -1724,7 +1729,7 @@ function renderTodos(){
     <td><select data-f="editrice"><option value="">—</option>${['Aurorae','Marina'].map(o=>`<option ${t.editrice===o?'selected':''}>${o}</option>`).join('')}</select></td>
     <td><input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></td>
     <td><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…"></td>
-    <td>${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : `<button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
+    <td style="white-space:nowrap">${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : `<button class="btn" data-todo-save style="padding:4px 10px;font-size:0.78rem">Enregistrer</button> <button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
   </tr>`).join('');
 }
 async function maybeCreateFromTodo(t){
@@ -1751,12 +1756,29 @@ document.getElementById('todoBody').addEventListener('change', async (e) => {
   if(!tr || !f) return;
   const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
   t[f] = e.target.value;
-  await maybeCreateFromTodo(t);
-  await saveTodos(); renderTodos();
+  await saveTodos();
 });
 document.getElementById('todoBody').addEventListener('click', async (e) => {
-  if(!e.target.closest('[data-todo-del]')) return;
   const tr = e.target.closest('tr[data-todo-id]');
+  if(!tr) return;
+  const saveBtn = e.target.closest('[data-todo-save]');
+  if(saveBtn){
+    const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
+    if(!(t.sujet||'').trim() || !(t.h1||'').trim() || !t.editrice || !(t.docx||'').trim()){
+      alert('Remplissez Sujet, Nom de l\'article, Éditrice et Lien du docx avant d\'enregistrer.');
+      return;
+    }
+    await maybeCreateFromTodo(t);
+    if(!t.articleId) return;
+    const articleId = t.articleId;
+    todos = todos.filter(x => x.id !== t.id);
+    if(collapsed[articleId]){ delete collapsed[articleId]; saveCollapsed(); }
+    await saveTodos(); renderTodos(); renderArticles();
+    const card = document.querySelector(`.article-card[data-article-id="${articleId}"]`);
+    if(card) card.scrollIntoView({ behavior:'smooth', block:'start' });
+    return;
+  }
+  if(!e.target.closest('[data-todo-del]')) return;
   if(!confirm('Supprimer cette ligne ?')) return;
   todos = todos.filter(x => x.id !== tr.dataset.todoId);
   await saveTodos(); renderTodos();
