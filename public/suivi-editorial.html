@@ -1740,10 +1740,10 @@ async function saveTodos(){
 function renderTodos(){
   const body = document.getElementById('todoBody');
   if(!todos.length){ body.innerHTML = '<tr><td colspan="8" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
-  body.innerHTML = todos.map(t => `<tr data-todo-id="${t.id}">
+  body.innerHTML = todos.map(t => `<tr data-todo-id="${t.id}"${t.editrice === 'Aurorae' ? ' class="todo-aurorae"' : t.editrice === 'Marina' ? ' class="todo-marina"' : ''}>
     <td><input data-f="sujet" value="${escapeAttr(t.sujet||'')}" placeholder="Sujet"></td>
-    <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td><select data-f="editrice"><option value="">—</option>${['Aurorae','Marina'].map(o=>`<option ${t.editrice===o?'selected':''}>${o}</option>`).join('')}</select></td>
+    <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td><select data-f="categorie"><option value="">—</option><optgroup label="Particulier">${BLOG_CATEGORIES['Particulier'].map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</optgroup><optgroup label="Professionnel">${BLOG_CATEGORIES['Professionnel'].map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</optgroup></select></td>
     <td><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></td>
