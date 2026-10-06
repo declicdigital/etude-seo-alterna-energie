@@ -818,6 +818,7 @@ async function sendComment(articleId, textarea){
     return name && body.includes('@' + name);
   });
   const article = getArticle(articleId);
+  const articleTitle = article ? article.title : (articleId === '__todo__' ? 'À rédiger' : 'Article');
   const row = {
     article_id: articleId,
     author_email: email,
@@ -840,7 +841,7 @@ async function sendComment(articleId, textarea){
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          articleTitle: article ? article.title : 'Article',
+          articleTitle,
           message: body,
           authorName: currentUserName(),
           authorEmail: email,
@@ -850,6 +851,7 @@ async function sendComment(articleId, textarea){
     }catch(e){}
   }
   renderArticles();
+  if(articleId === '__todo__') renderTodoComments();
 }
 
 async function deleteComment(articleId, commentId){
@@ -862,6 +864,7 @@ async function deleteComment(articleId, commentId){
   commentsByArticle[articleId] = (commentsByArticle[articleId] || []).filter(c => c.id !== commentId);
   showSaved();
   renderArticles();
+  if(articleId === '__todo__') renderTodoComments();
 }
 
 const storage = {
