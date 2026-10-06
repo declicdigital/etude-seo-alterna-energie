@@ -544,6 +544,17 @@ button{ font-family: inherit; cursor:pointer; }
 .mention-option{ display:block; width:100%; text-align:left; padding:8px 12px; font:inherit; font-size:0.82rem; background:none; border:none; cursor:pointer; color:var(--ink); }
 .mention-option:hover, .mention-option.active{ background:var(--lgreen-bg); }
 .mention-option .m-mail{ display:block; font-size:0.7rem; color:var(--muted); }
+.notif-wrap{ position:relative; }
+.notif-bell{ position:relative; font-size:1.05rem; padding:8px 12px; line-height:1; }
+.notif-badge{ position:absolute; top:-7px; right:-7px; background:#e11d48; color:#fff; font-size:0.68rem; font-weight:700; min-width:18px; height:18px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+.notif-dropdown{ position:absolute; right:0; top:calc(100% + 8px); width:340px; max-height:420px; overflow-y:auto; background:#fff; border:1.5px solid var(--line); border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,0.12); z-index:60; padding:8px; }
+.notif-item{ display:block; width:100%; text-align:left; background:none; border:none; cursor:pointer; padding:10px 12px; border-radius:8px; font:inherit; font-size:0.82rem; color:var(--ink); }
+.notif-item:hover{ background:var(--lgreen-bg); }
+.notif-item .n-meta{ display:block; font-size:0.7rem; color:var(--muted); margin-top:2px; }
+.notif-empty{ padding:14px 12px; font-size:0.8rem; color:var(--muted); }
+@keyframes notifFlash{ 0%,100%{ box-shadow:none; } 25%,75%{ box-shadow:0 0 0 4px rgba(22,163,74,0.35); } }
+.notif-flash{ animation:notifFlash 1.6s ease 2; }
+.todo-comments{ margin-top:14px; }
 
 .todo-block{ background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:16px; margin-bottom:20px; }
 .todo-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
@@ -552,7 +563,7 @@ button{ font-family: inherit; cursor:pointer; }
 .todo-toggle{ background:none; border:none; padding:2px; cursor:pointer; display:flex; align-items:center; color:var(--muted); }
 .todo-toggle svg{ transition:transform .15s ease; }
 .todo-block.collapsed .todo-toggle svg{ transform:rotate(-90deg); }
-.todo-block.collapsed .todo-hint, .todo-block.collapsed .todo-scroll{ display:none; }
+.todo-block.collapsed .todo-hint, .todo-block.collapsed .todo-scroll, .todo-block.collapsed .todo-comments{ display:none; }
 .todo-block.collapsed{ padding:12px 16px; }
 .todo-block .hint{ font-size:0.78rem; color:var(--muted); margin:6px 0 10px; }
 .todo-scroll{ overflow-x:auto; }
@@ -562,6 +573,10 @@ button{ font-family: inherit; cursor:pointer; }
 .todo-table input, .todo-table select{ width:100%; font:inherit; font-size:0.82rem; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:#fff; box-sizing:border-box; }
 .todo-badge{ font-size:0.7rem; background:var(--lgreen-bg); color:var(--ink); padding:3px 8px; border-radius:999px; white-space:nowrap; }
 .todo-del{ background:none; border:none; cursor:pointer; color:var(--muted); font-size:1rem; }
+.todo-table tr.todo-aurorae td{ background:rgba(22,163,74,0.09); }
+.todo-table tr.todo-aurorae td:first-child{ box-shadow:inset 3px 0 0 #16a34a; }
+.todo-table tr.todo-marina td{ background:rgba(124,58,237,0.09); }
+.todo-table tr.todo-marina td:first-child{ box-shadow:inset 3px 0 0 #7c3aed; }
 </style>
 </head>
 <body>
@@ -575,6 +590,10 @@ button{ font-family: inherit; cursor:pointer; }
       </div>
     </div>
     <div class="top-actions">
+      <div class="notif-wrap" id="notifWrap">
+        <button class="btn notif-bell" id="notifBell" title="Notifications">🔔<span class="notif-badge" id="notifBadge" hidden>0</span></button>
+        <div class="notif-dropdown" id="notifDropdown" hidden></div>
+      </div>
       <button class="btn" id="collapseAllBtn">Tout réduire</button>
       <button class="btn" id="expandAllBtn">Tout déplier</button>
       <button class="btn" id="toggleConfigBtn">Réglages du pipeline</button>
@@ -604,9 +623,10 @@ button{ font-family: inherit; cursor:pointer; }
     </div>
     <p class="hint todo-hint">Dès que Sujet, Nom de l'article, Éditrice et Lien du docx sont remplis, l'article est créé automatiquement dans le suivi (étape Rédaction). La catégorie choisie détermine la cible (Particulier ou Professionnel).</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th>Nom de l'article (H1)</th><th>Éditrice</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du docx</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du docx</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
+    <div id="todoComments" class="todo-comments"></div>
   </section>
 
   <div id="articlesContainer"></div>
@@ -798,6 +818,7 @@ async function sendComment(articleId, textarea){
     return name && body.includes('@' + name);
   });
   const article = getArticle(articleId);
+  const articleTitle = article ? article.title : (articleId === '__todo__' ? 'À rédiger' : 'Article');
   const row = {
     article_id: articleId,
     author_email: email,
@@ -820,7 +841,7 @@ async function sendComment(articleId, textarea){
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          articleTitle: article ? article.title : 'Article',
+          articleTitle,
           message: body,
           authorName: currentUserName(),
           authorEmail: email,
@@ -830,6 +851,7 @@ async function sendComment(articleId, textarea){
     }catch(e){}
   }
   renderArticles();
+  if(articleId === '__todo__') renderTodoComments();
 }
 
 async function deleteComment(articleId, commentId){
@@ -842,6 +864,7 @@ async function deleteComment(articleId, commentId){
   commentsByArticle[articleId] = (commentsByArticle[articleId] || []).filter(c => c.id !== commentId);
   showSaved();
   renderArticles();
+  if(articleId === '__todo__') renderTodoComments();
 }
 
 const storage = {
@@ -1736,10 +1759,10 @@ async function saveTodos(){
 function renderTodos(){
   const body = document.getElementById('todoBody');
   if(!todos.length){ body.innerHTML = '<tr><td colspan="8" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
-  body.innerHTML = todos.map(t => `<tr data-todo-id="${t.id}">
+  body.innerHTML = todos.map(t => `<tr data-todo-id="${t.id}"${t.editrice === 'Aurorae' ? ' class="todo-aurorae"' : t.editrice === 'Marina' ? ' class="todo-marina"' : ''}>
     <td><input data-f="sujet" value="${escapeAttr(t.sujet||'')}" placeholder="Sujet"></td>
-    <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td><select data-f="editrice"><option value="">—</option>${['Aurorae','Marina'].map(o=>`<option ${t.editrice===o?'selected':''}>${o}</option>`).join('')}</select></td>
+    <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td><select data-f="categorie"><option value="">—</option><optgroup label="Particulier">${BLOG_CATEGORIES['Particulier'].map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</optgroup><optgroup label="Professionnel">${BLOG_CATEGORIES['Professionnel'].map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</optgroup></select></td>
     <td><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></td>
@@ -1779,6 +1802,7 @@ document.getElementById('todoBody').addEventListener('change', async (e) => {
   const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
   t[f] = e.target.value;
   await saveTodos();
+  if(f === 'editrice') renderTodos();
 });
 document.getElementById('todoBody').addEventListener('click', async (e) => {
   const tr = e.target.closest('tr[data-todo-id]');
@@ -1806,14 +1830,133 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
   await saveTodos(); renderTodos();
 });
 
+/* ===== Commentaires du bloc « À rédiger » ===== */
+const TODO_ARTICLE_ID = '__todo__';
+function renderTodoComments(){
+  const el = document.getElementById('todoComments');
+  if(el) el.innerHTML = renderComments(TODO_ARTICLE_ID);
+}
+const todoBlockEl = document.getElementById('todoBlock');
+todoBlockEl.addEventListener('click', async (e) => {
+  const sendBtn = e.target.closest('[data-action="send-comment"]');
+  if(sendBtn){
+    const id = sendBtn.dataset.articleId;
+    const textarea = document.querySelector(`.comment-input[data-article-id="${id}"]`);
+    if(textarea) await sendComment(id, textarea);
+    return;
+  }
+  const delCommentBtn = e.target.closest('[data-action="delete-comment"]');
+  if(delCommentBtn){
+    await deleteComment(delCommentBtn.dataset.articleId, delCommentBtn.dataset.commentId);
+  }
+});
+todoBlockEl.addEventListener('input', (e) => {
+  if(e.target.classList && e.target.classList.contains('comment-input')){
+    const q = mentionQueryAt(e.target);
+    if(q === null) closeMentionMenu();
+    else openMentionMenu(e.target, q);
+  }
+});
+todoBlockEl.addEventListener('blur', (e) => {
+  if(e.target && e.target.classList && e.target.classList.contains('comment-input')){
+    setTimeout(closeMentionMenu, 150);
+  }
+}, true);
+
+/* ===== Notifications (cloche) ===== */
+let notifSeen = '';
+function notifSeenKey(){ return 'editorial-notif-seen-' + (currentUserEmail() || 'anon'); }
+function loadNotifSeen(){
+  try{ notifSeen = localStorage.getItem(notifSeenKey()) || ''; }catch(e){ notifSeen = ''; }
+}
+function myNotifications(){
+  const email = currentUserEmail();
+  if(!email) return [];
+  const out = [];
+  Object.keys(commentsByArticle).forEach(aid => {
+    (commentsByArticle[aid] || []).forEach(c => {
+      if((c.mentions || []).includes(email) && c.author_email !== email) out.push(c);
+    });
+  });
+  out.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  return out;
+}
+function updateBell(){
+  const bell = document.getElementById('notifBell');
+  if(!bell) return;
+  const email = currentUserEmail();
+  if(!email){ bell.hidden = true; return; }
+  bell.hidden = false;
+  const fresh = myNotifications().filter(c => !notifSeen || new Date(c.created_at) > new Date(notifSeen));
+  const badge = document.getElementById('notifBadge');
+  badge.hidden = fresh.length === 0;
+  badge.textContent = String(fresh.length);
+}
+function renderNotifDropdown(){
+  const dd = document.getElementById('notifDropdown');
+  const list = myNotifications().slice(0, 30);
+  if(!list.length){ dd.innerHTML = '<div class="notif-empty">Aucune notification.</div>'; return; }
+  dd.innerHTML = list.map(c => {
+    const where = c.article_id === TODO_ARTICLE_ID ? 'À rédiger' : ((getArticle(c.article_id) || {}).title || 'Article');
+    return `<button class="notif-item" data-notif-article="${c.article_id}">
+      <strong>${escapeHtml(c.author_name || c.author_email)}</strong> vous a tagué dans « ${escapeHtml(where)} »
+      <span class="n-meta">${fmtDateTime(c.created_at)}</span>
+    </button>`;
+  }).join('');
+}
+document.getElementById('notifBell').addEventListener('click', () => {
+  const dd = document.getElementById('notifDropdown');
+  if(dd.hidden){ renderNotifDropdown(); dd.hidden = false; }
+  else dd.hidden = true;
+});
+document.addEventListener('click', (e) => {
+  const dd = document.getElementById('notifDropdown');
+  if(dd && !dd.hidden && !e.target.closest('#notifWrap')) dd.hidden = true;
+});
+document.getElementById('notifDropdown').addEventListener('click', (e) => {
+  const item = e.target.closest('[data-notif-article]');
+  if(!item) return;
+  const aid = item.dataset.notifArticle;
+  document.getElementById('notifDropdown').hidden = true;
+  notifSeen = new Date().toISOString();
+  try{ localStorage.setItem(notifSeenKey(), notifSeen); }catch(err){}
+  updateBell();
+  if(aid === TODO_ARTICLE_ID){
+    const blk = document.getElementById('todoBlock');
+    blk.classList.remove('collapsed');
+    try{ localStorage.setItem('editorial-todo-collapsed', 'false'); }catch(err){}
+    blk.scrollIntoView({ behavior:'smooth', block:'start' });
+    blk.classList.add('notif-flash');
+    setTimeout(() => blk.classList.remove('notif-flash'), 3500);
+  } else {
+    if(collapsed[aid]){ delete collapsed[aid]; saveCollapsed(); }
+    renderArticles();
+    const card = document.querySelector(`.article-card[data-article-id="${aid}"]`);
+    if(card){
+      card.scrollIntoView({ behavior:'smooth', block:'start' });
+      card.classList.add('notif-flash');
+      setTimeout(() => card.classList.remove('notif-flash'), 3500);
+    }
+  }
+});
+
 async function init(){
   document.getElementById('articlesContainer').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
   await loadConfig();
   await loadArticles();
   await Promise.all([loadComments(), loadApprovedUsers(), loadTodos()]);
   renderTodos();
+  renderTodoComments();
+  loadNotifSeen();
+  updateBell();
   articles.forEach(syncArticleSteps);
   render();
+  setInterval(async () => {
+    await loadComments();
+    updateBell();
+    const ta = document.querySelector('#todoComments .comment-input');
+    if(!ta || document.activeElement !== ta) renderTodoComments();
+  }, 30000);
 }
 
 init();

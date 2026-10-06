@@ -4,3 +4,5 @@
 - [x] Unifier partout les catégories « Guide pratique » et « Guides pratiques » sous « Guide pratique »
 - [x] Reconnecter Gmail dans le nouvel espace de travail
 - [x] Classer les articles en cours au-dessus des articles finalisés, puis du plus récent au plus ancien
+- [x] Couleurs éditrice dans À rédiger (Violet Marina, Vert Aurorae, ligne entière) + colonne Éditrice juste après Sujet
+- [x] Espace commentaire avec @ dans le bloc À rédiger + cloche de notifications cliquable (mène à l'endroit où on a été tagué)
