@@ -1727,7 +1727,7 @@ function renderTodos(){
     <td><select data-f="editrice"><option value="">—</option>${['Aurorae','Marina'].map(o=>`<option ${t.editrice===o?'selected':''}>${o}</option>`).join('')}</select></td>
     <td><input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></td>
     <td><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…"></td>
-    <td>${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : `<button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
+    <td style="white-space:nowrap">${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : `<button class="btn" data-todo-save style="padding:4px 10px;font-size:0.78rem">Enregistrer</button> <button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
   </tr>`).join('');
 }
 async function maybeCreateFromTodo(t){
@@ -1754,12 +1754,29 @@ document.getElementById('todoBody').addEventListener('change', async (e) => {
   if(!tr || !f) return;
   const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
   t[f] = e.target.value;
-  await maybeCreateFromTodo(t);
-  await saveTodos(); renderTodos();
+  await saveTodos();
 });
 document.getElementById('todoBody').addEventListener('click', async (e) => {
-  if(!e.target.closest('[data-todo-del]')) return;
   const tr = e.target.closest('tr[data-todo-id]');
+  if(!tr) return;
+  const saveBtn = e.target.closest('[data-todo-save]');
+  if(saveBtn){
+    const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
+    if(!(t.sujet||'').trim() || !(t.h1||'').trim() || !t.editrice || !(t.docx||'').trim()){
+      alert('Remplissez Sujet, Nom de l\'article, Éditrice et Lien du docx avant d\'enregistrer.');
+      return;
+    }
+    await maybeCreateFromTodo(t);
+    if(!t.articleId) return;
+    const articleId = t.articleId;
+    todos = todos.filter(x => x.id !== t.id);
+    if(collapsed[articleId]){ delete collapsed[articleId]; saveCollapsed(); }
+    await saveTodos(); renderTodos(); renderArticles();
+    const card = document.querySelector(`.article-card[data-article-id="${articleId}"]`);
+    if(card) card.scrollIntoView({ behavior:'smooth', block:'start' });
+    return;
+  }
+  if(!e.target.closest('[data-todo-del]')) return;
   if(!confirm('Supprimer cette ligne ?')) return;
   todos = todos.filter(x => x.id !== tr.dataset.todoId);
   await saveTodos(); renderTodos();
