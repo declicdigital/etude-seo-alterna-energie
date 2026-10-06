@@ -1644,6 +1644,7 @@ async function init(){
   document.getElementById('articlesContainer').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
   await loadConfig();
   await loadArticles();
+  await Promise.all([loadComments(), loadApprovedUsers()]);
   articles.forEach(syncArticleSteps);
   render();
 }
