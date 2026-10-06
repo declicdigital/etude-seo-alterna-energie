@@ -3,3 +3,4 @@
 - [x] Étape Brief SEO supprimée du pipeline (config + articles existants)
 - [ ] Unifier partout les catégories « Guide pratique » et « Guides pratiques » sous « Guide pratique »
 - [ ] Reconnecter Gmail dans le nouvel espace de travail
+- [ ] Classer les articles en cours au-dessus des articles finalisés, puis du plus récent au plus ancien
