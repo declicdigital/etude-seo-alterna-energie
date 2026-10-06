@@ -37,7 +37,7 @@ export const EXTRA_COLUMNS: Record<
       options: [
         "Actualités",
         "Le B.A-BA de l'énergie",
-        "Guides pratiques",
+        "Guide pratique",
         "Aides et réglementations",
         "Économies d'énergie",
         "Transition bas carbone",
@@ -56,7 +56,7 @@ export const EXTRA_COLUMNS: Record<
 const BLOG_CATEGORIES_PARTICULIER = [
   "Actualités",
   "Le B.A-BA de l'énergie",
-  "Guides pratiques",
+  "Guide pratique",
   "Aides et réglementations",
   "Économies d'énergie",
   "Transition bas carbone",
