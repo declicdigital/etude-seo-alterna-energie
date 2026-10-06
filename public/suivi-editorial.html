@@ -1486,9 +1486,9 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     return;
   }
 
-  const delBtn = e.target.closest('[data-action="delete-comment"]');
-  if(delBtn){
-    await deleteComment(delBtn.dataset.articleId, delBtn.dataset.commentId);
+  const delCommentBtn = e.target.closest('[data-action="delete-comment"]');
+  if(delCommentBtn){
+    await deleteComment(delCommentBtn.dataset.articleId, delCommentBtn.dataset.commentId);
     return;
   }
 
