@@ -1,0 +1,1 @@
+- [x] Icône supprimer sur les messages/tags du suivi éditorial (article_comments)

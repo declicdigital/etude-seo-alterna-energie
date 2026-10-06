@@ -524,7 +524,9 @@ button{ font-family: inherit; cursor:pointer; }
 /* Commentaires + mentions */
 .comments-block{ padding: 4px 16px 18px; border-top: 1px dashed var(--line); margin-top: 6px; }
 .comments-label{ display:block; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin: 10px 0 8px; }
-.comment-item{ background:#f7faf8; border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin-bottom:8px; }
+.comment-item{ background:#f7faf8; border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin-bottom:8px; position:relative; }
+.comment-del{ position:absolute; top:6px; right:6px; border:none; background:none; cursor:pointer; font-size:0.85rem; opacity:0.45; padding:2px 4px; border-radius:6px; }
+.comment-del:hover{ opacity:1; background:#fee2e2; }
 .comment-meta{ font-size:0.7rem; color:var(--muted); font-weight:600; margin-bottom:2px; }
 .comment-body{ font-size:0.85rem; color:var(--ink); white-space:pre-wrap; word-break:break-word; }
 .comment-body .mention{ color:var(--green); font-weight:700; }
@@ -709,6 +711,7 @@ function renderComments(articleId){
   const list = commentsByArticle[articleId] || [];
   const items = list.map(c => `
     <div class="comment-item">
+      <button class="comment-del" data-action="delete-comment" data-comment-id="${c.id}" data-article-id="${articleId}" title="Supprimer ce message">🗑</button>
       <div class="comment-meta">${escapeHtml(c.author_name || c.author_email)} · ${fmtDateTime(c.created_at)}</div>
       <div class="comment-body">${renderCommentBody(c.body)}</div>
     </div>`).join('');
@@ -815,6 +818,18 @@ async function sendComment(articleId, textarea){
       });
     }catch(e){}
   }
+  renderArticles();
+}
+
+async function deleteComment(articleId, commentId){
+  if(!confirm('Supprimer ce message ?')) return;
+  const res = await fetch(COMMENTS_REST + '?id=eq.' + encodeURIComponent(commentId), {
+    method: 'DELETE',
+    headers: authHeaders()
+  });
+  if(!res.ok){ alert('Le message n\'a pas pu être supprimé.'); return; }
+  commentsByArticle[articleId] = (commentsByArticle[articleId] || []).filter(c => c.id !== commentId);
+  showSaved();
   renderArticles();
 }
 
@@ -1468,6 +1483,12 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     const id = sendBtn.dataset.articleId;
     const textarea = document.querySelector(`.comment-input[data-article-id="${id}"]`);
     if(textarea) await sendComment(id, textarea);
+    return;
+  }
+
+  const delBtn = e.target.closest('[data-action="delete-comment"]');
+  if(delBtn){
+    await deleteComment(delBtn.dataset.articleId, delBtn.dataset.commentId);
     return;
   }
 
