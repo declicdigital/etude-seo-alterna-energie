@@ -19,7 +19,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
 import { getAccess, signOutAndGoToAuth } from "@/lib/access";
-import { LogOut, ShieldCheck } from "lucide-react";
+import { LogOut, ShieldCheck, Lock } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 const searchSchema = z.object({
@@ -47,7 +47,7 @@ function Index() {
     ? "__guide"
     : sheetParam && sheetNames.includes(baseSheetOf(sheetParam))
       ? sheetParam
-      : "Structure RES";
+      : access.isAdmin ? "Structure RES" : "BLOG - ARTICLES::Particulier";
   const [selected, setSelected] = useState<number | null>(null);
   const { edits, setCell, deleteRow, loading } = useEdits();
   const { meta: metaOverrides, setMetaValue } = useMeta();
@@ -93,6 +93,7 @@ function Index() {
     for (const [c, v] of entries) await setCell(sheet, id, Number(c), v);
   };
 
+  const locked = !access.isAdmin && !baseSheet.toUpperCase().startsWith("BLOG");
   const embedSrc = isGuide ? null : embedSrcOf(sheet);
 
   const sidebar = <SheetSidebar meta={metaOverrides} setMetaValue={setMetaValue} />;
@@ -160,7 +161,15 @@ function Index() {
           </div>
         </div>
 
-        {isGuide ? (
+        {locked ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
+            <div className="size-16 rounded-full bg-muted flex items-center justify-center">
+              <Lock className="size-7 text-muted-foreground" />
+            </div>
+            <p className="text-lg font-semibold">Vous n'avez pas les accès pour le moment.</p>
+            <p className="text-sm text-muted-foreground">Seule la section Blog est disponible.</p>
+          </div>
+        ) : isGuide ? (
           <GuideView
             onOpenSheet={(s) => navigate({ to: "/", search: { sheet: s } })}
           />
