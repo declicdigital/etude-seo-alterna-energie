@@ -556,7 +556,7 @@ button{ font-family: inherit; cursor:pointer; }
 .todo-block.collapsed{ padding:12px 16px; }
 .todo-block .hint{ font-size:0.78rem; color:var(--muted); margin:6px 0 10px; }
 .todo-scroll{ overflow-x:auto; }
-.todo-table{ width:100%; border-collapse:collapse; min-width:760px; }
+.todo-table{ width:100%; border-collapse:collapse; min-width:1000px; }
 .todo-table th{ text-align:left; font-size:0.72rem; text-transform:uppercase; color:var(--muted); padding:6px; border-bottom:1.5px solid var(--line); }
 .todo-table td{ padding:4px; border-bottom:1px solid var(--line); vertical-align:middle; }
 .todo-table input, .todo-table select{ width:100%; font:inherit; font-size:0.82rem; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:#fff; box-sizing:border-box; }
@@ -602,9 +602,9 @@ button{ font-family: inherit; cursor:pointer; }
       </div>
       <button class="btn" id="todoAddBtn">+ Ajouter une ligne</button>
     </div>
-    <p class="hint todo-hint">Dès que Sujet, Nom de l'article, Éditrice et Lien du docx sont remplis, l'article est créé automatiquement dans le suivi (étape Rédaction).</p>
+    <p class="hint todo-hint">Dès que Sujet, Nom de l'article, Éditrice et Lien du docx sont remplis, l'article est créé automatiquement dans le suivi (étape Rédaction). La catégorie choisie détermine la cible (Particulier ou Professionnel).</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th>Nom de l'article (H1)</th><th>Éditrice</th><th>Deadline</th><th>Lien du docx</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th>Nom de l'article (H1)</th><th>Éditrice</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du docx</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
   </section>
@@ -1735,11 +1735,13 @@ async function saveTodos(){
 }
 function renderTodos(){
   const body = document.getElementById('todoBody');
-  if(!todos.length){ body.innerHTML = '<tr><td colspan="6" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
+  if(!todos.length){ body.innerHTML = '<tr><td colspan="8" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
   body.innerHTML = todos.map(t => `<tr data-todo-id="${t.id}">
     <td><input data-f="sujet" value="${escapeAttr(t.sujet||'')}" placeholder="Sujet"></td>
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td><select data-f="editrice"><option value="">—</option>${['Aurorae','Marina'].map(o=>`<option ${t.editrice===o?'selected':''}>${o}</option>`).join('')}</select></td>
+    <td><select data-f="categorie"><option value="">—</option><optgroup label="Particulier">${BLOG_CATEGORIES['Particulier'].map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</optgroup><optgroup label="Professionnel">${BLOG_CATEGORIES['Professionnel'].map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</optgroup></select></td>
+    <td><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></td>
     <td><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…"></td>
     <td style="white-space:nowrap">${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : `<button class="btn" data-todo-save style="padding:4px 10px;font-size:0.78rem">Enregistrer</button> <button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
@@ -1754,6 +1756,13 @@ async function maybeCreateFromTodo(t){
   article.deadline = t.deadline || '';
   const red = article.steps.find(s => s.key === 'redaction');
   if(red) red.assignee = t.editrice;
+  const cat = (t.categorie||'').trim();
+  if(cat){
+    article.category = cat;
+    article.audience = BLOG_CATEGORIES['Professionnel'].includes(cat) ? 'Professionnel' : 'Particulier';
+  }
+  const en = (t.energie||'').trim();
+  if(en) article.energy = en;
   articles.push(article);
   t.articleId = article.id;
   await saveArticle(article);
@@ -1761,7 +1770,7 @@ async function maybeCreateFromTodo(t){
   renderArticles();
 }
 document.getElementById('todoAddBtn').addEventListener('click', async () => {
-  todos.push({ id: uid(), sujet:'', h1:'', editrice:'', deadline:'', docx:'', articleId:null });
+  todos.push({ id: uid(), sujet:'', h1:'', editrice:'', categorie:'', energie:'', deadline:'', docx:'', articleId:null });
   await saveTodos(); renderTodos();
 });
 document.getElementById('todoBody').addEventListener('change', async (e) => {
