@@ -521,6 +521,28 @@ button{ font-family: inherit; cursor:pointer; }
   background: var(--lgreen-bg); border:1.5px solid var(--lgreen); color: var(--ink);
 }
 
+/* Commentaires + mentions */
+.comments-block{ padding: 4px 16px 18px; border-top: 1px dashed var(--line); margin-top: 6px; }
+.comments-label{ display:block; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin: 10px 0 8px; }
+.comment-item{ background:#f7faf8; border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin-bottom:8px; }
+.comment-meta{ font-size:0.7rem; color:var(--muted); font-weight:600; margin-bottom:2px; }
+.comment-body{ font-size:0.85rem; color:var(--ink); white-space:pre-wrap; word-break:break-word; }
+.comment-body .mention{ color:var(--green); font-weight:700; }
+.comment-input-wrap{ position:relative; display:flex; gap:8px; align-items:flex-start; }
+.comment-input{
+  flex:1; font:inherit; font-size:0.85rem; padding:8px 12px; min-height:38px; resize:vertical;
+  border:1.5px solid var(--line); border-radius:10px; background:#fff; color:var(--ink);
+}
+.comment-input:focus{ outline:none; border-color:var(--blue); }
+.comment-send{ flex-shrink:0; }
+.mention-dropdown{
+  position:absolute; left:0; bottom:calc(100% + 4px); z-index:50; min-width:220px; max-height:200px; overflow:auto;
+  background:#fff; border:1.5px solid var(--line); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.12);
+}
+.mention-option{ display:block; width:100%; text-align:left; padding:8px 12px; font:inherit; font-size:0.82rem; background:none; border:none; cursor:pointer; color:var(--ink); }
+.mention-option:hover, .mention-option.active{ background:var(--lgreen-bg); }
+.mention-option .m-mail{ display:block; font-size:0.7rem; color:var(--muted); }
+
 </style>
 </head>
 <body>
