@@ -1,1 +1,3 @@
 - [x] Icône supprimer sur les messages/tags du suivi éditorial (article_comments)
+- [x] Bouton « Enregistrer » dans À rédiger : crée l'article, enlève la ligne, ouvre la fiche
+- [x] Étape Brief SEO supprimée du pipeline (config + articles existants)
