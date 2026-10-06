@@ -93,7 +93,10 @@ function Index() {
     for (const [c, v] of entries) await setCell(sheet, id, Number(c), v);
   };
 
-  const locked = !access.isAdmin && !baseSheet.toUpperCase().startsWith("BLOG");
+  const locked =
+    !access.isAdmin &&
+    !baseSheet.toUpperCase().startsWith("BLOG") &&
+    baseSheet.toUpperCase() !== "SUIVI EDITORIAL";
   const embedSrc = isGuide ? null : embedSrcOf(sheet);
 
   const sidebar = <SheetSidebar meta={metaOverrides} setMetaValue={setMetaValue} />;
