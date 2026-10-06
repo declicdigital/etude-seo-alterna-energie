@@ -813,9 +813,12 @@ async function sendComment(articleId, textarea){
   if(!body) return;
   const email = currentUserEmail();
   if(!email){ alert('Vous devez être connecté pour envoyer un message.'); return; }
+  if(!approvedUsers.length){ try{ await loadApprovedUsers(); }catch(e){} }
+  const low = body.toLowerCase();
   const mentioned = approvedUsers.filter(u => {
-    const name = u.full_name || u.email;
-    return name && body.includes('@' + name);
+    const name = (u.full_name || '').toLowerCase().trim();
+    const mail = (u.email || '').toLowerCase();
+    return (name && low.includes('@' + name)) || (mail && low.includes('@' + mail));
   });
   const article = getArticle(articleId);
   const articleTitle = article ? article.title : (articleId === '__todo__' ? 'À rédiger' : 'Article');
@@ -836,19 +839,23 @@ async function sendComment(articleId, textarea){
   (commentsByArticle[articleId] = commentsByArticle[articleId] || []).push(inserted[0]);
   showSaved();
   if(mentioned.length){
+    let ok = false;
     try{
-      await fetch('/api/public/notify-mention', {
+      const r = await fetch('/api/public/notify-mention', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           articleTitle,
           message: body,
-          authorName: currentUserName(),
+          authorName: currentUserName() || undefined,
           authorEmail: email,
           mentions: mentioned.map(u => u.email)
         })
       });
+      const j = await r.json().catch(() => ({}));
+      ok = r.ok && j.sent > 0;
     }catch(e){}
+    if(!ok) alert('Message enregistré, mais le mail de notification n\'a pas pu partir.');
   }
   renderArticles();
   if(articleId === '__todo__') renderTodoComments();
