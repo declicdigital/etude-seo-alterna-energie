@@ -19,7 +19,8 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
 import { getAccess, signOutAndGoToAuth } from "@/lib/access";
-import { LogOut, ShieldCheck, Lock } from "lucide-react";
+import { LogOut, ShieldCheck, Lock, Download } from "lucide-react";
+import { downloadBackup } from "@/lib/backup";
 import { Link } from "@tanstack/react-router";
 
 const searchSchema = z.object({
@@ -134,6 +135,21 @@ function Index() {
             <ShieldCheck className="size-3.5" />
             <span className="hidden sm:inline">Demandes</span>
           </Link>
+        )}
+        {access.isAdmin && (
+          <button
+            onClick={async (e) => {
+              const b = e.currentTarget;
+              b.disabled = true;
+              try { await downloadBackup(); } catch (err) { alert("Échec de la sauvegarde : " + (err as Error).message); }
+              b.disabled = false;
+            }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur hover:bg-muted disabled:opacity-50"
+            title="Télécharger une sauvegarde de toutes les données"
+          >
+            <Download className="size-3.5" />
+            <span className="hidden sm:inline">Sauvegarde</span>
+          </button>
         )}
         <button
           onClick={signOutAndGoToAuth}
