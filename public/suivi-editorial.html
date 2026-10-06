@@ -548,6 +548,12 @@ button{ font-family: inherit; cursor:pointer; }
 .todo-block{ background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:16px; margin-bottom:20px; }
 .todo-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
 .todo-head h2{ margin:0; font-size:1.05rem; }
+.todo-head-left{ display:flex; align-items:center; gap:8px; min-width:0; }
+.todo-toggle{ background:none; border:none; padding:2px; cursor:pointer; display:flex; align-items:center; color:var(--muted); }
+.todo-toggle svg{ transition:transform .15s ease; }
+.todo-block.collapsed .todo-toggle svg{ transform:rotate(-90deg); }
+.todo-block.collapsed .todo-hint, .todo-block.collapsed .todo-scroll{ display:none; }
+.todo-block.collapsed{ padding:12px 16px; }
 .todo-block .hint{ font-size:0.78rem; color:var(--muted); margin:6px 0 10px; }
 .todo-scroll{ overflow-x:auto; }
 .todo-table{ width:100%; border-collapse:collapse; min-width:760px; }
@@ -588,10 +594,15 @@ button{ font-family: inherit; cursor:pointer; }
 
   <section class="todo-block" id="todoBlock">
     <div class="todo-head">
-      <h2>À rédiger</h2>
+      <div class="todo-head-left">
+        <button class="todo-toggle" id="todoToggleBtn" title="Réduire / déplier" aria-label="Réduire ou déplier le bloc À rédiger">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <h2>À rédiger</h2>
+      </div>
       <button class="btn" id="todoAddBtn">+ Ajouter une ligne</button>
     </div>
-    <p class="hint">Dès que Sujet, Nom de l'article, Éditrice et Lien du docx sont remplis, l'article est créé automatiquement dans le suivi (étape Rédaction).</p>
+    <p class="hint todo-hint">Dès que Sujet, Nom de l'article, Éditrice et Lien du docx sont remplis, l'article est créé automatiquement dans le suivi (étape Rédaction).</p>
     <div class="todo-scroll"><table class="todo-table">
       <thead><tr><th>Sujet</th><th>Nom de l'article (H1)</th><th>Éditrice</th><th>Deadline</th><th>Lien du docx</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
@@ -1381,6 +1392,15 @@ document.getElementById('toggleConfigBtn').addEventListener('click', () => {
 });
 document.getElementById('cfgCloseBtn').addEventListener('click', () => {
   document.getElementById('configPanel').classList.remove('open');
+});
+
+/* Bloc « À rédiger » : réduire / déplier, état mémorisé. */
+const TODO_COLLAPSE_KEY = 'editorial-todo-collapsed';
+const todoBlock = document.getElementById('todoBlock');
+if(localStorage.getItem(TODO_COLLAPSE_KEY) === '1') todoBlock.classList.add('collapsed');
+document.getElementById('todoToggleBtn').addEventListener('click', () => {
+  todoBlock.classList.toggle('collapsed');
+  try{ localStorage.setItem(TODO_COLLAPSE_KEY, todoBlock.classList.contains('collapsed') ? '1' : '0'); }catch(e){}
 });
 
 document.getElementById('cfgAddStep').addEventListener('click', async () => {
