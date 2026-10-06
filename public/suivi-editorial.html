@@ -953,11 +953,17 @@ async function loadArticles(){
       try{
         const r = await storage.get('article:' + id, false);
         const a = JSON.parse(r.value);
+        let articleChanged = false;
         // Retire l'étape Brief SEO des articles existants.
         if(Array.isArray(a.steps) && a.steps.some(s => s.key === 'brief')){
           a.steps = a.steps.filter(s => s.key !== 'brief');
-          await saveArticle(a);
+          articleChanged = true;
         }
+        if(a.category === 'Guides pratiques'){
+          a.category = 'Guide pratique';
+          articleChanged = true;
+        }
+        if(articleChanged) await saveArticle(a);
         out.push(a);
       }catch(e){}
     }
@@ -1174,11 +1180,22 @@ function pubDateOf(article){
   return dates.length ? dates[dates.length - 1] : '';
 }
 
-/** Articles triés du plus récemment ajouté au plus ancien. */
+function isFinalized(article){
+  const integration = (article.steps || []).find(s => s.key === 'integration');
+  return integration && integration.status === 'done';
+}
+
+/** Articles en cours en haut, puis finalisés ; chaque groupe du plus récent au plus ancien. */
 function sortedArticles(){
-  return articles.slice().sort((a, b) =>
-    (b.createdAt || '').localeCompare(a.createdAt || '')
-  );
+  return articles.slice().sort((a, b) => {
+    const aFinalized = isFinalized(a), bFinalized = isFinalized(b);
+    if(aFinalized !== bFinalized) return aFinalized ? 1 : -1;
+    if(aFinalized){
+      const da = pubDateOf(a), db = pubDateOf(b);
+      if(da !== db) return db.localeCompare(da);
+    }
+    return (b.createdAt || '').localeCompare(a.createdAt || '');
+  });
 }
 
 function renderArticles(){
