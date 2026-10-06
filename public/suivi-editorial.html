@@ -562,6 +562,10 @@ button{ font-family: inherit; cursor:pointer; }
 .todo-table input, .todo-table select{ width:100%; font:inherit; font-size:0.82rem; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:#fff; box-sizing:border-box; }
 .todo-badge{ font-size:0.7rem; background:var(--lgreen-bg); color:var(--ink); padding:3px 8px; border-radius:999px; white-space:nowrap; }
 .todo-del{ background:none; border:none; cursor:pointer; color:var(--muted); font-size:1rem; }
+.todo-table tr.todo-aurorae td{ background:rgba(22,163,74,0.09); }
+.todo-table tr.todo-aurorae td:first-child{ box-shadow:inset 3px 0 0 #16a34a; }
+.todo-table tr.todo-marina td{ background:rgba(124,58,237,0.09); }
+.todo-table tr.todo-marina td:first-child{ box-shadow:inset 3px 0 0 #7c3aed; }
 </style>
 </head>
 <body>
@@ -604,7 +608,7 @@ button{ font-family: inherit; cursor:pointer; }
     </div>
     <p class="hint todo-hint">Dès que Sujet, Nom de l'article, Éditrice et Lien du docx sont remplis, l'article est créé automatiquement dans le suivi (étape Rédaction). La catégorie choisie détermine la cible (Particulier ou Professionnel).</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th>Nom de l'article (H1)</th><th>Éditrice</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du docx</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du docx</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
   </section>
