@@ -1394,6 +1394,15 @@ document.getElementById('cfgCloseBtn').addEventListener('click', () => {
   document.getElementById('configPanel').classList.remove('open');
 });
 
+/* Bloc « À rédiger » : réduire / déplier, état mémorisé. */
+const TODO_COLLAPSE_KEY = 'editorial-todo-collapsed';
+const todoBlock = document.getElementById('todoBlock');
+if(localStorage.getItem(TODO_COLLAPSE_KEY) === '1') todoBlock.classList.add('collapsed');
+document.getElementById('todoToggleBtn').addEventListener('click', () => {
+  todoBlock.classList.toggle('collapsed');
+  try{ localStorage.setItem(TODO_COLLAPSE_KEY, todoBlock.classList.contains('collapsed') ? '1' : '0'); }catch(e){}
+});
+
 document.getElementById('cfgAddStep').addEventListener('click', async () => {
   const key = 'step-' + uid();
   config.push({ key, label: 'Nouvelle étape', assignee: '', skippable: false });
