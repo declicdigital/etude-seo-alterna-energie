@@ -14,6 +14,7 @@ import { Route as DemandesRouteImport } from './routes/demandes'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicNotifyMentionRouteImport } from './routes/api/public/notify-mention'
+import { Route as ApiPublicNotifyAccessRequestRouteImport } from './routes/api/public/notify-access-request'
 
 const EnAttenteRoute = EnAttenteRouteImport.update({
   id: '/en-attente',
@@ -40,12 +41,19 @@ const ApiPublicNotifyMentionRoute = ApiPublicNotifyMentionRouteImport.update({
   path: '/api/public/notify-mention',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicNotifyAccessRequestRoute =
+  ApiPublicNotifyAccessRequestRouteImport.update({
+    id: '/api/public/notify-access-request',
+    path: '/api/public/notify-access-request',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
+  '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +61,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
+  '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
 }
 export interface FileRoutesById {
@@ -61,6 +70,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
+  '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
 }
 export interface FileRouteTypes {
@@ -70,15 +80,23 @@ export interface FileRouteTypes {
     | '/auth'
     | '/demandes'
     | '/en-attente'
+    | '/api/public/notify-access-request'
     | '/api/public/notify-mention'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/demandes' | '/en-attente' | '/api/public/notify-mention'
+  to:
+    | '/'
+    | '/auth'
+    | '/demandes'
+    | '/en-attente'
+    | '/api/public/notify-access-request'
+    | '/api/public/notify-mention'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/demandes'
     | '/en-attente'
+    | '/api/public/notify-access-request'
     | '/api/public/notify-mention'
   fileRoutesById: FileRoutesById
 }
@@ -87,6 +105,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DemandesRoute: typeof DemandesRoute
   EnAttenteRoute: typeof EnAttenteRoute
+  ApiPublicNotifyAccessRequestRoute: typeof ApiPublicNotifyAccessRequestRoute
   ApiPublicNotifyMentionRoute: typeof ApiPublicNotifyMentionRoute
 }
 
@@ -127,6 +146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNotifyMentionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/notify-access-request': {
+      id: '/api/public/notify-access-request'
+      path: '/api/public/notify-access-request'
+      fullPath: '/api/public/notify-access-request'
+      preLoaderRoute: typeof ApiPublicNotifyAccessRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -135,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DemandesRoute: DemandesRoute,
   EnAttenteRoute: EnAttenteRoute,
+  ApiPublicNotifyAccessRequestRoute: ApiPublicNotifyAccessRequestRoute,
   ApiPublicNotifyMentionRoute: ApiPublicNotifyMentionRoute,
 }
 export const routeTree = rootRouteImport
