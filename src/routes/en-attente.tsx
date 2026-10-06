@@ -22,6 +22,7 @@ function PendingPage() {
 
   useEffect(() => {
     let active = true;
+    let notified = false;
     const check = async () => {
       const a = await getAccess();
       if (!active) return;
@@ -35,6 +36,14 @@ function PendingPage() {
       }
       setStatus(a.status);
       setEmail(a.email);
+      if (a.status === "pending" && !notified) {
+        notified = true;
+        fetch("/api/public/notify-access-request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: a.userId }),
+        }).catch(() => {});
+      }
     };
     check();
     const t = setInterval(check, 15000);
