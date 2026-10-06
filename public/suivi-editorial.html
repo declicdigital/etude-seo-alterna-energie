@@ -1596,6 +1596,12 @@ document.getElementById('articlesContainer').addEventListener('change', async (e
 document.getElementById('articlesContainer').addEventListener('input', async (e) => {
   const t = e.target;
   const action = t.dataset.action;
+  if(t.classList && t.classList.contains('comment-input')){
+    const q = mentionQueryAt(t);
+    if(q === null) closeMentionMenu();
+    else openMentionMenu(t, q);
+    return;
+  }
   if(action === 'edit-title'){
     const article = getArticle(t.dataset.articleId);
     article.title = t.value;
