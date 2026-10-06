@@ -821,6 +821,18 @@ async function sendComment(articleId, textarea){
   renderArticles();
 }
 
+async function deleteComment(articleId, commentId){
+  if(!confirm('Supprimer ce message ?')) return;
+  const res = await fetch(COMMENTS_REST + '?id=eq.' + encodeURIComponent(commentId), {
+    method: 'DELETE',
+    headers: authHeaders()
+  });
+  if(!res.ok){ alert('Le message n\'a pas pu être supprimé.'); return; }
+  commentsByArticle[articleId] = (commentsByArticle[articleId] || []).filter(c => c.id !== commentId);
+  showSaved();
+  renderArticles();
+}
+
 const storage = {
   async get(key){
     const res = await fetch(REST + '?select=value&key=eq.' + encodeURIComponent(key), { headers: HEADERS });
@@ -1471,6 +1483,12 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     const id = sendBtn.dataset.articleId;
     const textarea = document.querySelector(`.comment-input[data-article-id="${id}"]`);
     if(textarea) await sendComment(id, textarea);
+    return;
+  }
+
+  const delBtn = e.target.closest('[data-action="delete-comment"]');
+  if(delBtn){
+    await deleteComment(delBtn.dataset.articleId, delBtn.dataset.commentId);
     return;
   }
 
