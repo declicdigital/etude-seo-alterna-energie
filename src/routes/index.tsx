@@ -134,6 +134,11 @@ function Index() {
           >
             <ShieldCheck className="size-3.5" />
             <span className="hidden sm:inline">Demandes</span>
+            {pendingCount > 0 && (
+              <span className="ml-0.5 inline-flex min-w-4 h-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                {pendingCount}
+              </span>
+            )}
           </Link>
         )}
         {access.isAdmin && (
