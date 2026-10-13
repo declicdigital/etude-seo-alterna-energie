@@ -109,23 +109,7 @@ export const Route = createFileRoute("/api/public/notify-mention")({
           `Voir le message : ${APP_URL}`,
         ].filter((l): l is string => l !== null);
         const html = buildHtml({ author, title: payload.articleTitle, step: payload.stepLabel, message: payload.message });
-        const raw = createRawEmail(recipients.join(", "), subject, bodyLines.join("\r\n"), html);
-
-        const res = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": gmailKey,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ raw }),
-        });
-        if (!res.ok) {
-          const errorBody = await res.text();
-          console.error(`Gmail send failed [${res.status}]: ${errorBody}`);
-          return Response.json({ error: "send_failed", status: res.status }, { status: 502 });
-        }
-        return Response.json({ sent: recipients.length });
+        return sendBrevo(recipients, subject, bodyLines.join("\r\n"), html);
       },
     },
   },
