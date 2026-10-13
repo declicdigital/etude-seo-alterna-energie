@@ -10,23 +10,8 @@ const BodySchema = z.object({
   mentions: z.array(z.string().email()).min(1).max(20),
 });
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
-
-const b64 = (s: string) =>
-  btoa(Array.from(new TextEncoder().encode(s), (b) => String.fromCharCode(b)).join(""));
-
-// RFC 2047: split long non-ASCII headers into several short encoded-words (Outlook is strict).
-function mimeHeader(v: string): string {
-  if (/^[\x00-\x7F]*$/.test(v)) return v;
-  const chunks: string[] = [];
-  let cur = "";
-  for (const ch of Array.from(v)) {
-    if (new TextEncoder().encode(cur + ch).length > 42) { chunks.push(cur); cur = ""; }
-    cur += ch;
-  }
-  if (cur) chunks.push(cur);
-  return chunks.map((c) => `=?UTF-8?B?${b64(c)}?=`).join("\r\n ");
-}
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
+const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -51,30 +36,34 @@ ${p.step ? `<p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform
 </table></td></tr></table></body></html>`;
 }
 
-function createRawEmail(to: string, subject: string, text: string, html: string): string {
-  const boundary = "alt_" + crypto.randomUUID().replace(/-/g, "");
-  const wrap = (s: string) => b64(s).replace(/.{76}/g, "$&\r\n");
-  const email = [
-    `From: ${mimeHeader("Outil Alterna")} <g.delabarre.alterna@gmail.com>`,
-    `To: ${to}`,
-    `Subject: ${mimeHeader(subject)}`,
-    "MIME-Version: 1.0",
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    "",
-    `--${boundary}`,
-    'Content-Type: text/plain; charset="UTF-8"',
-    "Content-Transfer-Encoding: base64",
-    "",
-    wrap(text),
-    `--${boundary}`,
-    'Content-Type: text/html; charset="UTF-8"',
-    "Content-Transfer-Encoding: base64",
-    "",
-    wrap(html),
-    `--${boundary}--`,
-    "",
-  ].join("\r\n");
-  return b64(email).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+async function sendBrevo(to: string[], subject: string, text: string, html: string): Promise<Response> {
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  const brevoKey = process.env["BREVO_API_KEY"];
+  if (!lovableKey || !brevoKey) {
+    console.error("mail secrets missing");
+    return Response.json({ error: "mail_not_configured" }, { status: 500 });
+  }
+  const res = await fetch(`${GATEWAY_URL}/smtp/email`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${lovableKey}`,
+      "X-Connection-Api-Key": brevoKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: SENDER,
+      to: to.map((email) => ({ email })),
+      subject,
+      textContent: text,
+      htmlContent: html,
+    }),
+  });
+  if (!res.ok) {
+    const errorBody = await res.text();
+    console.error(`Brevo send failed [${res.status}]: ${errorBody}`);
+    return Response.json({ error: "send_failed", status: res.status }, { status: 502 });
+  }
+  return Response.json({ sent: to.length });
 }
 
 export const Route = createFileRoute("/api/public/notify-mention")({
@@ -104,13 +93,6 @@ export const Route = createFileRoute("/api/public/notify-mention")({
           return Response.json({ sent: 0, skipped: "no_approved_recipient" });
         }
 
-        const lovableKey = process.env["LOVABLE_API_KEY"];
-        const gmailKey = process.env["GOOGLE_MAIL_API_KEY"];
-        if (!lovableKey || !gmailKey) {
-          console.error("mail secrets missing");
-          return Response.json({ error: "mail_not_configured" }, { status: 500 });
-        }
-
         const author = payload.authorName || payload.authorEmail;
         const subject = `${author} vous a mentionné dans « ${payload.articleTitle} »`;
         const bodyLines = [
@@ -127,23 +109,7 @@ export const Route = createFileRoute("/api/public/notify-mention")({
           `Voir le message : ${APP_URL}`,
         ].filter((l): l is string => l !== null);
         const html = buildHtml({ author, title: payload.articleTitle, step: payload.stepLabel, message: payload.message });
-        const raw = createRawEmail(recipients.join(", "), subject, bodyLines.join("\r\n"), html);
-
-        const res = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": gmailKey,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ raw }),
-        });
-        if (!res.ok) {
-          const errorBody = await res.text();
-          console.error(`Gmail send failed [${res.status}]: ${errorBody}`);
-          return Response.json({ error: "send_failed", status: res.status }, { status: 502 });
-        }
-        return Response.json({ sent: recipients.length });
+        return sendBrevo(recipients, subject, bodyLines.join("\r\n"), html);
       },
     },
   },
