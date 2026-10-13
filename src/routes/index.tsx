@@ -111,6 +111,12 @@ function Index() {
     !baseSheet.toUpperCase().startsWith("BLOG") &&
     baseSheet.toUpperCase() !== "SUIVI EDITORIAL";
   const embedSrc = isGuide ? null : embedSrcOf(sheet);
+  const [pageHash, setPageHash] = useState(() => window.location.hash);
+  useEffect(() => {
+    const onHash = () => setPageHash(window.location.hash);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
   const sidebar = <SheetSidebar meta={metaOverrides} setMetaValue={setMetaValue} />;
 
@@ -211,7 +217,7 @@ function Index() {
           />
         ) : embedSrc ? (
           <iframe
-            src={embedSrc}
+            src={embedSrc + pageHash}
             title={sheetLabel}
             className="flex-1 w-full border-0 min-h-0"
           />

@@ -1344,6 +1344,7 @@ function renderArticleCard(article){
         <div class="article-meta">
           ${article.blogRowId ? `<span class="blog-badge">Ajouté au blog</span>` : ''}
           <span class="progress-tag">${doneCount}/${total} étapes</span>
+          <button class="btn-ghost copy-link-btn" data-action="copy-link" data-article-id="${article.id}" title="Copier le lien vers cette carte">🔗 Lien</button>
           <button class="delete-btn ${isConfirming?'confirming':''}" data-action="delete-article" data-article-id="${article.id}">${isConfirming ? 'Confirmer la suppression' : 'Supprimer'}</button>
         </div>
       </div>
@@ -1502,6 +1503,28 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     if(collapsed[id]) delete collapsed[id]; else collapsed[id] = true;
     saveCollapsed();
     renderArticles();
+    return;
+  }
+
+  const copyBtn = e.target.closest('[data-action="copy-link"]');
+  if(copyBtn){
+    const id = copyBtn.dataset.articleId;
+    let url;
+    try {
+      const top = window.top.location;
+      url = `${top.origin}/?sheet=SUIVI%20EDITORIAL#article-${id}`;
+    } catch {
+      url = `${location.origin}${location.pathname}#article-${id}`;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove();
+    }
+    copyBtn.textContent = '✓ Copié !';
+    setTimeout(() => { copyBtn.textContent = '🔗 Lien'; }, 2000);
     return;
   }
 
@@ -1947,6 +1970,20 @@ document.getElementById('notifDropdown').addEventListener('click', (e) => {
   }
 });
 
+function openArticleFromHash(){
+  const m = location.hash.match(/^#article-(.+)$/);
+  if(!m) return;
+  const id = m[1];
+  if(collapsed[id]){ delete collapsed[id]; saveCollapsed(); renderArticles(); }
+  const card = document.querySelector(`.article-card[data-article-id="${id}"]`);
+  if(card){
+    card.scrollIntoView({ behavior:'smooth', block:'start' });
+    card.classList.add('notif-flash');
+    setTimeout(() => card.classList.remove('notif-flash'), 3500);
+  }
+}
+window.addEventListener('hashchange', openArticleFromHash);
+
 async function init(){
   document.getElementById('articlesContainer').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
   await loadConfig();
@@ -1958,6 +1995,7 @@ async function init(){
   updateBell();
   articles.forEach(syncArticleSteps);
   render();
+  openArticleFromHash();
   setInterval(async () => {
     await loadComments();
     updateBell();
