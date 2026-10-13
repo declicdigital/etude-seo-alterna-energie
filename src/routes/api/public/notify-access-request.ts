@@ -2,23 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 const BodySchema = z.object({ userId: z.string().uuid() });
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const ADMIN_EMAIL = "geoffrey.delabarre@gmail.com";
 const APP_URL = "https://etude-seo-alterna-energie.lovable.app/demandes";
-
-const b64 = (s: string) =>
-  btoa(Array.from(new TextEncoder().encode(s), (b) => String.fromCharCode(b)).join(""));
-function mimeHeader(v: string): string {
-  if (/^[\x00-\x7F]*$/.test(v)) return v;
-  const chunks: string[] = [];
-  let cur = "";
-  for (const ch of Array.from(v)) {
-    if (new TextEncoder().encode(cur + ch).length > 42) { chunks.push(cur); cur = ""; }
-    cur += ch;
-  }
-  if (cur) chunks.push(cur);
-  return chunks.map((c) => `=?UTF-8?B?${b64(c)}?=`).join("\r\n ");
-}
+const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
