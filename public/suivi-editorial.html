@@ -1970,6 +1970,20 @@ document.getElementById('notifDropdown').addEventListener('click', (e) => {
   }
 });
 
+function openArticleFromHash(){
+  const m = location.hash.match(/^#article-(.+)$/);
+  if(!m) return;
+  const id = m[1];
+  if(collapsed[id]){ delete collapsed[id]; saveCollapsed(); renderArticles(); }
+  const card = document.querySelector(`.article-card[data-article-id="${id}"]`);
+  if(card){
+    card.scrollIntoView({ behavior:'smooth', block:'start' });
+    card.classList.add('notif-flash');
+    setTimeout(() => card.classList.remove('notif-flash'), 3500);
+  }
+}
+window.addEventListener('hashchange', openArticleFromHash);
+
 async function init(){
   document.getElementById('articlesContainer').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
   await loadConfig();
@@ -1981,6 +1995,7 @@ async function init(){
   updateBell();
   articles.forEach(syncArticleSteps);
   render();
+  openArticleFromHash();
   setInterval(async () => {
     await loadComments();
     updateBell();
