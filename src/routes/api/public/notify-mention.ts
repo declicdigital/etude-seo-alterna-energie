@@ -93,13 +93,6 @@ export const Route = createFileRoute("/api/public/notify-mention")({
           return Response.json({ sent: 0, skipped: "no_approved_recipient" });
         }
 
-        const lovableKey = process.env["LOVABLE_API_KEY"];
-        const gmailKey = process.env["GOOGLE_MAIL_API_KEY"];
-        if (!lovableKey || !gmailKey) {
-          console.error("mail secrets missing");
-          return Response.json({ error: "mail_not_configured" }, { status: 500 });
-        }
-
         const author = payload.authorName || payload.authorEmail;
         const subject = `${author} vous a mentionné dans « ${payload.articleTitle} »`;
         const bodyLines = [
