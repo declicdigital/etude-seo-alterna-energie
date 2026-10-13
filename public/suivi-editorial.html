@@ -621,9 +621,9 @@ button{ font-family: inherit; cursor:pointer; }
       </div>
       <button class="btn" id="todoAddBtn">+ Ajouter une ligne</button>
     </div>
-    <p class="hint todo-hint">Dès que Sujet, Nom de l'article, Éditrice et Lien du docx sont remplis, l'article est créé automatiquement dans le suivi (étape Rédaction). La catégorie choisie détermine la cible (Particulier ou Professionnel).</p>
+    <p class="hint todo-hint">Dès que Sujet, Nom de l'article, Éditrice et Lien du doc sont remplis, l'article est créé automatiquement dans le suivi (étape Rédaction). La catégorie choisie détermine la cible (Particulier ou Professionnel).</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du docx</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
     <div id="todoComments" class="todo-comments"></div>
@@ -1350,7 +1350,7 @@ function renderArticleCard(article){
       </div>
       <div class="article-body">
         <div class="links-row">
-          ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Docx', 'Coller le lien du document Docx')}
+          ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Doc', 'Coller le lien du document Doc')}
           ${renderLinkField(article.id, 'final-link', article.finalLink, 'Article publié', "Coller le lien de l'article publié")}
         </div>
         <div class="schema">${schemaHtml}</div>
@@ -1841,7 +1841,7 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
   if(saveBtn){
     const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
     if(!(t.sujet||'').trim() || !(t.h1||'').trim() || !t.editrice || !(t.docx||'').trim()){
-      alert('Remplissez Sujet, Nom de l\'article, Éditrice et Lien du docx avant d\'enregistrer.');
+      alert('Remplissez Sujet, Nom de l\'article, Éditrice et Lien du doc avant d\'enregistrer.');
       return;
     }
     await maybeCreateFromTodo(t);
