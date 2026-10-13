@@ -28,8 +28,8 @@ export const Route = createFileRoute("/api/public/notify-access-request")({
         if (already) return Response.json({ sent: 0, skipped: "already_notified" });
 
         const lovableKey = process.env["LOVABLE_API_KEY"];
-        const gmailKey = process.env["GOOGLE_MAIL_API_KEY"];
-        if (!lovableKey || !gmailKey) return Response.json({ error: "mail_not_configured" }, { status: 500 });
+        const brevoKey = process.env["BREVO_API_KEY"];
+        if (!lovableKey || !brevoKey) return Response.json({ error: "mail_not_configured" }, { status: 500 });
 
         const who = profile.full_name ? `${profile.full_name} (${profile.email})` : profile.email;
         const subject = `Nouvelle demande d'accès : ${profile.full_name || profile.email}`;
