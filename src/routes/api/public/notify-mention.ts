@@ -10,23 +10,8 @@ const BodySchema = z.object({
   mentions: z.array(z.string().email()).min(1).max(20),
 });
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
-
-const b64 = (s: string) =>
-  btoa(Array.from(new TextEncoder().encode(s), (b) => String.fromCharCode(b)).join(""));
-
-// RFC 2047: split long non-ASCII headers into several short encoded-words (Outlook is strict).
-function mimeHeader(v: string): string {
-  if (/^[\x00-\x7F]*$/.test(v)) return v;
-  const chunks: string[] = [];
-  let cur = "";
-  for (const ch of Array.from(v)) {
-    if (new TextEncoder().encode(cur + ch).length > 42) { chunks.push(cur); cur = ""; }
-    cur += ch;
-  }
-  if (cur) chunks.push(cur);
-  return chunks.map((c) => `=?UTF-8?B?${b64(c)}?=`).join("\r\n ");
-}
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
+const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
