@@ -45,28 +45,19 @@ ${profile.full_name ? `<strong>${esc(profile.full_name)}</strong><br>` : ""}${es
 <a href="${APP_URL}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Valider ou refuser</a>
 </td></tr></table></td></tr></table></body></html>`;
 
-        const boundary = "alt_" + crypto.randomUUID().replace(/-/g, "");
-        const wrap = (s: string) => b64(s).replace(/.{76}/g, "$&\r\n");
-        const email = [
-          `From: ${mimeHeader("Outil Alterna")} <g.delabarre.alterna@gmail.com>`,
-          `To: ${ADMIN_EMAIL}`,
-          `Subject: ${mimeHeader(subject)}`,
-          "MIME-Version: 1.0",
-          `Content-Type: multipart/alternative; boundary="${boundary}"`,
-          "",
-          `--${boundary}`, 'Content-Type: text/plain; charset="UTF-8"', "Content-Transfer-Encoding: base64", "", wrap(text),
-          `--${boundary}`, 'Content-Type: text/html; charset="UTF-8"', "Content-Transfer-Encoding: base64", "", wrap(html),
-          `--${boundary}--`, "",
-        ].join("\r\n");
-        const raw = b64(email).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-
-        const res = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
+        const res = await fetch(`${GATEWAY_URL}/smtp/email`, {
           method: "POST",
-          headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": gmailKey, "Content-Type": "application/json" },
-          body: JSON.stringify({ raw }),
+          headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": brevoKey, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sender: SENDER,
+            to: [{ email: ADMIN_EMAIL }],
+            subject,
+            textContent: text,
+            htmlContent: html,
+          }),
         });
         if (!res.ok) {
-          console.error(`Gmail send failed [${res.status}]: ${await res.text()}`);
+          console.error(`Brevo send failed [${res.status}]: ${await res.text()}`);
           return Response.json({ error: "send_failed" }, { status: 502 });
         }
         await supabaseAdmin.from("editorial_kv").upsert({ key, value: new Date().toISOString() });
