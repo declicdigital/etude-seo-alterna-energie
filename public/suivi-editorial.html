@@ -1943,6 +1943,7 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
     await maybeCreateFromTodo(t);
     if(!t.articleId) return;
     const articleId = t.articleId;
+    try{
       const r = await fetch('/api/public/notify-article-ready', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({ kind:'relecture', sujet:t.sujet, h1:t.h1, editrice:t.editrice, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
