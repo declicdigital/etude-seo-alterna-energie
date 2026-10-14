@@ -1811,7 +1811,9 @@ async function maybeCreateFromTodo(t){
   article.subject = t.sujet.trim();
   article.deadline = t.deadline || '';
   const red = article.steps.find(s => s.key === 'redaction');
-  if(red) red.assignee = t.editrice;
+  if(red){ red.assignee = t.editrice; red.status = 'done'; red.date = new Date().toISOString().slice(0,10); }
+  const idee = article.steps.find(s => s.key === 'idee');
+  if(idee && idee.status === 'pending') idee.status = 'skipped';
   const cat = (t.categorie||'').trim();
   if(cat){
     article.category = cat;
@@ -1863,6 +1865,11 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
         body: JSON.stringify({ sujet:t.sujet, h1:t.h1, editrice:t.editrice, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
       });
       if(!r.ok) alert('Article enregistré, mais le mail de notification n\'a pas pu partir.');
+      const r2 = await fetch('/api/public/notify-article-ready', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ kind:'relecture', sujet:t.sujet, h1:t.h1, editrice:t.editrice, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
+      });
+      if(!r2.ok) alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.');
     }catch(err){ alert('Article enregistré, mais le mail de notification n\'a pas pu partir.'); }
     todos = todos.filter(x => x.id !== t.id);
     if(collapsed[articleId]){ delete collapsed[articleId]; saveCollapsed(); }
