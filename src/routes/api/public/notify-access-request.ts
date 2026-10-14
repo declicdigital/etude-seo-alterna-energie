@@ -52,6 +52,7 @@ ${profile.full_name ? `<strong>${esc(profile.full_name)}</strong><br>` : ""}${es
           body: JSON.stringify({
             sender: SENDER,
             to: [{ email: ADMIN_EMAIL }],
+            cc: [{ email: CC_EMAIL }],
             subject,
             textContent: text,
             htmlContent: html,

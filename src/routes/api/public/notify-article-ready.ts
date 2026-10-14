@@ -126,6 +126,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           body: JSON.stringify({
             sender: SENDER,
             to: [{ email: isRel ? RELECTURE_EMAIL : isInt ? INTEGRATION_EMAIL : ADMIN_EMAIL }],
+            cc: [{ email: CC_EMAIL }],
             subject,
             textContent: text,
             htmlContent: buildHtml(payload),
