@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 const BodySchema = z.object({
-  kind: z.enum(["ready", "relecture"]).optional(),
+  kind: z.enum(["ready", "relecture", "integration"]).optional(),
   sujet: z.string().min(1).max(300),
   h1: z.string().min(1).max(300),
   editrice: z.string().min(1).max(120),
@@ -16,6 +16,7 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
 const ADMIN_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const RELECTURE_EMAIL = "fannie.laurendin@soregies.fr";
+const INTEGRATION_EMAIL = "marick.navarro.ext@soregies.fr";
 const APP_URL = "https://etude-seo-alterna-energie.lovable.app/?sheet=SUIVI+EDITORIAL";
 
 const esc = (s: string) =>
@@ -33,6 +34,8 @@ function buildHtml(p: z.infer<typeof BodySchema>): string {
 <tr><td style="padding:28px">
 ${p.kind === "relecture"
   ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Fannie,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>insérer en pièce jointe</strong> dans la carte de l'article du suivi éditorial.</p>`
+  : p.kind === "integration"
+  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Marick,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (pièce jointe de la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.</p>`
   : `<p style="margin:0 0 18px;font-size:16px">Un nouvel article est <strong>prêt à être rédigé</strong> : toutes les informations de la ligne « À rédiger » sont remplies et l'article a été créé dans le suivi.</p>`}
 ${row("Sujet", p.sujet)}
 ${row("Nom de l'article (H1)", p.h1)}
@@ -66,14 +69,28 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
         }
 
         const isRel = payload.kind === "relecture";
+        const isInt = payload.kind === "integration";
         const subject = isRel
           ? `Relecture + image à faire : « ${payload.h1} »`
+          : isInt
+          ? `À intégrer dans le site : « ${payload.h1} »`
           : `Article prêt à rédiger : « ${payload.h1} »`;
         const text = isRel ? [
           "Bonjour Fannie,",
           "",
           "L'article ci-dessous est passé à l'étape Relecture + Image.",
           "Merci de le relire, de trouver une image et de l'insérer en pièce jointe dans la carte de l'article.",
+          "",
+          `Nom de l'article (H1) : ${payload.h1}`,
+          `Sujet : ${payload.sujet}`,
+          payload.docx ? `Lien du doc : ${payload.docx}` : null,
+          "",
+          `Ouvrir le suivi éditorial : ${APP_URL}`,
+        ].filter((l): l is string => l !== null).join("\r\n") : isInt ? [
+          "Bonjour Marick,",
+          "",
+          "L'article ci-dessous est prêt : la relecture est faite et l'image est validée (pièce jointe de la carte de l'article).",
+          "Il ne vous reste plus qu'à l'intégrer dans le site.",
           "",
           `Nom de l'article (H1) : ${payload.h1}`,
           `Sujet : ${payload.sujet}`,
@@ -107,7 +124,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           },
           body: JSON.stringify({
             sender: SENDER,
-            to: [{ email: isRel ? RELECTURE_EMAIL : ADMIN_EMAIL }],
+            to: [{ email: isRel ? RELECTURE_EMAIL : isInt ? INTEGRATION_EMAIL : ADMIN_EMAIL }],
             subject,
             textContent: text,
             htmlContent: buildHtml(payload),
