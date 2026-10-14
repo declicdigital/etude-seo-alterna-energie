@@ -1835,7 +1835,17 @@ document.getElementById('todoBody').addEventListener('change', async (e) => {
   const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
   t[f] = e.target.value;
   await saveTodos();
-  if(f === 'editrice') renderTodos();
+  if(f === 'editrice'){ renderTodos(); return; }
+  const btn = tr.querySelector('[data-todo-save]');
+  if(btn){ const ok = todoComplete(t); btn.disabled = !ok; btn.title = ok ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'; }
+});
+document.getElementById('todoBody').addEventListener('input', (e) => {
+  const tr = e.target.closest('tr[data-todo-id]'); const f = e.target.dataset.f;
+  if(!tr || !f) return;
+  const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
+  t[f] = e.target.value;
+  const btn = tr.querySelector('[data-todo-save]');
+  if(btn){ const ok = todoComplete(t); btn.disabled = !ok; btn.title = ok ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'; }
 });
 document.getElementById('todoBody').addEventListener('click', async (e) => {
   const tr = e.target.closest('tr[data-todo-id]');
@@ -1843,13 +1853,17 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
   const saveBtn = e.target.closest('[data-todo-save]');
   if(saveBtn){
     const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
-    if(!(t.sujet||'').trim() || !(t.h1||'').trim() || !t.editrice || !(t.docx||'').trim()){
-      alert('Remplissez Sujet, Nom de l\'article, Éditrice et Lien du doc avant d\'enregistrer.');
-      return;
-    }
+    if(!todoComplete(t)) return;
     await maybeCreateFromTodo(t);
     if(!t.articleId) return;
     const articleId = t.articleId;
+    try{
+      const r = await fetch('/api/public/notify-article-ready', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ sujet:t.sujet, h1:t.h1, editrice:t.editrice, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
+      });
+      if(!r.ok) alert('Article enregistré, mais le mail de notification n\'a pas pu partir.');
+    }catch(err){ alert('Article enregistré, mais le mail de notification n\'a pas pu partir.'); }
     todos = todos.filter(x => x.id !== t.id);
     if(collapsed[articleId]){ delete collapsed[articleId]; saveCollapsed(); }
     await saveTodos(); renderTodos(); renderArticles();
