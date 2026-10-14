@@ -33,9 +33,9 @@ function buildHtml(p: z.infer<typeof BodySchema>): string {
 <tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Alterna Énergie · Suivi éditorial</td></tr>
 <tr><td style="padding:28px">
 ${p.kind === "relecture"
-  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Fannie,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>insérer en pièce jointe</strong> dans la carte de l'article du suivi éditorial.</p>`
+  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Fannie,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article du suivi éditorial.</p>`
   : p.kind === "integration"
-  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Marick,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (pièce jointe de la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.</p>`
+  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Marick,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (visible dans la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.</p>`
   : `<p style="margin:0 0 18px;font-size:16px">Un nouvel article est <strong>prêt à être rédigé</strong> : toutes les informations de la ligne « À rédiger » sont remplies et l'article a été créé dans le suivi.</p>`}
 ${row("Sujet", p.sujet)}
 ${row("Nom de l'article (H1)", p.h1)}
@@ -79,7 +79,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           "Bonjour Fannie,",
           "",
           "L'article ci-dessous est passé à l'étape Relecture + Image.",
-          "Merci de le relire, de trouver une image et de l'insérer en pièce jointe dans la carte de l'article.",
+          "Merci de le relire, de trouver une image et de l'ajouter dans la carte de l'article.",
           "",
           `Nom de l'article (H1) : ${payload.h1}`,
           `Sujet : ${payload.sujet}`,
@@ -89,7 +89,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
         ].filter((l): l is string => l !== null).join("\r\n") : isInt ? [
           "Bonjour Marick,",
           "",
-          "L'article ci-dessous est prêt : la relecture est faite et l'image est validée (pièce jointe de la carte de l'article).",
+          "L'article ci-dessous est prêt : la relecture est faite et l'image est validée (visible dans la carte de l'article).",
           "Il ne vous reste plus qu'à l'intégrer dans le site.",
           "",
           `Nom de l'article (H1) : ${payload.h1}`,
