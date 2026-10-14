@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 const BodySchema = z.object({
-  kind: z.enum(["ready", "relecture", "integration"]).optional(),
+  kind: z.enum(["ready", "relecture", "integration", "published"]).optional(),
   sujet: z.string().max(300).optional().default(""),
   h1: z.string().max(300).optional().default(""),
   editrice: z.string().max(120).optional().default(""),
@@ -37,6 +37,8 @@ ${p.kind === "relecture"
   ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Fannie,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article du suivi éditorial.</p>`
   : p.kind === "integration"
   ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Marick,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (visible dans la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.</p>`
+  : p.kind === "published"
+  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Geoffrey,<br><br>L'article ci-dessous a été <strong>intégré dans le site</strong> : toutes les étapes sont terminées et il a été ajouté au blog.</p>`
   : `<p style="margin:0 0 18px;font-size:16px">Un nouvel article est <strong>prêt à être rédigé</strong> : toutes les informations de la ligne « À rédiger » sont remplies et l'article a été créé dans le suivi.</p>`}
 ${row("Sujet", p.sujet)}
 ${row("Nom de l'article (H1)", p.h1)}
@@ -71,12 +73,25 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
 
         const isRel = payload.kind === "relecture";
         const isInt = payload.kind === "integration";
+        const isPub = payload.kind === "published";
+        const toEmail = isRel ? RELECTURE_EMAIL : isInt ? INTEGRATION_EMAIL : ADMIN_EMAIL;
         const subject = isRel
           ? `Relecture + image à faire : « ${payload.h1} »`
           : isInt
           ? `À intégrer dans le site : « ${payload.h1} »`
+          : isPub
+          ? `Article intégré et publié : « ${payload.h1} »`
           : `Article prêt à rédiger : « ${payload.h1} »`;
-        const text = isRel ? [
+        const text = isPub ? [
+          "Bonjour Geoffrey,",
+          "",
+          "L'article ci-dessous a été intégré dans le site : toutes les étapes sont terminées et il a été ajouté au blog.",
+          "",
+          `Nom de l'article (H1) : ${payload.h1}`,
+          `Sujet : ${payload.sujet}`,
+          "",
+          `Ouvrir le suivi éditorial : ${APP_URL}`,
+        ].join("\r\n") : isRel ? [
           "Bonjour Fannie,",
           "",
           "L'article ci-dessous est passé à l'étape Relecture + Image.",
@@ -125,8 +140,8 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           },
           body: JSON.stringify({
             sender: SENDER,
-            to: [{ email: isRel ? RELECTURE_EMAIL : isInt ? INTEGRATION_EMAIL : ADMIN_EMAIL }],
-            cc: [{ email: CC_EMAIL }],
+            to: [{ email: toEmail }],
+            ...(toEmail !== CC_EMAIL ? { cc: [{ email: CC_EMAIL }] } : {}),
             subject,
             textContent: text,
             htmlContent: buildHtml(payload),
