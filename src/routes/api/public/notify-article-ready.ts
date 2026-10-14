@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 const BodySchema = z.object({
+  kind: z.enum(["ready", "relecture"]).optional(),
   sujet: z.string().min(1).max(300),
   h1: z.string().min(1).max(300),
   editrice: z.string().min(1).max(120),
@@ -14,6 +15,7 @@ const BodySchema = z.object({
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
 const ADMIN_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
+const RELECTURE_EMAIL = "fannie.laurendin@soregies.fr";
 const APP_URL = "https://etude-seo-alterna-energie.lovable.app/?sheet=SUIVI+EDITORIAL";
 
 const esc = (s: string) =>
@@ -29,7 +31,9 @@ function buildHtml(p: z.infer<typeof BodySchema>): string {
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
 <tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Alterna Énergie · Suivi éditorial</td></tr>
 <tr><td style="padding:28px">
-<p style="margin:0 0 18px;font-size:16px">Un nouvel article est <strong>prêt à être rédigé</strong> : toutes les informations de la ligne « À rédiger » sont remplies et l'article a été créé dans le suivi.</p>
+${p.kind === "relecture"
+  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Fannie,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>insérer en pièce jointe</strong> dans la carte de l'article du suivi éditorial.</p>`
+  : `<p style="margin:0 0 18px;font-size:16px">Un nouvel article est <strong>prêt à être rédigé</strong> : toutes les informations de la ligne « À rédiger » sont remplies et l'article a été créé dans le suivi.</p>`}
 ${row("Sujet", p.sujet)}
 ${row("Nom de l'article (H1)", p.h1)}
 ${row("Éditrice", p.editrice)}
@@ -61,8 +65,22 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           return Response.json({ error: "mail_not_configured" }, { status: 500 });
         }
 
-        const subject = `Article prêt à rédiger : « ${payload.h1} »`;
-        const text = [
+        const isRel = payload.kind === "relecture";
+        const subject = isRel
+          ? `Relecture + image à faire : « ${payload.h1} »`
+          : `Article prêt à rédiger : « ${payload.h1} »`;
+        const text = isRel ? [
+          "Bonjour Fannie,",
+          "",
+          "L'article ci-dessous est passé à l'étape Relecture + Image.",
+          "Merci de le relire, de trouver une image et de l'insérer en pièce jointe dans la carte de l'article.",
+          "",
+          `Nom de l'article (H1) : ${payload.h1}`,
+          `Sujet : ${payload.sujet}`,
+          payload.docx ? `Lien du doc : ${payload.docx}` : null,
+          "",
+          `Ouvrir le suivi éditorial : ${APP_URL}`,
+        ].filter((l): l is string => l !== null).join("\r\n") : [
           "Bonjour Geoffrey,",
           "",
           "Un nouvel article est prêt à être rédigé (ligne « À rédiger » enregistrée) :",
@@ -89,7 +107,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           },
           body: JSON.stringify({
             sender: SENDER,
-            to: [{ email: ADMIN_EMAIL }],
+            to: [{ email: isRel ? RELECTURE_EMAIL : ADMIN_EMAIL }],
             subject,
             textContent: text,
             htmlContent: buildHtml(payload),
