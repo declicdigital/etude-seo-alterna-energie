@@ -15,6 +15,7 @@ import { Route as DemandesRouteImport } from './routes/demandes'
 import { Route as EnAttenteRouteImport } from './routes/en-attente'
 import { Route as ApiPublicNotifyAccessRequestRouteImport } from './routes/api/public/notify-access-request'
 import { Route as ApiPublicNotifyMentionRouteImport } from './routes/api/public/notify-mention'
+import { Route as ApiPublicJobsDeadlineRemindersRouteImport } from './routes/api/public/jobs/deadline-reminders'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,6 +48,12 @@ const ApiPublicNotifyMentionRoute = ApiPublicNotifyMentionRouteImport.update({
   path: '/api/public/notify-mention',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicJobsDeadlineRemindersRoute =
+  ApiPublicJobsDeadlineRemindersRouteImport.update({
+    id: '/api/public/jobs/deadline-reminders',
+    path: '/api/public/jobs/deadline-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -55,6 +62,7 @@ export interface FileRoutesByFullPath {
   '/en-attente': typeof EnAttenteRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
+  '/api/public/jobs/deadline-reminders': typeof ApiPublicJobsDeadlineRemindersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -63,6 +71,7 @@ export interface FileRoutesByTo {
   '/en-attente': typeof EnAttenteRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
+  '/api/public/jobs/deadline-reminders': typeof ApiPublicJobsDeadlineRemindersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -72,6 +81,7 @@ export interface FileRoutesById {
   '/en-attente': typeof EnAttenteRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
+  '/api/public/jobs/deadline-reminders': typeof ApiPublicJobsDeadlineRemindersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -82,6 +92,7 @@ export interface FileRouteTypes {
     | '/en-attente'
     | '/api/public/notify-access-request'
     | '/api/public/notify-mention'
+    | '/api/public/jobs/deadline-reminders'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -90,6 +101,7 @@ export interface FileRouteTypes {
     | '/en-attente'
     | '/api/public/notify-access-request'
     | '/api/public/notify-mention'
+    | '/api/public/jobs/deadline-reminders'
   id:
     | '__root__'
     | '/'
@@ -98,6 +110,7 @@ export interface FileRouteTypes {
     | '/en-attente'
     | '/api/public/notify-access-request'
     | '/api/public/notify-mention'
+    | '/api/public/jobs/deadline-reminders'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -107,6 +120,7 @@ export interface RootRouteChildren {
   EnAttenteRoute: typeof EnAttenteRoute
   ApiPublicNotifyAccessRequestRoute: typeof ApiPublicNotifyAccessRequestRoute
   ApiPublicNotifyMentionRoute: typeof ApiPublicNotifyMentionRoute
+  ApiPublicJobsDeadlineRemindersRoute: typeof ApiPublicJobsDeadlineRemindersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -153,6 +167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNotifyMentionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/jobs/deadline-reminders': {
+      id: '/api/public/jobs/deadline-reminders'
+      path: '/api/public/jobs/deadline-reminders'
+      fullPath: '/api/public/jobs/deadline-reminders'
+      preLoaderRoute: typeof ApiPublicJobsDeadlineRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -163,6 +184,7 @@ const rootRouteChildren: RootRouteChildren = {
   EnAttenteRoute: EnAttenteRoute,
   ApiPublicNotifyAccessRequestRoute: ApiPublicNotifyAccessRequestRoute,
   ApiPublicNotifyMentionRoute: ApiPublicNotifyMentionRoute,
+  ApiPublicJobsDeadlineRemindersRoute: ApiPublicJobsDeadlineRemindersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
