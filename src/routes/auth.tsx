@@ -9,8 +9,8 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Connexion - Étude SEO Alterna" },
-      { name: "description", content: "Connectez-vous ou demandez un accès à l'étude SEO Alterna Énergie." },
+      { title: "Connexion - Outil contenus Alterna Énergie" },
+      { name: "description", content: "Connectez-vous ou demandez un accès à Outil contenus Alterna Énergie." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -101,7 +101,7 @@ function AuthPage() {
           </h1>
           <p className="mt-1 text-sm text-emerald-700/80">
             {mode === "login"
-              ? "Accédez à l'étude SEO Alterna Énergie."
+              ? "Accédez à Outil contenus Alterna Énergie."
               : "Votre demande sera validée par un administrateur."}
           </p>
         </div>

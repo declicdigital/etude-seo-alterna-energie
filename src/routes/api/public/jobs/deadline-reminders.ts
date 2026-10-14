@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
-const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
+const SENDER = { name: "Outil contenus", email: "g.delabarre.alterna@gmail.com" };
 const APP_URL = "https://etude-seo-alterna-energie.lovable.app/?sheet=SUIVI+EDITORIAL";
 const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 
@@ -37,7 +37,7 @@ ${p.h1 ? `<p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:u
 <div style="background:#fef3c7;border-left:4px solid #d97706;padding:14px 16px;border-radius:6px;font-size:15px;line-height:1.5;margin:0 0 24px">Il vous reste <strong>${REMIND_DAYS} jours</strong> pour livrer l'article (deadline : <strong>${esc(p.deadline)}</strong>).</div>
 <a href="${APP_URL}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir le suivi éditorial</a>
 </td></tr>
-<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Rappel automatique de l'outil Alterna. Merci de ne pas répondre à ce mail.</td></tr>
+<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Rappel automatique d'Outil contenus. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 

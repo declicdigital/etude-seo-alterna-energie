@@ -17,8 +17,8 @@ export const Route = createFileRoute("/demandes")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Demandes d'accès - Étude SEO Alterna" },
-      { name: "description", content: "Validez ou refusez les demandes d'accès à l'étude SEO Alterna." },
+      { title: "Demandes d'accès - Outil contenus Alterna Énergie" },
+      { name: "description", content: "Validez ou refusez les demandes d'accès à Outil contenus Alterna Énergie." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

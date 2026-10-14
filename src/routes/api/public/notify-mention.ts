@@ -11,7 +11,7 @@ const BodySchema = z.object({
 });
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
-const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
+const SENDER = { name: "Outil contenus", email: "g.delabarre.alterna@gmail.com" };
 const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 
 const esc = (s: string) =>
@@ -33,7 +33,7 @@ ${p.step ? `<p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform
 <div style="background:#f0fdf4;border-left:4px solid #047857;padding:14px 16px;border-radius:6px;font-size:15px;line-height:1.5;margin:0 0 24px">${msg}</div>
 <a href="${APP_URL}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Voir le message</a>
 </td></tr>
-<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Notification automatique de l'outil Alterna. Merci de ne pas répondre à ce mail.</td></tr>
+<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Notification automatique d'Outil contenus. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -100,7 +100,7 @@ export const Route = createFileRoute("/api/public/notify-mention")({
         const bodyLines = [
           `Bonjour,`,
           ``,
-          `${author} vous a mentionné dans le suivi éditorial de l'outil Alterna.`,
+          `${author} vous a mentionné dans le suivi éditorial d'Outil contenus.`,
           ``,
           `Article : ${payload.articleTitle}`,
           payload.stepLabel ? `Étape : ${payload.stepLabel}` : null,

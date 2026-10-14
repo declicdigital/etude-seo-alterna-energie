@@ -7,8 +7,8 @@ export const Route = createFileRoute("/en-attente")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Demande en attente - Étude SEO Alterna" },
-      { name: "description", content: "Votre demande d'accès à l'étude SEO Alterna est en cours de validation." },
+      { title: "Demande en attente - Outil contenus Alterna Énergie" },
+      { name: "description", content: "Votre demande d'accès à Outil contenus Alterna Énergie est en cours de validation." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
