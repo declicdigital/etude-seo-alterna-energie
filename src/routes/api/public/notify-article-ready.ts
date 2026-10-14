@@ -15,6 +15,7 @@ const BodySchema = z.object({
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
 const ADMIN_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
+const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const RELECTURE_EMAIL = "fannie.laurendin@soregies.fr";
 const INTEGRATION_EMAIL = "marick.navarro.ext@soregies.fr";
 const APP_URL = "https://etude-seo-alterna-energie.lovable.app/?sheet=SUIVI+EDITORIAL";

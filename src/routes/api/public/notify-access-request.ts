@@ -4,6 +4,7 @@ import { z } from "zod";
 const BodySchema = z.object({ userId: z.string().uuid() });
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const ADMIN_EMAIL = "geoffrey.delabarre@gmail.com";
+const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const APP_URL = "https://etude-seo-alterna-energie.lovable.app/demandes";
 const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
 const esc = (s: string) =>

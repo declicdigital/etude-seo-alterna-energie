@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
 const APP_URL = "https://etude-seo-alterna-energie.lovable.app/?sheet=SUIVI+EDITORIAL";
+const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 
 const EDITOR_EMAILS: Record<string, string[]> = {
   aurorae: ["caroline@aurorae-editorial.com", "elodie@aurorae-editorial.com"],
