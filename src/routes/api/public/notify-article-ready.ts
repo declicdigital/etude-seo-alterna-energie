@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 const BodySchema = z.object({
-  kind: z.enum(["ready", "relecture"]).optional(),
+  kind: z.enum(["ready", "relecture", "integration"]).optional(),
   sujet: z.string().min(1).max(300),
   h1: z.string().min(1).max(300),
   editrice: z.string().min(1).max(120),
@@ -16,6 +16,7 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
 const ADMIN_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const RELECTURE_EMAIL = "fannie.laurendin@soregies.fr";
+const INTEGRATION_EMAIL = "marick.navarro.ext@soregies.fr";
 const APP_URL = "https://etude-seo-alterna-energie.lovable.app/?sheet=SUIVI+EDITORIAL";
 
 const esc = (s: string) =>
