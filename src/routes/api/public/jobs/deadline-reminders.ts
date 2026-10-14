@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
 const APP_URL = "https://etude-seo-alterna-energie.lovable.app/?sheet=SUIVI+EDITORIAL";
+const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 
 const EDITOR_EMAILS: Record<string, string[]> = {
   aurorae: ["caroline@aurorae-editorial.com", "elodie@aurorae-editorial.com"],
@@ -54,6 +55,7 @@ async function sendBrevo(to: string[], subject: string, text: string, html: stri
     body: JSON.stringify({
       sender: SENDER,
       to: to.map((email) => ({ email })),
+      cc: [{ email: CC_EMAIL }],
       subject,
       textContent: text,
       htmlContent: html,

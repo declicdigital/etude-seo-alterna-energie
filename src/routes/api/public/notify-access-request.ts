@@ -4,6 +4,7 @@ import { z } from "zod";
 const BodySchema = z.object({ userId: z.string().uuid() });
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const ADMIN_EMAIL = "geoffrey.delabarre@gmail.com";
+const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const APP_URL = "https://etude-seo-alterna-energie.lovable.app/demandes";
 const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
 const esc = (s: string) =>
@@ -51,6 +52,7 @@ ${profile.full_name ? `<strong>${esc(profile.full_name)}</strong><br>` : ""}${es
           body: JSON.stringify({
             sender: SENDER,
             to: [{ email: ADMIN_EMAIL }],
+            cc: [{ email: CC_EMAIL }],
             subject,
             textContent: text,
             htmlContent: html,
