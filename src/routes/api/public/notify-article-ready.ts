@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 const BodySchema = z.object({
-  kind: z.enum(["ready", "relecture", "integration"]).optional(),
+  kind: z.enum(["ready", "relecture", "integration", "published"]).optional(),
   sujet: z.string().max(300).optional().default(""),
   h1: z.string().max(300).optional().default(""),
   editrice: z.string().max(120).optional().default(""),
@@ -71,12 +71,25 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
 
         const isRel = payload.kind === "relecture";
         const isInt = payload.kind === "integration";
+        const isPub = payload.kind === "published";
+        const toEmail = isRel ? RELECTURE_EMAIL : isInt ? INTEGRATION_EMAIL : ADMIN_EMAIL;
         const subject = isRel
           ? `Relecture + image à faire : « ${payload.h1} »`
           : isInt
           ? `À intégrer dans le site : « ${payload.h1} »`
+          : isPub
+          ? `Article intégré et publié : « ${payload.h1} »`
           : `Article prêt à rédiger : « ${payload.h1} »`;
-        const text = isRel ? [
+        const text = isPub ? [
+          "Bonjour Geoffrey,",
+          "",
+          "L'article ci-dessous a été intégré dans le site : toutes les étapes sont terminées et il a été ajouté au blog.",
+          "",
+          `Nom de l'article (H1) : ${payload.h1}`,
+          `Sujet : ${payload.sujet}`,
+          "",
+          `Ouvrir le suivi éditorial : ${APP_URL}`,
+        ].join("\r\n") : isRel ? [
           "Bonjour Fannie,",
           "",
           "L'article ci-dessous est passé à l'étape Relecture + Image.",
@@ -125,8 +138,8 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           },
           body: JSON.stringify({
             sender: SENDER,
-            to: [{ email: isRel ? RELECTURE_EMAIL : isInt ? INTEGRATION_EMAIL : ADMIN_EMAIL }],
-            cc: [{ email: CC_EMAIL }],
+            to: [{ email: toEmail }],
+            ...(toEmail !== CC_EMAIL ? { cc: [{ email: CC_EMAIL }] } : {}),
             subject,
             textContent: text,
             htmlContent: buildHtml(payload),
