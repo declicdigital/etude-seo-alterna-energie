@@ -3,9 +3,9 @@ import { z } from "zod";
 
 const BodySchema = z.object({
   kind: z.enum(["ready", "relecture", "integration"]).optional(),
-  sujet: z.string().min(1).max(300),
-  h1: z.string().min(1).max(300),
-  editrice: z.string().min(1).max(120),
+  sujet: z.string().max(300).optional().default(""),
+  h1: z.string().max(300).optional().default(""),
+  editrice: z.string().max(120).optional().default(""),
   categorie: z.string().max(120).optional(),
   energie: z.string().max(120).optional(),
   deadline: z.string().max(40).optional(),
