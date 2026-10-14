@@ -1946,15 +1946,10 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
     try{
       const r = await fetch('/api/public/notify-article-ready', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ sujet:t.sujet, h1:t.h1, editrice:t.editrice, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
-      });
-      if(!r.ok) alert('Article enregistré, mais le mail de notification n\'a pas pu partir.');
-      const r2 = await fetch('/api/public/notify-article-ready', {
-        method:'POST', headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({ kind:'relecture', sujet:t.sujet, h1:t.h1, editrice:t.editrice, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
       });
-      if(!r2.ok) alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.');
-    }catch(err){ alert('Article enregistré, mais le mail de notification n\'a pas pu partir.'); }
+      if(!r.ok) alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.');
+    }catch(err){ alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.'); }
     todos = todos.filter(x => x.id !== t.id);
     if(collapsed[articleId]){ delete collapsed[articleId]; saveCollapsed(); }
     await saveTodos(); renderTodos(); renderArticles();
