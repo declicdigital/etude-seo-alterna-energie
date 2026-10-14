@@ -1666,15 +1666,21 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     step.status = 'done';
     await saveArticle(article);
     if(key === 'integration') await pushToBlog(article);
-    if(key === 'relecture'){
+    const MAIL_BY_STEP = {
+      redaction: { kind:'relecture', who:'Fannie (relecture + image)' },
+      relecture: { kind:'integration', who:'Marick (intégration)' },
+      integration: { kind:'published', who:'Geoffrey (article publié)' },
+    };
+    const mail = MAIL_BY_STEP[key];
+    if(mail){
       const red = article.steps.find(s => s.key === 'redaction');
       try{
         const r = await fetch('/api/public/notify-article-ready', {
           method:'POST', headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ kind:'integration', sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
+          body: JSON.stringify({ kind: mail.kind, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
         });
-        if(!r.ok) alert('Étape validée, mais le mail à Marick (intégration) n\'a pas pu partir.');
-      }catch(err){ alert('Étape validée, mais le mail à Marick (intégration) n\'a pas pu partir.'); }
+        if(!r.ok) alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.');
+      }catch(err){ alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.'); }
     }
     const idx = article.steps.findIndex(s => s.key === key);
     const nextStep = article.steps[idx+1];
