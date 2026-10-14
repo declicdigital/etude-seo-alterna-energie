@@ -13,7 +13,7 @@ const BodySchema = z.object({
 });
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
-const SENDER = { name: "Outil Alterna", email: "g.delabarre.alterna@gmail.com" };
+const SENDER = { name: "Outil contenus", email: "g.delabarre.alterna@gmail.com" };
 const ADMIN_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const RELECTURE_EMAIL = "fannie.laurendin@soregies.fr";
@@ -49,7 +49,7 @@ ${row("Deadline", p.deadline)}
 ${row("Lien du doc", p.docx)}
 <a href="${APP_URL}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir le suivi éditorial</a>
 </td></tr>
-<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Notification automatique de l'outil Alterna. Merci de ne pas répondre à ce mail.</td></tr>
+<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Notification automatique d'Outil contenus. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 

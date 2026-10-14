@@ -232,7 +232,7 @@ export function SheetSidebar({
             <EditableText
               as="h1"
               className="text-base font-semibold leading-tight"
-              value={metaGet(meta, "brand", "title", "Étude SEO")}
+              value={metaGet(meta, "brand", "title", "Outil contenus")}
               onCommit={(v) => setMetaValue("brand", "title", v)}
             />
           </div>
