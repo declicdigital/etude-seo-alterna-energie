@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemandesRouteImport } from './routes/demandes'
 import { Route as EnAttenteRouteImport } from './routes/en-attente'
 import { Route as ApiPublicNotifyAccessRequestRouteImport } from './routes/api/public/notify-access-request'
+import { Route as ApiPublicNotifyArticleReadyRouteImport } from './routes/api/public/notify-article-ready'
 import { Route as ApiPublicNotifyMentionRouteImport } from './routes/api/public/notify-mention'
 import { Route as ApiPublicJobsDeadlineRemindersRouteImport } from './routes/api/public/jobs/deadline-reminders'
 
@@ -43,6 +44,12 @@ const ApiPublicNotifyAccessRequestRoute =
     path: '/api/public/notify-access-request',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicNotifyArticleReadyRoute =
+  ApiPublicNotifyArticleReadyRouteImport.update({
+    id: '/api/public/notify-article-ready',
+    path: '/api/public/notify-article-ready',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicNotifyMentionRoute = ApiPublicNotifyMentionRouteImport.update({
   id: '/api/public/notify-mention',
   path: '/api/public/notify-mention',
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
+  '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
   '/api/public/jobs/deadline-reminders': typeof ApiPublicJobsDeadlineRemindersRoute
 }
@@ -70,6 +78,7 @@ export interface FileRoutesByTo {
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
+  '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
   '/api/public/jobs/deadline-reminders': typeof ApiPublicJobsDeadlineRemindersRoute
 }
@@ -80,6 +89,7 @@ export interface FileRoutesById {
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
+  '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
   '/api/public/jobs/deadline-reminders': typeof ApiPublicJobsDeadlineRemindersRoute
 }
@@ -91,6 +101,7 @@ export interface FileRouteTypes {
     | '/demandes'
     | '/en-attente'
     | '/api/public/notify-access-request'
+    | '/api/public/notify-article-ready'
     | '/api/public/notify-mention'
     | '/api/public/jobs/deadline-reminders'
   fileRoutesByTo: FileRoutesByTo
@@ -100,6 +111,7 @@ export interface FileRouteTypes {
     | '/demandes'
     | '/en-attente'
     | '/api/public/notify-access-request'
+    | '/api/public/notify-article-ready'
     | '/api/public/notify-mention'
     | '/api/public/jobs/deadline-reminders'
   id:
@@ -109,6 +121,7 @@ export interface FileRouteTypes {
     | '/demandes'
     | '/en-attente'
     | '/api/public/notify-access-request'
+    | '/api/public/notify-article-ready'
     | '/api/public/notify-mention'
     | '/api/public/jobs/deadline-reminders'
   fileRoutesById: FileRoutesById
@@ -119,6 +132,7 @@ export interface RootRouteChildren {
   DemandesRoute: typeof DemandesRoute
   EnAttenteRoute: typeof EnAttenteRoute
   ApiPublicNotifyAccessRequestRoute: typeof ApiPublicNotifyAccessRequestRoute
+  ApiPublicNotifyArticleReadyRoute: typeof ApiPublicNotifyArticleReadyRoute
   ApiPublicNotifyMentionRoute: typeof ApiPublicNotifyMentionRoute
   ApiPublicJobsDeadlineRemindersRoute: typeof ApiPublicJobsDeadlineRemindersRoute
 }
@@ -160,6 +174,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNotifyAccessRequestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/notify-article-ready': {
+      id: '/api/public/notify-article-ready'
+      path: '/api/public/notify-article-ready'
+      fullPath: '/api/public/notify-article-ready'
+      preLoaderRoute: typeof ApiPublicNotifyArticleReadyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/notify-mention': {
       id: '/api/public/notify-mention'
       path: '/api/public/notify-mention'
@@ -183,6 +204,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemandesRoute: DemandesRoute,
   EnAttenteRoute: EnAttenteRoute,
   ApiPublicNotifyAccessRequestRoute: ApiPublicNotifyAccessRequestRoute,
+  ApiPublicNotifyArticleReadyRoute: ApiPublicNotifyArticleReadyRoute,
   ApiPublicNotifyMentionRoute: ApiPublicNotifyMentionRoute,
   ApiPublicJobsDeadlineRemindersRoute: ApiPublicJobsDeadlineRemindersRoute,
 }

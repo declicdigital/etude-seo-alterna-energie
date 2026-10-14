@@ -621,7 +621,7 @@ button{ font-family: inherit; cursor:pointer; }
       </div>
       <button class="btn" id="todoAddBtn">+ Ajouter une ligne</button>
     </div>
-    <p class="hint todo-hint">Dès que Sujet, Nom de l'article, Éditrice et Lien du doc sont remplis, l'article est créé automatiquement dans le suivi (étape Rédaction). La catégorie choisie détermine la cible (Particulier ou Professionnel).</p>
+    <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. La catégorie choisie détermine la cible (Particulier ou Professionnel).</p>
     <div class="todo-scroll"><table class="todo-table">
       <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
@@ -1786,6 +1786,9 @@ async function loadTodos(){
 async function saveTodos(){
   try{ await storage.set('todo-redaction', JSON.stringify(todos), false); showSaved(); }catch(e){ console.error(e); }
 }
+function todoComplete(t){
+  return ['sujet','editrice','h1','categorie','energie','deadline','docx'].every(f => (t[f]||'').trim());
+}
 function renderTodos(){
   const body = document.getElementById('todoBody');
   if(!todos.length){ body.innerHTML = '<tr><td colspan="8" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
@@ -1797,7 +1800,7 @@ function renderTodos(){
     <td><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></td>
     <td><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…"></td>
-    <td style="white-space:nowrap">${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : `<button class="btn" data-todo-save style="padding:4px 10px;font-size:0.78rem">Enregistrer</button> <button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
+    <td style="white-space:nowrap">${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : `<button class="btn" data-todo-save ${todoComplete(t) ? '' : 'disabled'} style="padding:4px 10px;font-size:0.78rem" title="${todoComplete(t) ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'}">Enregistrer</button> <button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
   </tr>`).join('');
 }
 async function maybeCreateFromTodo(t){
@@ -1832,7 +1835,17 @@ document.getElementById('todoBody').addEventListener('change', async (e) => {
   const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
   t[f] = e.target.value;
   await saveTodos();
-  if(f === 'editrice') renderTodos();
+  if(f === 'editrice'){ renderTodos(); return; }
+  const btn = tr.querySelector('[data-todo-save]');
+  if(btn){ const ok = todoComplete(t); btn.disabled = !ok; btn.title = ok ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'; }
+});
+document.getElementById('todoBody').addEventListener('input', (e) => {
+  const tr = e.target.closest('tr[data-todo-id]'); const f = e.target.dataset.f;
+  if(!tr || !f) return;
+  const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
+  t[f] = e.target.value;
+  const btn = tr.querySelector('[data-todo-save]');
+  if(btn){ const ok = todoComplete(t); btn.disabled = !ok; btn.title = ok ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'; }
 });
 document.getElementById('todoBody').addEventListener('click', async (e) => {
   const tr = e.target.closest('tr[data-todo-id]');
@@ -1840,13 +1853,17 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
   const saveBtn = e.target.closest('[data-todo-save]');
   if(saveBtn){
     const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
-    if(!(t.sujet||'').trim() || !(t.h1||'').trim() || !t.editrice || !(t.docx||'').trim()){
-      alert('Remplissez Sujet, Nom de l\'article, Éditrice et Lien du doc avant d\'enregistrer.');
-      return;
-    }
+    if(!todoComplete(t)) return;
     await maybeCreateFromTodo(t);
     if(!t.articleId) return;
     const articleId = t.articleId;
+    try{
+      const r = await fetch('/api/public/notify-article-ready', {
+        method:'POST', headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ sujet:t.sujet, h1:t.h1, editrice:t.editrice, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
+      });
+      if(!r.ok) alert('Article enregistré, mais le mail de notification n\'a pas pu partir.');
+    }catch(err){ alert('Article enregistré, mais le mail de notification n\'a pas pu partir.'); }
     todos = todos.filter(x => x.id !== t.id);
     if(collapsed[articleId]){ delete collapsed[articleId]; saveCollapsed(); }
     await saveTodos(); renderTodos(); renderArticles();
