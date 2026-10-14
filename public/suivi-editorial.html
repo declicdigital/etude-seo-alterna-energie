@@ -469,6 +469,13 @@ button{ font-family: inherit; cursor:pointer; }
   font-size: 0.9rem; line-height:1; cursor:pointer; padding: 2px 4px; flex-shrink:0;
 }
 .attachment-remove:hover{ color: var(--danger); }
+  .attachment-download{
+    position:absolute; bottom:6px; right:6px; width:22px; height:22px;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(255,255,255,.92); border:1px solid var(--line); border-radius:6px;
+    color: var(--ink); font-size:13px; line-height:1; text-decoration:none; cursor:pointer;
+  }
+  .attachment-download:hover{ background: var(--green); color:#fff; border-color: var(--green); }
 
 .attachment-image{
   padding: 4px;
@@ -1370,6 +1377,7 @@ function renderAttachments(articleId, step){
           <a href="${escapeAttr(a.value)}" target="_blank" rel="noopener noreferrer" title="${escapeAttr(a.name||'Image')}">
             <img src="${escapeAttr(a.value)}" alt="${escapeAttr(a.name||'Image')}">
           </a>
+          <a class="attachment-download" href="${escapeAttr(a.value)}" download="${escapeAttr(a.name||'image')}" title="Télécharger">⤓</a>
           <button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>
         </div>`;
     }
