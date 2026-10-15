@@ -943,11 +943,7 @@ const DEFAULT_CONFIG = [
 function normalizeConfig(){
   let changed = false;
   const red = config.find(c => c.key === 'redaction');
-  if(red){
-    const want = ['Aurorae','Marina'];
-    if(JSON.stringify(red.options || []) !== JSON.stringify(want)){ red.options = want; changed = true; }
-    if(red.assignee && !want.includes(red.assignee)){ red.assignee = ''; changed = true; }
-  }
+  if(red && !Array.isArray(red.options)){ red.options = ['Aurorae','Marina']; changed = true; }
   // Brief SEO est supprimée ; Relecture et Image sont fusionnées en une seule étape.
   const drop = ['brief', 'image', 'validation_geoffrey'];
   if(config.some(c => drop.includes(c.key))){
@@ -1187,6 +1183,7 @@ function renderConfigPanel(){
       <div class="cfg-num">${i+1}</div>
       <input type="text" data-action="cfg-label" data-key="${c.key}" value="${escapeAttr(c.label)}" placeholder="Nom de l'étape">
       <input type="text" data-action="cfg-assignee" data-key="${c.key}" value="${escapeAttr(c.assignee)}" placeholder="Responsable par défaut" ${c.key === 'validation' ? 'readonly' : ''}>
+      <input type="text" data-action="cfg-options" data-key="${c.key}" value="${escapeAttr((c.options || []).join(', '))}" placeholder="Responsables possibles (séparés par des virgules)">
       <label class="cfg-skip-label">
         <input type="checkbox" data-action="cfg-skippable" data-key="${c.key}" ${c.skippable ? 'checked' : ''}>
         Facultative
@@ -1507,6 +1504,11 @@ document.getElementById('cfgRows').addEventListener('input', async (e) => {
   if(!cfg) return;
   if(action === 'cfg-label') cfg.label = t.value;
   if(action === 'cfg-assignee') cfg.assignee = t.value;
+  if(action === 'cfg-options'){
+    const opts = t.value.split(',').map(s => s.trim()).filter(Boolean);
+    if(opts.length){ cfg.options = opts; if(cfg.assignee && !opts.includes(cfg.assignee)) cfg.assignee = ''; }
+    else delete cfg.options;
+  }
   await saveConfig();
   renderArticles();
 });
