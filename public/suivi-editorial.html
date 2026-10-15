@@ -653,6 +653,10 @@ button{ font-family: inherit; cursor:pointer; }
 /* Choix de la cible : bleu = Professionnel, rose = Particulier (comme les cartes) */
 .todo-table select.td-cible[data-aud="Professionnel"]{ background:var(--blue-bg); border-color:#C6DAFF; color:#2F5DBF; font-weight:600; }
 .todo-table select.td-cible[data-aud="Particulier"]{ background:var(--pink-bg); border-color:#F8CBE0; color:#B33070; font-weight:600; }
+/* Deadline imminente : petit point rouge devant la date (moins de 5 jours) */
+.td-dl{ display:flex; align-items:center; gap:6px; min-width:0; }
+.td-dl input{ flex:1 1 auto; min-width:0; }
+.todo-dot{ width:9px; height:9px; border-radius:50%; background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.16); flex:0 0 auto; }
 </style>
 </head>
 <body>
@@ -698,7 +702,7 @@ button{ font-family: inherit; cursor:pointer; }
       </div>
       <button class="btn" id="todoAddBtn">+ Ajouter une ligne</button>
     </div>
-    <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte.</p>
+    <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
     <div class="todo-scroll"><table class="todo-table">
       <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Cible</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
@@ -2019,19 +2023,56 @@ function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').tr
 function todoComplete(t){
   return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].every(f => (t[f]||'').trim());
 }
+/* Nombre de jours restants avant la deadline (négatif si dépassée, null si pas de date). */
+function todoDaysLeft(t){
+  const d = (t.deadline || '').trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return null;
+  const dt = new Date(d + 'T00:00:00');
+  if(isNaN(dt.getTime())) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((dt.getTime() - today.getTime()) / 86400000);
+}
+function isUrgentTodo(t){ const n = todoDaysLeft(t); return n !== null && n < 5; }
+function urgentTitle(t){
+  const n = todoDaysLeft(t);
+  if(n === null) return '';
+  if(n < 0){ const k = Math.abs(n); return `Deadline dépassée depuis ${k} jour${k > 1 ? 's' : ''}`; }
+  if(n === 0) return 'Deadline aujourd\'hui';
+  return `Plus que ${n} jour${n > 1 ? 's' : ''} avant la deadline`;
+}
+/* Les lignes à venir d'abord (deadline la plus proche en haut), puis les dates libres, et les lignes déjà passées en article à la fin. */
+function sortedTodos(){
+  return todos.slice().sort((a, b) => {
+    const ad = a.articleId ? 1 : 0, bd = b.articleId ? 1 : 0;
+    if(ad !== bd) return ad - bd;
+    const da = (a.deadline || '').trim(), db = (b.deadline || '').trim();
+    if(!da && !db) return 0;
+    if(!da) return 1;
+    if(!db) return -1;
+    return da < db ? -1 : da > db ? 1 : 0;
+  });
+}
+function refreshTodoDot(tr, t){
+  const wrap = tr.querySelector('.td-dl'); if(!wrap) return;
+  const urgent = isUrgentTodo(t);
+  let dot = wrap.querySelector('.todo-dot');
+  if(urgent && !dot){ dot = document.createElement('span'); dot.className = 'todo-dot'; wrap.insertBefore(dot, wrap.firstChild); }
+  if(dot) dot.title = urgentTitle(t);
+  if(!urgent && dot) dot.remove();
+}
 function renderTodos(){
   const body = document.getElementById('todoBody');
   if(!todos.length){ body.innerHTML = '<tr><td colspan="9" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
   const ro = !canEditTodo();
   const addBtn = document.getElementById('todoAddBtn'); if(addBtn) addBtn.style.display = ro ? 'none' : '';
-  body.innerHTML = todos.map(t => `<tr data-todo-id="${t.id}"${t.editrice === 'Aurorae' ? ' class="todo-aurorae"' : t.editrice === 'Marina' ? ' class="todo-marina"' : ''}>
+  body.innerHTML = sortedTodos().map(t => `<tr data-todo-id="${t.id}"${t.editrice === 'Aurorae' ? ' class="todo-aurorae"' : t.editrice === 'Marina' ? ' class="todo-marina"' : ''}>
     <td><input data-f="sujet" value="${escapeAttr(t.sujet||'')}" placeholder="Sujet"></td>
     <td><select data-f="editrice"><option value="">—</option>${(((getConfigFor('redaction')||{}).options)||['Aurorae','Marina']).map(o=>`<option ${t.editrice===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
-    <td><input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></td>
+    <td><div class="td-dl">${isUrgentTodo(t) ? `<span class="todo-dot" title="${escapeAttr(urgentTitle(t))}"></span>` : ''}<input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></div></td>
     <td><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…"></td>
     <td style="white-space:nowrap">${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : ro ? '<span style="color:var(--muted);font-size:0.75rem">Lecture seule</span>' : `<button class="btn" data-todo-save ${todoComplete(t) ? '' : 'disabled'} style="padding:4px 10px;font-size:0.78rem" title="${todoComplete(t) ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'}">Enregistrer</button> <button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
   </tr>`).join('');
@@ -2076,6 +2117,7 @@ document.getElementById('todoBody').addEventListener('change', async (e) => {
     if(f === 'audience' && !categoriesFor(t.audience).includes(t.categorie)){ t.categorie = ''; await saveTodos(); }
     renderTodos(); return;
   }
+  if(f === 'deadline') refreshTodoDot(tr, t);
   const btn = tr.querySelector('[data-todo-save]');
   if(btn){ const ok = todoComplete(t); btn.disabled = !ok; btn.title = ok ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'; }
 });
@@ -2084,6 +2126,7 @@ document.getElementById('todoBody').addEventListener('input', (e) => {
   if(!tr || !f) return;
   const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
   t[f] = e.target.value;
+  if(f === 'deadline') refreshTodoDot(tr, t);
   const btn = tr.querySelector('[data-todo-save]');
   if(btn){ const ok = todoComplete(t); btn.disabled = !ok; btn.title = ok ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'; }
 });
