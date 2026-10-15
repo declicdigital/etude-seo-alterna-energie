@@ -7,6 +7,7 @@ const BodySchema = z.object({
   sujet: z.string().max(300).optional().default(""),
   h1: z.string().max(300).optional().default(""),
   editrice: z.string().max(120).optional().default(""),
+  cible: z.string().max(60).optional(),
   categorie: z.string().max(120).optional(),
   energie: z.string().max(120).optional(),
   deadline: z.string().max(40).optional(),
@@ -44,6 +45,7 @@ ${p.kind === "relecture"
 ${row("Sujet", p.sujet)}
 ${row("Nom de l'article (H1)", p.h1)}
 ${row("Éditrice", p.editrice)}
+${row("Cible", p.cible)}
 ${row("Catégorie", p.categorie)}
 ${row("Énergie", p.energie)}
 ${row("Deadline", p.deadline)}
@@ -136,6 +138,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           `Sujet : ${payload.sujet}`,
           `Nom de l'article (H1) : ${payload.h1}`,
           `Éditrice : ${payload.editrice}`,
+          payload.cible ? `Cible : ${payload.cible}` : null,
           payload.categorie ? `Catégorie : ${payload.categorie}` : null,
           payload.energie ? `Énergie : ${payload.energie}` : null,
           payload.deadline ? `Deadline : ${payload.deadline}` : null,

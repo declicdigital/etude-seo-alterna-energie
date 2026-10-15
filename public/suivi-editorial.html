@@ -640,7 +640,7 @@ button{ font-family: inherit; cursor:pointer; }
 .todo-block.collapsed{ padding:12px 16px; }
 .todo-block .hint{ font-size:0.78rem; color:var(--muted); margin:6px 0 10px; }
 .todo-scroll{ overflow-x:auto; }
-.todo-table{ width:100%; border-collapse:collapse; min-width:1000px; }
+.todo-table{ width:100%; border-collapse:collapse; min-width:1120px; }
 .todo-table th{ text-align:left; font-size:0.72rem; text-transform:uppercase; color:var(--muted); padding:6px; border-bottom:1.5px solid var(--line); }
 .todo-table td{ padding:4px; border-bottom:1px solid var(--line); vertical-align:middle; }
 .todo-table input, .todo-table select{ width:100%; font:inherit; font-size:0.82rem; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:#fff; box-sizing:border-box; }
@@ -650,6 +650,9 @@ button{ font-family: inherit; cursor:pointer; }
 .todo-table tr.todo-aurorae td:first-child{ box-shadow:inset 3px 0 0 #16a34a; }
 .todo-table tr.todo-marina td{ background:rgba(124,58,237,0.09); }
 .todo-table tr.todo-marina td:first-child{ box-shadow:inset 3px 0 0 #7c3aed; }
+/* Choix de la cible : bleu = Professionnel, rose = Particulier (comme les cartes) */
+.todo-table select.td-cible[data-aud="Professionnel"]{ background:var(--blue-bg); border-color:#C6DAFF; color:#2F5DBF; font-weight:600; }
+.todo-table select.td-cible[data-aud="Particulier"]{ background:var(--pink-bg); border-color:#F8CBE0; color:#B33070; font-weight:600; }
 </style>
 </head>
 <body>
@@ -695,9 +698,9 @@ button{ font-family: inherit; cursor:pointer; }
       </div>
       <button class="btn" id="todoAddBtn">+ Ajouter une ligne</button>
     </div>
-    <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. La catégorie choisie détermine la cible (Particulier ou Professionnel).</p>
+    <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte.</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du doc</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Cible</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
     <div id="todoComments" class="todo-comments"></div>
@@ -1795,7 +1798,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
       try{
         const r = await fetch('/api/public/notify-article-ready', {
           method:'POST', headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
+          body: JSON.stringify({ kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', cible: article.audience || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
         });
         if(!r.ok) alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.');
       }catch(err){ alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.'); }
@@ -2003,6 +2006,10 @@ document.getElementById('articlesContainer').addEventListener('blur', (e) => {
 let todos = [];
 async function loadTodos(){
   try{ todos = JSON.parse((await storage.get('todo-redaction', false)).value) || []; }catch(e){ todos = []; }
+  /* Les lignes existantes n'avaient pas de cible : on la déduit de la catégorie déjà choisie. */
+  let fixed = false;
+  todos.forEach(t => { if(!t.audience && t.categorie){ t.audience = BLOG_CATEGORIES['Professionnel'].includes(t.categorie) ? 'Professionnel' : 'Particulier'; fixed = true; } });
+  if(fixed){ try{ await storage.set('todo-redaction', JSON.stringify(todos), false); }catch(e){} }
 }
 async function saveTodos(){
   try{ await storage.set('todo-redaction', JSON.stringify(todos), false); showSaved(); }catch(e){ console.error(e); }
@@ -2010,18 +2017,19 @@ async function saveTodos(){
 const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com'];
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
 function todoComplete(t){
-  return ['sujet','editrice','h1','categorie','energie','deadline','docx'].every(f => (t[f]||'').trim());
+  return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].every(f => (t[f]||'').trim());
 }
 function renderTodos(){
   const body = document.getElementById('todoBody');
-  if(!todos.length){ body.innerHTML = '<tr><td colspan="8" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
+  if(!todos.length){ body.innerHTML = '<tr><td colspan="9" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
   const ro = !canEditTodo();
   const addBtn = document.getElementById('todoAddBtn'); if(addBtn) addBtn.style.display = ro ? 'none' : '';
   body.innerHTML = todos.map(t => `<tr data-todo-id="${t.id}"${t.editrice === 'Aurorae' ? ' class="todo-aurorae"' : t.editrice === 'Marina' ? ' class="todo-marina"' : ''}>
     <td><input data-f="sujet" value="${escapeAttr(t.sujet||'')}" placeholder="Sujet"></td>
     <td><select data-f="editrice"><option value="">—</option>${(((getConfigFor('redaction')||{}).options)||['Aurorae','Marina']).map(o=>`<option ${t.editrice===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
-    <td><select data-f="categorie"><option value="">—</option><optgroup label="Particulier">${BLOG_CATEGORIES['Particulier'].map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</optgroup><optgroup label="Professionnel">${BLOG_CATEGORIES['Professionnel'].map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</optgroup></select></td>
+    <td><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
+    <td><select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></td>
     <td><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…"></td>
@@ -2040,11 +2048,10 @@ async function maybeCreateFromTodo(t){
   if(red){ red.assignee = t.editrice; red.status = 'done'; red.date = new Date().toISOString().slice(0,10); }
   const idee = article.steps.find(s => s.key === 'idee');
   if(idee && idee.status === 'pending') idee.status = 'skipped';
+  const aud = (t.audience||'').trim();
+  if(aud === 'Professionnel' || aud === 'Particulier') article.audience = aud;
   const cat = (t.categorie||'').trim();
-  if(cat){
-    article.category = cat;
-    article.audience = BLOG_CATEGORIES['Professionnel'].includes(cat) ? 'Professionnel' : 'Particulier';
-  }
+  if(cat && categoriesFor(article.audience).includes(cat)) article.category = cat;
   const en = (t.energie||'').trim();
   if(en) article.energy = en;
   articles.push(article);
@@ -2055,7 +2062,7 @@ async function maybeCreateFromTodo(t){
 }
 document.getElementById('todoAddBtn').addEventListener('click', async () => {
   if(!canEditTodo()) return;
-  todos.push({ id: uid(), sujet:'', h1:'', editrice:'', categorie:'', energie:'', deadline:'', docx:'', articleId:null });
+  todos.push({ id: uid(), sujet:'', h1:'', editrice:'', audience:'', categorie:'', energie:'', deadline:'', docx:'', articleId:null });
   await saveTodos(); renderTodos();
 });
 document.getElementById('todoBody').addEventListener('change', async (e) => {
@@ -2065,7 +2072,10 @@ document.getElementById('todoBody').addEventListener('change', async (e) => {
   const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
   t[f] = e.target.value;
   await saveTodos();
-  if(f === 'editrice'){ renderTodos(); return; }
+  if(f === 'editrice' || f === 'audience'){
+    if(f === 'audience' && !categoriesFor(t.audience).includes(t.categorie)){ t.categorie = ''; await saveTodos(); }
+    renderTodos(); return;
+  }
   const btn = tr.querySelector('[data-todo-save]');
   if(btn){ const ok = todoComplete(t); btn.disabled = !ok; btn.title = ok ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'; }
 });
@@ -2091,7 +2101,7 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
     try{
       const r = await fetch('/api/public/notify-article-ready', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ kind:'relecture', to: (emailsFor(getConfigFor('validation'), 'Service Communication').length ? emailsFor(getConfigFor('validation'), 'Service Communication') : undefined), sujet:t.sujet, h1:t.h1, editrice:t.editrice, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
+        body: JSON.stringify({ kind:'relecture', to: (emailsFor(getConfigFor('validation'), 'Service Communication').length ? emailsFor(getConfigFor('validation'), 'Service Communication') : undefined), sujet:t.sujet, h1:t.h1, editrice:t.editrice, cible:t.audience, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
       });
       if(!r.ok) alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.');
     }catch(err){ alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.'); }
