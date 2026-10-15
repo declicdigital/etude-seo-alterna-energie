@@ -1486,53 +1486,86 @@ document.getElementById('todoToggleBtn').addEventListener('click', () => {
   try{ localStorage.setItem(TODO_COLLAPSE_KEY, todoBlock.classList.contains('collapsed') ? '1' : '0'); }catch(e){}
 });
 
-document.getElementById('cfgAddStep').addEventListener('click', async () => {
+function markCfgDirty(){
+  const b = document.getElementById('cfgSaveBtn');
+  if(b){ b.disabled = false; b.textContent = 'Valider'; }
+}
+
+document.getElementById('cfgAddStep').addEventListener('click', () => {
   const key = 'step-' + uid();
-  config.push({ key, label: 'Nouvelle étape', assignee: '', skippable: false });
-  articles.forEach(syncArticleSteps);
-  await saveConfig();
-  for(const a of articles) await saveArticle(a);
-  render();
+  cfgDraft.push({ key, label: 'Nouvelle étape', assignee: '', skippable: false });
+  renderConfigPanel(true);
+  markCfgDirty();
 });
 
-document.getElementById('cfgRows').addEventListener('input', async (e) => {
+document.getElementById('cfgRows').addEventListener('input', (e) => {
   const t = e.target;
   const action = t.dataset.action;
   const key = t.dataset.key;
   if(!action) return;
-  const cfg = getConfigFor(key);
+  const cfg = cfgDraft.find(c => c.key === key);
   if(!cfg) return;
   if(action === 'cfg-label') cfg.label = t.value;
   if(action === 'cfg-assignee') cfg.assignee = t.value;
-  if(action === 'cfg-options'){
-    const opts = t.value.split(',').map(s => s.trim()).filter(Boolean);
-    if(opts.length){ cfg.options = opts; if(cfg.assignee && !opts.includes(cfg.assignee)) cfg.assignee = ''; }
-    else delete cfg.options;
+  if(action === 'cfg-options') cfg._optionsRaw = t.value;
+  if(action === 'cfg-email'){
+    cfg.emails = cfg.emails || {};
+    cfg.emails[t.dataset.name] = t.value;
   }
-  await saveConfig();
-  renderArticles();
+  if(action === 'cfg-skippable') cfg.skippable = t.checked;
+  markCfgDirty();
 });
 
-document.getElementById('cfgRows').addEventListener('change', async (e) => {
+// Re-render email fields when the list of names changes (on leaving the field).
+document.getElementById('cfgRows').addEventListener('change', (e) => {
   const t = e.target;
-  const action = t.dataset.action;
-  const key = t.dataset.key;
-  if(action === 'cfg-skippable'){
-    const cfg = getConfigFor(key);
-    if(cfg){ cfg.skippable = t.checked; await saveConfig(); renderArticles(); }
+  if(t.dataset.action === 'cfg-skippable'){
+    const cfg = cfgDraft.find(c => c.key === t.dataset.key);
+    if(cfg) cfg.skippable = t.checked;
+    markCfgDirty();
   }
+  if(t.dataset.action === 'cfg-options' || t.dataset.action === 'cfg-assignee') renderConfigPanel(true);
 });
 
-document.getElementById('cfgRows').addEventListener('click', async (e) => {
+document.getElementById('cfgRows').addEventListener('click', (e) => {
   const t = e.target.closest('[data-action="cfg-remove"]');
   if(!t) return;
   const key = t.dataset.key;
-  if(config.length <= 1) return;
-  config = config.filter(c => c.key !== key);
+  if(cfgDraft.length <= 1) return;
+  cfgDraft = cfgDraft.filter(c => c.key !== key);
+  renderConfigPanel(true);
+  markCfgDirty();
+});
+
+document.getElementById('cfgSaveBtn').addEventListener('click', async () => {
+  const bad = [];
+  for(const c of cfgDraft){
+    if(c._optionsRaw !== undefined){
+      const opts = c._optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
+      if(opts.length){ c.options = opts; if(c.assignee && !opts.includes(c.assignee)) c.assignee = ''; }
+      else delete c.options;
+      delete c._optionsRaw;
+    }
+    const names = cfgNames(c);
+    const emails = {};
+    for(const n of names){
+      const raw = (c.emails && c.emails[n]) || '';
+      const list = raw.split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+      list.forEach(m => { if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m)) bad.push(m); });
+      if(list.length) emails[n] = list.join(', ');
+    }
+    if(Object.keys(emails).length) c.emails = emails; else delete c.emails;
+  }
+  if(bad.length){ alert('Adresse(s) mail invalide(s) : ' + bad.join(', ')); return; }
+  config = JSON.parse(JSON.stringify(cfgDraft));
+  normalizeConfig();
   articles.forEach(syncArticleSteps);
   await saveConfig();
   for(const a of articles) await saveArticle(a);
   render();
+  const b = document.getElementById('cfgSaveBtn');
+  b.disabled = true; b.textContent = 'Enregistré ✓';
+
 });
 
 document.getElementById('articlesContainer').addEventListener('click', async (e) => {
@@ -1669,17 +1702,25 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     await saveArticle(article);
     if(key === 'integration') await pushToBlog(article);
     const MAIL_BY_STEP = {
-      redaction: { kind:'relecture', who:'Fannie (relecture + image)' },
-      relecture: { kind:'integration', who:'Marick (intégration)' },
+      redaction: { kind:'relecture', who:'Fannie (relecture + image)', next:'validation' },
+      validation: { kind:'integration', who:'Marick (intégration)', next:'integration' },
+      relecture: { kind:'integration', who:'Marick (intégration)', next:'integration' },
       integration: { kind:'published', who:'Geoffrey (article publié)' },
     };
     const mail = MAIL_BY_STEP[key];
     if(mail){
       const red = article.steps.find(s => s.key === 'redaction');
+      let to = [];
+      if(mail.next){
+        const ns = article.steps.find(s => s.key === mail.next);
+        const ncfg = getConfigFor(mail.next);
+        to = emailsFor(ncfg, (ns && ns.assignee) || (ncfg && ncfg.assignee) || '');
+        if(to.length) mail.who = to.join(', ');
+      }
       try{
         const r = await fetch('/api/public/notify-article-ready', {
           method:'POST', headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ kind: mail.kind, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
+          body: JSON.stringify({ kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
         });
         if(!r.ok) alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.');
       }catch(err){ alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.'); }
