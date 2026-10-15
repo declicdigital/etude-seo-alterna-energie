@@ -3,6 +3,7 @@ import { z } from "zod";
 
 const BodySchema = z.object({
   kind: z.enum(["ready", "relecture", "integration", "published"]).optional(),
+  to: z.array(z.string().email()).max(10).optional(),
   sujet: z.string().max(300).optional().default(""),
   h1: z.string().max(300).optional().default(""),
   editrice: z.string().max(120).optional().default(""),
