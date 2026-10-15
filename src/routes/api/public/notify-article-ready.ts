@@ -76,7 +76,20 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
         const isInt = payload.kind === "integration";
         const isPub = payload.kind === "published";
         const toEmail = isRel ? RELECTURE_EMAIL : isInt ? INTEGRATION_EMAIL : ADMIN_EMAIL;
-        const recipients = !isPub && payload.to && payload.to.length ? [...new Set(payload.to)] : [toEmail];
+        // Custom recipients are only allowed if they're configured in the pipeline settings.
+        let allowedTo: string[] = [];
+        if (!isPub && payload.to && payload.to.length) {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: cfgRow } = await supabaseAdmin.from("editorial_kv").select("value").eq("key", "pipeline-config").maybeSingle();
+          const known = new Set<string>();
+          try {
+            const cfg = cfgRow?.value ? (JSON.parse(cfgRow.value) as { emails?: Record<string, string> }[]) : [];
+            for (const c of cfg) for (const raw of Object.values(c.emails ?? {}))
+              String(raw).split(/[,;\s]+/).forEach((m) => m.trim() && known.add(m.trim().toLowerCase()));
+          } catch { /* ignore */ }
+          allowedTo = [...new Set(payload.to.filter((m) => known.has(m.toLowerCase())))];
+        }
+        const recipients = allowedTo.length ? allowedTo : [toEmail];
         const subject = isRel
           ? `Relecture + image à faire : « ${payload.h1} »`
           : isInt
