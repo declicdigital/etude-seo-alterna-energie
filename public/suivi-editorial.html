@@ -1407,7 +1407,7 @@ function renderArticleCard(article){
           <div class="attachments-list">${renderAttachments(article.id, step)}</div>
           <label class="attach-image-label" data-article-id="${article.id}" data-step-key="${step.key}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></svg>
-            <span class="attach-image-copy">Ajouter une image<small>Glisser une image ici ou cliquer pour choisir · 3 Mo maximum</small></span>
+            <span class="attach-image-copy">Ajouter une image<small>Glisser une image ici ou cliquer pour choisir</small></span>
             <input type="file" accept="image/*" multiple class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" aria-label="Ajouter une image">
           </label>
           <div class="attachments-add">
@@ -1875,10 +1875,6 @@ async function addImageAttachments(zone, files){
   for(const file of files){
     if(!file.type.startsWith('image/')){
       alert('Merci de choisir un fichier image.');
-      return;
-    }
-    if(file.size > 3 * 1024 * 1024){
-      alert('Image trop volumineuse (3 Mo maximum).');
       return;
     }
   }
