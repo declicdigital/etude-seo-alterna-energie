@@ -536,7 +536,24 @@ button{ font-family: inherit; cursor:pointer; }
   color: var(--ink);
 }
 .attach-input:focus{ outline:none; border-color: var(--blue); }
-.attach-image-label{ position: relative; }
+.attach-image-label{
+  display:flex; align-items:center; justify-content:center; gap:12px;
+  width:100%; min-height:112px; margin-bottom:12px; padding:20px;
+  border:2px dashed var(--lgreen); border-radius:8px;
+  background:var(--lgreen-bg); color:var(--ink); cursor:pointer;
+  font-size:0.95rem; font-weight:600; text-align:center;
+  transition:background .15s, border-color .15s;
+}
+.attach-image-label:hover, .attach-image-label.drag-over{
+  background:var(--card); border-color:var(--ink);
+}
+.attach-image-label:focus-within{ outline:2px solid var(--blue); outline-offset:3px; }
+.attach-image-label svg{ width:30px; height:30px; flex-shrink:0; }
+.attach-image-copy{ display:flex; flex-direction:column; gap:6px; }
+.attach-image-copy small{ font-size:0.75rem; font-weight:500; color:var(--ink-60); }
+.attach-file-input{ position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; }
+.attach-image-label.uploading{ opacity:.65; cursor:wait; }
+@media (prefers-reduced-motion:reduce){ .attach-image-label{ transition:none; } }
 .save-indicator{
   position: fixed; bottom: 20px; right: 24px;
   font-size: 0.75rem; font-weight: 600; color: var(--ink);
@@ -1388,13 +1405,14 @@ function renderArticleCard(article){
         <div class="attachments-block">
           <label class="attachments-label">Pièces jointes</label>
           <div class="attachments-list">${renderAttachments(article.id, step)}</div>
+          <label class="attach-image-label" data-article-id="${article.id}" data-step-key="${step.key}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></svg>
+            <span class="attach-image-copy">Ajouter une image<small>Glisser une image ici ou cliquer pour choisir · 3 Mo maximum</small></span>
+            <input type="file" accept="image/*" multiple class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" aria-label="Ajouter une image">
+          </label>
           <div class="attachments-add">
             <input type="text" class="attach-input" data-article-id="${article.id}" data-step-key="${step.key}" placeholder="Coller un lien ou écrire une note, puis Entrée">
             <button class="btn-ghost" data-action="add-text-attachment" data-article-id="${article.id}" data-step-key="${step.key}">Ajouter</button>
-            <label class="btn-ghost attach-image-label">
-              Ajouter une image
-              <input type="file" accept="image/*" class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" hidden>
-            </label>
           </div>
         </div>`;
     }
@@ -1847,38 +1865,69 @@ document.getElementById('articlesContainer').addEventListener('change', async (e
     return;
   }
   if(e.target.classList.contains('attach-file-input')){
-    const file = e.target.files && e.target.files[0];
-    if(!file) return;
+    await addImageAttachments(e.target.closest('.attach-image-label'), Array.from(e.target.files || []));
+    e.target.value = '';
+  }
+});
+
+async function addImageAttachments(zone, files){
+  if(!zone || !files.length || zone.classList.contains('uploading')) return;
+  for(const file of files){
     if(!file.type.startsWith('image/')){
       alert('Merci de choisir un fichier image.');
-      e.target.value = '';
       return;
     }
     if(file.size > 3 * 1024 * 1024){
       alert('Image trop volumineuse (3 Mo maximum).');
-      e.target.value = '';
       return;
     }
-    const articleId = e.target.dataset.articleId;
-    const stepKey = e.target.dataset.stepKey;
-    try{
+  }
+  zone.classList.add('uploading');
+  zone.setAttribute('aria-busy', 'true');
+  try{
+    const article = getArticle(zone.dataset.articleId);
+    const step = article?.steps.find(s => s.key === zone.dataset.stepKey);
+    if(!step) return;
+    const images = [];
+    for(const file of files){
       const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
-      const article = getArticle(articleId);
-      const step = article.steps.find(s => s.key === stepKey);
-      if(!step.attachments) step.attachments = [];
-      step.attachments.push({ id: uid(), type: 'image', value: dataUrl, name: file.name });
-      await saveArticle(article);
-      renderArticles();
-    }catch(err){
-      console.error('Erreur de lecture du fichier', err);
-      alert("Impossible de charger cette image.");
+      images.push({ id: uid(), type: 'image', value: dataUrl, name: file.name });
     }
+    if(!step.attachments) step.attachments = [];
+    step.attachments.push(...images);
+    await saveArticle(article);
+    renderArticles();
+  }catch(err){
+    console.error('Erreur de lecture du fichier', err);
+    alert("Impossible de charger cette image.");
+  }finally{
+    zone.classList.remove('uploading');
+    zone.removeAttribute('aria-busy');
   }
+}
+
+document.getElementById('articlesContainer').addEventListener('dragover', (e) => {
+  const zone = e.target.closest('.attach-image-label');
+  if(!zone) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  zone.classList.add('drag-over');
+});
+document.getElementById('articlesContainer').addEventListener('dragleave', (e) => {
+  const zone = e.target.closest('.attach-image-label');
+  if(zone && !zone.contains(e.relatedTarget)) zone.classList.remove('drag-over');
+});
+document.getElementById('articlesContainer').addEventListener('drop', async (e) => {
+  const zone = e.target.closest('.attach-image-label');
+  if(!zone) return;
+  e.preventDefault();
+  zone.classList.remove('drag-over');
+  await addImageAttachments(zone, Array.from(e.dataTransfer.files || []));
 });
 
 document.getElementById('articlesContainer').addEventListener('input', async (e) => {
