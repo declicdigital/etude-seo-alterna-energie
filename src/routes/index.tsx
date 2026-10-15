@@ -31,6 +31,14 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/")({
   validateSearch: searchSchema,
   ssr: false,
+  head: () => ({ meta: [
+    { title: "Outil contenus - Alterna Énergie" },
+    { name: "description", content: "Suivi éditorial et gestion des contenus Particulier et Professionnel d’Alterna Énergie." },
+    { property: "og:title", content: "Outil contenus - Alterna Énergie" },
+    { property: "og:description", content: "Suivi éditorial et gestion des contenus Particulier et Professionnel d’Alterna Énergie." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   beforeLoad: async () => {
     const access = await getAccess();
     if (!access.userId) throw redirect({ to: "/auth" });
