@@ -640,7 +640,7 @@ button{ font-family: inherit; cursor:pointer; }
 .todo-block.collapsed{ padding:12px 16px; }
 .todo-block .hint{ font-size:0.78rem; color:var(--muted); margin:6px 0 10px; }
 .todo-scroll{ overflow-x:auto; }
-.todo-table{ width:100%; border-collapse:collapse; min-width:1000px; }
+.todo-table{ width:100%; border-collapse:collapse; min-width:1120px; }
 .todo-table th{ text-align:left; font-size:0.72rem; text-transform:uppercase; color:var(--muted); padding:6px; border-bottom:1.5px solid var(--line); }
 .todo-table td{ padding:4px; border-bottom:1px solid var(--line); vertical-align:middle; }
 .todo-table input, .todo-table select{ width:100%; font:inherit; font-size:0.82rem; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:#fff; box-sizing:border-box; }
@@ -650,6 +650,9 @@ button{ font-family: inherit; cursor:pointer; }
 .todo-table tr.todo-aurorae td:first-child{ box-shadow:inset 3px 0 0 #16a34a; }
 .todo-table tr.todo-marina td{ background:rgba(124,58,237,0.09); }
 .todo-table tr.todo-marina td:first-child{ box-shadow:inset 3px 0 0 #7c3aed; }
+/* Choix de la cible : bleu = Professionnel, rose = Particulier (comme les cartes) */
+.todo-table select.td-cible[data-aud="Professionnel"]{ background:var(--blue-bg); border-color:#C6DAFF; color:#2F5DBF; font-weight:600; }
+.todo-table select.td-cible[data-aud="Particulier"]{ background:var(--pink-bg); border-color:#F8CBE0; color:#B33070; font-weight:600; }
 </style>
 </head>
 <body>
@@ -695,9 +698,9 @@ button{ font-family: inherit; cursor:pointer; }
       </div>
       <button class="btn" id="todoAddBtn">+ Ajouter une ligne</button>
     </div>
-    <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. La catégorie choisie détermine la cible (Particulier ou Professionnel).</p>
+    <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte.</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du doc</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Cible</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
     <div id="todoComments" class="todo-comments"></div>
