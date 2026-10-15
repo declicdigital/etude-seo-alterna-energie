@@ -1504,6 +1504,11 @@ document.getElementById('cfgRows').addEventListener('input', async (e) => {
   if(!cfg) return;
   if(action === 'cfg-label') cfg.label = t.value;
   if(action === 'cfg-assignee') cfg.assignee = t.value;
+  if(action === 'cfg-options'){
+    const opts = t.value.split(',').map(s => s.trim()).filter(Boolean);
+    if(opts.length){ cfg.options = opts; if(cfg.assignee && !opts.includes(cfg.assignee)) cfg.assignee = ''; }
+    else delete cfg.options;
+  }
   await saveConfig();
   renderArticles();
 });
