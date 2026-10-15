@@ -643,7 +643,8 @@ button{ font-family: inherit; cursor:pointer; }
     <div id="cfgRows"></div>
     <div class="config-panel-footer">
       <button class="btn-ghost" id="cfgAddStep">+ Ajouter une étape</button>
-      <button class="btn" id="cfgCloseBtn">Fermer</button>
+      <button class="btn" id="cfgSaveBtn" disabled>Valider</button>
+      <button class="btn-ghost" id="cfgCloseBtn">Fermer</button>
     </div>
   </section>
 
@@ -944,6 +945,15 @@ function normalizeConfig(){
   let changed = false;
   const red = config.find(c => c.key === 'redaction');
   if(red && !Array.isArray(red.options)){ red.options = ['Aurorae','Marina']; changed = true; }
+  // Adresses mail par défaut des responsables (modifiables dans les réglages).
+  const DEFAULT_EMAILS = {
+    redaction: { 'Aurorae': 'caroline@aurorae-editorial.com, elodie@aurorae-editorial.com', 'Marina': 'contact@marinatravert.com' },
+    validation: { 'Service Communication': 'fannie.laurendin@soregies.fr' },
+    integration: { 'Marick': 'marick.navarro.ext@soregies.fr' },
+  };
+  for(const c of config){
+    if(DEFAULT_EMAILS[c.key] && !c.emails){ c.emails = { ...DEFAULT_EMAILS[c.key] }; changed = true; }
+  }
   // Brief SEO est supprimée ; Relecture et Image sont fusionnées en une seule étape.
   const drop = ['brief', 'image', 'validation_geoffrey'];
   if(config.some(c => drop.includes(c.key))){
@@ -1176,19 +1186,43 @@ function render(){
   renderArticles();
 }
 
-function renderConfigPanel(){
+let cfgDraft = [];
+function cfgNames(c){
+  const opts = c._optionsRaw !== undefined
+    ? c._optionsRaw.split(',').map(s => s.trim()).filter(Boolean)
+    : (c.options || []);
+  const names = [...opts];
+  if(c.assignee && !names.includes(c.assignee)) names.push(c.assignee);
+  return names;
+}
+function emailsFor(cfg, name){
+  if(!cfg || !cfg.emails || !name) return [];
+  return String(cfg.emails[name] || '').split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+}
+function renderConfigPanel(keepDraft){
+  if(!keepDraft){
+    cfgDraft = JSON.parse(JSON.stringify(config));
+    const b = document.getElementById('cfgSaveBtn');
+    if(b){ b.disabled = true; b.textContent = 'Valider'; }
+  }
   const rows = document.getElementById('cfgRows');
-  rows.innerHTML = config.map((c, i) => `
+  rows.innerHTML = cfgDraft.map((c, i) => `
     <div class="cfg-row">
       <div class="cfg-num">${i+1}</div>
       <input type="text" data-action="cfg-label" data-key="${c.key}" value="${escapeAttr(c.label)}" placeholder="Nom de l'étape">
       <input type="text" data-action="cfg-assignee" data-key="${c.key}" value="${escapeAttr(c.assignee)}" placeholder="Responsable par défaut" ${c.key === 'validation' ? 'readonly' : ''}>
-      <input type="text" data-action="cfg-options" data-key="${c.key}" value="${escapeAttr((c.options || []).join(', '))}" placeholder="Responsables possibles (séparés par des virgules)">
+      <input type="text" data-action="cfg-options" data-key="${c.key}" value="${escapeAttr(c._optionsRaw !== undefined ? c._optionsRaw : (c.options || []).join(', '))}" placeholder="Responsables possibles (séparés par des virgules)">
       <label class="cfg-skip-label">
         <input type="checkbox" data-action="cfg-skippable" data-key="${c.key}" ${c.skippable ? 'checked' : ''}>
         Facultative
       </label>
-      <button class="btn-ghost" data-action="cfg-remove" data-key="${c.key}" ${config.length<=1?'disabled':''}>Supprimer</button>
+      <button class="btn-ghost" data-action="cfg-remove" data-key="${c.key}" ${cfgDraft.length<=1?'disabled':''}>Supprimer</button>
+      ${cfgNames(c).length ? `<div style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;padding:4px 0 6px 36px">
+        ${cfgNames(c).map(n => `<label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--ink-60)">
+          <span style="min-width:150px">✉ ${escapeHtml(n)}</span>
+          <input type="text" style="flex:1" data-action="cfg-email" data-key="${c.key}" data-name="${escapeAttr(n)}" value="${escapeAttr((c.emails && c.emails[n]) || '')}" placeholder="adresse@exemple.fr (plusieurs : séparer par des virgules)">
+        </label>`).join('')}
+      </div>` : ''}
     </div>
   `).join('');
 }
@@ -1486,53 +1520,86 @@ document.getElementById('todoToggleBtn').addEventListener('click', () => {
   try{ localStorage.setItem(TODO_COLLAPSE_KEY, todoBlock.classList.contains('collapsed') ? '1' : '0'); }catch(e){}
 });
 
-document.getElementById('cfgAddStep').addEventListener('click', async () => {
+function markCfgDirty(){
+  const b = document.getElementById('cfgSaveBtn');
+  if(b){ b.disabled = false; b.textContent = 'Valider'; }
+}
+
+document.getElementById('cfgAddStep').addEventListener('click', () => {
   const key = 'step-' + uid();
-  config.push({ key, label: 'Nouvelle étape', assignee: '', skippable: false });
-  articles.forEach(syncArticleSteps);
-  await saveConfig();
-  for(const a of articles) await saveArticle(a);
-  render();
+  cfgDraft.push({ key, label: 'Nouvelle étape', assignee: '', skippable: false });
+  renderConfigPanel(true);
+  markCfgDirty();
 });
 
-document.getElementById('cfgRows').addEventListener('input', async (e) => {
+document.getElementById('cfgRows').addEventListener('input', (e) => {
   const t = e.target;
   const action = t.dataset.action;
   const key = t.dataset.key;
   if(!action) return;
-  const cfg = getConfigFor(key);
+  const cfg = cfgDraft.find(c => c.key === key);
   if(!cfg) return;
   if(action === 'cfg-label') cfg.label = t.value;
   if(action === 'cfg-assignee') cfg.assignee = t.value;
-  if(action === 'cfg-options'){
-    const opts = t.value.split(',').map(s => s.trim()).filter(Boolean);
-    if(opts.length){ cfg.options = opts; if(cfg.assignee && !opts.includes(cfg.assignee)) cfg.assignee = ''; }
-    else delete cfg.options;
+  if(action === 'cfg-options') cfg._optionsRaw = t.value;
+  if(action === 'cfg-email'){
+    cfg.emails = cfg.emails || {};
+    cfg.emails[t.dataset.name] = t.value;
   }
-  await saveConfig();
-  renderArticles();
+  if(action === 'cfg-skippable') cfg.skippable = t.checked;
+  markCfgDirty();
 });
 
-document.getElementById('cfgRows').addEventListener('change', async (e) => {
+// Re-render email fields when the list of names changes (on leaving the field).
+document.getElementById('cfgRows').addEventListener('change', (e) => {
   const t = e.target;
-  const action = t.dataset.action;
-  const key = t.dataset.key;
-  if(action === 'cfg-skippable'){
-    const cfg = getConfigFor(key);
-    if(cfg){ cfg.skippable = t.checked; await saveConfig(); renderArticles(); }
+  if(t.dataset.action === 'cfg-skippable'){
+    const cfg = cfgDraft.find(c => c.key === t.dataset.key);
+    if(cfg) cfg.skippable = t.checked;
+    markCfgDirty();
   }
+  if(t.dataset.action === 'cfg-options' || t.dataset.action === 'cfg-assignee') renderConfigPanel(true);
 });
 
-document.getElementById('cfgRows').addEventListener('click', async (e) => {
+document.getElementById('cfgRows').addEventListener('click', (e) => {
   const t = e.target.closest('[data-action="cfg-remove"]');
   if(!t) return;
   const key = t.dataset.key;
-  if(config.length <= 1) return;
-  config = config.filter(c => c.key !== key);
+  if(cfgDraft.length <= 1) return;
+  cfgDraft = cfgDraft.filter(c => c.key !== key);
+  renderConfigPanel(true);
+  markCfgDirty();
+});
+
+document.getElementById('cfgSaveBtn').addEventListener('click', async () => {
+  const bad = [];
+  for(const c of cfgDraft){
+    if(c._optionsRaw !== undefined){
+      const opts = c._optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
+      if(opts.length){ c.options = opts; if(c.assignee && !opts.includes(c.assignee)) c.assignee = ''; }
+      else delete c.options;
+      delete c._optionsRaw;
+    }
+    const names = cfgNames(c);
+    const emails = {};
+    for(const n of names){
+      const raw = (c.emails && c.emails[n]) || '';
+      const list = raw.split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+      list.forEach(m => { if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m)) bad.push(m); });
+      if(list.length) emails[n] = list.join(', ');
+    }
+    if(Object.keys(emails).length) c.emails = emails; else delete c.emails;
+  }
+  if(bad.length){ alert('Adresse(s) mail invalide(s) : ' + bad.join(', ')); return; }
+  config = JSON.parse(JSON.stringify(cfgDraft));
+  normalizeConfig();
   articles.forEach(syncArticleSteps);
   await saveConfig();
   for(const a of articles) await saveArticle(a);
   render();
+  const b = document.getElementById('cfgSaveBtn');
+  b.disabled = true; b.textContent = 'Enregistré ✓';
+
 });
 
 document.getElementById('articlesContainer').addEventListener('click', async (e) => {
@@ -1669,17 +1736,25 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     await saveArticle(article);
     if(key === 'integration') await pushToBlog(article);
     const MAIL_BY_STEP = {
-      redaction: { kind:'relecture', who:'Fannie (relecture + image)' },
-      relecture: { kind:'integration', who:'Marick (intégration)' },
+      redaction: { kind:'relecture', who:'Fannie (relecture + image)', next:'validation' },
+      validation: { kind:'integration', who:'Marick (intégration)', next:'integration' },
+      relecture: { kind:'integration', who:'Marick (intégration)', next:'integration' },
       integration: { kind:'published', who:'Geoffrey (article publié)' },
     };
     const mail = MAIL_BY_STEP[key];
     if(mail){
       const red = article.steps.find(s => s.key === 'redaction');
+      let to = [];
+      if(mail.next){
+        const ns = article.steps.find(s => s.key === mail.next);
+        const ncfg = getConfigFor(mail.next);
+        to = emailsFor(ncfg, (ns && ns.assignee) || (ncfg && ncfg.assignee) || '');
+        if(to.length) mail.who = to.join(', ');
+      }
       try{
         const r = await fetch('/api/public/notify-article-ready', {
           method:'POST', headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ kind: mail.kind, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
+          body: JSON.stringify({ kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
         });
         if(!r.ok) alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.');
       }catch(err){ alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.'); }
@@ -1876,7 +1951,7 @@ function renderTodos(){
   const addBtn = document.getElementById('todoAddBtn'); if(addBtn) addBtn.style.display = ro ? 'none' : '';
   body.innerHTML = todos.map(t => `<tr data-todo-id="${t.id}"${t.editrice === 'Aurorae' ? ' class="todo-aurorae"' : t.editrice === 'Marina' ? ' class="todo-marina"' : ''}>
     <td><input data-f="sujet" value="${escapeAttr(t.sujet||'')}" placeholder="Sujet"></td>
-    <td><select data-f="editrice"><option value="">—</option>${['Aurorae','Marina'].map(o=>`<option ${t.editrice===o?'selected':''}>${o}</option>`).join('')}</select></td>
+    <td><select data-f="editrice"><option value="">—</option>${(((getConfigFor('redaction')||{}).options)||['Aurorae','Marina']).map(o=>`<option ${t.editrice===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td><select data-f="categorie"><option value="">—</option><optgroup label="Particulier">${BLOG_CATEGORIES['Particulier'].map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</optgroup><optgroup label="Professionnel">${BLOG_CATEGORIES['Professionnel'].map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</optgroup></select></td>
     <td><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
@@ -1948,7 +2023,7 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
     try{
       const r = await fetch('/api/public/notify-article-ready', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ kind:'relecture', sujet:t.sujet, h1:t.h1, editrice:t.editrice, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
+        body: JSON.stringify({ kind:'relecture', to: (emailsFor(getConfigFor('validation'), 'Service Communication').length ? emailsFor(getConfigFor('validation'), 'Service Communication') : undefined), sujet:t.sujet, h1:t.h1, editrice:t.editrice, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
       });
       if(!r.ok) alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.');
     }catch(err){ alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.'); }

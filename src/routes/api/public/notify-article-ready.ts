@@ -3,6 +3,7 @@ import { z } from "zod";
 
 const BodySchema = z.object({
   kind: z.enum(["ready", "relecture", "integration", "published"]).optional(),
+  to: z.array(z.string().email()).max(10).optional(),
   sujet: z.string().max(300).optional().default(""),
   h1: z.string().max(300).optional().default(""),
   editrice: z.string().max(120).optional().default(""),
@@ -34,9 +35,9 @@ function buildHtml(p: z.infer<typeof BodySchema>): string {
 <tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Alterna Énergie · Suivi éditorial</td></tr>
 <tr><td style="padding:28px">
 ${p.kind === "relecture"
-  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Fannie,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article du suivi éditorial.</p>`
+  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article du suivi éditorial.</p>`
   : p.kind === "integration"
-  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Marick,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (visible dans la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.</p>`
+  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (visible dans la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.</p>`
   : p.kind === "published"
   ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Geoffrey,<br><br>L'article ci-dessous a été <strong>intégré dans le site</strong> : toutes les étapes sont terminées et il a été ajouté au blog.</p>`
   : `<p style="margin:0 0 18px;font-size:16px">Un nouvel article est <strong>prêt à être rédigé</strong> : toutes les informations de la ligne « À rédiger » sont remplies et l'article a été créé dans le suivi.</p>`}
@@ -75,6 +76,20 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
         const isInt = payload.kind === "integration";
         const isPub = payload.kind === "published";
         const toEmail = isRel ? RELECTURE_EMAIL : isInt ? INTEGRATION_EMAIL : ADMIN_EMAIL;
+        // Custom recipients are only allowed if they're configured in the pipeline settings.
+        let allowedTo: string[] = [];
+        if (!isPub && payload.to && payload.to.length) {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: cfgRow } = await supabaseAdmin.from("editorial_kv").select("value").eq("key", "pipeline-config").maybeSingle();
+          const known = new Set<string>();
+          try {
+            const cfg = cfgRow?.value ? (JSON.parse(cfgRow.value) as { emails?: Record<string, string> }[]) : [];
+            for (const c of cfg) for (const raw of Object.values(c.emails ?? {}))
+              String(raw).split(/[,;\s]+/).forEach((m) => m.trim() && known.add(m.trim().toLowerCase()));
+          } catch { /* ignore */ }
+          allowedTo = [...new Set(payload.to.filter((m) => known.has(m.toLowerCase())))];
+        }
+        const recipients = allowedTo.length ? allowedTo : [toEmail];
         const subject = isRel
           ? `Relecture + image à faire : « ${payload.h1} »`
           : isInt
@@ -92,7 +107,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           "",
           `Ouvrir le suivi éditorial : ${APP_URL}`,
         ].join("\r\n") : isRel ? [
-          "Bonjour Fannie,",
+          "Bonjour,",
           "",
           "L'article ci-dessous est passé à l'étape Relecture + Image.",
           "Merci de le relire, de trouver une image et de l'ajouter dans la carte de l'article.",
@@ -103,7 +118,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           "",
           `Ouvrir le suivi éditorial : ${APP_URL}`,
         ].filter((l): l is string => l !== null).join("\r\n") : isInt ? [
-          "Bonjour Marick,",
+          "Bonjour,",
           "",
           "L'article ci-dessous est prêt : la relecture est faite et l'image est validée (visible dans la carte de l'article).",
           "Il ne vous reste plus qu'à l'intégrer dans le site.",
@@ -140,8 +155,8 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           },
           body: JSON.stringify({
             sender: SENDER,
-            to: [{ email: toEmail }],
-            ...(toEmail !== CC_EMAIL ? { cc: [{ email: CC_EMAIL }] } : {}),
+            to: recipients.map((email) => ({ email })),
+            ...(!recipients.includes(CC_EMAIL) ? { cc: [{ email: CC_EMAIL }] } : {}),
             subject,
             textContent: text,
             htmlContent: buildHtml(payload),

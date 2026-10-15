@@ -55,7 +55,7 @@ async function sendBrevo(to: string[], subject: string, text: string, html: stri
     body: JSON.stringify({
       sender: SENDER,
       to: to.map((email) => ({ email })),
-      cc: [{ email: CC_EMAIL }],
+      ...(!to.includes(CC_EMAIL) ? { cc: [{ email: CC_EMAIL }] } : {}),
       subject,
       textContent: text,
       htmlContent: html,
@@ -103,6 +103,20 @@ export const Route = createFileRoute("/api/public/jobs/deadline-reminders")({
           todos = [];
         }
 
+        // Editor emails configured in the pipeline settings override/extend the defaults.
+        const editorEmails: Record<string, string[]> = { ...EDITOR_EMAILS };
+        try {
+          const { data: cfgRow } = await supabaseAdmin.from("editorial_kv").select("value").eq("key", "pipeline-config").maybeSingle();
+          const cfg = cfgRow?.value ? (JSON.parse(cfgRow.value) as { key: string; emails?: Record<string, string> }[]) : [];
+          const red = cfg.find((c) => c.key === "redaction");
+          for (const [name, raw] of Object.entries(red?.emails ?? {})) {
+            const list = String(raw).split(/[,;\s]+/).map((m) => m.trim()).filter((m) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m));
+            if (list.length) editorEmails[name.trim().toLowerCase()] = list;
+          }
+        } catch (e) {
+          console.error("pipeline-config read failed", e);
+        }
+
         // Target date: today + REMIND_DAYS (UTC), as YYYY-MM-DD
         const target = new Date(Date.now() + REMIND_DAYS * 86400000).toISOString().slice(0, 10);
 
@@ -111,7 +125,7 @@ export const Route = createFileRoute("/api/public/jobs/deadline-reminders")({
           if (!todo.deadline || todo.deadline !== target) continue;
           if (todo.articleId) continue; // already saved as an article, no longer pending
           const editorKey = (todo.editrice || "").trim().toLowerCase();
-          const recipients = EDITOR_EMAILS[editorKey];
+          const recipients = editorEmails[editorKey];
           if (!recipients) continue;
 
           const markerKey = `reminder5:${todo.id}`;
