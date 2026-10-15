@@ -23,6 +23,9 @@
   --yellow-bg: #F8FBDF;
   --blue: #639AFF;
   --blue-bg: #EAF1FF;
+  --pink: #F0679E;
+  --pink-bg: #FDEBF4;
+
 
   --danger: #C24A3B;
 }
@@ -182,6 +185,23 @@ button{ font-family: inherit; cursor:pointer; }
 .article-card.collapsed .article-head{ margin-bottom: 0; }
 .article-card.collapsed .article-body{ display: none; }
 .article-card.collapsed{ padding: 14px 20px; margin-bottom: 12px; }
+
+/* Carte colorée selon la cible : Professionnel = bleu, Particulier (B2C) = rose */
+.article-card.aud-pro{
+  border-color: #C6DAFF;
+  background: linear-gradient(180deg, var(--blue-bg) 0%, #FFFFFF 140px);
+  box-shadow: 0 2px 0 rgba(0,56,56,0.02), inset 5px 0 0 var(--blue);
+}
+.article-card.aud-part{
+  border-color: #F8CBE0;
+  background: linear-gradient(180deg, var(--pink-bg) 0%, #FFFFFF 140px);
+  box-shadow: 0 2px 0 rgba(0,56,56,0.02), inset 5px 0 0 var(--pink);
+}
+.article-card.aud-pro .progress-tag{ background: var(--blue-bg); color: #2F5DBF; }
+.article-card.aud-part .progress-tag{ background: var(--pink-bg); color: #B33070; }
+.article-card.aud-pro .schema{ border-color: #C6DAFF; }
+.article-card.aud-part .schema{ border-color: #F8CBE0; }
+
 
 .assignee-options{ display:flex; flex-wrap: wrap; gap: 8px; }
 .assignee-option{
@@ -1420,9 +1440,12 @@ function renderArticleCard(article){
 
   const isConfirming = confirmingDelete === article.id;
   const isCollapsed = !!collapsed[article.id];
+  const audCls = article.audience === 'Professionnel' ? 'aud-pro'
+    : article.audience === 'Particulier' ? 'aud-part' : '';
 
   return `
-    <div class="article-card ${isCollapsed ? 'collapsed' : ''}" data-article-id="${article.id}">
+    <div class="article-card ${audCls} ${isCollapsed ? 'collapsed' : ''}" data-article-id="${article.id}">
+
       <div class="article-head">
         <button class="collapse-btn" data-action="toggle-collapse" data-article-id="${article.id}" title="${isCollapsed ? 'Déplier' : 'Réduire'}" aria-label="${isCollapsed ? 'Déplier' : 'Réduire'}">${isCollapsed ? '▸' : '▾'}</button>
         <input class="title-input" data-action="edit-title" data-article-id="${article.id}" value="${escapeAttr(article.title)}" placeholder="Titre de l'article">
