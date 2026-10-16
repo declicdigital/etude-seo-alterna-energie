@@ -657,6 +657,7 @@ button{ font-family: inherit; cursor:pointer; }
 .td-dl{ display:flex; align-items:center; gap:6px; min-width:0; }
 .td-dl input{ flex:1 1 auto; min-width:0; }
 .todo-dot{ width:9px; height:9px; border-radius:50%; background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.16); flex:0 0 auto; }
+.no-cat .col-cat{display:none!important}
 </style>
 </head>
 <body>
@@ -704,7 +705,7 @@ button{ font-family: inherit; cursor:pointer; }
     </div>
     <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Cible</th><th>Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du doc</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Cible</th><th class="col-cat">Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
     <div id="todoComments" class="todo-comments"></div>
@@ -724,8 +725,13 @@ const REST = SUPABASE_URL + '/rest/v1/editorial_kv';
 const CELLS_REST = SUPABASE_URL + '/rest/v1/sheet_cells';
 
 /* Publication automatique vers l'onglet Blog de l'outil. */
-const BLOG_SHEET = 'BLOG - ARTICLES';
-const BLOG_BASE_LEN = 424;
+const SPACE = new URLSearchParams(location.search).get('space') === 'strategie' ? 'strategie' : '';
+const NO_CAT = SPACE === 'strategie';
+const KEY = k => SPACE ? 'strat:' + k : k;
+const BLOG_SHEET = SPACE ? 'STRATEGIE - ARTICLES' : 'BLOG - ARTICLES';
+const BLOG_BASE_LEN = SPACE ? 1 : 424;
+if(NO_CAT) document.documentElement.classList.add('no-cat');
+if(SPACE){ document.title = 'Suivi éditorial (Stratégie édito) — Outil contenus'; document.addEventListener('DOMContentLoaded', () => { const h = document.querySelector('h1'); if(h) h.textContent = 'Suivi éditorial — Stratégie édito'; }); const h0 = document.querySelector('h1'); if(h0) h0.textContent = 'Suivi éditorial — Stratégie édito'; }
 const AUDIENCES = ['Particulier', 'Professionnel'];
 const BLOG_CATEGORIES = {
   'Particulier': [
@@ -902,7 +908,7 @@ async function sendComment(articleId, textarea){
     return (name && low.includes('@' + name)) || (mail && low.includes('@' + mail));
   });
   const article = getArticle(articleId);
-  const articleTitle = article ? article.title : (articleId === '__todo__' ? 'À rédiger' : 'Article');
+  const articleTitle = article ? article.title : (articleId === TODO_ARTICLE_ID ? 'À rédiger' : 'Article');
   const row = {
     article_id: articleId,
     author_email: email,
@@ -926,6 +932,7 @@ async function sendComment(articleId, textarea){
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          space: SPACE || undefined,
           articleId,
           articleTitle,
           message: body,
@@ -940,7 +947,7 @@ async function sendComment(articleId, textarea){
     if(!ok) alert('Message enregistré, mais le mail de notification n\'a pas pu partir.');
   }
   renderArticles();
-  if(articleId === '__todo__') renderTodoComments();
+  if(articleId === TODO_ARTICLE_ID) renderTodoComments();
 }
 
 async function deleteComment(articleId, commentId){
@@ -953,12 +960,12 @@ async function deleteComment(articleId, commentId){
   commentsByArticle[articleId] = (commentsByArticle[articleId] || []).filter(c => c.id !== commentId);
   showSaved();
   renderArticles();
-  if(articleId === '__todo__') renderTodoComments();
+  if(articleId === TODO_ARTICLE_ID) renderTodoComments();
 }
 
 const storage = {
   async get(key){
-    const res = await fetch(REST + '?select=value&key=eq.' + encodeURIComponent(key), { headers: HEADERS });
+    const res = await fetch(REST + '?select=value&key=eq.' + encodeURIComponent(KEY(key)), { headers: HEADERS });
     if(!res.ok) throw new Error('Erreur de lecture');
     const rows = await res.json();
     if(!rows.length) throw new Error('Clé absente');
@@ -968,12 +975,12 @@ const storage = {
     const res = await fetch(REST + '?on_conflict=key', {
       method: 'POST',
       headers: Object.assign({}, HEADERS, { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
-      body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
+      body: JSON.stringify({ key: KEY(key), value, updated_at: new Date().toISOString() })
     });
     if(!res.ok) throw new Error('Erreur d\'enregistrement');
   },
   async delete(key){
-    await fetch(REST + '?key=eq.' + encodeURIComponent(key), { method: 'DELETE', headers: HEADERS });
+    await fetch(REST + '?key=eq.' + encodeURIComponent(KEY(key)), { method: 'DELETE', headers: HEADERS });
   }
 };
 
@@ -1133,7 +1140,7 @@ function missingFields(article, stepKey){
   if(stepKey === 'redaction'){
     if(!article.audience) out.push('Particulier / Professionnel');
     if(!(article.title||'').trim() || article.title.trim() === 'Nouvel article') out.push("le titre de l'article");
-    if(!article.category) out.push('la catégorie');
+    if(!NO_CAT && !article.category) out.push('la catégorie');
     if(!article.energy) out.push("l'énergie");
   }
   if(stepKey === 'integration'){
@@ -1144,6 +1151,7 @@ function missingFields(article, stepKey){
 }
 
 function categoriesFor(audience){
+  if(NO_CAT) return [];
   return BLOG_CATEGORIES[audience] || [];
 }
 
@@ -1300,7 +1308,7 @@ function renderRedactionFields(article){
       <label>Titre</label>
       <input type="text" class="req-input" data-action="edit-title" data-article-id="${article.id}" value="${escapeAttr(article.title)}" placeholder="Titre de l'article">
     </div>
-    <div class="field">
+    <div class="field col-cat">
       <label>Catégorie</label>
       <select data-action="pick-category" data-article-id="${article.id}" ${article.audience ? '' : 'disabled'}>
         <option value="">${article.audience ? '— Choisir —' : "— Choisis d'abord la cible —"}</option>
@@ -1821,7 +1829,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
       try{
         const r = await fetch('/api/public/notify-article-ready', {
           method:'POST', headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ articleId: id, stepKey: mail.next, kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', cible: article.audience || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
+          body: JSON.stringify({ space: SPACE || undefined, articleId: id, stepKey: mail.next, kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', cible: article.audience || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
         });
         if(!r.ok) alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.');
       }catch(err){ alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.'); }
@@ -2040,7 +2048,7 @@ async function saveTodos(){
 const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com'];
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
 function todoComplete(t){
-  return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].every(f => (t[f]||'').trim());
+  return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].filter(f => !(NO_CAT && f === 'categorie')).every(f => (t[f]||'').trim());
 }
 /* Nombre de jours restants avant la deadline (négatif si dépassée, null si pas de date). */
 function todoDaysLeft(t){
@@ -2089,7 +2097,7 @@ function renderTodos(){
     <td><select data-f="editrice"><option value="">—</option>${(((getConfigFor('redaction')||{}).options)||['Aurorae','Marina']).map(o=>`<option ${t.editrice===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
-    <td><select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
+    <td class="col-cat"><select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><div class="td-dl">${isUrgentTodo(t) ? `<span class="todo-dot" title="${escapeAttr(urgentTitle(t))}"></span>` : ''}<input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></div></td>
     <td><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…"></td>
@@ -2163,7 +2171,7 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
     try{
       const r = await fetch('/api/public/notify-article-ready', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ articleId, stepKey: 'validation', kind:'relecture', to: (emailsFor(getConfigFor('validation'), 'Service Communication').length ? emailsFor(getConfigFor('validation'), 'Service Communication') : undefined), sujet:t.sujet, h1:t.h1, editrice:t.editrice, cible:t.audience, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
+        body: JSON.stringify({ space: SPACE || undefined, articleId, stepKey: 'validation', kind:'relecture', to: (emailsFor(getConfigFor('validation'), 'Service Communication').length ? emailsFor(getConfigFor('validation'), 'Service Communication') : undefined), sujet:t.sujet, h1:t.h1, editrice:t.editrice, cible:t.audience, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
       });
       if(!r.ok) alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.');
     }catch(err){ alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.'); }
@@ -2181,7 +2189,7 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
 });
 
 /* ===== Commentaires du bloc « À rédiger » ===== */
-const TODO_ARTICLE_ID = '__todo__';
+const TODO_ARTICLE_ID = SPACE ? '__todo_strat__' : '__todo__';
 function renderTodoComments(){
   const el = document.getElementById('todoComments');
   if(el) el.innerHTML = renderComments(TODO_ARTICLE_ID);
