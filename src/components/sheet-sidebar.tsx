@@ -7,8 +7,17 @@ import symbol from "@/assets/alterna-symbol.png.asset.json";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 
-const DEFAULT_ORDER = ["Arborescence", "Blog", "Suivi", "Stratégie PAC", "Docs", "Autres", "Archives"];
+const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
 const ORDER_KEY = "sidebar.groupOrder.v1";
+const PROMOTED_KEY = "sidebar.orderPromoted.v1";
+
+// Move "Stratégie PAC" to the very top and "Blog" right after it, keeping the
+// relative order of every other group.
+const promotePac = (list: string[]) => [
+  ...list.filter((g) => g === "Stratégie PAC"),
+  ...list.filter((g) => g === "Blog"),
+  ...list.filter((g) => g !== "Stratégie PAC" && g !== "Blog"),
+];
 const COLLAPSED_KEY = "sidebar.groupCollapsed.v1";
 const GROUP_OVERRIDE_KEY = "sidebar.sheetGroup.v1";
 const SUBPATH_KEY = "sidebar.sheetSubpath.v1";
@@ -181,7 +190,16 @@ export function SheetSidebar({
         // Merge saved order with any new groups discovered later.
         const known = new Set(migrated);
         const extras = DEFAULT_ORDER.filter((g) => !known.has(g));
-        setOrder([...migrated, ...extras]);
+        let next = [...migrated, ...extras];
+        // One-time: bring "Stratégie PAC" to the top and "Blog" right after it.
+        try {
+          if (!localStorage.getItem(PROMOTED_KEY)) {
+            next = promotePac(next);
+            localStorage.setItem(ORDER_KEY, JSON.stringify(next));
+            localStorage.setItem(PROMOTED_KEY, "1");
+          }
+        } catch { /* ignore */ }
+        setOrder(next);
       }
     } catch { /* ignore */ }
   }, []);
