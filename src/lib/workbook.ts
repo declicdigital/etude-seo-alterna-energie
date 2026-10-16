@@ -5,12 +5,17 @@ export type Workbook = Record<string, Row[]>;
 
 export const workbook = raw as unknown as Workbook;
 
+/** Stratégie édito articles: same columns as the blog, filled by its own editorial pipeline. */
+export const STRATEGIE_SHEET = "STRATEGIE - ARTICLES";
+workbook[STRATEGIE_SHEET] ??= [[...(workbook["BLOG - ARTICLES"]?.[0] ?? [])]];
+
 /** Sheets retired from the tool (kept in the raw data, hidden everywhere). */
 export const RETIRED_SHEETS = new Set(["BLOG - IDEE"]);
 
 /** Sheets that aren't Excel data but standalone tools embedded in the app. */
 export const EMBED_SHEETS: Record<string, string> = {
   "SUIVI EDITORIAL": "/suivi-editorial.html",
+  "SUIVI STRATEGIE": "/suivi-editorial.html?space=strategie",
 };
 
 export const sheetNames = [
@@ -48,6 +53,9 @@ export const EXTRA_COLUMNS: Record<
 
       ],
     },
+    { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
+  ],
+  "STRATEGIE - ARTICLES": [
     { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
   ],
 };
@@ -223,10 +231,12 @@ export const SHEET_META: Record<
   "Netlinking": { headerRow: 1, firstDataRow: 2, label: "Netlinking", group: "Suivi" },
   "Roadmap 2026 - WIP": { headerRow: 1, firstDataRow: 2, label: "Roadmap 2026", group: "Suivi" },
   "Temps passé": { headerRow: 0, firstDataRow: 1, label: "Temps passé", group: "Suivi" },
-  "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Électricité", group: "Stratégie édito" },
-  "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Gaz", group: "Stratégie édito" },
   "Webflow - fonctionnement": { headerRow: 1, treeCols: 5, firstDataRow: 2, label: "Webflow - fonctionnement", group: "Docs" },
   "SUIVI EDITORIAL": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Blog" },
+  "SUIVI STRATEGIE": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Stratégie édito" },
+  "STRATEGIE - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Articles & publication", group: "Stratégie édito" },
+  "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon électricité", group: "Archives" },
+  "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon gaz", group: "Archives" },
 };
 
 export function headersOf(sheet: string, edits?: EditsMap): string[] {

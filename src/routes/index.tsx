@@ -120,7 +120,8 @@ function Index() {
   const locked =
     !access.isAdmin &&
     !baseSheet.toUpperCase().startsWith("BLOG") &&
-    baseSheet.toUpperCase() !== "SUIVI EDITORIAL";
+    !baseSheet.toUpperCase().startsWith("SUIVI ") &&
+    !baseSheet.toUpperCase().startsWith("STRATEGIE");
   const embedSrc = isGuide ? null : embedSrcOf(sheet);
   const [pageHash, setPageHash] = useState(() => window.location.hash);
   useEffect(() => {

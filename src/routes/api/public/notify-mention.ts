@@ -22,7 +22,7 @@ const esc = (s: string) =>
 
 
 
-function buildHtml(p: { author: string; title: string; step?: string; message: string; articleId?: string }): string {
+function buildHtml(p: { author: string; title: string; step?: string; message: string; articleId?: string; space?: string }): string {
   const msg = esc(p.message).replace(/(@[^\s@]+(?:\s[A-ZÀ-Ý][\wà-ÿ-]+)?)/g, '<strong style="color:#047857">$1</strong>').replace(/\n/g, "<br>");
   return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;padding:32px 12px"><tr><td align="center">
@@ -113,7 +113,7 @@ export const Route = createFileRoute("/api/public/notify-mention")({
           ``,
           `Voir le message : ${editorialLink(payload.articleId, undefined, "comments", !!payload.articleId?.startsWith("__todo"), payload.space)}`,
         ].filter((l): l is string => l !== null);
-        const html = buildHtml({ articleId: payload.articleId, author, title: payload.articleTitle, step: payload.stepLabel, message: payload.message });
+        const html = buildHtml({ space: payload.space, articleId: payload.articleId, author, title: payload.articleTitle, step: payload.stepLabel, message: payload.message });
         return sendBrevo(recipients, subject, bodyLines.join("\r\n"), html);
       },
     },
