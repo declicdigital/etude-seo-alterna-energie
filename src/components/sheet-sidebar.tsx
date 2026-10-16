@@ -7,7 +7,7 @@ import symbol from "@/assets/alterna-symbol.png.asset.json";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 
-const DEFAULT_ORDER = ["Arborescence", "Blog", "Suivi", "Stratégie édito", "Docs", "Autres", "Archives"];
+const DEFAULT_ORDER = ["Arborescence", "Blog", "Suivi", "Stratégie PAC", "Docs", "Autres", "Archives"];
 const ORDER_KEY = "sidebar.groupOrder.v1";
 const COLLAPSED_KEY = "sidebar.groupCollapsed.v1";
 const GROUP_OVERRIDE_KEY = "sidebar.sheetGroup.v1";
@@ -23,7 +23,7 @@ const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
     { name: "Particulier", subs: [] },
     { name: "Professionnel", subs: [] },
   ],
-  "Stratégie édito": [
+  "Stratégie PAC": [
     { name: "Particulier", subs: [] },
     { name: "Professionnel", subs: [] },
   ],
@@ -72,7 +72,7 @@ const GROUP_STYLES: Record<string, {
     hover: "hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300",
     bar: "bg-violet-500",
   },
-  "Stratégie édito": {
+  "Stratégie PAC": {
     header: "bg-violet-600 text-white",
     active: "bg-violet-500/15 text-violet-800 dark:text-violet-200 font-semibold ring-1 ring-inset ring-violet-500/30",
     hover: "hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300",
@@ -121,7 +121,14 @@ export function SheetSidebar({
   useEffect(() => {
     try {
       const raw = localStorage.getItem(GROUP_OVERRIDE_KEY);
-      if (raw) setGroupOverrides({ ...DEFAULT_GROUP_OVERRIDES, ...(JSON.parse(raw) as Record<string, string>) });
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, string>;
+        // Migrate old group label to "Stratégie PAC".
+        for (const k of Object.keys(parsed)) {
+          if (parsed[k] === "Stratégie édito") parsed[k] = "Stratégie PAC";
+        }
+        setGroupOverrides({ ...DEFAULT_GROUP_OVERRIDES, ...parsed });
+      }
     } catch { /* ignore */ }
   }, []);
   const setSheetGroup = (sheet: string, group: string | null) => {
@@ -174,10 +181,12 @@ export function SheetSidebar({
       const raw = localStorage.getItem(ORDER_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as string[];
+        // Migrate old "Stratégie édito" label to "Stratégie PAC".
+        const migrated = saved.map((g) => (g === "Stratégie édito" ? "Stratégie PAC" : g));
         // Merge saved order with any new groups discovered later.
-        const known = new Set(saved);
+        const known = new Set(migrated);
         const extras = DEFAULT_ORDER.filter((g) => !known.has(g));
-        setOrder([...saved, ...extras]);
+        setOrder([...migrated, ...extras]);
       }
     } catch { /* ignore */ }
   }, []);
@@ -191,7 +200,11 @@ export function SheetSidebar({
   useEffect(() => {
     try {
       const raw = localStorage.getItem(COLLAPSED_KEY);
-      if (raw) setCollapsed(new Set(JSON.parse(raw) as string[]));
+      if (raw) {
+        // Migrate old "Stratégie édito" label to "Stratégie PAC".
+        const saved = (JSON.parse(raw) as string[]).map((g) => (g === "Stratégie édito" ? "Stratégie PAC" : g));
+        setCollapsed(new Set(saved));
+      }
     } catch { /* ignore */ }
   }, []);
   const toggleCollapsed = (g: string) => {

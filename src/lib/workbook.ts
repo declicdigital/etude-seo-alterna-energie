@@ -5,7 +5,7 @@ export type Workbook = Record<string, Row[]>;
 
 export const workbook = raw as unknown as Workbook;
 
-/** Stratégie édito articles: same columns as the blog, filled by its own editorial pipeline. */
+/** Stratégie PAC articles: same columns as the blog, filled by its own editorial pipeline. */
 export const STRATEGIE_SHEET = "STRATEGIE - ARTICLES";
 workbook[STRATEGIE_SHEET] ??= [[...(workbook["BLOG - ARTICLES"]?.[0] ?? [])]];
 
@@ -233,8 +233,8 @@ export const SHEET_META: Record<
   "Temps passé": { headerRow: 0, firstDataRow: 1, label: "Temps passé", group: "Suivi" },
   "Webflow - fonctionnement": { headerRow: 1, treeCols: 5, firstDataRow: 2, label: "Webflow - fonctionnement", group: "Docs" },
   "SUIVI EDITORIAL": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Blog" },
-  "SUIVI STRATEGIE": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Stratégie édito" },
-  "STRATEGIE - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Articles & publication", group: "Stratégie édito" },
+  "SUIVI STRATEGIE": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Stratégie PAC" },
+  "STRATEGIE - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Articles & publication", group: "Stratégie PAC" },
   "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon électricité", group: "Archives" },
   "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon gaz", group: "Archives" },
 };

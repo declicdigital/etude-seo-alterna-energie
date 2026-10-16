@@ -122,7 +122,7 @@ function Index() {
     !baseSheet.toUpperCase().startsWith("BLOG") &&
     !baseSheet.toUpperCase().startsWith("SUIVI ") &&
     !baseSheet.toUpperCase().startsWith("STRATEGIE") &&
-    sheetInfo?.group !== "Stratégie édito";
+    sheetInfo?.group !== "Stratégie PAC";
   const embedSrc = isGuide ? null : embedSrcOf(sheet);
   const [pageHash, setPageHash] = useState(() => window.location.hash);
   useEffect(() => {

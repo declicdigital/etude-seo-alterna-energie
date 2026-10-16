@@ -735,7 +735,7 @@ const KEY = k => SPACE ? 'strat:' + k : k;
 const BLOG_SHEET = SPACE ? 'STRATEGIE - ARTICLES' : 'BLOG - ARTICLES';
 const BLOG_BASE_LEN = SPACE ? 1 : 424;
 if(NO_CAT) document.documentElement.classList.add('no-cat');
-if(SPACE){ document.title = 'Suivi éditorial (Stratégie édito) — Outil contenus'; document.addEventListener('DOMContentLoaded', () => { const h = document.querySelector('h1'); if(h) h.textContent = 'Suivi éditorial — Stratégie édito'; }); const h0 = document.querySelector('h1'); if(h0) h0.textContent = 'Suivi éditorial — Stratégie édito'; }
+if(SPACE){ document.title = 'Suivi éditorial (Stratégie PAC) — Outil contenus'; document.addEventListener('DOMContentLoaded', () => { const h = document.querySelector('h1'); if(h) h.textContent = 'Suivi éditorial — Stratégie PAC'; }); const h0 = document.querySelector('h1'); if(h0) h0.textContent = 'Suivi éditorial — Stratégie PAC'; }
 const AUDIENCES = ['Particulier', 'Professionnel'];
 const BLOG_CATEGORIES = {
   'Particulier': [
@@ -1031,7 +1031,7 @@ function normalizeConfig(){
     if(DEFAULT_EMAILS[c.key] && !c.emails){ c.emails = { ...DEFAULT_EMAILS[c.key] }; changed = true; }
   }
   // Brief SEO est supprimée ; Relecture et Image sont fusionnées en une seule étape.
-  // Stratégie édito : étape « Brief » en tout premier, avant la rédaction.
+  // Stratégie PAC : étape « Brief » en tout premier, avant la rédaction.
   const drop = SPACE ? ['idee', 'image', 'validation_geoffrey'] : ['idee', 'brief', 'image', 'validation_geoffrey'];
   if(SPACE && !config.some(c => c.key === 'brief')){
     config.unshift({ key:'brief', label:'Brief', assignee:'', skippable:false });
