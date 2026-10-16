@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getAccess, signOutAndGoToAuth } from "@/lib/access";
-import symbol from "@/assets/alterna-symbol.png.asset.json";
+import logo from "@/assets/alterna-logo.png.asset.json";
 
 type Profile = {
   id: string;

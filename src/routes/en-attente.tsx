@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getAccess, signOutAndGoToAuth, type AccessStatus } from "@/lib/access";
 import { pendingEditorialDestination } from "@/lib/editorial-links";
-import symbol from "@/assets/alterna-symbol.png.asset.json";
+import logo from "@/assets/alterna-logo.png.asset.json";
 
 export const Route = createFileRoute("/en-attente")({
   ssr: false,

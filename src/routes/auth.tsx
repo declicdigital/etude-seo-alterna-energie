@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { getAccess } from "@/lib/access";
 import { pendingEditorialDestination } from "@/lib/editorial-links";
-import symbol from "@/assets/alterna-symbol.png.asset.json";
+import logo from "@/assets/alterna-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
