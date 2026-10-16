@@ -1010,7 +1010,12 @@ function normalizeConfig(){
     if(DEFAULT_EMAILS[c.key] && !c.emails){ c.emails = { ...DEFAULT_EMAILS[c.key] }; changed = true; }
   }
   // Brief SEO est supprimée ; Relecture et Image sont fusionnées en une seule étape.
-  const drop = ['brief', 'image', 'validation_geoffrey'];
+  // Stratégie édito : étape « Brief » en tout premier, avant la rédaction.
+  const drop = SPACE ? ['image', 'validation_geoffrey'] : ['brief', 'image', 'validation_geoffrey'];
+  if(SPACE && !config.some(c => c.key === 'brief')){
+    config.unshift({ key:'brief', label:'Brief', assignee:'', skippable:false });
+    changed = true;
+  }
   if(config.some(c => drop.includes(c.key))){
     config = config.filter(c => !drop.includes(c.key));
     changed = true;
@@ -1082,7 +1087,7 @@ async function loadArticles(){
         const a = JSON.parse(r.value);
         let articleChanged = false;
         // Retire l'étape Brief SEO des articles existants.
-        if(Array.isArray(a.steps) && a.steps.some(s => s.key === 'brief')){
+        if(!SPACE && Array.isArray(a.steps) && a.steps.some(s => s.key === 'brief')){
           a.steps = a.steps.filter(s => s.key !== 'brief');
           articleChanged = true;
         }
@@ -2116,6 +2121,8 @@ async function maybeCreateFromTodo(t){
   if(red){ red.assignee = t.editrice; red.status = 'done'; red.date = new Date().toISOString().slice(0,10); }
   const idee = article.steps.find(s => s.key === 'idee');
   if(idee && idee.status === 'pending') idee.status = 'skipped';
+  const brief = article.steps.find(s => s.key === 'brief');
+  if(brief && brief.status === 'pending'){ brief.status = 'done'; brief.date = new Date().toISOString().slice(0,10); }
   const aud = (t.audience||'').trim();
   if(aud === 'Professionnel' || aud === 'Particulier') article.audience = aud;
   const cat = (t.categorie||'').trim();
