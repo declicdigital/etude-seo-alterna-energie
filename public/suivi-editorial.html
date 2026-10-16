@@ -2033,7 +2033,7 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
   }
 });
 
-const REFRESH_ON_BLUR = ['edit-assignee', 'edit-docx-link', 'edit-final-link', 'edit-title', 'edit-date'];
+const REFRESH_ON_BLUR = ['edit-assignee', 'edit-brief-link', 'edit-docx-link', 'edit-final-link', 'edit-title', 'edit-date'];
 document.getElementById('articlesContainer').addEventListener('blur', (e) => {
   const t = e.target;
   if(t && t.classList && t.classList.contains('comment-input')){
