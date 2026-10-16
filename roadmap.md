@@ -7,5 +7,6 @@
 - [x] Couleurs éditrice dans À rédiger (Violet Marina, Vert Aurorae, ligne entière) + colonne Éditrice juste après Sujet
 - [x] Espace commentaire avec @ dans le bloc À rédiger + cloche de notifications cliquable (mène à l'endroit où on a été tagué)
 - [x] Liens des mails : ouvrir la carte et la zone de l'étape concernée, y compris après connexion.
+- [x] Liens des mails : réduire les autres cartes et centrer la zone demandée de la carte destinataire.
 
 - [x] Encart Ajouter une image réservé à l’étape « Relecture + Image »
