@@ -731,6 +731,7 @@ const KEY = k => SPACE ? 'strat:' + k : k;
 const BLOG_SHEET = SPACE ? 'STRATEGIE - ARTICLES' : 'BLOG - ARTICLES';
 const BLOG_BASE_LEN = SPACE ? 1 : 424;
 if(NO_CAT) document.documentElement.classList.add('no-cat');
+if(SPACE){ document.title = 'Suivi éditorial (Stratégie édito) — Outil contenus'; document.addEventListener('DOMContentLoaded', () => { const h = document.querySelector('h1'); if(h) h.textContent = 'Suivi éditorial — Stratégie édito'; }); const h0 = document.querySelector('h1'); if(h0) h0.textContent = 'Suivi éditorial — Stratégie édito'; }
 const AUDIENCES = ['Particulier', 'Professionnel'];
 const BLOG_CATEGORIES = {
   'Particulier': [
