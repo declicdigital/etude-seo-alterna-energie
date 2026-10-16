@@ -663,6 +663,7 @@ button{ font-family: inherit; cursor:pointer; }
 .no-cat .col-cat{display:none!important}
 html:not(.no-cat) .col-brief{display:none!important}
 .no-cat .col-cible{display:none!important}
+.no-cat .col-energy{display:none!important}
 </style>
 </head>
 <body>
@@ -710,7 +711,7 @@ html:not(.no-cat) .col-brief{display:none!important}
     </div>
     <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th class="col-brief">Catégorie</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th class="col-cible">Cible</th><th class="col-cat">Catégorie</th><th>Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th class="col-brief">Catégorie</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th class="col-cible">Cible</th><th class="col-cat">Catégorie</th><th class="col-energy">Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
     <div id="todoComments" class="todo-comments"></div>
@@ -1193,7 +1194,7 @@ function missingFields(article, stepKey){
     if(!article.audience) out.push('Particulier / Professionnel');
     if(!(article.title||'').trim() || article.title.trim() === 'Nouvel article') out.push("le titre de l'article");
     if(!NO_CAT && !article.category) out.push('la catégorie');
-    if(!article.energy) out.push("l'énergie");
+    if(!NO_CAT && !article.energy) out.push("l'énergie");
   }
   if(stepKey === 'integration'){
     if(!step || !step.date) out.push('la date');
@@ -1379,7 +1380,7 @@ function renderRedactionFields(article){
         ${cats.map(c => `<option value="${escapeAttr(c)}" ${article.category === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
       </select>
     </div>
-    <div class="field">
+    <div class="field col-energy">
       <label>Énergie</label>
       <select data-action="pick-energy" data-article-id="${article.id}">
         <option value="">— Choisir —</option>
@@ -2132,7 +2133,7 @@ async function saveTodos(){
 const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com'];
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
 function todoComplete(t){
-  return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].concat(SPACE ? ['brief','type','dest'] : []).filter(f => !(NO_CAT && f === 'categorie')).every(f => (t[f]||'').trim());
+  return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].concat(SPACE ? ['brief','type','dest'] : []).filter(f => !(NO_CAT && (f === 'categorie' || f === 'energie'))).every(f => (t[f]||'').trim());
 }
 /* Nombre de jours restants avant la deadline (négatif si dépassée, null si pas de date). */
 function todoDaysLeft(t){
@@ -2184,7 +2185,7 @@ function renderTodos(){
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td class="col-cible"><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td class="col-cat"><select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
-    <td><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
+    <td class="col-energy"><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><div class="td-dl">${isUrgentTodo(t) ? `<span class="todo-dot" title="${escapeAttr(urgentTitle(t))}"></span>` : ''}<input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></div></td>
     <td class="col-brief"><div class="td-linkwrap"><input data-f="brief" value="${escapeAttr(t.brief||'')}" placeholder="https://…">${(t.brief||'').trim() ? `<a class="todo-open" href="${escapeAttr(normalizeUrl(t.brief.trim()))}" target="_blank" rel="noopener noreferrer" title="Ouvrir le lien">↗</a>` : ''}</div></td>
     <td><div class="td-linkwrap"><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…">${(t.docx||'').trim() ? `<a class="todo-open" href="${escapeAttr(normalizeUrl(t.docx.trim()))}" target="_blank" rel="noopener noreferrer" title="Ouvrir le lien">↗</a>` : ''}</div></td>
