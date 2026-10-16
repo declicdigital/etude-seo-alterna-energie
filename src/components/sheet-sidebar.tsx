@@ -32,6 +32,11 @@ const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
     { name: "Particulier", subs: [] },
     { name: "Professionnel", subs: [] },
   ],
+  // Same shape as Blog: "Suivi éditorial" stays on top, the article list sits
+  // nested under it.
+  "Stratégie PAC": [
+    { name: "Contenus", subs: [] },
+  ],
 };
 
 // Default sub-path assignments for existing sheets. Format: "Subcat/Subsub".
@@ -40,6 +45,7 @@ const DEFAULT_SUBPATHS: Record<string, string> = {
   "BLOG - ARTICLES": "*",
   "Structure RES": "Particulier",
   "Structure PRO": "Professionnel",
+  "STRATEGIE - ARTICLES": "Contenus",
 };
 
 // Per-group color palette. Each entry drives:
