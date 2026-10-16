@@ -1,4 +1,4 @@
-import { BookOpen, Newspaper, Target, ArrowRight, Mail, CheckCircle2 } from "lucide-react";
+import { BookOpen, Newspaper, Target, ArrowRight, Mail, CheckCircle2, PenLine, Image as ImageIcon, Globe, Sparkles, Users, Bell, AtSign } from "lucide-react";
 type Step = { title: string; who: string; color: string; items: string[]; mail?: string };
 type Flow = { title: string; intro: string; steps: Step[]; end: string[] };
 
@@ -101,28 +101,106 @@ const ENTRIES = [
   { icon: BookOpen, title: "Guide de l'outil", sheet: "__guide", text: "Les modes opératoires schématisés de chaque suivi." },
 ];
 
+const TEAM = [
+  { name: "Aurorae", role: "Rédaction · Caroline & Elodie", color: "bg-emerald-500" },
+  { name: "Marina", role: "Rédaction", color: "bg-violet-500" },
+  { name: "Fannie", role: "Relecture + image", color: "bg-amber-500" },
+  { name: "Marick", role: "Intégration site", color: "bg-sky-500" },
+  { name: "Geoffrey", role: "Pilotage · en copie", color: "bg-rose-500" },
+];
+
+const PIPE = [
+  { label: "À rédiger", icon: PenLine, tone: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" },
+  { label: "Relecture + image", icon: ImageIcon, tone: "bg-violet-500/15 text-violet-700 dark:text-violet-300" },
+  { label: "Intégration", icon: Globe, tone: "bg-sky-500/15 text-sky-700 dark:text-sky-300" },
+  { label: "Publié", icon: CheckCircle2, tone: "bg-rose-500/15 text-rose-700 dark:text-rose-300" },
+];
+
 export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void }) {
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-4xl mx-auto px-6 md:px-8 py-12 space-y-8">
-        <div>
-          <div className="text-xs uppercase tracking-widest text-primary font-semibold">Alterna Énergie</div>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight">Bienvenue sur l'Outil contenus</h2>
-          <p className="mt-2 text-muted-foreground">Choisissez un espace pour commencer.</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
+      <div className="max-w-6xl mx-auto px-6 md:px-10 py-10 space-y-10">
+        <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-8 md:p-12">
+          <div className="absolute -right-16 -top-16 size-64 rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute right-24 bottom-0 size-40 rounded-full bg-violet-500/10 blur-3xl" />
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-card/70 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
+              <Sparkles className="size-3.5" />Alterna Énergie
+            </div>
+            <h2 className="mt-4 text-3xl md:text-5xl font-semibold tracking-tight max-w-2xl">Bienvenue sur l'Outil contenus</h2>
+            <p className="mt-3 text-base md:text-lg text-muted-foreground max-w-2xl">
+              Du sujet à la mise en ligne : on rédige, on relit, on intègre, on publie, et chacun reçoit le bon mail au bon moment.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button onClick={() => onOpenSheet("SUIVI STRATEGIE")} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow hover:opacity-90">
+                Stratégie PAC <ArrowRight className="size-4" />
+              </button>
+              <button onClick={() => onOpenSheet("SUIVI EDITORIAL")} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted">
+                Blog <ArrowRight className="size-4" />
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-3">
           {ENTRIES.map((e) => {
             const Icon = e.icon;
             return (
               <button key={e.title} type="button" onClick={() => onOpenSheet(e.sheet)}
-                className="group text-left rounded-xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/50">
-                <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><Icon className="size-5" /></div>
-                <div className="mt-4 font-semibold flex items-center gap-1">{e.title}<ArrowRight className="size-4 opacity-0 group-hover:opacity-100 transition-opacity" /></div>
+                className="group text-left rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:border-primary/50">
+                <div className="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform"><Icon className="size-6" /></div>
+                <div className="mt-5 text-lg font-semibold flex items-center gap-1">{e.title}<ArrowRight className="size-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" /></div>
                 <p className="mt-1 text-sm text-muted-foreground">{e.text}</p>
               </button>
             );
           })}
-        </div>
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card p-6 md:p-8">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Le parcours d'un contenu</h3>
+          <div className="mt-6 flex flex-col md:flex-row md:items-center gap-3">
+            {PIPE.map((p, i) => {
+              const Icon = p.icon;
+              return (
+                <div key={p.label} className="flex md:flex-1 items-center gap-3">
+                  <div className="flex-1 flex flex-col items-center text-center gap-2">
+                    <div className={`size-16 rounded-2xl flex items-center justify-center ${p.tone}`}><Icon className="size-7" /></div>
+                    <div className="text-sm font-semibold">{p.label}</div>
+                  </div>
+                  {i < PIPE.length - 1 && <ArrowRight className="hidden md:block size-5 text-muted-foreground shrink-0" />}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"><Users className="size-4" />L'équipe</h3>
+            <ul className="mt-4 space-y-3">
+              {TEAM.map((t) => (
+                <li key={t.name} className="flex items-center gap-3">
+                  <div className={`size-9 rounded-full ${t.color} text-primary-foreground flex items-center justify-center text-sm font-bold`}>{t.name[0]}</div>
+                  <div><div className="text-sm font-semibold">{t.name}</div><div className="text-xs text-muted-foreground">{t.role}</div></div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"><Bell className="size-4" />Automatique</h3>
+            <ul className="mt-4 space-y-3 text-sm">
+              {[
+                [Mail, "Un mail à chaque étape validée, avec lien direct vers la carte"],
+                [Bell, "Rappel aux éditrices 5 jours avant la deadline"],
+                [AtSign, "@ dans un message : les personnes taguées sont prévenues"],
+                [ImageIcon, "Images ajoutées par glisser-déposer, téléchargeables à l'intégration"],
+              ].map(([I, t]) => {
+                const Ic = I as typeof Mail;
+                return <li key={t as string} className="flex gap-3"><span className="size-8 shrink-0 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><Ic className="size-4" /></span><span className="pt-1.5">{t as string}</span></li>;
+              })}
+            </ul>
+          </div>
+        </section>
       </div>
     </div>
   );
