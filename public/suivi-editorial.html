@@ -1877,6 +1877,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
       return;
     }
     step.status = 'done';
+    if(key !== 'integration' || !step.date) step.date = new Date().toISOString().slice(0,10);
     await saveArticle(article);
     if(key === 'integration') await pushToBlog(article);
     const MAIL_BY_STEP = {
