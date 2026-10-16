@@ -7,7 +7,7 @@ import symbol from "@/assets/alterna-symbol.png.asset.json";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 
-const DEFAULT_ORDER = ["Arborescence", "Blog", "Suivi", "Stratégie édito", "Docs", "Autres", "Archives"];
+const DEFAULT_ORDER = ["Arborescence", "Blog", "Suivi", "Stratégie PAC", "Docs", "Autres", "Archives"];
 const ORDER_KEY = "sidebar.groupOrder.v1";
 const COLLAPSED_KEY = "sidebar.groupCollapsed.v1";
 const GROUP_OVERRIDE_KEY = "sidebar.sheetGroup.v1";
@@ -23,7 +23,7 @@ const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
     { name: "Particulier", subs: [] },
     { name: "Professionnel", subs: [] },
   ],
-  "Stratégie édito": [
+  "Stratégie PAC": [
     { name: "Particulier", subs: [] },
     { name: "Professionnel", subs: [] },
   ],
@@ -72,7 +72,7 @@ const GROUP_STYLES: Record<string, {
     hover: "hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300",
     bar: "bg-violet-500",
   },
-  "Stratégie édito": {
+  "Stratégie PAC": {
     header: "bg-violet-600 text-white",
     active: "bg-violet-500/15 text-violet-800 dark:text-violet-200 font-semibold ring-1 ring-inset ring-violet-500/30",
     hover: "hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300",

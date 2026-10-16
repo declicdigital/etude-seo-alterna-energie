@@ -86,7 +86,7 @@ export const Route = createFileRoute("/api/public/jobs/deadline-reminders")({
           return Response.json({ error: "unauthorized" }, { status: 401 });
         }
 
-        // Each editorial space (Blog, Stratégie édito) has its own todo list and pipeline settings.
+        // Each editorial space (Blog, Stratégie PAC) has its own todo list and pipeline settings.
         const todos: (Todo & { space: string; emails: Record<string, string[]> })[] = [];
         for (const space of ["", "strategie"]) {
           const pfx = space ? "strat:" : "";
