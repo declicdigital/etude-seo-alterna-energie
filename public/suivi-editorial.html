@@ -47,7 +47,7 @@ h1, h2, .heading{
   font-weight: 600;
 }
 
-.wrap{ max-width: 1040px; margin: 0 auto; }
+.wrap{ max-width: 1560px; margin: 0 auto; }
 
 .brand-lockup{ display:flex; align-items:center; gap:28px; }
 .brand-logo{ width:176px; height:auto; display:block; }
@@ -706,7 +706,7 @@ html:not(.no-cat) .col-brief{display:none!important}
     </div>
     <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Cible</th><th class="col-cat">Catégorie</th><th>Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Cible</th><th class="col-cat">Catégorie</th><th>Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
     <div id="todoComments" class="todo-comments"></div>
@@ -2060,7 +2060,7 @@ async function saveTodos(){
 const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com'];
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
 function todoComplete(t){
-  return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].concat(SPACE ? ['brief'] : []).filter(f => !(NO_CAT && f === 'categorie')).every(f => (t[f]||'').trim());
+  return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].concat(SPACE ? ['brief','type'] : []).filter(f => !(NO_CAT && f === 'categorie')).every(f => (t[f]||'').trim());
 }
 /* Nombre de jours restants avant la deadline (négatif si dépassée, null si pas de date). */
 function todoDaysLeft(t){
@@ -2101,11 +2101,12 @@ function refreshTodoDot(tr, t){
 }
 function renderTodos(){
   const body = document.getElementById('todoBody');
-  if(!todos.length){ body.innerHTML = '<tr><td colspan="10" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
+  if(!todos.length){ body.innerHTML = '<tr><td colspan="11" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
   const ro = !canEditTodo();
   const addBtn = document.getElementById('todoAddBtn'); if(addBtn) addBtn.style.display = ro ? 'none' : '';
   body.innerHTML = sortedTodos().map(t => `<tr data-todo-id="${t.id}"${t.editrice === 'Aurorae' ? ' class="todo-aurorae"' : t.editrice === 'Marina' ? ' class="todo-marina"' : ''}>
     <td><input data-f="sujet" value="${escapeAttr(t.sujet||'')}" placeholder="Sujet"></td>
+    <td class="col-brief"><select data-f="type"><option value="">—</option>${['Réécriture','Création'].map(o=>`<option ${t.type===o?'selected':''}>${o}</option>`).join('')}</select></td>
     <td><select data-f="editrice"><option value="">—</option>${(((getConfigFor('redaction')||{}).options)||['Aurorae','Marina']).map(o=>`<option ${t.editrice===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
@@ -2123,6 +2124,7 @@ async function maybeCreateFromTodo(t){
   if(!(t.sujet||'').trim() || !(t.h1||'').trim() || !t.editrice || !(t.docx||'').trim()) return;
   const article = newArticle(t.h1.trim());
   article.docxLink = normalizeUrl(t.docx.trim());
+  if(t.type) article.type = t.type;
   if((t.brief||'').trim()) article.briefLink = normalizeUrl(t.brief.trim());
   article.subject = t.sujet.trim();
   article.deadline = t.deadline || '';
