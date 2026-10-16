@@ -121,7 +121,8 @@ function Index() {
     !access.isAdmin &&
     !baseSheet.toUpperCase().startsWith("BLOG") &&
     !baseSheet.toUpperCase().startsWith("SUIVI ") &&
-    !baseSheet.toUpperCase().startsWith("STRATEGIE");
+    !baseSheet.toUpperCase().startsWith("STRATEGIE") &&
+    sheetInfo?.group !== "Stratégie édito";
   const embedSrc = isGuide ? null : embedSrcOf(sheet);
   const [pageHash, setPageHash] = useState(() => window.location.hash);
   useEffect(() => {
