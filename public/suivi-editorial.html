@@ -599,6 +599,8 @@ button{ font-family: inherit; cursor:pointer; }
 .comments-label{ display:block; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin: 10px 0 8px; }
 .comment-item{ background:#f7faf8; border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin-bottom:8px; position:relative; }
 .comment-del{ position:absolute; top:6px; right:6px; border:none; background:none; cursor:pointer; font-size:0.85rem; opacity:0.45; padding:2px 4px; border-radius:6px; }
+.comment-edit{ position:absolute; top:6px; right:32px; border:none; background:none; cursor:pointer; font-size:0.8rem; opacity:0.45; padding:2px 4px; border-radius:6px; }
+.comment-edit:hover{ opacity:1; background:#ecfdf5; }
 .comment-del:hover{ opacity:1; background:#fee2e2; }
 .comment-meta{ font-size:0.7rem; color:var(--muted); font-weight:600; margin-bottom:2px; }
 .comment-body{ font-size:0.85rem; color:var(--ink); white-space:pre-wrap; word-break:break-word; }
@@ -832,6 +834,7 @@ function renderComments(articleId){
   const items = list.map(c => `
     <div class="comment-item">
       <button class="comment-del" data-action="delete-comment" data-comment-id="${c.id}" data-article-id="${articleId}" title="Supprimer ce message">🗑</button>
+      <button class="comment-edit" data-action="edit-comment" data-comment-id="${c.id}" data-article-id="${articleId}" title="Modifier ce message">✏️</button>
       <div class="comment-meta">${escapeHtml(c.author_name || c.author_email)} · ${fmtDateTime(c.created_at)}</div>
       <div class="comment-body">${renderCommentBody(c.body)}</div>
     </div>`).join('');
@@ -948,6 +951,23 @@ async function sendComment(articleId, textarea){
     }catch(e){}
     if(!ok) alert('Message enregistré, mais le mail de notification n\'a pas pu partir.');
   }
+  renderArticles();
+  if(articleId === TODO_ARTICLE_ID) renderTodoComments();
+}
+
+async function editComment(articleId, commentId){
+  const c = (commentsByArticle[articleId] || []).find(x => x.id === commentId);
+  if(!c) return;
+  const next = prompt('Modifier le message :', c.body);
+  if(next === null || !next.trim() || next === c.body) return;
+  const res = await fetch(COMMENTS_REST + '?id=eq.' + encodeURIComponent(commentId), {
+    method: 'PATCH',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ body: next.trim() })
+  });
+  if(!res.ok){ alert('Le message n\'a pas pu être modifié.'); return; }
+  c.body = next.trim();
+  showSaved();
   renderArticles();
   if(articleId === TODO_ARTICLE_ID) renderTodoComments();
 }
@@ -1789,6 +1809,8 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     return;
   }
 
+  const editCommentBtn = e.target.closest('[data-action="edit-comment"]');
+  if(editCommentBtn){ await editComment(editCommentBtn.dataset.articleId, editCommentBtn.dataset.commentId); return; }
   const delCommentBtn = e.target.closest('[data-action="delete-comment"]');
   if(delCommentBtn){
     await deleteComment(delCommentBtn.dataset.articleId, delCommentBtn.dataset.commentId);
@@ -2227,6 +2249,8 @@ todoBlockEl.addEventListener('click', async (e) => {
     if(textarea) await sendComment(id, textarea);
     return;
   }
+  const editCommentBtn = e.target.closest('[data-action="edit-comment"]');
+  if(editCommentBtn){ await editComment(editCommentBtn.dataset.articleId, editCommentBtn.dataset.commentId); return; }
   const delCommentBtn = e.target.closest('[data-action="delete-comment"]');
   if(delCommentBtn){
     await deleteComment(delCommentBtn.dataset.articleId, delCommentBtn.dataset.commentId);
