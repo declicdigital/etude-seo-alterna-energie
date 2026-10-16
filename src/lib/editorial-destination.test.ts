@@ -15,7 +15,7 @@ test('a mail opens only its article and scrolls to the requested area', () => {
     const area = { scrollIntoView: () => { scrolled = true; }, classList: { add() {}, remove() {} } };
     const context = {
       location: { hash: `#article-one?step=${step}&focus=${focus}` },
-      URLSearchParams, articles, collapsed, openPanels: {} as Record<string, string>,
+      URLSearchParams, articles, collapsed, TODO_ARTICLE_ID: '__todo__', openPanels: {} as Record<string, string>,
       getArticle: (id: string) => articles.find(a => a.id === id), saveCollapsed() {}, renderArticles() {},
       document: { querySelectorAll: () => [{ dataset: { articleId: 'one' }, querySelector: (selector: string) => { selected = selector; return area; } }] },
       setTimeout() {},
