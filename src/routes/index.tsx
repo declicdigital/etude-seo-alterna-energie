@@ -23,6 +23,7 @@ import { getAccess, signOutAndGoToAuth } from "@/lib/access";
 import { LogOut, ShieldCheck, Lock, Download } from "lucide-react";
 import { downloadBackup } from "@/lib/backup";
 import { Link } from "@tanstack/react-router";
+import { rememberEditorialDestination, clearEditorialDestination } from "@/lib/editorial-links";
 
 const searchSchema = z.object({
   sheet: z.string().optional(),
@@ -39,10 +40,12 @@ export const Route = createFileRoute("/")({
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
+    rememberEditorialDestination(location.href);
     const access = await getAccess();
     if (!access.userId) throw redirect({ to: "/auth" });
     if (access.status !== "approved") throw redirect({ to: "/en-attente" });
+    clearEditorialDestination();
     return { access };
   },
   component: Index,

@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { editorialLink } from "@/lib/editorial-links";
 
 const BodySchema = z.object({
+  articleId: z.string().max(200).optional(),
   articleTitle: z.string().min(1).max(300),
   stepLabel: z.string().max(120).optional(),
   message: z.string().min(1).max(4000),
@@ -17,9 +19,9 @@ const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-const APP_URL = "https://etude-seo-alterna-energie.lovable.app/?sheet=SUIVI+EDITORIAL";
 
-function buildHtml(p: { author: string; title: string; step?: string; message: string }): string {
+
+function buildHtml(p: { author: string; title: string; step?: string; message: string; articleId?: string }): string {
   const msg = esc(p.message).replace(/(@[^\s@]+(?:\s[A-ZÀ-Ý][\wà-ÿ-]+)?)/g, '<strong style="color:#047857">$1</strong>').replace(/\n/g, "<br>");
   return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;padding:32px 12px"><tr><td align="center">
@@ -31,7 +33,7 @@ function buildHtml(p: { author: string; title: string; step?: string; message: s
 <p style="margin:0 0 16px;font-size:16px;font-weight:bold">${esc(p.title)}</p>
 ${p.step ? `<p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">Étape</p><p style="margin:0 0 16px">${esc(p.step)}</p>` : ""}
 <div style="background:#f0fdf4;border-left:4px solid #047857;padding:14px 16px;border-radius:6px;font-size:15px;line-height:1.5;margin:0 0 24px">${msg}</div>
-<a href="${APP_URL}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Voir le message</a>
+<a href="${editorialLink(p.articleId, undefined, "comments", p.articleId === "__todo__")}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Voir le message</a>
 </td></tr>
 <tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Notification automatique d'Outil contenus. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
@@ -108,9 +110,9 @@ export const Route = createFileRoute("/api/public/notify-mention")({
           `Message :`,
           payload.message,
           ``,
-          `Voir le message : ${APP_URL}`,
+          `Voir le message : ${editorialLink(payload.articleId, undefined, "comments", payload.articleId === "__todo__")}`,
         ].filter((l): l is string => l !== null);
-        const html = buildHtml({ author, title: payload.articleTitle, step: payload.stepLabel, message: payload.message });
+        const html = buildHtml({ articleId: payload.articleId, author, title: payload.articleTitle, step: payload.stepLabel, message: payload.message });
         return sendBrevo(recipients, subject, bodyLines.join("\r\n"), html);
       },
     },
