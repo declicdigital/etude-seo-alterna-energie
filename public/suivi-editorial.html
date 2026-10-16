@@ -1434,8 +1434,8 @@ function renderArticleCard(article){
           </div>
         </div>
         <div class="attachments-block">
-          <label class="attachments-label">Pièces jointes</label>
-          <div class="attachments-list">${renderAttachments(article.id, step)}</div>
+          <label class="attachments-label">${step.key === 'integration' ? 'Images validées (étape Relecture + Image)' : 'Pièces jointes'}</label>
+          <div class="attachments-list">${renderAttachments(article.id, step)}${step.key === 'integration' ? renderImagesReadonly(article, step.key) : ''}</div>
           ${isImageStep(step.key) ? `
           <label class="attach-image-label" data-article-id="${article.id}" data-step-key="${step.key}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></svg>
@@ -1507,6 +1507,20 @@ function renderAttachments(articleId, step){
         <button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>
       </div>`;
   }).join('');
+}
+
+function renderImagesReadonly(article, excludeKey){
+  const images = (article.steps || [])
+    .filter(s => s.key !== excludeKey)
+    .flatMap(s => (s.attachments || []).filter(a => a.type === 'image'));
+  if(!images.length) return '';
+  return images.map(a => `
+    <div class="attachment-chip attachment-image">
+      <a class="attachment-thumb" href="${escapeAttr(a.value)}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image">
+        <img src="${escapeAttr(a.value)}" alt="${escapeAttr(a.name||'Image')}">
+        <span class="attachment-badge">⤓</span>
+      </a>
+    </div>`).join('');
 }
 
 function shortenUrl(u){
