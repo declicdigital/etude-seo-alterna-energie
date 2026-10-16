@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { getAccess } from "@/lib/access";
+import { pendingEditorialDestination } from "@/lib/editorial-links";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
@@ -33,13 +34,13 @@ function AuthPage() {
   useEffect(() => {
     getAccess().then((a) => {
       if (!a.userId) return;
-      navigate({ to: a.status === "approved" ? "/" : "/en-attente" });
+      navigate(a.status === "approved" ? pendingEditorialDestination() : { to: "/en-attente" });
     });
   }, [navigate]);
 
   async function afterAuth() {
     const a = await getAccess();
-    navigate({ to: a.status === "approved" ? "/" : "/en-attente" });
+    navigate(a.status === "approved" ? pendingEditorialDestination() : { to: "/en-attente" });
   }
 
   async function onSubmit(e: React.FormEvent) {

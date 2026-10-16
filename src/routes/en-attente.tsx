@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getAccess, signOutAndGoToAuth, type AccessStatus } from "@/lib/access";
+import { pendingEditorialDestination } from "@/lib/editorial-links";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
 
 export const Route = createFileRoute("/en-attente")({
@@ -35,7 +36,7 @@ function PendingPage() {
         return;
       }
       if (a.status === "approved") {
-        navigate({ to: "/" });
+        navigate(pendingEditorialDestination());
         return;
       }
       setStatus(a.status);

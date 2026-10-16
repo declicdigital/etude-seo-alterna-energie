@@ -926,6 +926,7 @@ async function sendComment(articleId, textarea){
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          articleId,
           articleTitle,
           message: body,
           authorName: currentUserName() || undefined,
@@ -1802,7 +1803,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
       try{
         const r = await fetch('/api/public/notify-article-ready', {
           method:'POST', headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', cible: article.audience || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
+          body: JSON.stringify({ articleId: id, stepKey: mail.next, kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', cible: article.audience || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
         });
         if(!r.ok) alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.');
       }catch(err){ alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.'); }
@@ -2144,7 +2145,7 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
     try{
       const r = await fetch('/api/public/notify-article-ready', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ kind:'relecture', to: (emailsFor(getConfigFor('validation'), 'Service Communication').length ? emailsFor(getConfigFor('validation'), 'Service Communication') : undefined), sujet:t.sujet, h1:t.h1, editrice:t.editrice, cible:t.audience, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
+        body: JSON.stringify({ articleId, stepKey: 'validation', kind:'relecture', to: (emailsFor(getConfigFor('validation'), 'Service Communication').length ? emailsFor(getConfigFor('validation'), 'Service Communication') : undefined), sujet:t.sujet, h1:t.h1, editrice:t.editrice, cible:t.audience, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
       });
       if(!r.ok) alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.');
     }catch(err){ alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.'); }
@@ -2272,15 +2273,42 @@ document.getElementById('notifDropdown').addEventListener('click', (e) => {
 });
 
 function openArticleFromHash(){
-  const m = location.hash.match(/^#article-(.+)$/);
+  const m = location.hash.match(/^#(article|todo)-([^?]+)(?:\?(.*))?$/);
   if(!m) return;
-  const id = m[1];
-  if(collapsed[id]){ delete collapsed[id]; saveCollapsed(); renderArticles(); }
-  const card = document.querySelector(`.article-card[data-article-id="${id}"]`);
-  if(card){
-    card.scrollIntoView({ behavior:'smooth', block:'start' });
-    card.classList.add('notif-flash');
-    setTimeout(() => card.classList.remove('notif-flash'), 3500);
+  let id;
+  try{ id = decodeURIComponent(m[2]); }catch(e){ return; }
+  const params = new URLSearchParams(m[3] || '');
+  const focus = params.get('focus');
+  let target;
+  if(m[1] === 'todo' || id === TODO_ARTICLE_ID){
+    const block = document.getElementById('todoBlock');
+    block.classList.remove('collapsed');
+    try{ localStorage.setItem('editorial-todo-collapsed', 'false'); }catch(e){}
+    target = focus === 'comments' ? document.getElementById('todoComments')
+      : Array.from(block.querySelectorAll('[data-todo-id]')).find(row => row.dataset.todoId === id) || block;
+  } else {
+    const article = getArticle(id);
+    if(!article) return;
+    if(collapsed[id]){ delete collapsed[id]; saveCollapsed(); }
+    let key = params.get('step');
+    if(key === 'validation' || key === 'relecture'){
+      key = article.steps.some(s => s.key === key) ? key
+        : article.steps.find(s => s.key === 'validation' || s.key === 'relecture')?.key;
+    }
+    const step = article.steps.find(s => s.key === key);
+    if(step) openPanels[id] = step.key;
+    renderArticles();
+    const card = Array.from(document.querySelectorAll('.article-card')).find(c => c.dataset.articleId === id);
+    if(!card) return;
+    target = focus === 'images' ? card.querySelector('.attach-image-label')
+      : focus === 'comments' ? card.querySelector('.comments-block')
+      : step ? card.querySelector('.step-panel') : card;
+    target = target || card;
+  }
+  if(target){
+    target.scrollIntoView({ behavior:'instant', block:'center' });
+    target.classList.add('notif-flash');
+    setTimeout(() => target.classList.remove('notif-flash'), 3500);
   }
 }
 window.addEventListener('hashchange', openArticleFromHash);

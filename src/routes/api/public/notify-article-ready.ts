@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { notificationLink } from "@/lib/editorial-links";
 
 const BodySchema = z.object({
+  articleId: z.string().max(200).optional(),
+  stepKey: z.string().max(120).optional(),
   kind: z.enum(["ready", "relecture", "integration", "published"]).optional(),
   to: z.array(z.string().email()).max(10).optional(),
   sujet: z.string().max(300).optional().default(""),
@@ -20,7 +23,6 @@ const ADMIN_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const RELECTURE_EMAIL = "fannie.laurendin@soregies.fr";
 const INTEGRATION_EMAIL = "marick.navarro.ext@soregies.fr";
-const APP_URL = "https://etude-seo-alterna-energie.lovable.app/?sheet=SUIVI+EDITORIAL";
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -50,7 +52,7 @@ ${row("Catégorie", p.categorie)}
 ${row("Énergie", p.energie)}
 ${row("Deadline", p.deadline)}
 ${row("Lien du doc", p.docx)}
-<a href="${APP_URL}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir le suivi éditorial</a>
+<a href="${notificationLink(p.kind, p.articleId, p.stepKey)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir le suivi éditorial</a>
 </td></tr>
 <tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Notification automatique d'Outil contenus. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
@@ -74,6 +76,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           return Response.json({ error: "mail_not_configured" }, { status: 500 });
         }
 
+        const appUrl = notificationLink(payload.kind, payload.articleId, payload.stepKey);
         const isRel = payload.kind === "relecture";
         const isInt = payload.kind === "integration";
         const isPub = payload.kind === "published";
@@ -107,7 +110,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           `Nom de l'article (H1) : ${payload.h1}`,
           `Sujet : ${payload.sujet}`,
           "",
-          `Ouvrir le suivi éditorial : ${APP_URL}`,
+          `Ouvrir le suivi éditorial : ${appUrl}`,
         ].join("\r\n") : isRel ? [
           "Bonjour,",
           "",
@@ -118,7 +121,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           `Sujet : ${payload.sujet}`,
           payload.docx ? `Lien du doc : ${payload.docx}` : null,
           "",
-          `Ouvrir le suivi éditorial : ${APP_URL}`,
+          `Ouvrir le suivi éditorial : ${appUrl}`,
         ].filter((l): l is string => l !== null).join("\r\n") : isInt ? [
           "Bonjour,",
           "",
@@ -129,7 +132,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           `Sujet : ${payload.sujet}`,
           payload.docx ? `Lien du doc : ${payload.docx}` : null,
           "",
-          `Ouvrir le suivi éditorial : ${APP_URL}`,
+          `Ouvrir le suivi éditorial : ${appUrl}`,
         ].filter((l): l is string => l !== null).join("\r\n") : [
           "Bonjour Geoffrey,",
           "",
@@ -144,7 +147,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           payload.deadline ? `Deadline : ${payload.deadline}` : null,
           payload.docx ? `Lien du doc : ${payload.docx}` : null,
           "",
-          `Ouvrir le suivi éditorial : ${APP_URL}`,
+          `Ouvrir le suivi éditorial : ${appUrl}`,
         ]
           .filter((l): l is string => l !== null)
           .join("\r\n");

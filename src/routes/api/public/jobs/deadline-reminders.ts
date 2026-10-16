@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { editorialLink } from "@/lib/editorial-links";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = { name: "Outil contenus", email: "g.delabarre.alterna@gmail.com" };
-const APP_URL = "https://etude-seo-alterna-energie.lovable.app/?sheet=SUIVI+EDITORIAL";
 const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 
 const EDITOR_EMAILS: Record<string, string[]> = {
@@ -24,7 +24,7 @@ type Todo = {
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-function buildHtml(p: { sujet: string; h1: string; deadline: string }): string {
+function buildHtml(p: { id: string; sujet: string; h1: string; deadline: string }): string {
   return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;padding:32px 12px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
@@ -35,7 +35,7 @@ function buildHtml(p: { sujet: string; h1: string; deadline: string }): string {
 <p style="margin:0 0 16px;font-size:16px;font-weight:bold">${esc(p.sujet)}</p>
 ${p.h1 ? `<p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">Article</p><p style="margin:0 0 16px">${esc(p.h1)}</p>` : ""}
 <div style="background:#fef3c7;border-left:4px solid #d97706;padding:14px 16px;border-radius:6px;font-size:15px;line-height:1.5;margin:0 0 24px">Il vous reste <strong>${REMIND_DAYS} jours</strong> pour livrer l'article (deadline : <strong>${esc(p.deadline)}</strong>).</div>
-<a href="${APP_URL}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir le suivi éditorial</a>
+<a href="${editorialLink(p.id, undefined, undefined, true)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir le suivi éditorial</a>
 </td></tr>
 <tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Rappel automatique d'Outil contenus. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
@@ -151,11 +151,11 @@ export const Route = createFileRoute("/api/public/jobs/deadline-reminders")({
             ``,
             `Il vous reste ${REMIND_DAYS} jours pour livrer l'article.`,
             ``,
-            `Ouvrir le suivi éditorial : ${APP_URL}`,
+            `Ouvrir le suivi éditorial : ${editorialLink(todo.id, undefined, undefined, true)}`,
           ]
             .filter((l): l is string => l !== null)
             .join("\r\n");
-          const html = buildHtml({ sujet, h1: todo.h1 || "", deadline: todo.deadline });
+          const html = buildHtml({ id: todo.id, sujet, h1: todo.h1 || "", deadline: todo.deadline });
 
           try {
             await sendBrevo(recipients, subject, text, html);
