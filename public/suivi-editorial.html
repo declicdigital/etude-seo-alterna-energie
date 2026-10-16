@@ -2307,7 +2307,9 @@ function openArticleFromHash(){
   } else {
     const article = getArticle(id);
     if(!article) return;
-    if(collapsed[id]){ delete collapsed[id]; saveCollapsed(); }
+    articles.forEach(a => { if(a.id !== id) collapsed[a.id] = true; });
+    delete collapsed[id];
+    saveCollapsed();
     let key = params.get('step');
     if(key === 'validation' || key === 'relecture'){
       key = article.steps.some(s => s.key === key) ? key
@@ -2325,6 +2327,7 @@ function openArticleFromHash(){
   }
   if(target){
     target.scrollIntoView({ behavior:'instant', block:'center' });
+    setTimeout(() => target.scrollIntoView({ behavior:'instant', block:'center' }), 600);
     target.classList.add('notif-flash');
     setTimeout(() => target.classList.remove('notif-flash'), 3500);
   }
