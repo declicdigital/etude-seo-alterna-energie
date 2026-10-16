@@ -656,6 +656,7 @@ button{ font-family: inherit; cursor:pointer; }
 /* Deadline imminente : petit point rouge devant la date (moins de 5 jours) */
 .td-dl{ display:flex; align-items:center; gap:6px; min-width:0; }
 .td-dl input{ flex:1 1 auto; min-width:0; }
+.td-linkwrap{display:flex;align-items:center;gap:4px}.td-linkwrap input{flex:1;min-width:0}.todo-open{flex:none;text-decoration:none;font-weight:700;color:#047857;padding:2px 6px;border-radius:6px;border:1px solid #d1d5db;background:#fff}.todo-open:hover{background:#ecfdf5}
 .todo-dot{ width:9px; height:9px; border-radius:50%; background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.16); flex:0 0 auto; }
 .no-cat .col-cat{display:none!important}
 html:not(.no-cat) .col-brief{display:none!important}
@@ -2118,8 +2119,8 @@ function renderTodos(){
     <td class="col-cat"><select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><div class="td-dl">${isUrgentTodo(t) ? `<span class="todo-dot" title="${escapeAttr(urgentTitle(t))}"></span>` : ''}<input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></div></td>
-    <td class="col-brief"><input data-f="brief" value="${escapeAttr(t.brief||'')}" placeholder="https://…"></td>
-    <td><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…"></td>
+    <td class="col-brief"><div class="td-linkwrap"><input data-f="brief" value="${escapeAttr(t.brief||'')}" placeholder="https://…">${(t.brief||'').trim() ? `<a class="todo-open" href="${escapeAttr(normalizeUrl(t.brief.trim()))}" target="_blank" rel="noopener noreferrer" title="Ouvrir le lien">↗</a>` : ''}</div></td>
+    <td><div class="td-linkwrap"><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…">${(t.docx||'').trim() ? `<a class="todo-open" href="${escapeAttr(normalizeUrl(t.docx.trim()))}" target="_blank" rel="noopener noreferrer" title="Ouvrir le lien">↗</a>` : ''}</div></td>
     <td style="white-space:nowrap">${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : ro ? '<span style="color:var(--muted);font-size:0.75rem">Lecture seule</span>' : `<button class="btn" data-todo-save ${todoComplete(t) ? '' : 'disabled'} style="padding:4px 10px;font-size:0.78rem" title="${todoComplete(t) ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'}">Enregistrer</button> <button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
   </tr>`).join('');
   if(ro) body.querySelectorAll('input,select').forEach(el => { el.disabled = true; el.title = 'Seules Marina, Elodie, Caroline et Geoffrey peuvent modifier cette liste'; });
