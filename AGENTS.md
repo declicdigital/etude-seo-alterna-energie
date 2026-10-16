@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Editorial attachment selection and drag-and-drop use the same upload handler in the embedded editorial page, so validation and persistence remain consistent.
+- Editorial email destinations use the shared editorial-links module and article/todo hash targets; the embedded page opens the selected step and area, and sign-in preserves the destination.
