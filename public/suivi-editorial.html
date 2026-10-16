@@ -658,6 +658,7 @@ button{ font-family: inherit; cursor:pointer; }
 .td-dl input{ flex:1 1 auto; min-width:0; }
 .todo-dot{ width:9px; height:9px; border-radius:50%; background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.16); flex:0 0 auto; }
 .no-cat .col-cat{display:none!important}
+html:not(.no-cat) .col-brief{display:none!important}
 </style>
 </head>
 <body>
@@ -705,7 +706,7 @@ button{ font-family: inherit; cursor:pointer; }
     </div>
     <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Cible</th><th class="col-cat">Catégorie</th><th>Énergie</th><th>Deadline</th><th>Lien du doc</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Cible</th><th class="col-cat">Catégorie</th><th>Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
     <div id="todoComments" class="todo-comments"></div>
@@ -1483,6 +1484,7 @@ function renderArticleCard(article){
       </div>
       <div class="article-body">
         <div class="links-row">
+          ${SPACE ? renderLinkField(article.id, 'brief-link', article.briefLink || '', 'Brief', 'Coller le lien du brief') : ''}
           ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Doc', 'Coller le lien du document Doc')}
           ${renderLinkField(article.id, 'final-link', article.finalLink, 'Article publié', "Coller le lien de l'article publié")}
         </div>
@@ -2002,6 +2004,11 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
     article.title = t.value;
     await saveArticle(article);
   }
+  if(action === 'edit-brief-link'){
+    const article = getArticle(t.dataset.articleId);
+    article.briefLink = t.value;
+    await saveArticle(article);
+  }
   if(action === 'edit-docx-link'){
     const article = getArticle(t.dataset.articleId);
     article.docxLink = t.value;
@@ -2053,7 +2060,7 @@ async function saveTodos(){
 const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com'];
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
 function todoComplete(t){
-  return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].filter(f => !(NO_CAT && f === 'categorie')).every(f => (t[f]||'').trim());
+  return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].concat(SPACE ? ['brief'] : []).filter(f => !(NO_CAT && f === 'categorie')).every(f => (t[f]||'').trim());
 }
 /* Nombre de jours restants avant la deadline (négatif si dépassée, null si pas de date). */
 function todoDaysLeft(t){
@@ -2094,7 +2101,7 @@ function refreshTodoDot(tr, t){
 }
 function renderTodos(){
   const body = document.getElementById('todoBody');
-  if(!todos.length){ body.innerHTML = '<tr><td colspan="9" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
+  if(!todos.length){ body.innerHTML = '<tr><td colspan="10" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
   const ro = !canEditTodo();
   const addBtn = document.getElementById('todoAddBtn'); if(addBtn) addBtn.style.display = ro ? 'none' : '';
   body.innerHTML = sortedTodos().map(t => `<tr data-todo-id="${t.id}"${t.editrice === 'Aurorae' ? ' class="todo-aurorae"' : t.editrice === 'Marina' ? ' class="todo-marina"' : ''}>
@@ -2105,6 +2112,7 @@ function renderTodos(){
     <td class="col-cat"><select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><div class="td-dl">${isUrgentTodo(t) ? `<span class="todo-dot" title="${escapeAttr(urgentTitle(t))}"></span>` : ''}<input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></div></td>
+    <td class="col-brief"><input data-f="brief" value="${escapeAttr(t.brief||'')}" placeholder="https://…"></td>
     <td><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…"></td>
     <td style="white-space:nowrap">${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : ro ? '<span style="color:var(--muted);font-size:0.75rem">Lecture seule</span>' : `<button class="btn" data-todo-save ${todoComplete(t) ? '' : 'disabled'} style="padding:4px 10px;font-size:0.78rem" title="${todoComplete(t) ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'}">Enregistrer</button> <button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
   </tr>`).join('');
@@ -2115,6 +2123,7 @@ async function maybeCreateFromTodo(t){
   if(!(t.sujet||'').trim() || !(t.h1||'').trim() || !t.editrice || !(t.docx||'').trim()) return;
   const article = newArticle(t.h1.trim());
   article.docxLink = normalizeUrl(t.docx.trim());
+  if((t.brief||'').trim()) article.briefLink = normalizeUrl(t.brief.trim());
   article.subject = t.sujet.trim();
   article.deadline = t.deadline || '';
   const red = article.steps.find(s => s.key === 'redaction');
