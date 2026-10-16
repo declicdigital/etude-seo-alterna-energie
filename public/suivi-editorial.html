@@ -990,7 +990,6 @@ const storage = {
 function isImageStep(key){ return key === 'validation' || key === 'relecture'; }
 
 const DEFAULT_CONFIG = [
-  { key:'idee', label:'Idée', assignee:'', skippable:true },
   { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae','Marina'], skippable:false },
   { key:'validation', label:'Relecture + Image', assignee:'Service Communication', skippable:false },
   { key:'integration', label:'Intégration', assignee:'Marick', skippable:false }
@@ -1012,7 +1011,7 @@ function normalizeConfig(){
   }
   // Brief SEO est supprimée ; Relecture et Image sont fusionnées en une seule étape.
   // Stratégie édito : étape « Brief » en tout premier, avant la rédaction.
-  const drop = SPACE ? ['image', 'validation_geoffrey'] : ['brief', 'image', 'validation_geoffrey'];
+  const drop = SPACE ? ['idee', 'image', 'validation_geoffrey'] : ['idee', 'brief', 'image', 'validation_geoffrey'];
   if(SPACE && !config.some(c => c.key === 'brief')){
     config.unshift({ key:'brief', label:'Brief', assignee:'', skippable:false });
     changed = true;
@@ -1088,8 +1087,8 @@ async function loadArticles(){
         const a = JSON.parse(r.value);
         let articleChanged = false;
         // Retire l'étape Brief SEO des articles existants.
-        if(!SPACE && Array.isArray(a.steps) && a.steps.some(s => s.key === 'brief')){
-          a.steps = a.steps.filter(s => s.key !== 'brief');
+        if(Array.isArray(a.steps) && a.steps.some(s => s.key === 'idee' || (!SPACE && s.key === 'brief'))){
+          a.steps = a.steps.filter(s => s.key !== 'idee' && (SPACE || s.key !== 'brief'));
           articleChanged = true;
         }
         if(a.category === 'Guides pratiques'){
