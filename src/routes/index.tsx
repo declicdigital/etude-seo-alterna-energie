@@ -116,7 +116,7 @@ function Index() {
   };
 
   const locked =
-    !access.isAdmin &&
+    !isGuide && !access.isAdmin &&
     !baseSheet.toUpperCase().startsWith("BLOG") &&
     !baseSheet.toUpperCase().startsWith("SUIVI ") &&
     !baseSheet.toUpperCase().startsWith("STRATEGIE") &&
