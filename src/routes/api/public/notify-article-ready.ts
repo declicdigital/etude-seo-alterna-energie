@@ -3,6 +3,7 @@ import { z } from "zod";
 import { notificationLink } from "@/lib/editorial-links";
 
 const BodySchema = z.object({
+  space: z.enum(["strategie"]).optional(),
   articleId: z.string().max(200).optional(),
   stepKey: z.string().max(120).optional(),
   kind: z.enum(["ready", "relecture", "integration", "published"]).optional(),
@@ -52,7 +53,7 @@ ${row("Catégorie", p.categorie)}
 ${row("Énergie", p.energie)}
 ${row("Deadline", p.deadline)}
 ${row("Lien du doc", p.docx)}
-<a href="${notificationLink(p.kind, p.articleId, p.stepKey)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir le suivi éditorial</a>
+<a href="${notificationLink(p.kind, p.articleId, p.stepKey, p.space)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir le suivi éditorial</a>
 </td></tr>
 <tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Notification automatique d'Outil contenus. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
@@ -76,7 +77,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           return Response.json({ error: "mail_not_configured" }, { status: 500 });
         }
 
-        const appUrl = notificationLink(payload.kind, payload.articleId, payload.stepKey);
+        const appUrl = notificationLink(payload.kind, payload.articleId, payload.stepKey, payload.space);
         const isRel = payload.kind === "relecture";
         const isInt = payload.kind === "integration";
         const isPub = payload.kind === "published";
