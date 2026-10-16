@@ -24,7 +24,7 @@ type Todo = {
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-function buildHtml(p: { space: string; id: string; sujet: string; h1: string; deadline: string }): string {
+function buildHtml(p: { days: number; space: string; id: string; sujet: string; h1: string; deadline: string }): string {
   return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;padding:32px 12px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
@@ -34,7 +34,7 @@ function buildHtml(p: { space: string; id: string; sujet: string; h1: string; de
 <p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">Sujet</p>
 <p style="margin:0 0 16px;font-size:16px;font-weight:bold">${esc(p.sujet)}</p>
 ${p.h1 ? `<p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">Article</p><p style="margin:0 0 16px">${esc(p.h1)}</p>` : ""}
-<div style="background:#fef3c7;border-left:4px solid #d97706;padding:14px 16px;border-radius:6px;font-size:15px;line-height:1.5;margin:0 0 24px">Il vous reste <strong>${REMIND_DAYS} jours</strong> pour livrer l'article (deadline : <strong>${esc(p.deadline)}</strong>).</div>
+<div style="background:#fef3c7;border-left:4px solid #d97706;padding:14px 16px;border-radius:6px;font-size:15px;line-height:1.5;margin:0 0 24px">${p.days === 0 ? `C'est <strong>aujourd'hui</strong> la deadline pour livrer l'article (<strong>${esc(p.deadline)}</strong>).` : `Il vous reste <strong>${p.days} jours</strong> pour livrer l'article (deadline : <strong>${esc(p.deadline)}</strong>).`}</div>
 <a href="${editorialLink(p.id, undefined, undefined, true, p.space)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir le suivi éditorial</a>
 </td></tr>
 <tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Rappel automatique d'Outil contenus. Merci de ne pas répondre à ce mail.</td></tr>
@@ -113,30 +113,32 @@ export const Route = createFileRoute("/api/public/jobs/deadline-reminders")({
           for (const t of list) todos.push({ ...t, space, emails: editorEmails });
         }
 
+        const results: { id: string; days: number; status: string }[] = [];
         // Target date: today + REMIND_DAYS (UTC), as YYYY-MM-DD
-        const target = new Date(Date.now() + REMIND_DAYS * 86400000).toISOString().slice(0, 10);
+        for (const days of [REMIND_DAYS, 0]) {
+        const target = new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
 
-        const results: { id: string; status: string }[] = [];
-        for (const todo of todos) {
+                for (const todo of todos) {
           if (!todo.deadline || todo.deadline !== target) continue;
-          if (todo.articleId) continue; // already saved as an article, no longer pending
+          if (days !== 0 && todo.articleId) continue; // already saved as an article, no longer pending
           const editorKey = (todo.editrice || "").trim().toLowerCase();
           const recipients = todo.emails[editorKey];
           if (!recipients) continue;
 
-          const markerKey = `reminder5:${todo.id}`;
+          const markerKey = days === 0 ? `reminder0:${todo.id}` : `reminder5:${todo.id}`;
           const { data: marker } = await supabaseAdmin
             .from("editorial_kv")
             .select("key")
             .eq("key", markerKey)
             .maybeSingle();
           if (marker) {
-            results.push({ id: todo.id, status: "already_sent" });
+            results.push({ id: todo.id, days, status: "already_sent" });
             continue;
           }
 
           const sujet = todo.sujet || todo.h1 || "Article";
-          const subject = `Rappel : « ${sujet} » — il vous reste ${REMIND_DAYS} jours pour livrer l'article`;
+          const msg = days === 0 ? "c'est aujourd'hui la deadline pour livrer l'article" : `il vous reste ${days} jours pour livrer l'article`;
+          const subject = `Rappel : « ${sujet} » — ${msg}`;
           const text = [
             `Bonjour,`,
             ``,
@@ -145,25 +147,26 @@ export const Route = createFileRoute("/api/public/jobs/deadline-reminders")({
             todo.h1 ? `Article : ${todo.h1}` : null,
             `Deadline : ${todo.deadline}`,
             ``,
-            `Il vous reste ${REMIND_DAYS} jours pour livrer l'article.`,
+            msg.charAt(0).toUpperCase() + msg.slice(1) + ".",
             ``,
             `Ouvrir le suivi éditorial : ${editorialLink(todo.id, undefined, undefined, true, todo.space)}`,
           ]
             .filter((l): l is string => l !== null)
             .join("\r\n");
-          const html = buildHtml({ space: todo.space, id: todo.id, sujet, h1: todo.h1 || "", deadline: todo.deadline });
+          const html = buildHtml({ days, space: todo.space, id: todo.id, sujet, h1: todo.h1 || "", deadline: todo.deadline });
 
           try {
             await sendBrevo(recipients, subject, text, html);
             await supabaseAdmin.from("editorial_kv").upsert({ key: markerKey, value: new Date().toISOString() });
-            results.push({ id: todo.id, status: "sent" });
+            results.push({ id: todo.id, days, status: "sent" });
           } catch (e) {
             console.error("reminder send failed", e);
-            results.push({ id: todo.id, status: "send_failed" });
+            results.push({ id: todo.id, days, status: "send_failed" });
           }
         }
+        }
 
-        return Response.json({ target, checked: todos.length, results });
+        return Response.json({ checked: todos.length, results });
       },
     },
   },
