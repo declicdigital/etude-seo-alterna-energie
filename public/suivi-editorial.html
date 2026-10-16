@@ -1484,6 +1484,7 @@ function renderArticleCard(article){
       </div>
       <div class="article-body">
         <div class="links-row">
+          ${SPACE ? `<div class="link-field"><span class="link-tag">Type</span><select data-action="pick-type" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">—</option>${['Réécriture','Création'].map(o=>`<option ${article.type===o?'selected':''}>${o}</option>`).join('')}</select></div>` : ''}
           ${SPACE ? renderLinkField(article.id, 'brief-link', article.briefLink || '', 'Brief', 'Coller le lien du brief') : ''}
           ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Doc', 'Coller le lien du document Doc')}
           ${renderLinkField(article.id, 'final-link', article.finalLink, 'Article publié', "Coller le lien de l'article publié")}
@@ -1920,6 +1921,11 @@ document.getElementById('articlesContainer').addEventListener('keydown', async (
 
 document.getElementById('articlesContainer').addEventListener('change', async (e) => {
   const act = e.target.dataset && e.target.dataset.action;
+  if(act === 'pick-type'){
+    const article = getArticle(e.target.dataset.articleId);
+    if(article){ article.type = e.target.value; await saveArticle(article); }
+    return;
+  }
   if(act === 'pick-category' || act === 'pick-energy'){
     const article = getArticle(e.target.dataset.articleId);
     if(act === 'pick-category') article.category = e.target.value;
