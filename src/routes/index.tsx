@@ -6,7 +6,7 @@ import { SheetSidebar } from "@/components/sheet-sidebar";
 import { TreeView } from "@/components/tree-view";
 import { TableView } from "@/components/table-view";
 import { WebflowView } from "@/components/webflow-view";
-import { GuideView } from "@/components/guide-view";
+import { GuideView, HomeView } from "@/components/guide-view";
 import { DetailPanel } from "@/components/detail-panel";
 import { useEdits } from "@/lib/use-edits";
 import { baseSheetOf, embedSrcOf, isStructureSheet, nextRowId, SHEET_META, sheetNames } from "@/lib/workbook";
@@ -55,12 +55,10 @@ function Index() {
   const { sheet: sheetParam } = Route.useSearch();
   const { access } = Route.useRouteContext();
   const navigate = useNavigate();
-  const isGuide = sheetParam === "__guide";
-  const sheet = isGuide
-    ? "__guide"
-    : sheetParam && sheetNames.includes(baseSheetOf(sheetParam))
-      ? sheetParam
-      : access.isAdmin ? "Structure RES" : "BLOG - ARTICLES::Particulier";
+  const valid = sheetParam && sheetNames.includes(baseSheetOf(sheetParam));
+  const isHome = !valid && sheetParam !== "__guide";
+  const isGuide = sheetParam === "__guide" || isHome;
+  const sheet = sheetParam === "__guide" ? "__guide" : isHome ? "__home" : sheetParam!;
   const [selected, setSelected] = useState<number | null>(null);
   const { edits, setCell, deleteRow, loading } = useEdits();
   const { meta: metaOverrides, setMetaValue } = useMeta();
@@ -94,7 +92,7 @@ function Index() {
   const scope = sheet.includes("::") ? sheet.split("::")[1] : null;
   const baseLabel = metaGet(metaOverrides, "sheet", baseSheet, sheetInfo?.label ?? baseSheet);
   const scopeLabel = scope ? scope.replace("/", " › ") : "";
-  const sheetLabel = isGuide
+  const sheetLabel = isHome ? "Accueil" : isGuide
     ? "Guide de l'outil"
     : scope
       ? `${baseLabel} — ${scopeLabel}`
@@ -224,6 +222,8 @@ function Index() {
             <p className="text-lg font-semibold">Vous n'avez pas les accès pour le moment.</p>
             <p className="text-sm text-muted-foreground">Seule la section Blog est disponible.</p>
           </div>
+        ) : isHome ? (
+          <HomeView onOpenSheet={(s) => navigate({ to: "/", search: { sheet: s } })} />
         ) : isGuide ? (
           <GuideView
             onOpenSheet={(s) => navigate({ to: "/", search: { sheet: s } })}

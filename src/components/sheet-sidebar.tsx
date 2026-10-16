@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Archive, ArchiveRestore, BookOpen, ChevronDown, ChevronRight, GripVertical, Minus, Plus, Trash2, RotateCcw } from "lucide-react";
+import { Archive, ArchiveRestore, BookOpen, Home, ChevronDown, ChevronRight, GripVertical, Minus, Plus, Trash2, RotateCcw } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import symbol from "@/assets/alterna-symbol.png.asset.json";
@@ -8,6 +8,7 @@ import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 
 const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
+const REMOVED_GROUPS = new Set(["Arborescence", "Suivi", "Docs", "Archives", "Autres"]);
 const ORDER_KEY = "sidebar.groupOrder.v1";
 const PROMOTED_KEY = "sidebar.orderPromoted.v1";
 
@@ -180,6 +181,7 @@ export function SheetSidebar({
     for (const s of sheetNames) {
       if (!showHidden && hiddenSheets.has(s)) continue;
       const k = groupOverrides[s] ?? SHEET_META[s]?.group ?? "Autres";
+      if (REMOVED_GROUPS.has(SHEET_META[s]?.group ?? "Autres") || REMOVED_GROUPS.has(k)) continue;
       (g[k] ??= []).push(s);
     }
     return g;
@@ -271,11 +273,24 @@ export function SheetSidebar({
         <EditableText
           as="div"
           className="mt-3 text-xs text-muted-foreground"
-          value={metaGet(meta, "brand", "tagline", "Arborescence & suivi éditorial")}
+          value={metaGet(meta, "brand", "tagline", "Suivi éditorial")}
           onCommit={(v) => setMetaValue("brand", "tagline", v)}
         />
       </div>
       <nav className="p-3 space-y-3">
+        <Link
+          to="/"
+          search={{ sheet: "__home" }}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors border",
+            active === "__home"
+              ? "bg-primary/10 text-primary border-primary/40"
+              : "border-transparent text-foreground/80 hover:bg-primary/5 hover:text-primary",
+          )}
+        >
+          <Home className="size-4" />
+          Accueil
+        </Link>
         <Link
           to="/"
           search={{ sheet: "__guide" }}
