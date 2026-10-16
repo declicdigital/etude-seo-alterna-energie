@@ -57,7 +57,7 @@ async function sendBrevo(to: string[], subject: string, text: string, html: stri
     body: JSON.stringify({
       sender: SENDER,
       to: to.map((email) => ({ email })),
-      cc: [{ email: CC_EMAIL }],
+      ...(to.some((e) => e.toLowerCase() === CC_EMAIL) ? {} : { cc: [{ email: CC_EMAIL }] }),
       subject,
       textContent: text,
       htmlContent: html,
