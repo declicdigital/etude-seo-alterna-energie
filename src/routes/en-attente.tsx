@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getAccess, signOutAndGoToAuth, type AccessStatus } from "@/lib/access";
 import { pendingEditorialDestination } from "@/lib/editorial-links";
-import symbol from "@/assets/alterna-symbol.png.asset.json";
+import logo from "@/assets/alterna-logo.png.asset.json";
 
 export const Route = createFileRoute("/en-attente")({
   ssr: false,
@@ -63,7 +63,7 @@ function PendingPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-emerald-100 px-4">
       <div className="w-full max-w-md rounded-2xl border border-emerald-100 bg-white p-8 text-center shadow-xl">
-        <img src={symbol.url} alt="Alterna Énergie" className="mx-auto mb-4 h-12 w-12" />
+        <img src={logo.url} alt="Alterna Énergie" className="mx-auto mb-4 h-10 w-auto" />
         <h1 className="text-xl font-semibold text-emerald-900">
           {rejected ? "Demande refusée" : "Demande en attente de validation"}
         </h1>

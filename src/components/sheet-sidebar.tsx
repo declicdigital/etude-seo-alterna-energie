@@ -3,7 +3,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Archive, ArchiveRestore, BookOpen, Home, ChevronDown, ChevronRight, GripVertical, Minus, Plus, Trash2, RotateCcw } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
-import symbol from "@/assets/alterna-symbol.png.asset.json";
+import logo from "@/assets/alterna-logo.png.asset.json";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 
@@ -254,14 +254,8 @@ export function SheetSidebar({
     <aside className="w-full md:w-72 shrink-0 border-r border-border bg-card/50 backdrop-blur-sm md:h-screen md:sticky md:top-0 overflow-y-auto">
       <div className="p-5 border-b border-border">
         <div className="flex items-center gap-3">
-          <img src={symbol.url} alt="Alterna Énergie" className="size-10 rounded-full shrink-0" />
+          <img src={logo.url} alt="Alterna Énergie" className="h-7 w-auto shrink-0" />
           <div className="min-w-0">
-            <EditableText
-              as="div"
-              className="text-[10px] uppercase tracking-widest text-primary/80 font-semibold"
-              value={metaGet(meta, "brand", "eyebrow", "Alterna Énergie")}
-              onCommit={(v) => setMetaValue("brand", "eyebrow", v)}
-            />
             <EditableText
               as="h1"
               className="text-base font-semibold leading-tight"
