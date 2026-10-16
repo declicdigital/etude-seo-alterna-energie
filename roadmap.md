@@ -10,3 +10,4 @@
 - [x] Liens des mails : réduire les autres cartes et centrer la zone demandée de la carte destinataire.
 
 - [x] Encart Ajouter une image réservé à l’étape « Relecture + Image »
+- [x] Stratégie PAC : "Contenus" rangé sous "Suivi éditorial" (comme le Blog)
