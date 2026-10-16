@@ -234,7 +234,7 @@ export const SHEET_META: Record<
   "Webflow - fonctionnement": { headerRow: 1, treeCols: 5, firstDataRow: 2, label: "Webflow - fonctionnement", group: "Docs" },
   "SUIVI EDITORIAL": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Blog" },
   "SUIVI STRATEGIE": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Stratégie PAC" },
-  "STRATEGIE - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Articles & publication", group: "Stratégie PAC" },
+  "STRATEGIE - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Contenus", group: "Stratégie PAC" },
   "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon électricité", group: "Archives" },
   "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon gaz", group: "Archives" },
 };
