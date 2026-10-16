@@ -662,6 +662,7 @@ button{ font-family: inherit; cursor:pointer; }
 .todo-dot{ width:9px; height:9px; border-radius:50%; background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.16); flex:0 0 auto; }
 .no-cat .col-cat{display:none!important}
 html:not(.no-cat) .col-brief{display:none!important}
+.no-cat .col-cible{display:none!important}
 </style>
 </head>
 <body>
@@ -709,7 +710,7 @@ html:not(.no-cat) .col-brief{display:none!important}
     </div>
     <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th>Cible</th><th class="col-cat">Catégorie</th><th>Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th class="col-brief">Catégorie</th><th>Éditrice</th><th>Nom de l'article (H1)</th><th class="col-cible">Cible</th><th class="col-cat">Catégorie</th><th>Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
     <div id="todoComments" class="todo-comments"></div>
@@ -737,6 +738,7 @@ const BLOG_BASE_LEN = SPACE ? 1 : 424;
 if(NO_CAT) document.documentElement.classList.add('no-cat');
 if(SPACE){ document.title = 'Suivi éditorial (Stratégie PAC) — Outil contenus'; document.addEventListener('DOMContentLoaded', () => { const h = document.querySelector('h1'); if(h) h.textContent = 'Suivi éditorial — Stratégie PAC'; }); const h0 = document.querySelector('h1'); if(h0) h0.textContent = 'Suivi éditorial — Stratégie PAC'; }
 const AUDIENCES = ['Particulier', 'Professionnel'];
+const DESTS = ['Blog', 'Éditorial'];
 const BLOG_CATEGORIES = {
   'Particulier': [
     'Actualités',
@@ -1151,7 +1153,7 @@ function newArticle(title){
     createdAt: new Date().toISOString(),
     docxLink: '',
     finalLink: '',
-    audience: '',
+    audience: SPACE ? 'Particulier' : '',
     category: '',
     energy: '',
     blogRowId: null,
@@ -1182,8 +1184,9 @@ function categoriesFor(audience){
 }
 
 /* Crée la ligne correspondante tout en haut de Blog > Particulier / Professionnel. */
-async function nextBlogRowId(sheet){
-  let max = BLOG_BASE_LEN - 1;
+async function nextBlogRowId(sheet, base){
+  if(base === undefined) base = BLOG_BASE_LEN;
+  let max = base - 1;
   try{
     const res = await fetch(CELLS_REST + '?select=row_id&sheet=eq.' + encodeURIComponent(sheet) + '&order=row_id.desc&limit=1', { headers: HEADERS });
     if(res.ok){
@@ -1191,15 +1194,13 @@ async function nextBlogRowId(sheet){
       if(rows.length) max = Math.max(max, rows[0].row_id);
     }
   }catch(e){}
-  return Math.max(BLOG_BASE_LEN, max + 1);
+  return Math.max(base, max + 1);
 }
 
-async function pushToBlog(article){
-  if(article.blogRowId) return;
-  const audience = article.audience === 'Professionnel' ? 'Professionnel' : 'Particulier';
-  const sheet = BLOG_SHEET + '::' + audience;
+async function insertBlogRow(article, sheet, base){
+  const audience = SPACE ? 'Particulier' : (article.audience === 'Professionnel' ? 'Professionnel' : 'Particulier');
   const step = article.steps.find(s => s.key === 'integration');
-  const rowId = await nextBlogRowId(sheet);
+  const rowId = await nextBlogRowId(sheet, base);
   const now = new Date().toISOString();
   const values = [
     [0, 'x'],
@@ -1211,18 +1212,31 @@ async function pushToBlog(article){
     [10, article.energy || '']
   ];
   const body = values.map(v => ({ sheet, row_id: rowId, col: v[0], value: String(v[1]), updated_at: now }));
+  const res = await fetch(CELLS_REST + '?on_conflict=sheet,row_id,col', {
+    method: 'POST',
+    headers: Object.assign({}, HEADERS, { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+    body: JSON.stringify(body)
+  });
+  if(!res.ok) throw new Error('insert');
+  return rowId;
+}
+
+/* Blog : ajoute en haut de Blog > Particulier/Professionnel.
+   Stratégie PAC : ajoute en haut de « Contenus », et aussi du Blog > Particulier si catégorie « Blog ». */
+async function pushToBlog(article){
   try{
-    const res = await fetch(CELLS_REST + '?on_conflict=sheet,row_id,col', {
-      method: 'POST',
-      headers: Object.assign({}, HEADERS, { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
-      body: JSON.stringify(body)
-    });
-    if(!res.ok) throw new Error('insert');
-    article.blogRowId = rowId;
-    article.blogSheet = sheet;
-    await saveArticle(article);
+    if(!article.blogRowId){
+      const sheet = SPACE ? BLOG_SHEET : BLOG_SHEET + '::' + (article.audience === 'Professionnel' ? 'Professionnel' : 'Particulier');
+      article.blogRowId = await insertBlogRow(article, sheet);
+      article.blogSheet = sheet;
+      await saveArticle(article);
+    }
+    if(SPACE && article.dest === 'Blog' && !article.mainBlogRowId){
+      article.mainBlogRowId = await insertBlogRow(article, 'BLOG - ARTICLES::Particulier', 424);
+      await saveArticle(article);
+    }
   }catch(e){
-    alert("L'article n'a pas pu être ajouté au blog. Réessaie dans un instant.");
+    alert("L'article n'a pas pu être ajouté à la liste. Réessaie dans un instant.");
   }
 }
 
@@ -1320,7 +1334,7 @@ function escapeHtml(s){
 function renderRedactionFields(article){
   const cats = categoriesFor(article.audience);
   return `
-    <div class="field">
+    <div class="field col-cible">
       <label>Cible</label>
       <div class="assignee-options">
         ${AUDIENCES.map(a => `
@@ -1504,7 +1518,7 @@ function renderArticleCard(article){
       </div>
       <div class="article-body">
         <div class="links-row">
-          ${SPACE ? `<div class="link-field"><span class="link-tag">Type</span><select data-action="pick-type" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">—</option>${['Réécriture','Création'].map(o=>`<option ${article.type===o?'selected':''}>${o}</option>`).join('')}</select></div>` : ''}
+          ${SPACE ? `<div class="link-field"><span class="link-tag">Type</span><select data-action="pick-type" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">—</option>${['Réécriture','Création'].map(o=>`<option ${article.type===o?'selected':''}>${o}</option>`).join('')}</select></div><div class="link-field"><span class="link-tag">Catégorie</span><select data-action="pick-dest" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">—</option>${DESTS.map(o=>`<option ${article.dest===o?'selected':''}>${o}</option>`).join('')}</select></div>` : ''}
           ${SPACE ? renderLinkField(article.id, 'brief-link', article.briefLink || '', 'Brief', 'Coller le lien du brief') : ''}
           ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Doc', 'Coller le lien du document Doc')}
           ${renderLinkField(article.id, 'final-link', article.finalLink, 'Article publié', "Coller le lien de l'article publié")}
@@ -1943,6 +1957,11 @@ document.getElementById('articlesContainer').addEventListener('keydown', async (
 
 document.getElementById('articlesContainer').addEventListener('change', async (e) => {
   const act = e.target.dataset && e.target.dataset.action;
+  if(act === 'pick-dest'){
+    const article = getArticle(e.target.dataset.articleId);
+    if(article){ article.dest = e.target.value; await saveArticle(article); }
+    return;
+  }
   if(act === 'pick-type'){
     const article = getArticle(e.target.dataset.articleId);
     if(article){ article.type = e.target.value; await saveArticle(article); }
@@ -2079,6 +2098,7 @@ async function loadTodos(){
   try{ todos = JSON.parse((await storage.get('todo-redaction', false)).value) || []; }catch(e){ todos = []; }
   /* Les lignes existantes n'avaient pas de cible : on la déduit de la catégorie déjà choisie. */
   let fixed = false;
+  if(SPACE) todos.forEach(t => { if(t.audience !== 'Particulier'){ t.audience = 'Particulier'; fixed = true; } });
   todos.forEach(t => { if(!t.audience && t.categorie){ t.audience = BLOG_CATEGORIES['Professionnel'].includes(t.categorie) ? 'Professionnel' : 'Particulier'; fixed = true; } });
   if(fixed){ try{ await storage.set('todo-redaction', JSON.stringify(todos), false); }catch(e){} }
 }
@@ -2088,7 +2108,7 @@ async function saveTodos(){
 const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com'];
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
 function todoComplete(t){
-  return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].concat(SPACE ? ['brief','type'] : []).filter(f => !(NO_CAT && f === 'categorie')).every(f => (t[f]||'').trim());
+  return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].concat(SPACE ? ['brief','type','dest'] : []).filter(f => !(NO_CAT && f === 'categorie')).every(f => (t[f]||'').trim());
 }
 /* Nombre de jours restants avant la deadline (négatif si dépassée, null si pas de date). */
 function todoDaysLeft(t){
@@ -2129,15 +2149,16 @@ function refreshTodoDot(tr, t){
 }
 function renderTodos(){
   const body = document.getElementById('todoBody');
-  if(!todos.length){ body.innerHTML = '<tr><td colspan="11" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
+  if(!todos.length){ body.innerHTML = '<tr><td colspan="12" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
   const ro = !canEditTodo();
   const addBtn = document.getElementById('todoAddBtn'); if(addBtn) addBtn.style.display = ro ? 'none' : '';
   body.innerHTML = sortedTodos().map(t => `<tr data-todo-id="${t.id}"${t.editrice === 'Aurorae' ? ' class="todo-aurorae"' : t.editrice === 'Marina' ? ' class="todo-marina"' : ''}>
     <td><input data-f="sujet" value="${escapeAttr(t.sujet||'')}" placeholder="Sujet"></td>
     <td class="col-brief"><select data-f="type"><option value="">—</option>${['Réécriture','Création'].map(o=>`<option ${t.type===o?'selected':''}>${o}</option>`).join('')}</select></td>
+    <td class="col-brief"><select data-f="dest"><option value="">—</option>${DESTS.map(o=>`<option ${t.dest===o?'selected':''}>${o}</option>`).join('')}</select></td>
     <td><select data-f="editrice"><option value="">—</option>${(((getConfigFor('redaction')||{}).options)||['Aurorae','Marina']).map(o=>`<option ${t.editrice===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
-    <td><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
+    <td class="col-cible"><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td class="col-cat"><select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><div class="td-dl">${isUrgentTodo(t) ? `<span class="todo-dot" title="${escapeAttr(urgentTitle(t))}"></span>` : ''}<input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></div></td>
@@ -2153,6 +2174,7 @@ async function maybeCreateFromTodo(t){
   const article = newArticle(t.h1.trim());
   article.docxLink = normalizeUrl(t.docx.trim());
   if(t.type) article.type = t.type;
+  if(t.dest) article.dest = t.dest;
   if((t.brief||'').trim()) article.briefLink = normalizeUrl(t.brief.trim());
   article.subject = t.sujet.trim();
   article.deadline = t.deadline || '';
@@ -2176,7 +2198,7 @@ async function maybeCreateFromTodo(t){
 }
 document.getElementById('todoAddBtn').addEventListener('click', async () => {
   if(!canEditTodo()) return;
-  todos.push({ id: uid(), sujet:'', h1:'', editrice:'', audience:'', categorie:'', energie:'', deadline:'', docx:'', articleId:null });
+  todos.push({ id: uid(), sujet:'', h1:'', editrice:'', audience: SPACE ? 'Particulier' : '', categorie:'', energie:'', deadline:'', docx:'', articleId:null });
   await saveTodos(); renderTodos();
 });
 document.getElementById('todoBody').addEventListener('change', async (e) => {
