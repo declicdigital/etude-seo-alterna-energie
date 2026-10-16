@@ -73,7 +73,7 @@ function RequestsPage() {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-100 px-4 py-8">
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-6 flex items-center gap-3">
-          <img src={symbol.url} alt="" className="h-9 w-9" />
+          <img src={logo.url} alt="Alterna Énergie" className="h-8 w-auto shrink-0" />
           <div className="flex-1">
             <h1 className="text-xl font-semibold text-emerald-900">Demandes d'accès</h1>
             <p className="text-sm text-emerald-700/80">Validez ou refusez les personnes qui demandent un accès.</p>
