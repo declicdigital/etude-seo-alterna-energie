@@ -121,7 +121,14 @@ export function SheetSidebar({
   useEffect(() => {
     try {
       const raw = localStorage.getItem(GROUP_OVERRIDE_KEY);
-      if (raw) setGroupOverrides({ ...DEFAULT_GROUP_OVERRIDES, ...(JSON.parse(raw) as Record<string, string>) });
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, string>;
+        // Migrate old group label to "Stratégie PAC".
+        for (const k of Object.keys(parsed)) {
+          if (parsed[k] === "Stratégie édito") parsed[k] = "Stratégie PAC";
+        }
+        setGroupOverrides({ ...DEFAULT_GROUP_OVERRIDES, ...parsed });
+      }
     } catch { /* ignore */ }
   }, []);
   const setSheetGroup = (sheet: string, group: string | null) => {
@@ -174,10 +181,12 @@ export function SheetSidebar({
       const raw = localStorage.getItem(ORDER_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as string[];
+        // Migrate old "Stratégie édito" label to "Stratégie PAC".
+        const migrated = saved.map((g) => (g === "Stratégie édito" ? "Stratégie PAC" : g));
         // Merge saved order with any new groups discovered later.
-        const known = new Set(saved);
+        const known = new Set(migrated);
         const extras = DEFAULT_ORDER.filter((g) => !known.has(g));
-        setOrder([...saved, ...extras]);
+        setOrder([...migrated, ...extras]);
       }
     } catch { /* ignore */ }
   }, []);
