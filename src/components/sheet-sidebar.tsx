@@ -200,7 +200,11 @@ export function SheetSidebar({
   useEffect(() => {
     try {
       const raw = localStorage.getItem(COLLAPSED_KEY);
-      if (raw) setCollapsed(new Set(JSON.parse(raw) as string[]));
+      if (raw) {
+        // Migrate old "Stratégie édito" label to "Stratégie PAC".
+        const saved = (JSON.parse(raw) as string[]).map((g) => (g === "Stratégie édito" ? "Stratégie PAC" : g));
+        setCollapsed(new Set(saved));
+      }
     } catch { /* ignore */ }
   }, []);
   const toggleCollapsed = (g: string) => {
