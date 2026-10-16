@@ -23,16 +23,11 @@ const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
     { name: "Particulier", subs: [] },
     { name: "Professionnel", subs: [] },
   ],
-  "Stratégie PAC": [
-    { name: "Particulier", subs: [] },
-    { name: "Professionnel", subs: [] },
-  ],
 };
 
 // Default sub-path assignments for existing sheets. Format: "Subcat/Subsub".
 // A value of "*" means the sheet should appear in every leaf of the group.
 const DEFAULT_SUBPATHS: Record<string, string> = {
-  "STRATEGIE - ARTICLES": "*",
   "BLOG - ARTICLES": "*",
   "Structure RES": "Particulier",
   "Structure PRO": "Professionnel",

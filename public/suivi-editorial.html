@@ -1510,7 +1510,7 @@ function renderArticleCard(article){
         <button class="collapse-btn" data-action="toggle-collapse" data-article-id="${article.id}" title="${isCollapsed ? 'Déplier' : 'Réduire'}" aria-label="${isCollapsed ? 'Déplier' : 'Réduire'}">${isCollapsed ? '▸' : '▾'}</button>
         <input class="title-input" data-action="edit-title" data-article-id="${article.id}" value="${escapeAttr(article.title)}" placeholder="Titre de l'article">
         <div class="article-meta">
-          ${article.blogRowId ? `<span class="blog-badge">Ajouté au blog</span>` : ''}
+          ${article.blogRowId ? `<span class="blog-badge">${SPACE ? 'Ajouté aux contenus' : 'Ajouté au blog'}</span>` : ''}${article.mainBlogRowId ? `<span class="blog-badge">Ajouté au blog</span>` : ''}
           <span class="progress-tag">${doneCount}/${total} étapes</span>
           <button class="btn-ghost copy-link-btn" data-action="copy-link" data-article-id="${article.id}" title="Copier le lien vers cette carte">🔗 Lien</button>
           <button class="delete-btn ${isConfirming?'confirming':''}" data-action="delete-article" data-article-id="${article.id}">${isConfirming ? 'Confirmer la suppression' : 'Supprimer'}</button>
