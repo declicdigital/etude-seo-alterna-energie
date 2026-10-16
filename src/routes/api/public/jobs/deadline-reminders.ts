@@ -120,7 +120,7 @@ export const Route = createFileRoute("/api/public/jobs/deadline-reminders")({
 
                 for (const todo of todos) {
           if (!todo.deadline || todo.deadline !== target) continue;
-          if (days !== 0 && todo.articleId) continue; // already saved as an article, no longer pending
+          if (todo.articleId) continue; // already saved as an article, no longer pending
           const editorKey = (todo.editrice || "").trim().toLowerCase();
           const recipients = todo.emails[editorKey];
           if (!recipients) continue;
