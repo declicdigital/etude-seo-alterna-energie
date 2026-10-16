@@ -960,18 +960,42 @@ async function sendComment(articleId, textarea){
 async function editComment(articleId, commentId){
   const c = (commentsByArticle[articleId] || []).find(x => x.id === commentId);
   if(!c) return;
-  const next = prompt('Modifier le message :', c.body);
-  if(next === null || !next.trim() || next === c.body) return;
-  const res = await fetch(COMMENTS_REST + '?id=eq.' + encodeURIComponent(commentId), {
-    method: 'PATCH',
-    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ body: next.trim() })
+  const btn = document.querySelector(`[data-action="edit-comment"][data-comment-id="${commentId}"]`);
+  const item = btn && btn.closest('.comment-item');
+  const bodyEl = item && item.querySelector('.comment-body');
+  if(!bodyEl || bodyEl.dataset.editing) return;
+  bodyEl.dataset.editing = '1';
+  const ta = document.createElement('textarea');
+  ta.className = 'comment-input';
+  ta.value = c.body;
+  ta.style.cssText = 'width:100%;min-height:60px;box-sizing:border-box;';
+  bodyEl.innerHTML = '';
+  bodyEl.appendChild(ta);
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+  ta.addEventListener('click', ev => ev.stopPropagation());
+  let done = false;
+  const finish = async (save) => {
+    if(done) return; done = true;
+    const next = ta.value.trim();
+    if(save && next && next !== c.body){
+      const res = await fetch(COMMENTS_REST + '?id=eq.' + encodeURIComponent(commentId), {
+        method: 'PATCH',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: next })
+      });
+      if(!res.ok) alert('Le message n\'a pas pu être modifié.');
+      else { c.body = next; showSaved(); }
+    }
+    renderArticles();
+    if(articleId === TODO_ARTICLE_ID) renderTodoComments();
+  };
+  ta.addEventListener('keydown', ev => {
+    ev.stopPropagation();
+    if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); finish(true); }
+    else if(ev.key === 'Escape'){ ev.preventDefault(); finish(false); }
   });
-  if(!res.ok){ alert('Le message n\'a pas pu être modifié.'); return; }
-  c.body = next.trim();
-  showSaved();
-  renderArticles();
-  if(articleId === TODO_ARTICLE_ID) renderTodoComments();
+  ta.addEventListener('blur', () => finish(true));
 }
 
 async function deleteComment(articleId, commentId){
