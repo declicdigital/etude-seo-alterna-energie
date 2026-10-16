@@ -118,7 +118,7 @@ export function SheetSidebar({
   setMetaValue: (scope: string, key: string, value: string | null) => void;
 }) {
   const search = useRouterState({ select: (r) => r.location.search }) as { sheet?: string };
-  const active = search.sheet ?? "Structure RES";
+  const active = search.sheet ?? "__home";
 
   const hiddenSheets = useMemo(() => {
     const set = new Set<string>();
