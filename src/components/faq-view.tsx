@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, ImagePlus, MessageSquare, Paperclip, Save, Trash2, X } from "lucide-react";
+import { Check, Download, ImagePlus, MessageSquare, Paperclip, Save, Trash2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import type { Access } from "@/lib/access";
-import { FAQ_CATEGORIES, type FaqAttachment, type FaqComment, type FaqRequest } from "@/lib/faq";
+import { canValidateFaq, validatedFaqForTarget, FAQ_CATEGORIES, type FaqAttachment, type FaqComment, type FaqRequest } from "@/lib/faq";
 import existingFaq from "@/data/faq-existing.json";
 
 type User = { id: string; full_name: string | null; email: string };
@@ -75,7 +76,7 @@ export function FaqView({ access, scope, hash }: { access: Access; scope: string
   const myName = me?.full_name || access.email || "";
 
   const target = scope?.toLowerCase().startsWith("pro") ? "Professionnel" : scope ? "Particulier" : null;
-  const list = target ? requests.filter((r) => r.target === target) : requests;
+  const list = requests;
   const focusId = hash.startsWith("#faq-") ? decodeURIComponent(hash.slice(5)) : null;
 
   useEffect(() => {
@@ -84,8 +85,8 @@ export function FaqView({ access, scope, hash }: { access: Access; scope: string
   }, [focusId, loading, requests.length]);
 
   const update = async (r: FaqRequest) => {
-    setRequests((prev) => prev.map((x) => (x.id === r.id ? r : x)));
     await saveRequest(r);
+    setRequests((prev) => prev.map((x) => (x.id === r.id ? r : x)));
   };
 
   return (
@@ -93,11 +94,11 @@ export function FaqView({ access, scope, hash }: { access: Access; scope: string
       <header className="px-5 md:px-8 py-6 border-b bg-gradient-to-r from-teal-500/15 via-teal-500/5 to-transparent border-teal-500/30">
         <div className="text-[11px] uppercase tracking-widest font-semibold text-teal-700">FAQ</div>
         <h2 className="mt-1 text-2xl font-semibold tracking-tight text-teal-900">
-          {target ? `Demandes FAQ — ${target}` : "Suivi des demandes FAQ"}
+          {target ? `FAQ — ${target}` : "Demande"}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           {target
-            ? `Toutes les demandes FAQ ciblant le ${target.toLowerCase()}.`
+            ? `Questions FAQ — ${target.toLowerCase()}.`
             : "Remplissez une demande, puis sauvegardez : Geoffrey est prévenu par mail."}
         </p>
       </header>
@@ -120,7 +121,7 @@ export function FaqView({ access, scope, hash }: { access: Access; scope: string
           />
         )}
 
-        <section className="space-y-3">
+        {!target && <section className="space-y-3">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             {loading ? "Chargement…" : `${list.length} demande${list.length > 1 ? "s" : ""}`}
           </h3>
@@ -132,6 +133,8 @@ export function FaqView({ access, scope, hash }: { access: Access; scope: string
               users={users}
               myName={myName}
               myEmail={access.email ?? ""}
+              canValidate={access.isAdmin}
+              userId={access.userId}
               onUpdate={update}
               onDelete={async () => {
                 if (!confirm("Supprimer définitivement cette demande ?")) return;
@@ -143,8 +146,8 @@ export function FaqView({ access, scope, hash }: { access: Access; scope: string
           {!loading && list.length === 0 && (
             <p className="text-sm text-muted-foreground italic">Aucune demande pour le moment.</p>
           )}
-        </section>
-        {target && <ExistingFaq target={target} />}
+        </section>}
+        {target && <ExistingFaq target={target} requests={requests} />}
       </div>
     </div>
   );
@@ -152,7 +155,8 @@ export function FaqView({ access, scope, hash }: { access: Access; scope: string
 
 type ExistingQ = { target: string; category: string; sub: string; question: string; link: string };
 
-function ExistingFaq({ target }: { target: string }) {
+function ExistingFaq({ target, requests }: { target: string; requests: FaqRequest[] }) {
+  const validated = validatedFaqForTarget(requests, target);
   const rows = (existingFaq as ExistingQ[]).filter((q) => q.target === target);
   const groups = new Map<string, ExistingQ[]>();
   for (const q of rows) {
@@ -162,8 +166,26 @@ function ExistingFaq({ target }: { target: string }) {
   return (
     <section className="space-y-3">
       <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-        FAQ en ligne · {rows.length} questions
+        FAQ en ligne · {rows.length + validated.length} questions
       </h3>
+      {validated.length > 0 && (
+        <div className="overflow-x-auto border border-border rounded-md">
+          <table className="w-full text-sm">
+            <thead className="bg-muted text-muted-foreground text-left">
+              <tr><th className="px-4 py-3">Question</th><th className="px-4 py-3">Catégorie</th><th className="px-4 py-3">Lien</th></tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {validated.map((r) => (
+                <tr key={r.id} id={`faq-${r.id}`}>
+                  <td className="px-4 py-3 font-medium">{r.question}</td>
+                  <td className="px-4 py-3">{r.category}</td>
+                  <td className="px-4 py-3"><Button asChild variant="link" size="sm"><a href={r.link} target="_blank" rel="noreferrer">Voir ↗</a></Button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       {[...groups].map(([cat, qs]) => (
         <div key={cat} className="rounded-xl border bg-card">
           <div className="px-4 py-2 border-b text-xs font-semibold uppercase tracking-wider text-teal-700">{cat}</div>
@@ -517,12 +539,16 @@ function RequestCard({
   myEmail,
   onUpdate,
   onDelete,
+  canValidate,
+  userId,
 }: {
   r: FaqRequest;
   focused: boolean;
   users: User[];
   myName: string;
   myEmail: string;
+  canValidate: boolean;
+  userId: string | null;
   onUpdate: (r: FaqRequest) => Promise<void>;
   onDelete: () => void;
 }) {
@@ -530,6 +556,20 @@ function RequestCard({
   const [text, setText] = useState("");
   const [files, setFiles] = useState<FaqAttachment[]>([]);
   const pro = r.target === "Professionnel";
+  const [finalQuestion, setFinalQuestion] = useState(r.question ?? "");
+  const [link, setLink] = useState(r.link ?? "");
+  const [validating, setValidating] = useState(false);
+  const [validationError, setValidationError] = useState("");
+  const validate = async () => {
+    if (!canValidate || !userId || validating || !canValidateFaq(finalQuestion, link)) return;
+    setValidating(true);
+    setValidationError("");
+    try {
+      await onUpdate({ ...r, question: finalQuestion.trim(), link: link.trim(), validatedAt: new Date().toISOString(), validatedBy: userId });
+    } catch {
+      setValidationError("La validation a échoué. Réessayez.");
+    } finally { setValidating(false); }
+  };
 
   const send = async () => {
     if (!text.trim() && !files.length) return;
@@ -562,6 +602,7 @@ function RequestCard({
             <span className={cn("rounded-full px-2 py-0.5", pro ? "bg-blue-500/15 text-blue-700" : "bg-pink-500/15 text-pink-700")}>{r.target}</span>
             <span className="rounded-full bg-muted px-2 py-0.5">{r.type}</span>
             <span className="rounded-full bg-muted px-2 py-0.5">{r.content}</span>
+            <span className="rounded-full bg-muted px-2 py-0.5">{r.validatedAt ? "Validée" : "En attente de validation"}</span>
             <span className="rounded-full bg-teal-500/15 text-teal-800 px-2 py-0.5">
               {r.category}{r.newCategory ? " (nouvelle)" : ""}
             </span>
@@ -584,6 +625,17 @@ function RequestCard({
       </div>
       {open && (
         <div className="border-t px-4 py-4 space-y-3">
+          {canValidate && !r.validatedAt && (
+            <div className="border-b border-border pb-4 space-y-3">
+              <label className={label} htmlFor={`question-${r.id}`}>Question finale</label>
+              <textarea id={`question-${r.id}`} rows={2} className={cn(field, "h-auto py-2")} value={finalQuestion} onChange={(e) => setFinalQuestion(e.target.value)} />
+              <label className={label} htmlFor={`link-${r.id}`}>Lien de la FAQ</label>
+              <input id={`link-${r.id}`} type="url" className={field} placeholder="https://…" value={link} onChange={(e) => setLink(e.target.value)} />
+              {validationError && <p role="alert" className="text-sm text-destructive">{validationError}</p>}
+              <div className="flex justify-end"><Button onClick={validate} disabled={validating || !canValidateFaq(finalQuestion, link)}><Check />{validating ? "Validation…" : "Valider"}</Button></div>
+            </div>
+          )}
+          {r.validatedAt && r.link && <Button asChild variant="link" size="sm"><a href={r.link} target="_blank" rel="noreferrer">Voir la FAQ ↗</a></Button>}
           {r.question && (
             <div className="rounded-lg border border-teal-500/30 bg-teal-500/5 px-3 py-2 space-y-1.5">
               <div>
