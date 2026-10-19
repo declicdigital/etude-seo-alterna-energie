@@ -17,6 +17,7 @@ import { Route as ApiPublicNotifyAccessRequestRouteImport } from './routes/api/p
 import { Route as ApiPublicNotifyArticleReadyRouteImport } from './routes/api/public/notify-article-ready'
 import { Route as ApiPublicNotifyMentionRouteImport } from './routes/api/public/notify-mention'
 import { Route as ApiPublicJobsDeadlineRemindersRouteImport } from './routes/api/public/jobs/deadline-reminders'
+import { Route as ApiPublicJobsMonthlyRecapRouteImport } from './routes/api/public/jobs/monthly-recap'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -61,6 +62,12 @@ const ApiPublicJobsDeadlineRemindersRoute =
     path: '/api/public/jobs/deadline-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicJobsMonthlyRecapRoute =
+  ApiPublicJobsMonthlyRecapRouteImport.update({
+    id: '/api/public/jobs/monthly-recap',
+    path: '/api/public/jobs/monthly-recap',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
   '/api/public/jobs/deadline-reminders': typeof ApiPublicJobsDeadlineRemindersRoute
+  '/api/public/jobs/monthly-recap': typeof ApiPublicJobsMonthlyRecapRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -81,6 +89,7 @@ export interface FileRoutesByTo {
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
   '/api/public/jobs/deadline-reminders': typeof ApiPublicJobsDeadlineRemindersRoute
+  '/api/public/jobs/monthly-recap': typeof ApiPublicJobsMonthlyRecapRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -92,6 +101,7 @@ export interface FileRoutesById {
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
   '/api/public/jobs/deadline-reminders': typeof ApiPublicJobsDeadlineRemindersRoute
+  '/api/public/jobs/monthly-recap': typeof ApiPublicJobsMonthlyRecapRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
     | '/api/public/notify-article-ready'
     | '/api/public/notify-mention'
     | '/api/public/jobs/deadline-reminders'
+    | '/api/public/jobs/monthly-recap'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/api/public/notify-article-ready'
     | '/api/public/notify-mention'
     | '/api/public/jobs/deadline-reminders'
+    | '/api/public/jobs/monthly-recap'
   id:
     | '__root__'
     | '/'
@@ -124,6 +136,7 @@ export interface FileRouteTypes {
     | '/api/public/notify-article-ready'
     | '/api/public/notify-mention'
     | '/api/public/jobs/deadline-reminders'
+    | '/api/public/jobs/monthly-recap'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -135,6 +148,7 @@ export interface RootRouteChildren {
   ApiPublicNotifyArticleReadyRoute: typeof ApiPublicNotifyArticleReadyRoute
   ApiPublicNotifyMentionRoute: typeof ApiPublicNotifyMentionRoute
   ApiPublicJobsDeadlineRemindersRoute: typeof ApiPublicJobsDeadlineRemindersRoute
+  ApiPublicJobsMonthlyRecapRoute: typeof ApiPublicJobsMonthlyRecapRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -195,6 +209,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicJobsDeadlineRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/jobs/monthly-recap': {
+      id: '/api/public/jobs/monthly-recap'
+      path: '/api/public/jobs/monthly-recap'
+      fullPath: '/api/public/jobs/monthly-recap'
+      preLoaderRoute: typeof ApiPublicJobsMonthlyRecapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -207,6 +228,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicNotifyArticleReadyRoute: ApiPublicNotifyArticleReadyRoute,
   ApiPublicNotifyMentionRoute: ApiPublicNotifyMentionRoute,
   ApiPublicJobsDeadlineRemindersRoute: ApiPublicJobsDeadlineRemindersRoute,
+  ApiPublicJobsMonthlyRecapRoute: ApiPublicJobsMonthlyRecapRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
