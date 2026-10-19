@@ -114,18 +114,21 @@ export const Route = createFileRoute("/api/public/jobs/deadline-reminders")({
         }
 
         const results: { id: string; days: number; status: string }[] = [];
-        // Target date: today + REMIND_DAYS (UTC), as YYYY-MM-DD
-        for (const days of [REMIND_DAYS, 0]) {
-        const target = new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+        // Weekly reminder: sent on the Monday before the deadline (covers deadlines of the coming week).
+        // Day-J reminder: sent on the deadline day itself.
+        const today = new Date().toISOString().slice(0, 10);
+        const isMonday = new Date(today + "T00:00:00Z").getUTCDay() === 1;
+        for (const mode of ["week", "day0"] as const) {
 
                 for (const todo of todos) {
-          if (!todo.deadline || todo.deadline !== target) continue;
-          if (todo.articleId) continue; // already saved as an article, no longer pending
+          if (!todo.deadline || todo.articleId) continue; // already saved as an article, no longer pending
+          const days = Math.round((Date.parse(todo.deadline) - Date.parse(today)) / 86400000);
+          if (mode === "day0" ? days !== 0 : !(isMonday && days >= 1 && days <= 7)) continue;
           const editorKey = (todo.editrice || "").trim().toLowerCase();
           const recipients = todo.emails[editorKey];
           if (!recipients) continue;
 
-          const markerKey = days === 0 ? `reminder0:${todo.id}` : `reminder5:${todo.id}`;
+          const markerKey = mode === "day0" ? `reminder0:${todo.id}` : `reminderMon:${todo.id}`;
           const { data: marker } = await supabaseAdmin
             .from("editorial_kv")
             .select("key")
