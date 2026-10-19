@@ -1,0 +1,2 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS allowed_sections text[];
+COMMENT ON COLUMN public.profiles.allowed_sections IS 'NULL = access to every section; otherwise list of allowed section keys (Group or Group/Sub). Editable by admins only.';
