@@ -55,7 +55,7 @@ ${section("Blog professionnel", "#2563eb", p.pro)}
 </table></td></tr></table></body></html>`;
 }
 
-async function sendBrevo(to: string[], subject: string, text: string, html: string): Promise<void> {
+async function sendBrevo(to: string[], subject: string, text: string, html: string, cc: string[] = []): Promise<void> {
   const lovableKey = process.env["LOVABLE_API_KEY"];
   const brevoKey = process.env["BREVO_API_KEY"];
   if (!lovableKey || !brevoKey) throw new Error("mail secrets missing");
@@ -69,6 +69,7 @@ async function sendBrevo(to: string[], subject: string, text: string, html: stri
     body: JSON.stringify({
       sender: SENDER,
       to: to.map((email) => ({ email })),
+      ...(cc.length ? { cc: cc.map((email) => ({ email })) } : {}),
       subject,
       textContent: text,
       htmlContent: html,
