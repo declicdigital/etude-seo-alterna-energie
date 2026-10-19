@@ -196,6 +196,8 @@ function NewRequestForm({
   const [type, setType] = useState("");
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
   const [target, setTarget] = useState("");
   const [category, setCategory] = useState("");
   const [newCategory, setNewCategory] = useState("");

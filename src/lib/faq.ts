@@ -27,6 +27,8 @@ export type FaqRequest = {
   type: string;
   subject: string;
   content: string;
+  question?: string;
+  answer?: string;
   target: string;
   category: string;
   newCategory: boolean;
