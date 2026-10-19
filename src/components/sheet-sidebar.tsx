@@ -280,9 +280,9 @@ export function SheetSidebar({
           loading="lazy"
           width={1281}
           height={359}
-          className="h-7 w-auto"
+          className="h-9 w-auto"
         />
-        <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+        <p className="mt-1.5 text-[13px] leading-snug font-medium text-primary">
           l'outil de suivi de la communication digitale
         </p>
       </div>
