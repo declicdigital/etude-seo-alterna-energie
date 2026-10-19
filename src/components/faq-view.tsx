@@ -547,6 +547,20 @@ function RequestCard({
       </div>
       {open && (
         <div className="border-t px-4 py-4 space-y-3">
+          {r.question && (
+            <div className="rounded-lg border border-teal-500/30 bg-teal-500/5 px-3 py-2 space-y-1.5">
+              <div>
+                <span className="text-[11px] uppercase tracking-wider font-semibold text-teal-800">Question</span>
+                <p className="text-sm whitespace-pre-wrap mt-0.5">{r.question}</p>
+              </div>
+              {r.answer && (
+                <div>
+                  <span className="text-[11px] uppercase tracking-wider font-semibold text-teal-800">Réponse</span>
+                  <p className="text-sm whitespace-pre-wrap mt-0.5">{r.answer}</p>
+                </div>
+              )}
+            </div>
+          )}
           {r.comments.map((c) => (
             <div key={c.id} className="rounded-lg bg-muted/40 px-3 py-2">
               <div className="text-xs text-muted-foreground">
