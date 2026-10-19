@@ -171,7 +171,7 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
 
         // Recipients: every approved user (test mode overrides).
         let recipients: string[] = [];
-        if (testTo) {
+        if (testTo && testTo !== "all") {
           recipients = [testTo];
         } else {
           const { data: users, error: usersError } = await supabaseAdmin.rpc("approved_users");
@@ -202,7 +202,9 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
         const html = buildHtml({ month: label, particulier, pro, total });
 
         try {
-          await sendBrevo(recipients, subject, text, html, testCc ? [testCc] : []);
+          // Never CC someone who is already a direct recipient.
+          const cc = testCc.filter((e) => !recipients.some((r) => r.toLowerCase() === e.toLowerCase()));
+          await sendBrevo(recipients, subject, text, html, cc);
           if (!testTo) {
             await supabaseAdmin.from("editorial_kv").upsert({ key: markerKey, value: new Date().toISOString() });
           }
