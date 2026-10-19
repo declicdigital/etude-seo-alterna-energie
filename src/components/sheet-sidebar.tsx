@@ -3,7 +3,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Archive, ArchiveRestore, BookOpen, Home, ChevronDown, ChevronRight, GripVertical, Minus, Plus, Trash2, RotateCcw } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
-import digicomLogo from "@/assets/digicom-logo.png";
+import digicomWordmark from "@/assets/digicom-wordmark.png";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 import { sheetAllowed } from "@/lib/sections";
@@ -275,10 +275,13 @@ export function SheetSidebar({
     <aside className="w-full md:w-72 shrink-0 border-r border-border bg-card/50 backdrop-blur-sm md:h-screen md:sticky md:top-0 overflow-y-auto">
       <div className="p-5 border-b border-border">
         <img
-          src={digicomLogo}
-          alt="Digicom — l'outil de suivi de la communication digitale"
-          className="h-11 w-auto"
+          src={digicomWordmark}
+          alt="Digicom"
+          className="h-8 w-auto"
         />
+        <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+          l'outil de suivi de la communication digitale
+        </p>
       </div>
       <nav className="p-3 space-y-3">
         <Link
