@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import type { Access } from "@/lib/access";
 import { FAQ_CATEGORIES, type FaqAttachment, type FaqComment, type FaqRequest } from "@/lib/faq";
+import existingFaq from "@/data/faq-existing.json";
 
 type User = { id: string; full_name: string | null; email: string };
 
@@ -143,8 +144,44 @@ export function FaqView({ access, scope, hash }: { access: Access; scope: string
             <p className="text-sm text-muted-foreground italic">Aucune demande pour le moment.</p>
           )}
         </section>
+        {target && <ExistingFaq target={target} />}
       </div>
     </div>
+  );
+}
+
+type ExistingQ = { target: string; category: string; sub: string; question: string; link: string };
+
+function ExistingFaq({ target }: { target: string }) {
+  const rows = (existingFaq as ExistingQ[]).filter((q) => q.target === target);
+  const groups = new Map<string, ExistingQ[]>();
+  for (const q of rows) {
+    const k = q.sub ? `${q.category} · ${q.sub}` : q.category;
+    groups.set(k, [...(groups.get(k) ?? []), q]);
+  }
+  return (
+    <section className="space-y-3">
+      <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        FAQ en ligne · {rows.length} questions
+      </h3>
+      {[...groups].map(([cat, qs]) => (
+        <div key={cat} className="rounded-xl border bg-card">
+          <div className="px-4 py-2 border-b text-xs font-semibold uppercase tracking-wider text-teal-700">{cat}</div>
+          <ul className="divide-y">
+            {qs.map((q) => (
+              <li key={q.question} className="px-4 py-2 text-sm flex items-center justify-between gap-3">
+                <span>{q.question}</span>
+                {q.link && (
+                  <a href={q.link} target="_blank" rel="noreferrer" className="shrink-0 text-teal-700 hover:underline text-xs">
+                    Voir ↗
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
   );
 }
 

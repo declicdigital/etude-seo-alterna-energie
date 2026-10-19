@@ -1,0 +1,765 @@
+[
+{
+"target": "Particulier",
+"category": "Souscription",
+"sub": "",
+"question": "Où trouver mon numéro de PDL / PCE ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13369619321629"
+},
+{
+"target": "Particulier",
+"category": "Souscription",
+"sub": "",
+"question": "Puis-je choisir Alterna comme fournisseur d’énergie quel que soit mon lieu de résidence ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14364071719325"
+},
+{
+"target": "Particulier",
+"category": "Souscription",
+"sub": "",
+"question": "J'ai un contrat d'énergie avec un fournisseur dans un logement, comment changer pour Alterna ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14395540229789"
+},
+{
+"target": "Particulier",
+"category": "Souscription",
+"sub": "",
+"question": "Est-ce que je risque une coupure si je change de fournisseur d’énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13369834295325"
+},
+{
+"target": "Particulier",
+"category": "Souscription",
+"sub": "",
+"question": "Y a-t-il des frais pour souscrire un contrat chez Alterna énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13370699311389"
+},
+{
+"target": "Particulier",
+"category": "Souscription",
+"sub": "",
+"question": "Comment choisir ma puissance et mon option tarifaire ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14394606980637"
+},
+{
+"target": "Particulier",
+"category": "Souscription",
+"sub": "",
+"question": "Comment souscrire un contrat d’électricité ou de gaz en colocation ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14395082112669"
+},
+{
+"target": "Particulier",
+"category": "Souscription",
+"sub": "",
+"question": "Quel délai de traitement pour la prise en compte de ma souscription ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13370850222237"
+},
+{
+"target": "Particulier",
+"category": "Souscription",
+"sub": "",
+"question": "Comment me retracter de ma souscription chez Alterna énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/18287889577501"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Qui est Alterna énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/22944437592477"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Comment contacter Alterna énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13366596658333"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Comment accéder à mon espace client ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14363232540317"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Comment créer mon espace client ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13358864715421"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Vous rencontrez des difficultés sur Safari pour télécharger vos documents sur votre espace client ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/24730622705821"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Quelles sont les offres d’Alterna énergie commercialisées ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13401420322333"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Où trouver ma référence client/contrat ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13359821621533"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Où trouver les tarifs de mon contrat ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/22944833696157"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "En cas de changement de nom, quelles formalités accomplir ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14371732911517"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Comment modifier la puissance souscrite de mon contrat ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13398795737629"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Comment modifier l’option tarifaire de mon contrat ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13398636160797"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Quelles sont mes horaires d’heures creuses et super creuses ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13359285805469"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Est-ce avantageux de passer en Heures pleines/Heures creuses ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/36712741155869"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Comment mon compteur sait-il si je suis en heures pleines, heures creuses ou heures super creuses ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/25824279720349"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Comment savoir si mon chauffe-eau électrique ne fonctionne que pendant les heures creuses ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14394995013149"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Avez-vous une offre de fourniture dédiée aux véhicules électriques ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/25736804526365"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Ai-je besoin d’installer une borne de recharge spécifique pour mon véhicule électrique à mon domicile ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/25737531690781"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Comment faire une réclamation ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14394863605149"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "Comment sont gérées mes données personnelles ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14363473718301"
+},
+{
+"target": "Particulier",
+"category": "Offres & contrats",
+"sub": "",
+"question": "À quoi correspondent les cookies d’Alterna énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14338218893725"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "J’ai besoin d’un duplicata de facture ou d’un justificatif de domicile",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13360067734685"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "Comment modifier mes coordonnées bancaires/mon RIB ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13360194550685"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "A quoi correspondent les taxes sur ma facture ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14363623811357"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "Je continue de recevoir des factures de mon ancien fournisseur alors que j'ai souscrit chez Alterna énergie, est-ce normal ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14395575826077"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "J’ai été relancé pour un impayé, comment faire pour régulariser ma situation ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13371654295069"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "Puis-je modifier le montant de mes mensualités ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13399245433501"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "Pourquoi mon nouvel échéancier de mensualisation a t-il évolué ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13371881826717"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "Comment Alterna énergie vous accompagne pour faire évoluer vos échéances de mensualisation ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/27584496550813"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "Pourquoi les index sur ma facture ne correspondent pas à ceux affichés sur mon compteur ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14396103374365"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "J’ai déjà résilié, quand vais-je recevoir ma dernière facture ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14639258796573"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "Qu’est-ce que le chèque énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14372978047005"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "Comment bénéficier du chèque énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13371432240669"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "Je n’ai pas reçu mon chèque énergie, pourquoi ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14372882369181"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "Comment utiliser le chèque énergie pour payer ma facture ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14372412939293"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "A quoi sert l'attestation du chèque énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14372338892317"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "Pourquoi mon compteur indique-t-il des m3 et ma facture des kWh ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13401553227549"
+},
+{
+"target": "Particulier",
+"category": "Factures & paiements",
+"sub": "",
+"question": "Qu'est-ce que l'accise sur le gaz naturel ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/25049165064605"
+},
+{
+"target": "Particulier",
+"category": "Déménagement & résiliation",
+"sub": "",
+"question": "Combien de temps à l’avance dois-je prévenir de mon déménagement ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13401767008541"
+},
+{
+"target": "Particulier",
+"category": "Déménagement & résiliation",
+"sub": "",
+"question": "Comment résilier mon contrat d’énergie lors d'un déménagement ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13399467789085"
+},
+{
+"target": "Particulier",
+"category": "Déménagement & résiliation",
+"sub": "",
+"question": "La résiliation de mon contrat est-elle facturée ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14395859583517"
+},
+{
+"target": "Particulier",
+"category": "Déménagement & résiliation",
+"sub": "",
+"question": "Vais-je être coupé si je résilie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13369774482461"
+},
+{
+"target": "Particulier",
+"category": "Déménagement & résiliation",
+"sub": "",
+"question": "J’ai résilié mais je continue de recevoir des factures d’Alterna énergie, pourquoi ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14372637448477"
+},
+{
+"target": "Particulier",
+"category": "Assistance & dépannage",
+"sub": "",
+"question": "Je subis des microcoupures, que faire ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14371781051421"
+},
+{
+"target": "Particulier",
+"category": "Assistance & dépannage",
+"sub": "",
+"question": "Mon installation disjoncte souvent, que faire ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14395901354525"
+},
+{
+"target": "Particulier",
+"category": "Assistance & dépannage",
+"sub": "",
+"question": "J’ai un problème avec mon compteur, que faire ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14638810905501"
+},
+{
+"target": "Particulier",
+"category": "Assistance & dépannage",
+"sub": "",
+"question": "Je n'ai plus d'électricité, que faire ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13399733011485"
+},
+{
+"target": "Particulier",
+"category": "Assistance & dépannage",
+"sub": "",
+"question": "Je soupçonne une fuite de gaz, que faire ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13399880831901"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Qui sont les acteurs du marché de l’énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14384503555101"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Comment mieux comprendre le marché de l'énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14384565138333"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Qu’est-ce qu’une entreprise locale d’énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14364114665885"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Qu'est-ce que le médiateur de l'énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14384719626397"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Qui sont ENEDIS, SRD et GRDF ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13359931406749"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Que signifie tarif réglementé ? Offre de marché ? Offre élue ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13400988355229"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Puis-je revenir au tarif réglementé si je suis en offre de marché ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13359881530909"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Qu'est-ce qu'une offre à prix fixe ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13401322290205"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Qu'est-ce qu'une offre à prix indexé ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13401230574621"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Qu'est-ce que le prix repère gaz (PRVG) qui remplace le TRV ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13401050730269"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Les compteurs Linky et Gazpar, c’est quoi ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13360042216605"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "La pose d'un compteur Linky est-elle obligatoire ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/36712486422557"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Qui est propriétaire du compteur ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14364188141725"
+},
+{
+"target": "Particulier",
+"category": "B.a-ba de l'énergie",
+"sub": "",
+"question": "Quelles sont les différences entre monophasé et triphasé ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14396015685405"
+},
+{
+"target": "Particulier",
+"category": "Engagement responsable",
+"sub": "",
+"question": "Pourquoi choisir Alterna énergie ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14364049804829"
+},
+{
+"target": "Particulier",
+"category": "Engagement responsable",
+"sub": "",
+"question": "Comment simuler et demander une prime de Certificat d'Économie d'Énergie (CEE) ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/26612252190749"
+},
+{
+"target": "Particulier",
+"category": "Engagement responsable",
+"sub": "",
+"question": "Travaux de rénovation : nos conseils et nos aides",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14384328786205"
+},
+{
+"target": "Particulier",
+"category": "Engagement responsable",
+"sub": "",
+"question": "Comment réduire sa consommation d’énergie au quotidien ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14363419934237"
+},
+{
+"target": "Particulier",
+"category": "Engagement responsable",
+"sub": "",
+"question": "Pourquoi s'équiper d'un gestionnaire d'énergie ou de prises programmables ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14395978586269"
+},
+{
+"target": "Particulier",
+"category": "Engagement responsable",
+"sub": "",
+"question": "Qu'est-ce qu'une garantie d'origine ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/14384967167517"
+},
+{
+"target": "Particulier",
+"category": "Engagement responsable",
+"sub": "",
+"question": "Qu'est-ce que le label Vertvolt ?",
+"link": "https://aide.alterna-energie.fr/hc/fr/articles/13400328545565"
+},
+{
+"target": "Professionnel",
+"category": "Offres et services",
+"sub": "",
+"question": "Évolution des Heures Pleines / Heures Creuses (HP/HC) dans le cadre du TURPE 7",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/31228370574365"
+},
+{
+"target": "Professionnel",
+"category": "Offres et services",
+"sub": "",
+"question": "Comment souscrire un contrat d’électricité ou de gaz ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/19594051115933"
+},
+{
+"target": "Professionnel",
+"category": "Contrat",
+"sub": "",
+"question": "Vous êtes actuellement chez un autre fournisseur, comment devenir client Alterna énergie ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/19594292376349"
+},
+{
+"target": "Professionnel",
+"category": "Contrat",
+"sub": "",
+"question": "Comment modifier la puissance souscrite de votre contrat ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/19596263447453"
+},
+{
+"target": "Professionnel",
+"category": "Contrat",
+"sub": "",
+"question": "Comment modifier vos coordonnées de contact ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/19596425060509"
+},
+{
+"target": "Professionnel",
+"category": "Contrat",
+"sub": "",
+"question": "Est-il possible de résilier son contrat à tout moment ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/20287584164509"
+},
+{
+"target": "Professionnel",
+"category": "Contrat",
+"sub": "",
+"question": "Quelle est la date d'échéance de votre contrat ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/20288659909661"
+},
+{
+"target": "Professionnel",
+"category": "Contrat",
+"sub": "",
+"question": "Comment accéder à vos Conditions Générales de Vente (CGV) ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/22143961903389"
+},
+{
+"target": "Professionnel",
+"category": "Mon Espace Client",
+"sub": "",
+"question": "Comment modifier le mot de passe de mon espace client ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/19596487755293"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Informations générales",
+"question": "Comment retrouver mes factures ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/19990563208477"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Informations générales",
+"question": "Comment modifier mon adresse de facturation ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/20138986830877"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Informations générales",
+"question": "Comment modifier mon RIB/IBAN ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/19991114666397"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Informations générales",
+"question": "A quel rythme sont éditées les factures ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/19539548566941"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Informations générales",
+"question": "Qu'est-ce que le dispositif CEE (Certificat d’Economies d’Energie) ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/22142984741277"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Informations générales",
+"question": "Qu’est-ce qu’un \"obligé\" dans le dispositif des CEE (Certificat d’Economies d’Energie) ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/22143234339101"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Focus sur les factures d'électricité",
+"question": "Quelles sont les taxes applicables sur l’électricité ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/20445969034397"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Focus sur les factures d'électricité",
+"question": "Qu'est ce que le TURPE (Le Tarif d’Utilisation des Réseaux Publics d’Électricité) ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/22143865377949"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Focus sur les factures d'électricité",
+"question": "Qu’est-ce que la CTA (Contribution Tarifaire d’Acheminement) ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/20446434762909"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Focus sur les factures d'électricité",
+"question": "Qu’est-ce que l’Accise sur l’électricité ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/20444976826013"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Focus sur les factures gaz",
+"question": "Qu'est-ce que l’ATRD ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/21386776097693"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Focus sur les factures gaz",
+"question": "Qu'est-ce que l'ATRT ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/21385132679453"
+},
+{
+"target": "Professionnel",
+"category": "Factures",
+"sub": "Focus sur les factures gaz",
+"question": "Qu'est-ce que le certificat de production de biogaz (CPB) ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/27613180683165"
+},
+{
+"target": "Professionnel",
+"category": "Tout sur l'énergie",
+"sub": "",
+"question": "J'ai reçu l'offre d'un concurrent, pourquoi le coût du TURPE n'est pas le même que dans l'offre Alterna énergie ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/37110746967069"
+},
+{
+"target": "Professionnel",
+"category": "Tout sur l'énergie",
+"sub": "",
+"question": "Qu’est-ce que le mix énergétique ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/30454557366173"
+},
+{
+"target": "Professionnel",
+"category": "Tout sur l'énergie",
+"sub": "",
+"question": "Quels sont les différents acteurs de l’énergie ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/19783250111901"
+},
+{
+"target": "Professionnel",
+"category": "Tout sur l'énergie",
+"sub": "",
+"question": "Quelle est la différence entre distributeur et fournisseur d’électricité ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/20137572490781"
+},
+{
+"target": "Professionnel",
+"category": "Tout sur l'énergie",
+"sub": "",
+"question": "Qu'est ce que la Programmation Pluriannuelle de l’Énergie ? (PPE 3)",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/30028328495773"
+},
+{
+"target": "Professionnel",
+"category": "Tout sur l'énergie",
+"sub": "",
+"question": "Qu’est-ce que la responsabilité sociétale des entreprises (RSE) ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/30454114000029"
+},
+{
+"target": "Professionnel",
+"category": "Assistance dépannage",
+"sub": "",
+"question": "Que faire en cas de fuite de gaz ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/22141444179741"
+},
+{
+"target": "Professionnel",
+"category": "Assistance dépannage",
+"sub": "",
+"question": "En cas de panne d'électricité ou de gaz, qui contacter ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/20140189180445"
+},
+{
+"target": "Professionnel",
+"category": "Compteur et équipements électriques",
+"sub": "",
+"question": "Où trouver mon numéro de PDL (Point De Livraison)/PCE (Point de Comptage et d'Estimation) ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/20549005785373"
+},
+{
+"target": "Professionnel",
+"category": "Compteur et équipements électriques",
+"sub": "",
+"question": "À quoi correspondent les segments C1, C2, C3, C4 ou C5 ?",
+"link": "https://aide-pro.alterna-energie.fr/hc/fr/articles/20549555563293"
+}
+]
