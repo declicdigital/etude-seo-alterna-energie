@@ -206,7 +206,8 @@ function NewRequestForm({
   const [saving, setSaving] = useState(false);
 
   const finalCategory = category === NEW_CAT ? newCategory.trim() : category;
-  const ready = !!(type && subject.trim() && content && target && finalCategory);
+  const contentReady = content !== "Contenu déjà fourni" || (question.trim() && answer.trim());
+  const ready = !!(type && subject.trim() && content && contentReady && target && finalCategory);
 
   const submit = async () => {
     if (!ready || saving) return;
@@ -222,6 +223,8 @@ function NewRequestForm({
       type,
       subject: subject.trim(),
       content,
+      question: content === "Contenu déjà fourni" && question.trim() ? question.trim() : undefined,
+      answer: content === "Contenu déjà fourni" && answer.trim() ? answer.trim() : undefined,
       target,
       category: finalCategory,
       newCategory: category === NEW_CAT,
