@@ -102,10 +102,12 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
 
         // Test mode: { testTo: "email", month: "YYYY-MM" } sends only to that address, no marker.
         let testTo: string | null = null;
+        let testCc: string | null = null;
         let monthOverride: string | null = null;
         try {
-          const body = (await request.json()) as { testTo?: string; month?: string };
+          const body = (await request.json()) as { testTo?: string; testCc?: string; month?: string };
           if (body?.testTo && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.testTo)) testTo = body.testTo;
+          if (body?.testCc && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.testCc)) testCc = body.testCc;
           if (body?.month && /^\d{4}-\d{2}$/.test(body.month)) monthOverride = body.month;
         } catch {
           // empty body: normal scheduled run
@@ -199,7 +201,7 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
         const html = buildHtml({ month: label, particulier, pro, total });
 
         try {
-          await sendBrevo(recipients, subject, text, html);
+          await sendBrevo(recipients, subject, text, html, testCc ? [testCc] : []);
           if (!testTo) {
             await supabaseAdmin.from("editorial_kv").upsert({ key: markerKey, value: new Date().toISOString() });
           }
