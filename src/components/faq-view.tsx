@@ -196,6 +196,8 @@ function NewRequestForm({
   const [type, setType] = useState("");
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
   const [target, setTarget] = useState("");
   const [category, setCategory] = useState("");
   const [newCategory, setNewCategory] = useState("");
@@ -204,7 +206,8 @@ function NewRequestForm({
   const [saving, setSaving] = useState(false);
 
   const finalCategory = category === NEW_CAT ? newCategory.trim() : category;
-  const ready = !!(type && subject.trim() && content && target && finalCategory);
+  const contentReady = content !== "Contenu déjà fourni" || (question.trim() && answer.trim());
+  const ready = !!(type && subject.trim() && content && contentReady && target && finalCategory);
 
   const submit = async () => {
     if (!ready || saving) return;
@@ -220,6 +223,8 @@ function NewRequestForm({
       type,
       subject: subject.trim(),
       content,
+      question: content === "Contenu déjà fourni" && question.trim() ? question.trim() : undefined,
+      answer: content === "Contenu déjà fourni" && answer.trim() ? answer.trim() : undefined,
       target,
       category: finalCategory,
       newCategory: category === NEW_CAT,
@@ -228,7 +233,7 @@ function NewRequestForm({
     };
     try {
       await onSaved(r);
-      setType(""); setSubject(""); setContent(""); setTarget(""); setCategory(""); setNewCategory(""); setComment(""); setFiles([]);
+      setType(""); setSubject(""); setContent(""); setQuestion(""); setAnswer(""); setTarget(""); setCategory(""); setNewCategory(""); setComment(""); setFiles([]);
     } catch (e) {
       alert("Échec de l'enregistrement : " + (e as Error).message);
     }
@@ -255,6 +260,32 @@ function NewRequestForm({
           <span className={label}>Contenu</span>
           <Choice value={content} options={["À créer", "Contenu déjà fourni"]} onChange={setContent} />
         </div>
+        {content === "Contenu déjà fourni" && (
+          <div className="md:col-span-2 rounded-lg border border-teal-500/30 bg-teal-500/5 p-4 space-y-3">
+            <div className="text-[11px] uppercase tracking-wider font-semibold text-teal-800">Contenu fourni</div>
+            <div>
+              <span className={label}>Question</span>
+              <textarea
+                autoFocus
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                rows={2}
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder="La question exacte telle qu'elle apparaîtra dans la FAQ"
+              />
+            </div>
+            <div>
+              <span className={label}>Réponse</span>
+              <textarea
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                rows={5}
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="La réponse rédigée à afficher dans la FAQ"
+              />
+            </div>
+          </div>
+        )}
         <div>
           <span className={label}>Cible</span>
           <Choice value={target} options={["Particulier", "Professionnel"]} onChange={setTarget} />
@@ -516,6 +547,20 @@ function RequestCard({
       </div>
       {open && (
         <div className="border-t px-4 py-4 space-y-3">
+          {r.question && (
+            <div className="rounded-lg border border-teal-500/30 bg-teal-500/5 px-3 py-2 space-y-1.5">
+              <div>
+                <span className="text-[11px] uppercase tracking-wider font-semibold text-teal-800">Question</span>
+                <p className="text-sm whitespace-pre-wrap mt-0.5">{r.question}</p>
+              </div>
+              {r.answer && (
+                <div>
+                  <span className="text-[11px] uppercase tracking-wider font-semibold text-teal-800">Réponse</span>
+                  <p className="text-sm whitespace-pre-wrap mt-0.5">{r.answer}</p>
+                </div>
+              )}
+            </div>
+          )}
           {r.comments.map((c) => (
             <div key={c.id} className="rounded-lg bg-muted/40 px-3 py-2">
               <div className="text-xs text-muted-foreground">
