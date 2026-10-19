@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
-const SENDER = { name: "Outil contenus", email: "g.delabarre.alterna@gmail.com" };
+const SENDER = { name: "Digicom", email: "g.delabarre.alterna@gmail.com" };
 
 type Step = { key: string; status?: string; date?: string };
 type Article = {
@@ -51,7 +51,7 @@ ${section("Blog particulier", "#db2777", p.particulier)}
 ${section("Blog professionnel", "#2563eb", p.pro)}
 <p style="margin:24px 0 0;font-size:15px;line-height:1.6">On continue sur cette lancée ce mois-ci !</p>
 </td></tr>
-<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Récap automatique d'Outil contenus, envoyé le 1er de chaque mois. Merci de ne pas répondre à ce mail.</td></tr>
+<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Récap automatique d'Digicom, envoyé le 1er de chaque mois. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 

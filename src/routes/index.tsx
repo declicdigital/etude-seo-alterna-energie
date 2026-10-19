@@ -35,9 +35,9 @@ export const Route = createFileRoute("/")({
   validateSearch: searchSchema,
   ssr: false,
   head: () => ({ meta: [
-    { title: "Outil contenus - Alterna Énergie" },
+    { title: "Digicom - Alterna Énergie" },
     { name: "description", content: "Suivi éditorial et gestion des contenus Particulier et Professionnel d’Alterna Énergie." },
-    { property: "og:title", content: "Outil contenus - Alterna Énergie" },
+    { property: "og:title", content: "Digicom - Alterna Énergie" },
     { property: "og:description", content: "Suivi éditorial et gestion des contenus Particulier et Professionnel d’Alterna Énergie." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
