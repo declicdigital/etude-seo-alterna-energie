@@ -1,4 +1,4 @@
-import { BookOpen, Newspaper, Target, ArrowRight, Mail, CheckCircle2, PenLine, Image as ImageIcon, Globe, Users, Bell, AtSign } from "lucide-react";
+import { BookOpen, Newspaper, Target, ArrowRight, Mail, CheckCircle2, PenLine, Image as ImageIcon, Globe, Users, Bell, AtSign, HelpCircle } from "lucide-react";
 import logo from "@/assets/alterna-logo.png.asset.json";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
 type Step = { title: string; who: string; color: string; items: string[]; mail?: string };
@@ -110,6 +110,7 @@ export function GuideView(_: { onOpenSheet: (sheet: string) => void }) {
 const ENTRIES = [
   { icon: Target, title: "Stratégie PAC", sheet: "SUIVI STRATEGIE", text: "Suivi éditorial des contenus PAC : brief, rédaction, relecture + image, intégration." },
   { icon: Newspaper, title: "Blog", sheet: "SUIVI EDITORIAL", text: "Suivi éditorial des articles de blog Particulier et Professionnel." },
+  { icon: HelpCircle, title: "FAQ", sheet: "SUIVI FAQ", text: "Demandes de questions fréquentes Particulier et Professionnel, validées puis ajoutées en ligne." },
   { icon: BookOpen, title: "Guide de l'outil", sheet: "__guide", text: "Les modes opératoires schématisés de chaque suivi." },
 ];
 
@@ -155,11 +156,14 @@ export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void
               <button onClick={() => onOpenSheet("SUIVI EDITORIAL")} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted">
                 Blog <ArrowRight className="size-4" />
               </button>
+              <button onClick={() => onOpenSheet("SUIVI FAQ")} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted">
+                FAQ <ArrowRight className="size-4" />
+              </button>
             </div>
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-3">
+        <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {ENTRIES.map((e) => {
             const Icon = e.icon;
             return (
