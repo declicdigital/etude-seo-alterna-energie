@@ -36,6 +36,16 @@ const FLOWS: Flow[] = [
     ],
     end: ["En haut du Blog de la bonne cible", "Coché « Publié »"],
   },
+  {
+    title: "FAQ",
+    intro: "Demandes de FAQ · Particulier (cartes roses) · Professionnel (cartes bleues)",
+    steps: [
+      { title: "Demande", who: "Toute personne connectée", color: C.prep, items: ["Demandeur (automatique)", "Création ou Réécriture", "Sujet", "Contenu : à créer ou déjà fourni", "Si déjà fourni → Question + Réponse", "Cible Particulier / Pro", "Catégorie (ou nouvelle)", "Commentaire avec @ et pièce jointe", "Tout rempli → Sauvegarder"], mail: "Mail → Geoffrey" },
+      { title: "Échanges sur la carte", who: "Tous les comptes validés", color: C.review, items: ["Nouveaux messages", "@ pour taguer (un seul mail)", "Pièces jointes téléchargeables", "Demande visible en haut du suivi"], mail: "Mail aux personnes taguées" },
+      { title: "Validation", who: "Geoffrey seul", color: C.integ, items: ["Lien de la FAQ", "Question finale", "Cible vérifiée", "Cliquer sur Valider"], mail: "Badge « Validée »" },
+    ],
+    end: ["En haut du tableau Particulier ou Pro", "Visible par tous les comptes validés"],
+  },
 ];
 
 function FlowChart({ flow }: { flow: Flow }) {
