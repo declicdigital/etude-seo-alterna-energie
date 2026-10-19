@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getAccess, signOutAndGoToAuth } from "@/lib/access";
+import { SECTION_TREE, ALL_SECTION_KEYS } from "@/lib/sections";
 import logo from "@/assets/alterna-logo.png.asset.json";
 
 type Profile = {
@@ -11,6 +12,7 @@ type Profile = {
   status: string;
   requested_at: string;
   reviewed_at: string | null;
+  allowed_sections: string[] | null;
 };
 
 export const Route = createFileRoute("/demandes")({
@@ -43,7 +45,7 @@ function RequestsPage() {
   const load = useCallback(async () => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, email, full_name, status, requested_at, reviewed_at")
+      .select("id, email, full_name, status, requested_at, reviewed_at, allowed_sections")
       .order("requested_at", { ascending: false });
     setRows((data ?? []) as Profile[]);
   }, []);
@@ -64,6 +66,14 @@ function RequestsPage() {
       .update({ status, reviewed_at: new Date().toISOString(), reviewed_by: me })
       .eq("id", id);
     await load();
+  }
+
+  async function toggleSection(r: Profile, key: string) {
+    const cur = new Set(r.allowed_sections ?? ALL_SECTION_KEYS);
+    if (cur.has(key)) cur.delete(key); else cur.add(key);
+    const next = ALL_SECTION_KEYS.filter((k) => cur.has(k));
+    setRows((rs) => (rs ?? []).map((x) => (x.id === r.id ? { ...x, allowed_sections: next } : x)));
+    await supabase.from("profiles").update({ allowed_sections: next }).eq("id", r.id);
   }
 
   const pending = (rows ?? []).filter((r) => r.status === "pending");
@@ -121,7 +131,7 @@ function RequestsPage() {
                 <p className="px-4 py-5 text-sm text-emerald-700/70">Rien pour le moment.</p>
               ) : (
                 others.map((r) => (
-                  <Row key={r.id} row={r}>
+                  <Row key={r.id} row={r} extra={r.status === "approved" && r.id !== me ? <SectionToggles row={r} onToggle={(k) => toggleSection(r, k)} /> : null}>
                     <span
                       className={
                         r.status === "approved"
@@ -157,7 +167,39 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Row({ row, children }: { row: Profile; children: React.ReactNode }) {
+function SectionToggles({ row, onToggle }: { row: Profile; onToggle: (key: string) => void }) {
+  const allowed = new Set(row.allowed_sections ?? ALL_SECTION_KEYS);
+  const chip = (key: string, label: string, on: boolean, dim = false) => (
+    <button
+      key={key}
+      type="button"
+      onClick={() => onToggle(key)}
+      title={on ? "Accès autorisé — cliquer pour retirer" : "Pas d'accès — cliquer pour autoriser"}
+      className={
+        "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors " +
+        (on ? "border-emerald-500 bg-emerald-500 text-white hover:bg-emerald-600" : "border-gray-200 bg-gray-50 text-gray-400 line-through hover:bg-gray-100") +
+        (dim ? " opacity-40" : "")
+      }
+    >
+      {label}
+    </button>
+  );
+  return (
+    <div className="mt-2 flex w-full flex-wrap gap-x-4 gap-y-2">
+      {SECTION_TREE.map((t) => {
+        const g = allowed.has(t.group);
+        return (
+          <div key={t.group} className="flex flex-wrap items-center gap-1.5">
+            {chip(t.group, t.group, g)}
+            {t.subs.map((s) => chip(`${t.group}/${s}`, s, allowed.has(`${t.group}/${s}`), !g))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Row({ row, children, extra }: { row: Profile; children: React.ReactNode; extra?: React.ReactNode }) {
   return (
     <div className="flex flex-wrap items-center gap-3 px-4 py-3">
       <div className="min-w-0 flex-1">
@@ -167,6 +209,7 @@ function Row({ row, children }: { row: Profile; children: React.ReactNode }) {
         </div>
       </div>
       <div className="flex items-center gap-2">{children}</div>
+      {extra}
     </div>
   );
 }
