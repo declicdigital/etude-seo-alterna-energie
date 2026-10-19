@@ -3,7 +3,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Archive, ArchiveRestore, BookOpen, Home, ChevronDown, ChevronRight, GripVertical, Minus, Plus, Trash2, RotateCcw } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
-import logo from "@/assets/alterna-logo.png.asset.json";
+import digicomLogo from "@/assets/digicom-logo.png";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 import { sheetAllowed } from "@/lib/sections";
@@ -274,22 +274,10 @@ export function SheetSidebar({
   return (
     <aside className="w-full md:w-72 shrink-0 border-r border-border bg-card/50 backdrop-blur-sm md:h-screen md:sticky md:top-0 overflow-y-auto">
       <div className="p-5 border-b border-border">
-        <div className="flex items-center gap-3">
-          <img src={logo.url} alt="Alterna Énergie" className="h-7 w-auto shrink-0" />
-          <div className="min-w-0">
-            <EditableText
-              as="h1"
-              className="text-base font-semibold leading-tight"
-              value={metaGet(meta, "brand", "title", "Digicom")}
-              onCommit={(v) => setMetaValue("brand", "title", v)}
-            />
-          </div>
-        </div>
-        <EditableText
-          as="div"
-          className="mt-3 text-xs text-muted-foreground"
-          value={metaGet(meta, "brand", "tagline", "Suivi éditorial")}
-          onCommit={(v) => setMetaValue("brand", "tagline", v)}
+        <img
+          src={digicomLogo}
+          alt="Digicom — l'outil de suivi de la communication digitale"
+          className="h-11 w-auto"
         />
       </div>
       <nav className="p-3 space-y-3">

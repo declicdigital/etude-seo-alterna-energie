@@ -19,7 +19,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-import logo from "@/assets/alterna-logo.png.asset.json";
+import digicomLogo from "@/assets/digicom-logo.png";
 import { sheetAllowed } from "@/lib/sections";
 import { getAccess, signOutAndGoToAuth } from "@/lib/access";
 import { LogOut, ShieldCheck, Lock, Download } from "lucide-react";
@@ -208,7 +208,7 @@ function Index() {
           >
             <Menu className="size-5" />
           </button>
-          <img src={logo.url} alt="Alterna Énergie" className="h-5 w-auto shrink-0" />
+          <img src={digicomLogo} alt="Digicom" className="h-6 w-auto shrink-0" />
           <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground truncate">
               {groupLabel}
