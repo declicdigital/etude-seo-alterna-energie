@@ -10,7 +10,6 @@ const EDITOR_EMAILS: Record<string, string[]> = {
   marina: ["contact@marinatravert.com"],
 };
 
-const REMIND_DAYS = 5;
 
 type Todo = {
   id: string;
@@ -140,7 +139,7 @@ export const Route = createFileRoute("/api/public/jobs/deadline-reminders")({
           }
 
           const sujet = todo.sujet || todo.h1 || "Article";
-          const msg = days === 0 ? "c'est aujourd'hui la deadline pour livrer l'article" : `il vous reste ${days} jours pour livrer l'article`;
+          const msg = mode === "day0" ? "c'est aujourd'hui la deadline pour livrer l'article" : "la deadline est cette semaine, pensez à livrer l'article";
           const subject = `Rappel : « ${sujet} » — ${msg}`;
           const text = [
             `Bonjour,`,
