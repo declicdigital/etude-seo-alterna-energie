@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import logo from "@/assets/alterna-logo.png.asset.json";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
+import { sheetAllowed } from "@/lib/sections";
 
 const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "FAQ", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
 const REMOVED_GROUPS = new Set(["Arborescence", "Suivi", "Docs", "Archives", "Autres"]);
@@ -124,7 +125,9 @@ const FALLBACK_STYLE = GROUP_STYLES.Autres;
 export function SheetSidebar({
   meta,
   setMetaValue,
+  allowed = null,
 }: {
+  allowed?: string[] | null;
   meta: MetaMap;
   setMetaValue: (scope: string, key: string, value: string | null) => void;
 }) {
@@ -191,12 +194,13 @@ export function SheetSidebar({
     const g: Record<string, string[]> = {};
     for (const s of sheetNames) {
       if (!showHidden && hiddenSheets.has(s)) continue;
+      if (!sheetAllowed(s, allowed)) continue;
       const k = groupOverrides[s] ?? SHEET_META[s]?.group ?? "Autres";
       if (REMOVED_GROUPS.has(SHEET_META[s]?.group ?? "Autres") || REMOVED_GROUPS.has(k)) continue;
       (g[k] ??= []).push(s);
     }
     return g;
-  }, [groupOverrides, hiddenSheets, showHidden]);
+  }, [groupOverrides, hiddenSheets, showHidden, allowed]);
 
   const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
   useEffect(() => {
@@ -368,6 +372,7 @@ export function SheetSidebar({
                 setSheetSubpath,
                 setSheetGroup,
                 hiddenSheets,
+                allowed,
               })}
             </div>
             )}
@@ -401,10 +406,11 @@ type RenderCtx = {
   setSheetSubpath: (sheet: string, path: string | null) => void;
   setSheetGroup: (sheet: string, group: string | null) => void;
   hiddenSheets: Set<string>;
+  allowed: string[] | null;
 };
 
 function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
-  const structure = SUB_STRUCTURE[group];
+  const structure = SUB_STRUCTURE[group]?.filter((sc) => !ctx.allowed || ctx.allowed.includes(`${group}/${sc.name}`));
   if (!structure) {
     return (
       <ul className="space-y-0.5">

@@ -20,6 +20,7 @@ import { Menu } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import logo from "@/assets/alterna-logo.png.asset.json";
+import { sheetAllowed } from "@/lib/sections";
 import { getAccess, signOutAndGoToAuth } from "@/lib/access";
 import { LogOut, ShieldCheck, Lock, Download } from "lucide-react";
 import { downloadBackup } from "@/lib/backup";
@@ -56,7 +57,7 @@ function Index() {
   const { sheet: sheetParam } = Route.useSearch();
   const { access } = Route.useRouteContext();
   const navigate = useNavigate();
-  const valid = sheetParam && sheetNames.includes(baseSheetOf(sheetParam));
+  const valid = sheetParam && sheetNames.includes(baseSheetOf(sheetParam)) && sheetAllowed(sheetParam, access.allowedSections);
   const isHome = !valid && sheetParam !== "__guide";
   const isGuide = sheetParam === "__guide" || isHome;
   const sheet = sheetParam === "__guide" ? "__guide" : isHome ? "__home" : sheetParam!;
@@ -131,7 +132,7 @@ function Index() {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  const sidebar = <SheetSidebar meta={metaOverrides} setMetaValue={setMetaValue} />;
+  const sidebar = <SheetSidebar allowed={access.allowedSections} meta={metaOverrides} setMetaValue={setMetaValue} />;
 
   const detailPanel = selected != null && !isGuide ? (
     <DetailPanel
