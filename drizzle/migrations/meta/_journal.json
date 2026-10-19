@@ -8,6 +8,13 @@
       "when": 1792155418379,
       "tag": "0000_comments_update",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792420977586,
+      "tag": "0001_profile_allowed_sections",
+      "breakpoints": true
     }
   ]
 }

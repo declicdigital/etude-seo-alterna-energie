@@ -70,6 +70,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          allowed_sections: string[] | null
           email: string
           full_name: string | null
           id: string
@@ -79,6 +80,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          allowed_sections?: string[] | null
           email: string
           full_name?: string | null
           id: string
@@ -88,6 +90,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          allowed_sections?: string[] | null
           email?: string
           full_name?: string | null
           id?: string
