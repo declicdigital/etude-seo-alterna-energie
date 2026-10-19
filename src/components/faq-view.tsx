@@ -233,7 +233,7 @@ function NewRequestForm({
     };
     try {
       await onSaved(r);
-      setType(""); setSubject(""); setContent(""); setTarget(""); setCategory(""); setNewCategory(""); setComment(""); setFiles([]);
+      setType(""); setSubject(""); setContent(""); setQuestion(""); setAnswer(""); setTarget(""); setCategory(""); setNewCategory(""); setComment(""); setFiles([]);
     } catch (e) {
       alert("Échec de l'enregistrement : " + (e as Error).message);
     }
@@ -260,6 +260,32 @@ function NewRequestForm({
           <span className={label}>Contenu</span>
           <Choice value={content} options={["À créer", "Contenu déjà fourni"]} onChange={setContent} />
         </div>
+        {content === "Contenu déjà fourni" && (
+          <div className="md:col-span-2 rounded-lg border border-teal-500/30 bg-teal-500/5 p-4 space-y-3">
+            <div className="text-[11px] uppercase tracking-wider font-semibold text-teal-800">Contenu fourni</div>
+            <div>
+              <span className={label}>Question</span>
+              <textarea
+                autoFocus
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                rows={2}
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder="La question exacte telle qu'elle apparaîtra dans la FAQ"
+              />
+            </div>
+            <div>
+              <span className={label}>Réponse</span>
+              <textarea
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                rows={5}
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="La réponse rédigée à afficher dans la FAQ"
+              />
+            </div>
+          </div>
+        )}
         <div>
           <span className={label}>Cible</span>
           <Choice value={target} options={["Particulier", "Professionnel"]} onChange={setTarget} />
