@@ -7,7 +7,7 @@ import logo from "@/assets/alterna-logo.png.asset.json";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 
-const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
+const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "FAQ", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
 const REMOVED_GROUPS = new Set(["Arborescence", "Suivi", "Docs", "Archives", "Autres"]);
 const ORDER_KEY = "sidebar.groupOrder.v1";
 const PROMOTED_KEY = "sidebar.orderPromoted.v1";
@@ -38,6 +38,10 @@ const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
   "Stratégie PAC": [
     { name: "Contenus", subs: [] },
   ],
+  FAQ: [
+    { name: "Particulier", subs: [] },
+    { name: "Professionnel", subs: [] },
+  ],
 };
 
 // Default sub-path assignments for existing sheets. Format: "Subcat/Subsub".
@@ -47,6 +51,7 @@ const DEFAULT_SUBPATHS: Record<string, string> = {
   "Structure RES": "Particulier",
   "Structure PRO": "Professionnel",
   "STRATEGIE - ARTICLES": "Contenus",
+  "FAQ - DEMANDES": "*",
 };
 
 // Per-group color palette. Each entry drives:
@@ -88,6 +93,12 @@ const GROUP_STYLES: Record<string, {
     active: "bg-violet-500/15 text-violet-800 dark:text-violet-200 font-semibold ring-1 ring-inset ring-violet-500/30",
     hover: "hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300",
     bar: "bg-violet-500",
+  },
+  FAQ: {
+    header: "bg-teal-600 text-white",
+    active: "bg-teal-500/15 text-teal-800 dark:text-teal-200 font-semibold ring-1 ring-inset ring-teal-500/30",
+    hover: "hover:bg-teal-500/10 hover:text-teal-700 dark:hover:text-teal-300",
+    bar: "bg-teal-500",
   },
   Docs: {
     header: "bg-rose-500 text-white",
@@ -198,7 +209,13 @@ export function SheetSidebar({
         // Merge saved order with any new groups discovered later.
         const known = new Set(migrated);
         const extras = DEFAULT_ORDER.filter((g) => !known.has(g));
-        let next = [...migrated, ...extras];
+        let next = [...migrated];
+        for (const g of extras) {
+          // New groups land right after their default predecessor (FAQ after Blog).
+          const prev = DEFAULT_ORDER[DEFAULT_ORDER.indexOf(g) - 1];
+          const at = prev ? next.indexOf(prev) : -1;
+          if (at >= 0) next.splice(at + 1, 0, g); else next.push(g);
+        }
         // One-time: bring "Stratégie PAC" to the top and "Blog" right after it.
         try {
           if (!localStorage.getItem(PROMOTED_KEY)) {

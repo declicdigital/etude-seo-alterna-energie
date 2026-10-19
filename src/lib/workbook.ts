@@ -18,9 +18,15 @@ export const EMBED_SHEETS: Record<string, string> = {
   "SUIVI STRATEGIE": "/suivi-editorial.html?space=strategie",
 };
 
+/** FAQ space: request tracker + Particulier/Professionnel lists, rendered by FaqView. */
+export const FAQ_SUIVI = "SUIVI FAQ";
+export const FAQ_LIST = "FAQ - DEMANDES";
+
 export const sheetNames = [
   ...Object.keys(workbook).filter((n) => !RETIRED_SHEETS.has(n)),
   ...Object.keys(EMBED_SHEETS),
+  FAQ_SUIVI,
+  FAQ_LIST,
 ];
 
 export function embedSrcOf(sheet: string): string | null {
@@ -235,6 +241,8 @@ export const SHEET_META: Record<
   "SUIVI EDITORIAL": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Blog" },
   "SUIVI STRATEGIE": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Stratégie PAC" },
   "STRATEGIE - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Contenus", group: "Stratégie PAC" },
+  "SUIVI FAQ": { headerRow: 0, firstDataRow: 0, label: "Suivi", group: "FAQ" },
+  "FAQ - DEMANDES": { headerRow: 0, firstDataRow: 0, label: "Demandes FAQ", group: "FAQ" },
   "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon électricité", group: "Archives" },
   "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon gaz", group: "Archives" },
 };
