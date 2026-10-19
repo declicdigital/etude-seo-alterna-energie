@@ -43,7 +43,7 @@ function buildHtml(p: { month: string; particulier: Article[]; pro: Article[]; t
   return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;padding:32px 12px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
-<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Alterna Énergie · Récap du mois</td></tr>
+<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · Blog</td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 16px;font-size:16px"><strong>Merci et félicitations à toute l'équipe !</strong></p>
 <p style="margin:0 0 8px;font-size:15px;line-height:1.6">En <strong>${esc(p.month)}</strong>, nous avons publié <strong>${p.total} article${p.total > 1 ? "s" : ""}</strong> sur le blog. Bravo à toutes et tous pour ce travail.</p>
@@ -51,7 +51,7 @@ ${section("Blog particulier", "#db2777", p.particulier)}
 ${section("Blog professionnel", "#2563eb", p.pro)}
 <p style="margin:24px 0 0;font-size:15px;line-height:1.6">On continue sur cette lancée ce mois-ci !</p>
 </td></tr>
-<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Récap automatique d'Digicom, envoyé le 1er de chaque mois. Merci de ne pas répondre à ce mail.</td></tr>
+<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Récap automatique de Digicom, envoyé le 1er de chaque mois. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
