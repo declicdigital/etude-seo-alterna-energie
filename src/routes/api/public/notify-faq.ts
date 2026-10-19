@@ -39,7 +39,7 @@ function buildHtml(intro: string, p: z.infer<typeof BodySchema>): string {
   return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;padding:32px 12px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
-<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Alterna Énergie · FAQ</td></tr>
+<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · FAQ</td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 16px;font-size:16px">${intro}</p>
 ${rows.map(([k, v]) => `<p style="margin:0 0 2px;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">${k}</p><p style="margin:0 0 12px;font-size:15px;font-weight:bold">${esc(v)}</p>`).join("")}
