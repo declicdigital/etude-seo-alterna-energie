@@ -27,7 +27,7 @@ function buildHtml(p: { days: number; space: string; id: string; sujet: string; 
   return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;padding:32px 12px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
-<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Alterna Énergie · Digicom</td></tr>
+<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · ${p.space === "strategie" ? "Stratégie PAC" : "Blog"}</td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 16px;font-size:16px"><strong>Rappel de deadline</strong></p>
 <p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">Sujet</p>
@@ -36,7 +36,7 @@ ${p.h1 ? `<p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:u
 <div style="background:#fef3c7;border-left:4px solid #d97706;padding:14px 16px;border-radius:6px;font-size:15px;line-height:1.5;margin:0 0 24px">${p.days === 0 ? `C'est <strong>aujourd'hui</strong> la deadline pour livrer l'article (<strong>${esc(p.deadline)}</strong>).` : `Il vous reste <strong>${p.days} jours</strong> pour livrer l'article (deadline : <strong>${esc(p.deadline)}</strong>).`}</div>
 <a href="${editorialLink(p.id, undefined, undefined, true, p.space)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir Digicom</a>
 </td></tr>
-<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Rappel automatique d'Digicom. Merci de ne pas répondre à ce mail.</td></tr>
+<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Rappel automatique de Digicom. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
