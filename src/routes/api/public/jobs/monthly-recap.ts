@@ -102,12 +102,13 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
 
         // Test mode: { testTo: "email", month: "YYYY-MM" } sends only to that address, no marker.
         let testTo: string | null = null;
-        let testCc: string | null = null;
+        let testCc: string[] = [];
         let monthOverride: string | null = null;
+        const emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
         try {
           const body = (await request.json()) as { testTo?: string; testCc?: string; month?: string };
-          if (body?.testTo && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.testTo)) testTo = body.testTo;
-          if (body?.testCc && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(body.testCc)) testCc = body.testCc;
+          if (body?.testTo && (body.testTo === "all" || emailRe.test(body.testTo))) testTo = body.testTo;
+          if (body?.testCc) testCc = body.testCc.split(",").map((e) => e.trim()).filter((e) => emailRe.test(e));
           if (body?.month && /^\d{4}-\d{2}$/.test(body.month)) monthOverride = body.month;
         } catch {
           // empty body: normal scheduled run
@@ -170,7 +171,7 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
 
         // Recipients: every approved user (test mode overrides).
         let recipients: string[] = [];
-        if (testTo) {
+        if (testTo && testTo !== "all") {
           recipients = [testTo];
         } else {
           const { data: users, error: usersError } = await supabaseAdmin.rpc("approved_users");
@@ -201,7 +202,9 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
         const html = buildHtml({ month: label, particulier, pro, total });
 
         try {
-          await sendBrevo(recipients, subject, text, html, testCc ? [testCc] : []);
+          // Never CC someone who is already a direct recipient.
+          const cc = testCc.filter((e) => !recipients.some((r) => r.toLowerCase() === e.toLowerCase()));
+          await sendBrevo(recipients, subject, text, html, cc);
           if (!testTo) {
             await supabaseAdmin.from("editorial_kv").upsert({ key: markerKey, value: new Date().toISOString() });
           }
