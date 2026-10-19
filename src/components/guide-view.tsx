@@ -138,7 +138,7 @@ export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void
           <div className="relative">
             <div className="flex items-center justify-between gap-6">
               <img src={logo.url} alt="Alterna Énergie" className="h-10 md:h-14 w-auto" />
-              <img src={digicomWordmark} alt="Digicom" width={1189} height={318} className="h-8 md:h-11 w-auto shrink-0" />
+              <img src={digicomWordmark} alt="Digicom" width={1281} height={359} className="h-8 md:h-11 w-auto shrink-0" />
             </div>
 
             <h2 className="mt-4 text-3xl md:text-5xl font-semibold tracking-tight max-w-2xl">Bienvenue sur Digicom</h2>

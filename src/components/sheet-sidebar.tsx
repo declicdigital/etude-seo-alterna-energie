@@ -278,8 +278,8 @@ export function SheetSidebar({
           src={digicomWordmark}
           alt="Digicom"
           loading="lazy"
-          width={1189}
-          height={318}
+          width={1281}
+          height={359}
           className="h-7 w-auto"
         />
         <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
