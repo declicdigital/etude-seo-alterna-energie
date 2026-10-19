@@ -15,6 +15,13 @@
       "when": 1792420977586,
       "tag": "0001_profile_allowed_sections",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792422645502,
+      "tag": "0002_faq_validation_guard",
+      "breakpoints": true
     }
   ]
 }
