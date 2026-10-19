@@ -1,5 +1,6 @@
 import { BookOpen, Newspaper, Target, ArrowRight, Mail, CheckCircle2, PenLine, Image as ImageIcon, Globe, Users, Bell, AtSign } from "lucide-react";
 import logo from "@/assets/alterna-logo.png.asset.json";
+import digicomWordmark from "@/assets/digicom-wordmark.png";
 type Step = { title: string; who: string; color: string; items: string[]; mail?: string };
 type Flow = { title: string; intro: string; steps: Step[]; end: string[] };
 
@@ -135,9 +136,15 @@ export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void
           <div className="absolute -right-16 -top-16 size-64 rounded-full bg-primary/10 blur-3xl" />
           <div className="absolute right-24 bottom-0 size-40 rounded-full bg-violet-500/10 blur-3xl" />
           <div className="relative">
-            <img src={logo.url} alt="Alterna Énergie" className="h-10 md:h-14 w-auto" />
+            <div className="flex items-center justify-between gap-6">
+              <img src={logo.url} alt="Alterna Énergie" className="h-10 md:h-14 w-auto" />
+              <img src={digicomWordmark} alt="Digicom" className="h-8 md:h-12 w-auto shrink-0" />
+            </div>
 
             <h2 className="mt-4 text-3xl md:text-5xl font-semibold tracking-tight max-w-2xl">Bienvenue sur Digicom</h2>
+            <p className="mt-2 text-base md:text-lg font-medium text-primary">
+              l'outil de suivi de la communication digitale
+            </p>
             <p className="mt-3 text-base md:text-lg text-muted-foreground max-w-2xl">
               Du sujet à la mise en ligne : on rédige, on relit, on intègre, on publie, et chacun reçoit le bon mail au bon moment.
             </p>
