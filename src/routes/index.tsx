@@ -208,7 +208,7 @@ function Index() {
           >
             <Menu className="size-5" />
           </button>
-          <img src={digicomWordmark} alt="Digicom" className="h-6 w-auto shrink-0" />
+          <img src={digicomWordmark} alt="Digicom" loading="lazy" width={1189} height={318} className="h-6 w-auto shrink-0" />
           <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground truncate">
               {groupLabel}

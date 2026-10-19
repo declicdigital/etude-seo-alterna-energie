@@ -277,7 +277,10 @@ export function SheetSidebar({
         <img
           src={digicomWordmark}
           alt="Digicom"
-          className="h-8 w-auto"
+          loading="lazy"
+          width={1189}
+          height={318}
+          className="h-7 w-auto"
         />
         <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
           l'outil de suivi de la communication digitale
