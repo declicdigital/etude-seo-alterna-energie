@@ -7,6 +7,7 @@ import { TreeView } from "@/components/tree-view";
 import { TableView } from "@/components/table-view";
 import { WebflowView } from "@/components/webflow-view";
 import { GuideView, HomeView } from "@/components/guide-view";
+import { FaqView } from "@/components/faq-view";
 import { DetailPanel } from "@/components/detail-panel";
 import { useEdits } from "@/lib/use-edits";
 import { baseSheetOf, embedSrcOf, isStructureSheet, nextRowId, SHEET_META, sheetNames } from "@/lib/workbook";
@@ -120,7 +121,8 @@ function Index() {
     !baseSheet.toUpperCase().startsWith("BLOG") &&
     !baseSheet.toUpperCase().startsWith("SUIVI ") &&
     !baseSheet.toUpperCase().startsWith("STRATEGIE") &&
-    sheetInfo?.group !== "Stratégie PAC";
+    sheetInfo?.group !== "Stratégie PAC" &&
+    sheetInfo?.group !== "FAQ";
   const embedSrc = isGuide ? null : embedSrcOf(sheet);
   const [pageHash, setPageHash] = useState(() => window.location.hash);
   useEffect(() => {
@@ -228,6 +230,8 @@ function Index() {
           <GuideView
             onOpenSheet={(s) => navigate({ to: "/", search: { sheet: s } })}
           />
+        ) : sheetInfo?.group === "FAQ" ? (
+          <FaqView access={access} scope={scope} hash={pageHash} />
         ) : embedSrc ? (
           <iframe
             src={embedSrc + pageHash}

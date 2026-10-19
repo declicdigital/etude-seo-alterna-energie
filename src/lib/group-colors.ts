@@ -19,6 +19,15 @@ const MAP: Record<string, GroupColor> = {
     activeRow: "bg-emerald-500/15 hover:bg-emerald-500/20",
     accent: "bg-emerald-500",
   },
+  FAQ: {
+    header:
+      "bg-gradient-to-r from-teal-500/15 via-teal-500/5 to-transparent border-teal-500/30",
+    chip: "text-teal-700 dark:text-teal-300",
+    title: "text-teal-900 dark:text-teal-100",
+    rowTint: "hover:bg-teal-500/10",
+    activeRow: "bg-teal-500/15 hover:bg-teal-500/20",
+    accent: "bg-teal-500",
+  },
   Blog: {
     header:
       "bg-gradient-to-r from-sky-500/15 via-sky-500/5 to-transparent border-sky-500/30",
