@@ -8,11 +8,11 @@ export const Route = createFileRoute("/en-attente")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Demande en attente - Outil contenus Alterna Énergie" },
-      { name: "description", content: "Votre demande d'accès à Outil contenus Alterna Énergie est en cours de validation." },
+      { title: "Demande en attente - Digicom — Alterna Énergie" },
+      { name: "description", content: "Votre demande d'accès à Digicom — Alterna Énergie est en cours de validation." },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:title", content: "Demande en attente - Outil contenus Alterna Énergie" },
-      { property: "og:description", content: "Votre demande d'accès à Outil contenus Alterna Énergie est en cours de validation." },
+      { property: "og:title", content: "Demande en attente - Digicom — Alterna Énergie" },
+      { property: "og:description", content: "Votre demande d'accès à Digicom — Alterna Énergie est en cours de validation." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

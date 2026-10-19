@@ -6,7 +6,7 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const ADMIN_EMAIL = "geoffrey.delabarre@gmail.com";
 const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const APP_URL = "https://etude-seo-alterna-energie.lovable.app/demandes";
-const SENDER = { name: "Outil contenus", email: "g.delabarre.alterna@gmail.com" };
+const SENDER = { name: "Digicom", email: "g.delabarre.alterna@gmail.com" };
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/api/public/notify-access-request")({
 
         const who = profile.full_name ? `${profile.full_name} (${profile.email})` : profile.email;
         const subject = `Nouvelle demande d'accès : ${profile.full_name || profile.email}`;
-        const text = `Bonjour,\r\n\r\n${who} demande l'accès à Outil contenus.\r\n\r\nValider ou refuser : ${APP_URL}`;
+        const text = `Bonjour,\r\n\r\n${who} demande l'accès à Digicom.\r\n\r\nValider ou refuser : ${APP_URL}`;
         const html = `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 12px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">

@@ -19,7 +19,7 @@ const BodySchema = z.object({
 });
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
-const SENDER = { name: "Outil contenus", email: "g.delabarre.alterna@gmail.com" };
+const SENDER = { name: "Digicom", email: "g.delabarre.alterna@gmail.com" };
 const ADMIN_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const RELECTURE_EMAIL = "fannie.laurendin@soregies.fr";
@@ -36,10 +36,10 @@ function buildHtml(p: z.infer<typeof BodySchema>): string {
   return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;padding:32px 12px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
-<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Alterna Énergie · Suivi éditorial</td></tr>
+<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Alterna Énergie · Digicom</td></tr>
 <tr><td style="padding:28px">
 ${p.kind === "relecture"
-  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article du suivi éditorial.</p>`
+  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article.</p>`
   : p.kind === "integration"
   ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (visible dans la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.</p>`
   : p.kind === "published"
@@ -53,9 +53,9 @@ ${row("Catégorie", p.categorie)}
 ${row("Énergie", p.energie)}
 ${row("Deadline", p.deadline)}
 ${row("Lien du doc", p.docx)}
-<a href="${notificationLink(p.kind, p.articleId, p.stepKey, p.space)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir le suivi éditorial</a>
+<a href="${notificationLink(p.kind, p.articleId, p.stepKey, p.space)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir Digicom</a>
 </td></tr>
-<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Notification automatique d'Outil contenus. Merci de ne pas répondre à ce mail.</td></tr>
+<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Notification automatique d'Digicom. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -111,7 +111,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           `Nom de l'article (H1) : ${payload.h1}`,
           `Sujet : ${payload.sujet}`,
           "",
-          `Ouvrir le suivi éditorial : ${appUrl}`,
+          `Ouvrir Digicom : ${appUrl}`,
         ].join("\r\n") : isRel ? [
           "Bonjour,",
           "",
@@ -122,7 +122,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           `Sujet : ${payload.sujet}`,
           payload.docx ? `Lien du doc : ${payload.docx}` : null,
           "",
-          `Ouvrir le suivi éditorial : ${appUrl}`,
+          `Ouvrir Digicom : ${appUrl}`,
         ].filter((l): l is string => l !== null).join("\r\n") : isInt ? [
           "Bonjour,",
           "",
@@ -133,7 +133,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           `Sujet : ${payload.sujet}`,
           payload.docx ? `Lien du doc : ${payload.docx}` : null,
           "",
-          `Ouvrir le suivi éditorial : ${appUrl}`,
+          `Ouvrir Digicom : ${appUrl}`,
         ].filter((l): l is string => l !== null).join("\r\n") : [
           "Bonjour Geoffrey,",
           "",
@@ -148,7 +148,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           payload.deadline ? `Deadline : ${payload.deadline}` : null,
           payload.docx ? `Lien du doc : ${payload.docx}` : null,
           "",
-          `Ouvrir le suivi éditorial : ${appUrl}`,
+          `Ouvrir Digicom : ${appUrl}`,
         ]
           .filter((l): l is string => l !== null)
           .join("\r\n");
