@@ -29,6 +29,9 @@ export type FaqRequest = {
   content: string;
   question?: string;
   answer?: string;
+  link?: string;
+  validatedAt?: string;
+  validatedBy?: string;
   target: string;
   category: string;
   newCategory: boolean;
@@ -39,4 +42,17 @@ export type FaqRequest = {
 export function faqLink(id?: string): string {
   const base = "https://etude-seo-alterna-energie.lovable.app/?sheet=SUIVI+FAQ";
   return id ? `${base}#faq-${encodeURIComponent(id)}` : base;
+}
+
+export function canValidateFaq(question: string, link: string): boolean {
+  if (!question.trim()) return false;
+  try {
+    const url = new URL(link.trim());
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch { return false; }
+}
+
+export function validatedFaqForTarget(requests: FaqRequest[], target: string): FaqRequest[] {
+  return requests.filter((r) => !!r.validatedAt && r.target === target)
+    .sort((a, b) => (b.validatedAt ?? "").localeCompare(a.validatedAt ?? ""));
 }

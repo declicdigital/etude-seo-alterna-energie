@@ -12,3 +12,4 @@
 - [x] Encart Ajouter une image réservé à l’étape « Relecture + Image »
 - [x] Stratégie PAC : "Contenus" rangé sous "Suivi éditorial" (comme le Blog)
 - [x] Espace FAQ (suivi + Particulier/Professionnel, demande, mail à Geoffrey)
+- [x] FAQ : renommer Suivi en Demande, valider avec lien et question avant ajout en tête de Particulier ou Professionnel

@@ -241,8 +241,8 @@ export const SHEET_META: Record<
   "SUIVI EDITORIAL": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Blog" },
   "SUIVI STRATEGIE": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Stratégie PAC" },
   "STRATEGIE - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Contenus", group: "Stratégie PAC" },
-  "SUIVI FAQ": { headerRow: 0, firstDataRow: 0, label: "Suivi", group: "FAQ" },
-  "FAQ - DEMANDES": { headerRow: 0, firstDataRow: 0, label: "Demandes FAQ", group: "FAQ" },
+  "SUIVI FAQ": { headerRow: 0, firstDataRow: 0, label: "Demande", group: "FAQ" },
+  "FAQ - DEMANDES": { headerRow: 0, firstDataRow: 0, label: "FAQ", group: "FAQ" },
   "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon électricité", group: "Archives" },
   "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon gaz", group: "Archives" },
 };
