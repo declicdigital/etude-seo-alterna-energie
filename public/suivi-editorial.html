@@ -1918,7 +1918,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     await saveArticle(article);
     if(key === 'integration') await pushToBlog(article);
     const MAIL_BY_STEP = {
-      redaction: { kind:'relecture', who:'Fannie (relecture + image)', next:'validation' },
+      redaction: { kind:'relecture', who:'Fannie Laurendin (relecture + image)', next:'validation' },
       validation: { kind:'integration', who:'Marick (intégration)', next:'integration' },
       relecture: { kind:'integration', who:'Marick (intégration)', next:'integration' },
       integration: { kind:'published', who:'Geoffrey (article publié)' },
@@ -2322,8 +2322,8 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
         method:'POST', headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({ space: SPACE || undefined, articleId, stepKey: 'validation', kind:'relecture', to: (emailsFor(getConfigFor('validation'), 'Service Communication').length ? emailsFor(getConfigFor('validation'), 'Service Communication') : undefined), sujet:t.sujet, h1:t.h1, editrice:t.editrice, cible:t.audience, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
       });
-      if(!r.ok) alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.');
-    }catch(err){ alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.'); }
+      if(!r.ok) alert('Article enregistré, mais le mail à Fannie Laurendin (relecture + image) n\'a pas pu partir.');
+    }catch(err){ alert('Article enregistré, mais le mail à Fannie Laurendin (relecture + image) n\'a pas pu partir.'); }
     todos = todos.filter(x => x.id !== t.id);
     if(!expanded[articleId]){ expanded[articleId] = true; saveExpanded(); }
     await saveTodos(); renderTodos(); renderArticles();
