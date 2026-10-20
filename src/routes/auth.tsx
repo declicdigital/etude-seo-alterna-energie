@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { getAccess } from "@/lib/access";
 import { pendingEditorialDestination } from "@/lib/editorial-links";
-import digicomWordmark from "@/assets/digicom-wordmark.png";
+import logo from "@/assets/alterna-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -100,7 +100,7 @@ function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-emerald-100 px-4 py-10">
       <div className="w-full max-w-sm rounded-2xl border border-emerald-100 bg-white p-8 shadow-xl">
         <div className="mb-6 flex flex-col items-center text-center">
-          <img src={digicomWordmark} alt="Digicom" loading="lazy" width={1281} height={359} className="mb-4 h-9 w-auto" />
+          <img src={logo.url} alt="Logo" className="mb-4 h-10 w-auto" />
           <h1 className="text-xl font-semibold text-emerald-900">
             {mode === "login" ? "Connexion" : "Créer un compte"}
           </h1>

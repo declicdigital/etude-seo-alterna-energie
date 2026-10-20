@@ -1,4 +1,5 @@
 import { BookOpen, Newspaper, Target, ArrowRight, Mail, CheckCircle2, PenLine, Image as ImageIcon, Globe, Users, Bell, AtSign, HelpCircle } from "lucide-react";
+import logo from "@/assets/alterna-logo.png.asset.json";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -139,7 +140,11 @@ export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void
           <div className="absolute -right-16 -top-16 size-64 rounded-full bg-primary/10 blur-3xl" />
           <div className="absolute right-24 bottom-0 size-40 rounded-full bg-violet-500/10 blur-3xl" />
           <div className="relative">
-            <img src={digicomWordmark} alt="Digicom" loading="lazy" width={1281} height={359} className="h-10 md:h-14 w-auto" />
+            <div className="flex items-center justify-start gap-5 md:gap-7">
+              <img src={logo.url} alt="Logo" className="h-10 md:h-14 w-auto" />
+              <div aria-hidden="true" className="h-10 md:h-14 w-px shrink-0 bg-foreground/30" />
+              <img src={digicomWordmark} alt="Digicom" width={1281} height={359} className="h-8 md:h-11 w-auto" />
+            </div>
 
             <h2 className="mt-4 text-3xl md:text-5xl font-semibold tracking-tight max-w-2xl">Bienvenue sur Digicom</h2>
             <p className="mt-2 text-base md:text-lg font-medium text-primary">
