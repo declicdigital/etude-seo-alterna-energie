@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { notificationLink } from "@/lib/editorial-links";
+import { notificationDeadline } from "@/lib/article-notification";
 
 const BodySchema = z.object({
   space: z.enum(["strategie"]).optional(),
@@ -96,6 +97,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           allowedTo = [...new Set(payload.to.filter((m) => known.has(m.toLowerCase())))];
         }
         const recipients = allowedTo.length ? allowedTo : [toEmail];
+        payload = { ...payload, deadline: notificationDeadline(payload.deadline, payload.kind, recipients) };
         const subject = isRel
           ? `Relecture + image à faire : « ${payload.h1} »`
           : isInt
