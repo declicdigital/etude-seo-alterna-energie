@@ -22,8 +22,8 @@ const FLOWS: Flow[] = [
     steps: [
       { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Type : Réécriture / Création", "Titre H1", "Édition", "Catégorie Blog / Éditorial", "Catégorie du blog (si Blog)", "Deadline", "Lien du brief", "Lien du doc", "Tout rempli → Enregistrer"] },
       { title: "Rappel deadline", who: "Automatique · 9 h", color: C.remind, items: ["Le lundi avant la deadline", "Aurorae : Caroline + Elodie", "Marina seule", "Point rouge < 5 jours"], mail: "Mail rappel édition" },
-      { title: "1 · Brief + 2 · Rédaction", who: "Validés à l'enregistrement", color: C.prep, items: ["Carte créée", "Brief + doc liés", "Passage auto en relecture"], mail: "Mail → Fannie Laurendin" },
-      { title: "3 · Relecture + Image", who: "Service Communication", color: C.review, items: ["Relire", "Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Marick" },
+      { title: "1 · Brief + 2 · Rédaction", who: "Validés à l'enregistrement", color: C.prep, items: ["Carte créée", "Brief + doc liés", "Passage auto en relecture"], mail: "Mail → Service Communication" },
+      { title: "3 · Relecture + Image", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Relire", "Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Marick" },
       { title: "4 · Intégration", who: "Marick", color: C.integ, items: ["Télécharger l'image", "Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
     ],
     end: ["En haut de « Contenus »", "Si Blog → aussi en haut de Blog › Particulier"],
@@ -34,8 +34,8 @@ const FLOWS: Flow[] = [
     steps: [
       { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Titre H1", "Édition", "Cible Particulier / Pro", "Catégorie + Énergie", "Deadline", "Lien du doc", "Tout rempli → Enregistrer"] },
       { title: "Rappel deadline", who: "Automatique · 9 h", color: C.remind, items: ["Le lundi avant la deadline", "Aurorae : Caroline + Elodie", "Marina seule", "Point rouge < 5 jours"], mail: "Mail rappel édition" },
-      { title: "1 · Rédaction", who: "Validée à l'enregistrement", color: C.prep, items: ["Carte créée", "Couleur selon la cible", "Passage auto en relecture"], mail: "Mail → Fannie Laurendin" },
-      { title: "2 · Relecture + Image", who: "Service Communication", color: C.review, items: ["Relire", "Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Marick" },
+      { title: "1 · Rédaction", who: "Validée à l'enregistrement", color: C.prep, items: ["Carte créée", "Couleur selon la cible", "Passage auto en relecture"], mail: "Mail → Service Communication" },
+      { title: "2 · Relecture + Image", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Relire", "Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Marick" },
       { title: "3 · Intégration", who: "Marick", color: C.integ, items: ["Télécharger l'image", "Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
     ],
     end: ["En haut du Blog de la bonne cible", "Coché « Publié »"],
@@ -46,7 +46,7 @@ const FLOWS: Flow[] = [
     steps: [
       { title: "1 · Édition", who: "Édition", color: C.prep, items: ["Titre H1", "Catégorie + Énergie", "Document rédigé", "Validée à l'enregistrement"] },
       { title: "2 · Relecture de l’expert métier", who: "Expert métier à renseigner dans la carte", color: C.remind, items: ["Relire le document", "Vérifier les informations métier", "Valider la relecture"] },
-      { title: "3 · Image", who: "Service Communication", color: C.review, items: ["Ajouter l'image", "Valider l'étape"], mail: "Mail → Marick" },
+      { title: "3 · Image", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Ajouter l'image", "Valider l'étape"], mail: "Mail → Marick" },
       { title: "4 · Intégration", who: "Marick", color: C.integ, items: ["Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
     ],
     end: ["En haut du Blog Pro", "Coché « Publié »"],
@@ -131,7 +131,7 @@ const ENTRIES = [
 const TEAM = [
   { name: "Aurorae", role: "Rédaction · Caroline & Elodie", color: "bg-emerald-500" },
   { name: "Marina", role: "Rédaction", color: "bg-violet-500" },
-  { name: "Fannie Laurendin", role: "Relecture + image", color: "bg-amber-500" },
+  { name: "Service Communication", role: "Relecture + image · Fannie & Coraline", color: "bg-amber-500" },
   { name: "Marick", role: "Intégration site", color: "bg-sky-500" },
   { name: "Geoffrey", role: "Pilotage", color: "bg-rose-500" },
 ];
