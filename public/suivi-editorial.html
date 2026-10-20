@@ -202,6 +202,30 @@ button{ font-family: inherit; cursor:pointer; }
 .article-card.aud-pro .schema{ border-color: #C6DAFF; }
 .article-card.aud-part .schema{ border-color: #F8CBE0; }
 
+/* Pastille de cible, en haut à gauche de la carte */
+.aud-pill{
+  font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em;
+  padding:5px 11px; border-radius:100px; border:1.5px solid var(--line);
+  background:var(--bg); color:var(--ink-60); flex-shrink:0; white-space:nowrap;
+}
+.article-card.aud-part .aud-pill{ background:var(--pink-bg); border-color:var(--pink); color:#B33070; }
+.article-card.aud-pro .aud-pill{ background:var(--blue-bg); border-color:var(--blue); color:#2F5DBF; }
+/* Publié / en cours : différence franche, visible même carte pliée */
+.status-pill{
+  font-size:0.72rem; font-weight:800; padding:5px 11px; border-radius:100px;
+  border:1.5px solid var(--line); background:var(--bg); color:var(--ink-60);
+  flex-shrink:0; white-space:nowrap;
+}
+.status-pill.ongoing{ background:var(--yellow-bg); border-color:#DCE07A; color:#7A6A00; }
+.article-card.is-published{
+  border-color:var(--lgreen);
+  background:linear-gradient(180deg, var(--lgreen-bg) 0%, #FFFFFF 160px);
+  box-shadow:0 2px 0 rgba(0,56,56,0.02), inset 5px 0 0 #0E9E57;
+}
+.article-card.is-published .status-pill{ background:#0E9E57; border-color:#0E9E57; color:#FFFFFF; }
+.article-card.is-published .progress-tag{ background:var(--lgreen-bg); border-color:var(--lgreen); color:#0E7A44; }
+.article-card.is-published .schema{ border-color:var(--lgreen); }
+
 
 .assignee-options{ display:flex; flex-wrap: wrap; gap: 8px; }
 .assignee-option{
@@ -1088,12 +1112,13 @@ let config = [];
 let articles = [];
 let openPanels = {};
 let confirmingDelete = null;
-const COLLAPSE_KEY = 'editorial-collapsed';
-let collapsed = (() => {
-  try{ return JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '{}'); }catch(e){ return {}; }
+/* Les cartes sont pliées par défaut : on ne mémorise que celles qu'on ouvre. */
+const EXPAND_KEY = 'editorial-expanded';
+let expanded = (() => {
+  try{ return JSON.parse(localStorage.getItem(EXPAND_KEY) || '{}'); }catch(e){ return {}; }
 })();
-function saveCollapsed(){
-  try{ localStorage.setItem(COLLAPSE_KEY, JSON.stringify(collapsed)); }catch(e){}
+function saveExpanded(){
+  try{ localStorage.setItem(EXPAND_KEY, JSON.stringify(expanded)); }catch(e){}
 }
 
 function uid(){
@@ -1529,15 +1554,20 @@ function renderArticleCard(article){
   }
 
   const isConfirming = confirmingDelete === article.id;
-  const isCollapsed = !!collapsed[article.id];
+  const isCollapsed = !expanded[article.id];
   const audCls = article.audience === 'Professionnel' ? 'aud-pro'
     : article.audience === 'Particulier' ? 'aud-part' : '';
+  const isPublished = !!article.blogRowId || (article.steps || []).some(s => s.key === 'integration' && s.status === 'done');
+  const audPill = article.audience === 'Professionnel' ? '<span class="aud-pill">Pro</span>'
+    : article.audience === 'Particulier' ? '<span class="aud-pill">Part.</span>' : '';
+  const statusPill = isPublished ? '<span class="status-pill">✓ Publié</span>' : '<span class="status-pill ongoing">En cours</span>';
 
   return `
-    <div class="article-card ${audCls} ${isCollapsed ? 'collapsed' : ''}" data-article-id="${article.id}">
+    <div class="article-card ${audCls} ${isPublished ? 'is-published' : ''} ${isCollapsed ? 'collapsed' : ''}" data-article-id="${article.id}">
 
       <div class="article-head">
         <button class="collapse-btn" data-action="toggle-collapse" data-article-id="${article.id}" title="${isCollapsed ? 'Déplier' : 'Réduire'}" aria-label="${isCollapsed ? 'Déplier' : 'Réduire'}">${isCollapsed ? '▸' : '▾'}</button>
+        ${audPill}${statusPill}
         <input class="title-input" data-action="edit-title" data-article-id="${article.id}" value="${escapeAttr(article.title)}" placeholder="Titre de l'article">
         <div class="article-meta">
           ${article.blogRowId ? `<span class="blog-badge">${SPACE ? 'Ajouté aux contenus' : 'Ajouté au blog'}</span>` : ''}${article.mainBlogRowId ? `<span class="blog-badge">Ajouté au blog</span>` : ''}
@@ -1631,6 +1661,7 @@ async function addArticle(){
   const article = newArticle('Nouvel article');
   articles.push(article);
   openPanels[article.id] = null;
+  expanded[article.id] = true; saveExpanded();
   await saveArticle(article);
   await saveIndex();
   render();
@@ -1641,14 +1672,14 @@ async function addArticle(){
 document.getElementById('addArticleBtn').addEventListener('click', addArticle);
 
 document.getElementById('collapseAllBtn').addEventListener('click', () => {
-  collapsed = {};
-  articles.forEach(a => collapsed[a.id] = true);
-  saveCollapsed();
+  expanded = {};
+  saveExpanded();
   renderArticles();
 });
 document.getElementById('expandAllBtn').addEventListener('click', () => {
-  collapsed = {};
-  saveCollapsed();
+  expanded = {};
+  articles.forEach(a => expanded[a.id] = true);
+  saveExpanded();
   renderArticles();
 });
 
@@ -1754,8 +1785,8 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
   const collapseBtn = e.target.closest('[data-action="toggle-collapse"]');
   if(collapseBtn){
     const id = collapseBtn.dataset.articleId;
-    if(collapsed[id]) delete collapsed[id]; else collapsed[id] = true;
-    saveCollapsed();
+    if(expanded[id]) delete expanded[id]; else expanded[id] = true;
+    saveExpanded();
     renderArticles();
     return;
   }
@@ -2294,7 +2325,7 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
       if(!r.ok) alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.');
     }catch(err){ alert('Article enregistré, mais le mail à Fannie (relecture + image) n\'a pas pu partir.'); }
     todos = todos.filter(x => x.id !== t.id);
-    if(collapsed[articleId]){ delete collapsed[articleId]; saveCollapsed(); }
+    if(!expanded[articleId]){ expanded[articleId] = true; saveExpanded(); }
     await saveTodos(); renderTodos(); renderArticles();
     const card = document.querySelector(`.article-card[data-article-id="${articleId}"]`);
     if(card) card.scrollIntoView({ behavior:'smooth', block:'start' });
@@ -2407,7 +2438,7 @@ document.getElementById('notifDropdown').addEventListener('click', (e) => {
     blk.classList.add('notif-flash');
     setTimeout(() => blk.classList.remove('notif-flash'), 3500);
   } else {
-    if(collapsed[aid]){ delete collapsed[aid]; saveCollapsed(); }
+    if(!expanded[aid]){ expanded[aid] = true; saveExpanded(); }
     renderArticles();
     const card = document.querySelector(`.article-card[data-article-id="${aid}"]`);
     if(card){
@@ -2435,9 +2466,9 @@ function openArticleFromHash(){
   } else {
     const article = getArticle(id);
     if(!article) return;
-    articles.forEach(a => { if(a.id !== id) collapsed[a.id] = true; });
-    delete collapsed[id];
-    saveCollapsed();
+    expanded = {};
+    expanded[id] = true;
+    saveExpanded();
     let key = params.get('step');
     if(key === 'validation' || key === 'relecture'){
       key = article.steps.some(s => s.key === key) ? key
