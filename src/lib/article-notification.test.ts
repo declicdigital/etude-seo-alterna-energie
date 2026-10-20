@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { notificationDeadline } from "./article-notification";
+import { notificationCta, notificationDeadline } from "./article-notification";
 
 describe("notificationDeadline", () => {
   it("removes the deadline from every notification addressed to Fannie", () => {
@@ -14,5 +14,17 @@ describe("notificationDeadline", () => {
 
   it("preserves the deadline for other recipients and notification stages", () => {
     expect(notificationDeadline("2026-10-23", "ready", ["geoffrey.delabarre@alterna-energie.fr"])).toBe("2026-10-23");
+  });
+});
+
+describe("notificationCta", () => {
+  it("asks for the image on the review step", () => {
+    expect(notificationCta("relecture")).toBe("Ajouter l'image");
+  });
+
+  it("keeps the generic label on every other stage", () => {
+    for (const kind of ["ready", "integration", "published", undefined]) {
+      expect(notificationCta(kind)).toBe("Ouvrir Digicom");
+    }
   });
 });

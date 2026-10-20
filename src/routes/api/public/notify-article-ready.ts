@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { notificationLink } from "@/lib/editorial-links";
-import { notificationDeadline } from "@/lib/article-notification";
+import { notificationCta, notificationDeadline } from "@/lib/article-notification";
 
 const BodySchema = z.object({
   space: z.enum(["strategie"]).optional(),
@@ -30,6 +30,7 @@ const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 function buildHtml(p: z.infer<typeof BodySchema>): string {
+  const cta = notificationCta(p.kind);
   const row = (label: string, value?: string) =>
     value
       ? `<p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">${label}</p><p style="margin:0 0 14px;font-size:15px">${esc(value)}</p>`
@@ -54,7 +55,7 @@ ${row("Catégorie", p.categorie)}
 ${row("Énergie", p.energie)}
 ${row("Deadline", p.deadline)}
 ${row("Lien du doc", p.docx)}
-<a href="${notificationLink(p.kind, p.articleId, p.stepKey, p.space)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir Digicom</a>
+<a href="${notificationLink(p.kind, p.articleId, p.stepKey, p.space)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">${cta}</a>
 </td></tr>
 <tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Notification automatique de Digicom. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
@@ -124,7 +125,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           `Sujet : ${payload.sujet}`,
           payload.docx ? `Lien du doc : ${payload.docx}` : null,
           "",
-          `Ouvrir Digicom : ${appUrl}`,
+          `${notificationCta("relecture")} : ${appUrl}`,
         ].filter((l): l is string => l !== null).join("\r\n") : isInt ? [
           "Bonjour,",
           "",
