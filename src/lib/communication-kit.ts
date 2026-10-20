@@ -12,7 +12,7 @@ import a10 from "@/assets/communication-kit/svg-2.asset.json";
 import a11 from "@/assets/communication-kit/svg-3.asset.json";
 import a12 from "@/assets/communication-kit/svg-4.asset.json";
 import a13 from "@/assets/communication-kit/svg-5.asset.json";
-import a14 from "@/assets/communication-kit/complete-v2.asset.json";
+import a14 from "@/assets/communication-kit/complete-v3.asset.json";
 import a15 from "@/assets/communication-kit/brand-guidelines.asset.json";
 export const kitResources = [
 {"key": "resource-0", "title": "Logos SVG · toutes les variantes", "group": "logos", "filename": "SVG.zip", "size": 39739, url: a0.url },

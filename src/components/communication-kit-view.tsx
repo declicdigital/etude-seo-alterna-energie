@@ -46,6 +46,6 @@ export function CommunicationKitView() {
       {error && <p role="alert" className="text-destructive text-sm mt-3">Copie indisponible : sélectionnez le code affiché.</p>}
       <p className="mt-4 text-sm text-muted-foreground">Astuce : pensez à enregistrer ces HEX dans vos applications lorsque vous les utilisez la première fois !</p>
     </section>
-    <section className="border-t border-border pt-8"><h2 className="text-xl font-semibold flex items-center gap-2"><FileText className="size-5 text-primary" /> Charte et modèle email</h2><div className="mt-3">{kitResources.filter(r => r.group === "documents").map(r => <Resource key={r.key} resource={r} />)}</div></section>
+    <section className="border-t border-border pt-8"><h2 className="text-xl font-semibold flex items-center gap-2"><FileText className="size-5 text-primary" /> Charte, guide de marque et modèle email</h2><div className="mt-3">{kitResources.filter(r => r.group === "documents").map(r => <Resource key={r.key} resource={r} />)}</div></section>
   </div>;
 }
