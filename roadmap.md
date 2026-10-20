@@ -1,3 +1,4 @@
+- [x] Demandes d'accès : Geoffrey est le seul compte administrateur vérifié ; deadline retirée des mails à Fannie dans les deux formats, 11 tests réussis.
 - [x] Demandes d'accès : date et heure de dernière connexion (Paris), invitation acceptée/non acceptée ; 8 tests réussis et liste réelle vérifiée avec le compte administrateur (14 comptes).
 - [x] Logo Digicom partout dans l'interface (en-tête Demandes d'accès, connexion, attente, accueil, page éditoriale) ; l'ancien logo n'est plus affiché.
 - [x] Invitations : formulaire nom et e-mail, envoi réservé à l’administrateur, accès directement approuvé, page de choix du mot de passe ; tests et contrôles compte existant/lien invalide réussis.
