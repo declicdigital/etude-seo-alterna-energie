@@ -133,7 +133,7 @@ const TEAM = [
   { name: "Marina", role: "Rédaction", color: "bg-violet-500" },
   { name: "Fannie Laurendin", role: "Relecture + image", color: "bg-amber-500" },
   { name: "Marick", role: "Intégration site", color: "bg-sky-500" },
-  { name: "Geoffrey", role: "Pilotage · en copie", color: "bg-rose-500" },
+  { name: "Geoffrey", role: "Pilotage", color: "bg-rose-500" },
 ];
 
 const PIPE = [
