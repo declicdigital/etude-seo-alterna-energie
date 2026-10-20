@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MAIL_SENDER } from "@/lib/mail-sender";
+import { recapCc } from "@/lib/monthly-recap-cc";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = MAIL_SENDER;
 
@@ -202,8 +203,8 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
         const html = buildHtml({ month: label, particulier, pro, total });
 
         try {
-          // Never CC someone who is already a direct recipient.
-          const cc = testCc.filter((e) => !recipients.some((r) => r.toLowerCase() === e.toLowerCase()));
+          // Always copy Christophe and Géraldine, and never twice the same person.
+          const cc = recapCc(recipients, testCc);
           await sendBrevo(recipients, subject, text, html, cc);
           if (!testTo) {
             await supabaseAdmin.from("editorial_kv").upsert({ key: markerKey, value: new Date().toISOString() });
