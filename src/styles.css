@@ -59,11 +59,11 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-kit-renewable: oklch(0.3078 0.0526 194.77);
-  --color-kit-energy: oklch(0.7964 0.1467 158.94);
-  --color-kit-solar: oklch(0.9047 0.1613 113.58);
-  --color-kit-hydro: oklch(0.6942 0.1641 261.49);
-  --color-kit-ivory: oklch(0.989 0.0102 84.57);
+  --color-kit-renewable: oklch(0.30846685 0.05265473 194.76895);
+  --color-kit-energy: oklch(0.79378921 0.14518115 160.46279);
+  --color-kit-solar: oklch(0.90885958 0.15883689 113.41448);
+  --color-kit-hydro: oklch(0.69468796 0.16003986 261.57873);
+  --color-kit-ivory: oklch(0.98923784 0.01017893 81.79533);
 }
 
 :root {
