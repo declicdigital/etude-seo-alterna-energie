@@ -13,3 +13,4 @@
 - Editorial email destinations use the shared editorial-links module and article/todo hash targets; the embedded page collapses other cards and opens the selected step and area, and sign-in preserves the destination to keep mail links targeted.
 - FAQ requests remain in the request tracker; audience lists derive only from validated records, sorted by validation time, and a database trigger protects validation fields using the authenticated admin role to prevent client-side bypasses.
 - The communication kit has its own approved-user route and a static asset manifest; ship original resources and a prebuilt complete ZIP through same-origin Lovable Assets downloads, without changing editorial workflows.
+- Invitations use an authenticated admin-only server function and Cloud Auth Invite emails; the public acceptance page sets the initial password, and invitation secrets must never be returned to administrators or copied in email.
