@@ -15,6 +15,7 @@
       const saved = existing[c.key] || (c.key === 'expert' ? article.expertStep : null);
       const step = saved || { key: c.key, status: c.key === 'expert' && published ? 'skipped' : 'pending', assignee: c.assignee || '', date: '', attachments: [] };
       if(!step.attachments) step.attachments = [];
+      if(c.key === 'expert' && !(step.assignee || '').trim()) step.assignee = c.assignee || '';
       if(c.key === 'validation') step.assignee = 'Service Communication';
       return step;
     });

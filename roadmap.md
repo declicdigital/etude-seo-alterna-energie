@@ -1,3 +1,4 @@
+- [x] Relecture métier : reprendre le responsable par défaut sur les étapes existantes sans responsable, sans remplacer les affectations individuelles.
 - [x] Blog Pro : Édition → Relecture de l’expert métier → Image → Intégration ; étapes précédentes requises, historique publié préservé, cartes réelles vérifiées après rechargement et 9 tests réussis.
 - [x] Récap mensuel : tous les comptes (y compris les prochains ajoutés) + copie fixe à Christophe Castel et Géraldine Deiber ; 3 tests réussis.
 - [x] Mails : expéditeur affiché « Alterna énergie - Digicom » sur les 6 envois automatiques (identité unique dans `src/lib/mail-sender.ts`) ; 7 tests réussis.
