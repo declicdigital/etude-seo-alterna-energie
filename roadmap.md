@@ -20,4 +20,4 @@
 - [x] Kit de communication : ajouter le guide de marque (Brand Guidelines) et retirer « décembre 2024 » du titre de la charte.
 - [x] Stratégie PAC : catégorie du blog obligatoire quand la ligne est classée « Blog » (pas pour Éditorial), reprise dans la carte et dans le tableau Blog.
 - [x] Cartes Blog, Stratégie PAC et FAQ : pastille Pro/Part., différence publiée/en cours marquée, toujours pliées par défaut.
-- [x] Logo Digicom limité à len-tête de la page « Demandes daccès » ; logo Alterna rétabli sur laccueil, la connexion, la page dattente et le suivi éditorial.
+- [x] Logo Digicom limité à l'en-tête de la page « Demandes d'accès » ; logo Alterna rétabli sur l'accueil, la connexion, la page d'attente et le suivi éditorial.
