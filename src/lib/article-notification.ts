@@ -11,3 +11,8 @@ export function notificationDeadline(
   }
   return deadline;
 }
+
+/** The review step asks Fannie to add the image, so its button says exactly that. */
+export function notificationCta(kind: string | undefined): string {
+  return kind === "relecture" ? "Ajouter l'image" : "Ouvrir Digicom";
+}
