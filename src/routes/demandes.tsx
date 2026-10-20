@@ -9,6 +9,8 @@ import { UserPlus, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { invitePerson } from "@/lib/invitations.functions";
+import { getAccessActivity } from "@/lib/access-activity.functions";
+import { formatLastConnection, invitationState, type AccessActivity } from "@/lib/access-activity";
 
 type Profile = {
   id: string;
@@ -18,6 +20,7 @@ type Profile = {
   requested_at: string;
   reviewed_at: string | null;
   allowed_sections: string[] | null;
+  activity?: AccessActivity;
 };
 
 export const Route = createFileRoute("/demandes")({
@@ -47,6 +50,8 @@ function RequestsPage() {
   const [rows, setRows] = useState<Profile[] | null>(null);
   const [me, setMe] = useState<string | null>(null);
   const sendInvitation = useServerFn(invitePerson);
+  const fetchActivity = useServerFn(getAccessActivity);
+  const [loadError, setLoadError] = useState("");
   const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
@@ -66,12 +71,21 @@ function RequestsPage() {
   }
 
   const load = useCallback(async () => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, email, full_name, status, requested_at, reviewed_at, allowed_sections")
-      .order("requested_at", { ascending: false });
-    setRows((data ?? []) as Profile[]);
-  }, []);
+    try {
+      const [profiles, activity] = await Promise.all([
+        supabase.from("profiles")
+          .select("id, email, full_name, status, requested_at, reviewed_at, allowed_sections")
+          .order("requested_at", { ascending: false }),
+        fetchActivity(),
+      ]);
+      if (profiles.error) throw profiles.error;
+      const byId = new Map(activity.map((item) => [item.user_id, item]));
+      setRows((profiles.data ?? []).map((profile) => ({ ...profile, activity: byId.get(profile.id) })));
+      setLoadError("");
+    } catch {
+      setLoadError("Les informations d’accès n’ont pas pu être chargées. Réessayez.");
+    }
+  }, [fetchActivity]);
 
   useEffect(() => {
     (async () => {
@@ -82,6 +96,14 @@ function RequestsPage() {
       await load();
     })();
   }, [navigate, load]);
+
+  useEffect(() => {
+    if (!me) return;
+    const refresh = () => { if (document.visibilityState === "visible") void load(); };
+    window.addEventListener("focus", refresh);
+    const timer = window.setInterval(refresh, 60000);
+    return () => { window.removeEventListener("focus", refresh); window.clearInterval(timer); };
+  }, [me, load]);
 
   async function decide(id: string, status: "approved" | "rejected") {
     await supabase
@@ -135,7 +157,10 @@ function RequestsPage() {
           {inviteSuccess && <p role="status" className="mt-3 text-sm text-primary">{inviteSuccess}</p>}
         </section>}
 
-        {rows === null ? (
+        {loadError && <div role="alert" className="mb-4 flex flex-wrap items-center gap-3 text-sm text-destructive">
+          {loadError}<Button variant="outline" size="sm" onClick={() => void load()}>Réessayer</Button>
+        </div>}
+        {rows === null && !loadError ? (
           <p className="text-sm text-emerald-700/70">Chargement…</p>
         ) : (
           <>
@@ -236,15 +261,27 @@ function SectionToggles({ row, onToggle }: { row: Profile; onToggle: (key: strin
 }
 
 function Row({ row, children, extra }: { row: Profile; children: React.ReactNode; extra?: React.ReactNode }) {
+  const invitation = invitationState(row.activity);
+  const lastConnection = formatLastConnection(row.activity?.last_sign_in_at);
   return (
     <div className="flex flex-wrap items-center gap-3 px-4 py-3">
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-emerald-900">{row.full_name || row.email}</div>
-        <div className="truncate text-xs text-emerald-700/70">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="break-words text-sm font-medium text-foreground">{row.full_name || row.email}</span>
+          {invitation && <span className={"inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium " +
+            (invitation === "accepted" ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-muted text-muted-foreground")}>
+            {invitation === "accepted" ? "✓ Invitation acceptée" : "Invitation non acceptée"}
+          </span>}
+        </div>
+        <div className="break-words text-xs text-muted-foreground">
           {row.email} · demandé le {new Date(row.requested_at).toLocaleDateString("fr-FR")}
         </div>
+        <div className="mt-1 text-xs text-muted-foreground">
+          Dernière connexion : <span className="font-medium text-foreground">{lastConnection ?? "Aucune connexion enregistrée"}</span>
+          {lastConnection && " (heure de Paris)"}
+        </div>
       </div>
-      <div className="flex items-center gap-2">{children}</div>
+      <div className="flex flex-wrap items-center gap-2">{children}</div>
       {extra}
     </div>
   );
