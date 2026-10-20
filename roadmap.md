@@ -1,3 +1,4 @@
+- [x] Mail « Relecture + Image » : bouton « Ajouter l'image » (au lieu de « Ouvrir Digicom »), même libellé dans le texte brut ; 5 tests réussis.
 - [x] Demandes d'accès : Geoffrey est le seul compte administrateur vérifié ; deadline retirée des mails à Fannie dans les deux formats, 11 tests réussis.
 - [x] Demandes d'accès : date et heure de dernière connexion (Paris), invitation acceptée/non acceptée ; 8 tests réussis et liste réelle vérifiée avec le compte administrateur (14 comptes).
 - [x] Logo Digicom partout dans l'interface (en-tête Demandes d'accès, connexion, attente, accueil, page éditoriale) ; l'ancien logo n'est plus affiché.
