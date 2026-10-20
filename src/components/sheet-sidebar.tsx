@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Archive, ArchiveRestore, BookOpen, Home, ChevronDown, ChevronRight, GripVertical, Minus, Plus, Trash2, RotateCcw } from "lucide-react";
+import { Archive, ArchiveRestore, BookOpen, FolderDown, Home, ChevronDown, ChevronRight, GripVertical, Minus, Plus, Trash2, RotateCcw } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
@@ -133,6 +133,7 @@ export function SheetSidebar({
 }) {
   const search = useRouterState({ select: (r) => r.location.search }) as { sheet?: string };
   const active = search.sheet ?? "__home";
+  const isKit = useRouterState({ select: (r) => r.location.pathname === "/kit-communication" });
 
   const hiddenSheets = useMemo(() => {
     const set = new Set<string>();
@@ -292,7 +293,7 @@ export function SheetSidebar({
           search={{ sheet: "__home" }}
           className={cn(
             "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors border",
-            active === "__home"
+            active === "__home" && !isKit
               ? "bg-primary/10 text-primary border-primary/40"
               : "border-transparent text-foreground/80 hover:bg-primary/5 hover:text-primary",
           )}
@@ -312,6 +313,9 @@ export function SheetSidebar({
         >
           <BookOpen className="size-4" />
           Guide de l'outil
+        </Link>
+        <Link to="/kit-communication" className={cn("flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors border", isKit ? "bg-primary/10 text-primary border-primary/40" : "border-transparent text-foreground/80 hover:bg-primary/5 hover:text-primary")}>
+          <FolderDown className="size-4" /> Kit de communication
         </Link>
         {order.filter((g) => groups[g]?.length).map((g) => {
           const style = GROUP_STYLES[g] ?? FALLBACK_STYLE;
