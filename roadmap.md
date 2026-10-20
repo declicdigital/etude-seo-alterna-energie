@@ -1,4 +1,4 @@
-- [ ] Blog Pro : séparer Édition, Relecture de l’expert métier et Image, préserver les autres parcours et vérifier les articles existants.
+- [x] Blog Pro : Édition → Relecture de l’expert métier → Image → Intégration ; étapes précédentes requises, historique publié préservé, cartes réelles vérifiées après rechargement et 9 tests réussis.
 - [x] Récap mensuel : tous les comptes (y compris les prochains ajoutés) + copie fixe à Christophe Castel et Géraldine Deiber ; 3 tests réussis.
 - [x] Mails : expéditeur affiché « Alterna énergie - Digicom » sur les 6 envois automatiques (identité unique dans `src/lib/mail-sender.ts`) ; 7 tests réussis.
 - [x] Mail « Relecture + Image » : bouton « Ajouter l'image » (au lieu de « Ouvrir Digicom »), même libellé dans le texte brut ; 5 tests réussis.

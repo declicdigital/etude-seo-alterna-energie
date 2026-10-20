@@ -1219,7 +1219,7 @@ function newArticle(title){
     category: '',
     energy: '',
     blogRowId: null,
-    steps: config.map(c => ({ key: c.key, status: 'pending', assignee: c.assignee || '', date: '', attachments: [] }))
+    steps: config.filter(c => c.key !== 'expert').map(c => ({ key: c.key, status: 'pending', assignee: c.assignee || '', date: '', attachments: [] }))
   };
 }
 
