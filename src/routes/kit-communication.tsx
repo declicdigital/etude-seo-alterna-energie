@@ -10,9 +10,9 @@ export const Route = createFileRoute("/kit-communication")({
   ssr: false,
   head: () => ({ meta: [
     { title: "Kit de communication · Digicom" },
-    { name: "description", content: "Logos Alterna Énergie, polices, couleurs, charte et modèle email à télécharger." },
+    { name: "description", content: "Logos, polices, couleurs, charte et modèle email à télécharger." },
     { property: "og:title", content: "Kit de communication · Digicom" },
-    { property: "og:description", content: "Toutes les ressources de communication Alterna Énergie, ensemble ou à l’unité." },
+    { property: "og:description", content: "Toutes les ressources de communication, ensemble ou à l’unité." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),

@@ -168,7 +168,7 @@ export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void
         </section>
 
         <section className="flex flex-wrap items-center justify-between gap-4 border-y border-border py-6">
-          <div><h3 className="text-xl font-semibold">Kit de communication</h3><p className="mt-1 text-sm text-muted-foreground">Logos, polices, couleurs et charte Alterna Énergie.</p></div>
+          <div><h3 className="text-xl font-semibold">Kit de communication</h3><p className="mt-1 text-sm text-muted-foreground">Logos, polices, couleurs et charte.</p></div>
           <Button asChild variant="outline"><Link to="/kit-communication"><FolderDown /> Ouvrir le kit</Link></Button>
         </section>
         <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

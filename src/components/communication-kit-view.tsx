@@ -25,7 +25,7 @@ export function CommunicationKitView() {
   const logo = kitResources.find(r => r.key === "resource-1");
   return <div className="max-w-6xl mx-auto px-6 md:px-10 py-12 space-y-10">
     <header className="flex flex-wrap items-start justify-between gap-5">
-      <div><p className="text-primary text-sm font-medium mb-2">Alterna Énergie · Ressources de marque</p><h1 className="text-3xl font-semibold">Kit de communication</h1><p className="mt-3 text-muted-foreground">Tous les éléments pour vos communications.</p></div>
+      <div><p className="text-primary text-sm font-medium mb-2">Ressources de marque</p><h1 className="text-3xl font-semibold">Kit de communication</h1><p className="mt-3 text-muted-foreground">Tous les éléments pour vos communications.</p></div>
       {complete && <Button asChild size="lg"><a href={complete.url} download={complete.filename}><FolderDown /> Télécharger le kit complet</a></Button>}
     </header>
     <section className="border-t border-border pt-8">
