@@ -19,11 +19,11 @@ export const Route = createFileRoute("/demandes")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Demandes d'accès - Digicom — Alterna Énergie" },
-      { name: "description", content: "Validez ou refusez les demandes d'accès à Digicom — Alterna Énergie." },
+      { title: "Demandes d'accès - Digicom" },
+      { name: "description", content: "Validez ou refusez les demandes d'accès à Digicom." },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:title", content: "Demandes d'accès - Digicom — Alterna Énergie" },
-      { property: "og:description", content: "Validez ou refusez les demandes d'accès à Digicom — Alterna Énergie." },
+      { property: "og:title", content: "Demandes d'accès - Digicom" },
+      { property: "og:description", content: "Validez ou refusez les demandes d'accès à Digicom." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

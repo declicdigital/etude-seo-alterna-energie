@@ -10,11 +10,11 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Connexion - Digicom — Alterna Énergie" },
-      { name: "description", content: "Connectez-vous ou demandez un accès à Digicom — Alterna Énergie." },
+      { title: "Connexion - Digicom" },
+      { name: "description", content: "Connectez-vous ou demandez un accès à Digicom." },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:title", content: "Connexion - Digicom — Alterna Énergie" },
-      { property: "og:description", content: "Connectez-vous ou demandez un accès à Digicom — Alterna Énergie." },
+      { property: "og:title", content: "Connexion - Digicom" },
+      { property: "og:description", content: "Connectez-vous ou demandez un accès à Digicom." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -106,7 +106,7 @@ function AuthPage() {
           </h1>
           <p className="mt-1 text-sm text-emerald-700/80">
             {mode === "login"
-              ? "Accédez à Digicom — Alterna Énergie."
+              ? "Accédez à Digicom."
               : "Votre demande sera validée par un administrateur."}
           </p>
         </div>
