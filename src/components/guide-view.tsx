@@ -1,6 +1,9 @@
 import { BookOpen, Newspaper, Target, ArrowRight, Mail, CheckCircle2, PenLine, Image as ImageIcon, Globe, Users, Bell, AtSign, HelpCircle } from "lucide-react";
 import logo from "@/assets/alterna-logo.png.asset.json";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
+import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { FolderDown } from "lucide-react";
 type Step = { title: string; who: string; color: string; items: string[]; mail?: string };
 type Flow = { title: string; intro: string; steps: Step[]; end: string[] };
 
@@ -164,6 +167,10 @@ export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void
           </div>
         </section>
 
+        <section className="flex flex-wrap items-center justify-between gap-4 border-y border-border py-6">
+          <div><h3 className="text-xl font-semibold">Kit de communication</h3><p className="mt-1 text-sm text-muted-foreground">Logos, polices, couleurs et charte Alterna Énergie.</p></div>
+          <Button asChild variant="outline"><Link to="/kit-communication"><FolderDown /> Ouvrir le kit</Link></Button>
+        </section>
         <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {ENTRIES.map((e) => {
             const Icon = e.icon;
