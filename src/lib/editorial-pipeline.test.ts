@@ -32,4 +32,16 @@ describe('Blog Pro expert review', () => {
     expect(pipeline.nextNotification({audience:'Professionnel'},'redaction','')).toBeNull();
     expect(pipeline.nextNotification({audience:'Professionnel'},'expert','')).toMatchObject({kind:'relecture',next:'validation'});
   });
+  it('applies Clément as the default expert to an existing unassigned step', () => {
+    const article: any = {audience:'Professionnel', steps:[{key:'expert',status:'pending',assignee:''}]};
+    const defaults = config.map(c => c.key === 'expert' ? {...c,assignee:'Clément'} : c);
+    pipeline.sync(article,defaults,'');
+    expect(article.steps.find((s: any) => s.key === 'expert')?.assignee).toBe('Clément');
+  });
+  it('preserves an individually assigned expert instead of replacing it with Clément', () => {
+    const article: any = {audience:'Professionnel', steps:[{key:'expert',status:'pending',assignee:'Autre expert'}]};
+    const defaults = config.map(c => c.key === 'expert' ? {...c,assignee:'Clément'} : c);
+    pipeline.sync(article,defaults,'');
+    expect(article.steps.find((s: any) => s.key === 'expert')?.assignee).toBe('Autre expert');
+  });
 });
