@@ -29,8 +29,8 @@ const FLOWS: Flow[] = [
     end: ["En haut de « Contenus »", "Si Blog → aussi en haut de Blog › Particulier"],
   },
   {
-    title: "Blog",
-    intro: "Particulier (cartes roses) · Professionnel (cartes bleues)",
+    title: "Blog Particulier",
+    intro: "Particulier · cartes roses",
     steps: [
       { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Titre H1", "Édition", "Cible Particulier / Pro", "Catégorie + Énergie", "Deadline", "Lien du doc", "Tout rempli → Enregistrer"] },
       { title: "Rappel deadline", who: "Automatique · 9 h", color: C.remind, items: ["Le lundi avant la deadline", "Aurorae : Caroline + Elodie", "Marina seule", "Point rouge < 5 jours"], mail: "Mail rappel édition" },
@@ -39,6 +39,17 @@ const FLOWS: Flow[] = [
       { title: "3 · Intégration", who: "Marick", color: C.integ, items: ["Télécharger l'image", "Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
     ],
     end: ["En haut du Blog de la bonne cible", "Coché « Publié »"],
+  },
+  {
+    title: "Blog Pro",
+    intro: "Professionnel · cartes bleues",
+    steps: [
+      { title: "1 · Édition", who: "Édition", color: C.prep, items: ["Titre H1", "Catégorie + Énergie", "Document rédigé", "Validée à l'enregistrement"] },
+      { title: "2 · Relecture de l’expert métier", who: "Expert métier à renseigner dans la carte", color: C.remind, items: ["Relire le document", "Vérifier les informations métier", "Valider la relecture"] },
+      { title: "3 · Image", who: "Service Communication", color: C.review, items: ["Ajouter l'image", "Valider l'étape"], mail: "Mail → Marick" },
+      { title: "4 · Intégration", who: "Marick", color: C.integ, items: ["Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
+    ],
+    end: ["En haut du Blog Pro", "Coché « Publié »"],
   },
   {
     title: "FAQ",

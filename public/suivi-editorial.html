@@ -748,6 +748,7 @@ html:not(.no-cat) .col-brief{display:none!important}
 
 <div class="save-indicator" id="saveIndicator">Enregistré</div>
 
+<script src="/editorial-pipeline.js"></script>
 <script>
 (function(){
 
@@ -1073,6 +1074,11 @@ const DEFAULT_CONFIG = [
 /* Règles imposées sur le pipeline, appliquées même sur une config déjà enregistrée. */
 function normalizeConfig(){
   let changed = false;
+  if(!SPACE && !config.some(c => c.key === 'expert')){
+    const index = config.findIndex(c => c.key === 'redaction');
+    config.splice(index + 1, 0, { key:'expert', label:'Relecture de l’expert métier', assignee:'', skippable:false });
+    changed = true;
+  }
   const red = config.find(c => c.key === 'redaction');
   if(red && !Array.isArray(red.options)){ red.options = ['Aurorae','Marina']; changed = true; }
   // Adresses mail par défaut des responsables (modifiables dans les réglages).
@@ -1171,6 +1177,9 @@ async function loadArticles(){
           a.category = 'Guide pratique';
           articleChanged = true;
         }
+        const before = JSON.stringify(a.steps);
+        syncArticleSteps(a);
+        if(before !== JSON.stringify(a.steps)) articleChanged = true;
         if(articleChanged) await saveArticle(a);
         out.push(a);
       }catch(e){}
@@ -1210,7 +1219,7 @@ function newArticle(title){
     category: '',
     energy: '',
     blogRowId: null,
-    steps: config.map(c => ({ key: c.key, status: 'pending', assignee: c.assignee || '', date: '', attachments: [] }))
+    steps: config.filter(c => c.key !== 'expert').map(c => ({ key: c.key, status: 'pending', assignee: c.assignee || '', date: '', attachments: [] }))
   };
 }
 
@@ -1218,6 +1227,10 @@ function newArticle(title){
 function missingFields(article, stepKey){
   const step = article.steps.find(s => s.key === stepKey);
   const out = [];
+  if(EditorialPipeline.isPro(article, SPACE)){
+    const index = article.steps.findIndex(s => s.key === stepKey);
+    if(article.steps.slice(0, index).some(s => s.status === 'pending')) out.push('les étapes précédentes');
+  }
   if(stepKey === 'redaction'){
     if(!article.audience) out.push('Particulier / Professionnel');
     if(!(article.title||'').trim() || article.title.trim() === 'Nouvel article') out.push("le titre de l'article");
@@ -1304,18 +1317,12 @@ function normalizeUrl(v){
 }
 
 function syncArticleSteps(article){
-  const existing = {};
-  article.steps.forEach(s => existing[s.key] = s);
-  article.steps = config.map(c => {
-    const s = existing[c.key] || { key: c.key, status: 'pending', assignee: c.assignee || '', date: '', attachments: [] };
-    if(!s.attachments) s.attachments = [];
-    if(c.key === 'validation') s.assignee = 'Service Communication';
-    return s;
-  });
+  EditorialPipeline.sync(article, config, SPACE);
 }
 
 function getArticle(id){ return articles.find(a => a.id === id); }
 function getConfigFor(key){ return config.find(c => c.key === key); }
+function getArticleConfig(article, key){ return EditorialPipeline.configFor(article, config, SPACE).find(c => c.key === key); }
 
 function currentActiveIndex(article){
   for(let i=0;i<article.steps.length;i++){
@@ -1469,7 +1476,7 @@ function renderArticleCard(article){
 
   let schemaHtml = '';
   article.steps.forEach((step, i) => {
-    const cfg = getConfigFor(step.key) || { label: step.key, skippable:false };
+    const cfg = getArticleConfig(article, step.key) || { label: step.key, skippable:false };
     let cls = 'step-box accent-' + accentFor(i);
     let iconContent = i+1;
     if(step.status === 'done'){ cls += ' done'; iconContent = '✓'; }
@@ -1495,7 +1502,7 @@ function renderArticleCard(article){
   let panelHtml = '';
   if(openKey){
     const step = article.steps.find(s => s.key === openKey);
-    const cfg = getConfigFor(openKey);
+    const cfg = getArticleConfig(article, openKey);
     if(step && cfg){
       const isDone = step.status === 'done';
       const isSkipped = step.status === 'skipped';
@@ -1537,7 +1544,7 @@ function renderArticleCard(article){
           </div>
         </div>
         <div class="attachments-block">
-          <label class="attachments-label">${step.key === 'integration' ? 'Images validées (étape Relecture + Image)' : 'Pièces jointes'}</label>
+          <label class="attachments-label">${step.key === 'integration' ? (EditorialPipeline.isPro(article, SPACE) ? 'Images validées (étape Image)' : 'Images validées (étape Relecture + Image)') : 'Pièces jointes'}</label>
           <div class="attachments-list">${renderAttachments(article.id, step)}${step.key === 'integration' ? renderImagesReadonly(article, step.key) : ''}</div>
           ${isImageStep(step.key) ? `
           <label class="attach-image-label" data-article-id="${article.id}" data-step-key="${step.key}">
@@ -1851,6 +1858,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     const article = getArticle(pickAud.dataset.articleId);
     const value = pickAud.dataset.value;
     article.audience = (article.audience === value) ? '' : value;
+    syncArticleSteps(article);
     if(!categoriesFor(article.audience).includes(article.category)) article.category = '';
     await saveArticle(article);
     renderArticles();
@@ -1917,13 +1925,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     if(key !== 'integration' || !step.date) step.date = new Date().toISOString().slice(0,10);
     await saveArticle(article);
     if(key === 'integration') await pushToBlog(article);
-    const MAIL_BY_STEP = {
-      redaction: { kind:'relecture', who:'Fannie Laurendin (relecture + image)', next:'validation' },
-      validation: { kind:'integration', who:'Marick (intégration)', next:'integration' },
-      relecture: { kind:'integration', who:'Marick (intégration)', next:'integration' },
-      integration: { kind:'published', who:'Geoffrey (article publié)' },
-    };
-    const mail = MAIL_BY_STEP[key];
+    const mail = EditorialPipeline.nextNotification(article, key, SPACE);
     if(mail){
       const red = article.steps.find(s => s.key === 'redaction');
       let to = [];
@@ -1935,7 +1937,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
       }
       try{
         const r = await fetch('/api/public/notify-article-ready', {
-          method:'POST', headers:{ 'Content-Type':'application/json' },
+          method:'POST', headers:authHeaders(),
           body: JSON.stringify({ space: SPACE || undefined, articleId: id, stepKey: mail.next, kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', cible: article.audience || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
         });
         if(!r.ok) alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.');
@@ -2267,6 +2269,7 @@ async function maybeCreateFromTodo(t){
   if(cat && categoriesFor(article.audience).includes(cat)) article.category = cat;
   const en = (t.energie||'').trim();
   if(en) article.energy = en;
+  syncArticleSteps(article);
   articles.push(article);
   t.articleId = article.id;
   await saveArticle(article);
@@ -2317,9 +2320,10 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
     await maybeCreateFromTodo(t);
     if(!t.articleId) return;
     const articleId = t.articleId;
-    try{
+    const createdArticle = getArticle(articleId);
+    if(createdArticle && !EditorialPipeline.isPro(createdArticle, SPACE)) try{
       const r = await fetch('/api/public/notify-article-ready', {
-        method:'POST', headers:{ 'Content-Type':'application/json' },
+        method:'POST', headers:authHeaders(),
         body: JSON.stringify({ space: SPACE || undefined, articleId, stepKey: 'validation', kind:'relecture', to: (emailsFor(getConfigFor('validation'), 'Service Communication').length ? emailsFor(getConfigFor('validation'), 'Service Communication') : undefined), sujet:t.sujet, h1:t.h1, editrice:t.editrice, cible:t.audience, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
       });
       if(!r.ok) alert('Article enregistré, mais le mail à Fannie Laurendin (relecture + image) n\'a pas pu partir.');
@@ -2327,6 +2331,10 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
     todos = todos.filter(x => x.id !== t.id);
     if(!expanded[articleId]){ expanded[articleId] = true; saveExpanded(); }
     await saveTodos(); renderTodos(); renderArticles();
+    if(createdArticle && EditorialPipeline.isPro(createdArticle, SPACE)){
+      openPanels[articleId] = 'expert';
+      renderArticles();
+    }
     const card = document.querySelector(`.article-card[data-article-id="${articleId}"]`);
     if(card) card.scrollIntoView({ behavior:'smooth', block:'start' });
     return;
