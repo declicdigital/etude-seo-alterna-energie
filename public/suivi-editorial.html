@@ -661,6 +661,8 @@ button{ font-family: inherit; cursor:pointer; }
 .td-linkwrap{display:flex;align-items:center;gap:4px}.td-linkwrap input{flex:1;min-width:0}.todo-open{flex:none;text-decoration:none;font-weight:700;color:#047857;padding:2px 6px;border-radius:6px;border:1px solid #d1d5db;background:#fff}.todo-open:hover{background:#ecfdf5}
 .todo-dot{ width:9px; height:9px; border-radius:50%; background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.16); flex:0 0 auto; }
 .no-cat .col-cat{display:none!important}
+.no-cat.show-blog-cat .col-cat{display:table-cell!important}
+.td-na{color:var(--muted);font-size:0.78rem;padding-left:8px}
 html:not(.no-cat) .col-brief{display:none!important}
 .no-cat .col-cible{display:none!important}
 .no-cat .col-energy{display:none!important}
@@ -737,6 +739,7 @@ const KEY = k => SPACE ? 'strat:' + k : k;
 const BLOG_SHEET = SPACE ? 'STRATEGIE - ARTICLES' : 'BLOG - ARTICLES';
 const BLOG_BASE_LEN = SPACE ? 1 : 424;
 if(NO_CAT) document.documentElement.classList.add('no-cat');
+if(NO_CAT){ const thc = document.querySelector('thead th.col-cat'); if(thc) thc.textContent = 'Catégorie du blog'; }
 if(SPACE){ document.title = 'Suivi éditorial (Stratégie PAC) — Outil contenus'; document.addEventListener('DOMContentLoaded', () => { const h = document.querySelector('h1'); if(h) h.textContent = 'Suivi éditorial — Stratégie PAC'; }); const h0 = document.querySelector('h1'); if(h0) h0.textContent = 'Suivi éditorial — Stratégie PAC'; }
 const AUDIENCES = ['Particulier', 'Professionnel'];
 const DESTS = ['Blog', 'Éditorial'];
@@ -1199,12 +1202,14 @@ function missingFields(article, stepKey){
   if(stepKey === 'integration'){
     if(!step || !step.date) out.push('la date');
     if(!(article.finalLink||'').trim()) out.push("le lien de l'article publié");
+    if(SPACE && article.dest === 'Blog' && !(article.category||'').trim()) out.push('la catégorie du blog');
   }
   return out;
 }
 
 function categoriesFor(audience){
-  if(NO_CAT) return [];
+  /* Stratégie PAC : ces catégories ne servent que pour un article classé « Blog ». */
+  if(NO_CAT) return BLOG_CATEGORIES[audience] || BLOG_CATEGORIES['Particulier'] || [];
   return BLOG_CATEGORIES[audience] || [];
 }
 
