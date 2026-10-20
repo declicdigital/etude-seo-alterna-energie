@@ -47,7 +47,7 @@ ${p.kind === "relecture"
   : `<p style="margin:0 0 18px;font-size:16px">Un nouvel article est <strong>prêt à être rédigé</strong> : toutes les informations de la ligne « À rédiger » sont remplies et l'article a été créé dans le suivi.</p>`}
 ${row("Sujet", p.sujet)}
 ${row("Nom de l'article (H1)", p.h1)}
-${row("Éditrice", p.editrice)}
+${row("Édition", p.editrice)}
 ${row("Cible", p.cible)}
 ${row("Catégorie", p.categorie)}
 ${row("Énergie", p.energie)}
@@ -141,7 +141,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           "",
           `Sujet : ${payload.sujet}`,
           `Nom de l'article (H1) : ${payload.h1}`,
-          `Éditrice : ${payload.editrice}`,
+          `Édition : ${payload.editrice}`,
           payload.cible ? `Cible : ${payload.cible}` : null,
           payload.categorie ? `Catégorie : ${payload.categorie}` : null,
           payload.energie ? `Énergie : ${payload.energie}` : null,

@@ -20,7 +20,7 @@ const FLOWS: Flow[] = [
     title: "Stratégie PAC",
     intro: "Contenus Particulier uniquement · catégorie Blog ou Éditorial",
     steps: [
-      { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Type : Réécriture / Création", "Titre H1", "Éditrice", "Catégorie Blog / Éditorial", "Catégorie du blog (si Blog)", "Deadline", "Lien du brief", "Lien du doc", "Tout rempli → Enregistrer"] },
+      { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Type : Réécriture / Création", "Titre H1", "Édition", "Catégorie Blog / Éditorial", "Catégorie du blog (si Blog)", "Deadline", "Lien du brief", "Lien du doc", "Tout rempli → Enregistrer"] },
       { title: "Rappel deadline", who: "Automatique · 9 h", color: C.remind, items: ["Le lundi avant la deadline", "Aurorae : Caroline + Elodie", "Marina seule", "Point rouge < 5 jours"], mail: "Mail rappel éditrice" },
       { title: "1 · Brief + 2 · Rédaction", who: "Validés à l'enregistrement", color: C.prep, items: ["Carte créée", "Brief + doc liés", "Passage auto en relecture"], mail: "Mail → Fannie Laurendin" },
       { title: "3 · Relecture + Image", who: "Service Communication", color: C.review, items: ["Relire", "Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Marick" },
@@ -32,7 +32,7 @@ const FLOWS: Flow[] = [
     title: "Blog",
     intro: "Particulier (cartes roses) · Professionnel (cartes bleues)",
     steps: [
-      { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Titre H1", "Éditrice", "Cible Particulier / Pro", "Catégorie + Énergie", "Deadline", "Lien du doc", "Tout rempli → Enregistrer"] },
+      { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Titre H1", "Édition", "Cible Particulier / Pro", "Catégorie + Énergie", "Deadline", "Lien du doc", "Tout rempli → Enregistrer"] },
       { title: "Rappel deadline", who: "Automatique · 9 h", color: C.remind, items: ["Le lundi avant la deadline", "Aurorae : Caroline + Elodie", "Marina seule", "Point rouge < 5 jours"], mail: "Mail rappel éditrice" },
       { title: "1 · Rédaction", who: "Validée à l'enregistrement", color: C.prep, items: ["Carte créée", "Couleur selon la cible", "Passage auto en relecture"], mail: "Mail → Fannie Laurendin" },
       { title: "2 · Relecture + Image", who: "Service Communication", color: C.review, items: ["Relire", "Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Marick" },
@@ -220,7 +220,7 @@ export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void
             <ul className="mt-4 space-y-3 text-sm">
               {[
                 [Mail, "Un mail à chaque étape validée, avec lien direct vers la carte"],
-                [Bell, "Rappel aux éditrices le lundi avant la deadline"],
+                [Bell, "Rappel à l'édition le lundi avant la deadline"],
                 [AtSign, "@ dans un message : les personnes taguées sont prévenues"],
                 [ImageIcon, "Images ajoutées par glisser-déposer, téléchargeables à l'intégration"],
               ].map(([I, t]) => {
