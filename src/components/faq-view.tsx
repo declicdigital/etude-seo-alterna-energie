@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Download, ImagePlus, MessageSquare, Paperclip, Save, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Download, ImagePlus, MessageSquare, Paperclip, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -556,6 +556,7 @@ function RequestCard({
   const [text, setText] = useState("");
   const [files, setFiles] = useState<FaqAttachment[]>([]);
   const pro = r.target === "Professionnel";
+  const published = !!r.validatedAt;
   const [finalQuestion, setFinalQuestion] = useState(r.question ?? "");
   const [link, setLink] = useState(r.link ?? "");
   const [validating, setValidating] = useState(false);
@@ -591,18 +592,24 @@ function RequestCard({
     <article
       id={`faq-${r.id}`}
       className={cn(
-        "rounded-xl border bg-card shadow-sm",
-        pro ? "border-l-4 border-l-blue-500" : "border-l-4 border-l-pink-500",
+        "rounded-xl border border-l-4 shadow-sm",
+        published
+          ? "border-emerald-500/50 bg-emerald-500/10 border-l-emerald-600"
+          : pro ? "bg-card border-l-blue-500" : "bg-card border-l-pink-500",
         focused && "ring-2 ring-primary",
       )}
     >
       <div className="flex items-start gap-3 p-4 cursor-pointer" onClick={() => setOpen((o) => !o)}>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5 mb-1.5 text-[11px] font-semibold">
-            <span className={cn("rounded-full px-2 py-0.5", pro ? "bg-blue-500/15 text-blue-700" : "bg-pink-500/15 text-pink-700")}>{r.target}</span>
+            <span className={cn("rounded-full px-2.5 py-0.5 uppercase tracking-wider ring-1", pro ? "bg-blue-500/15 text-blue-700 ring-blue-500/40" : "bg-pink-500/15 text-pink-700 ring-pink-500/40")}>
+              {pro ? "Pro" : "Part."}
+            </span>
+            <span className={cn("rounded-full px-2.5 py-0.5", published ? "bg-emerald-600 text-white" : "bg-amber-400/25 text-amber-900 ring-1 ring-amber-500/50")}>
+              {published ? "✓ Publié" : "En cours"}
+            </span>
             <span className="rounded-full bg-muted px-2 py-0.5">{r.type}</span>
             <span className="rounded-full bg-muted px-2 py-0.5">{r.content}</span>
-            <span className="rounded-full bg-muted px-2 py-0.5">{r.validatedAt ? "Validée" : "En attente de validation"}</span>
             <span className="rounded-full bg-teal-500/15 text-teal-800 px-2 py-0.5">
               {r.category}{r.newCategory ? " (nouvelle)" : ""}
             </span>
@@ -612,6 +619,7 @@ function RequestCard({
             Demandé par {r.requester} · {new Date(r.createdAt).toLocaleDateString("fr-FR")}
           </p>
         </div>
+        {open ? <ChevronDown className="size-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="size-4 shrink-0 text-muted-foreground" />}
         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
           <MessageSquare className="size-3.5" /> {r.comments.length}
         </span>

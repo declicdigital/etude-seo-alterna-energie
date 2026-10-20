@@ -16,3 +16,4 @@
 - [x] Kit de communication : accès accueil et sous Guide, fichiers à l’unité et ZIP complet, notes de marque, vérification des téléchargements.
 - [x] Kit de communication : ajouter le guide de marque (Brand Guidelines) et retirer « décembre 2024 » du titre de la charte.
 - [x] Stratégie PAC : catégorie du blog obligatoire quand la ligne est classée « Blog » (pas pour Éditorial), reprise dans la carte et dans le tableau Blog.
+- [ ] Cartes Blog, Stratégie PAC et FAQ : pastille Pro/Part., différence publiée/en cours marquée, toujours pliées par défaut.
