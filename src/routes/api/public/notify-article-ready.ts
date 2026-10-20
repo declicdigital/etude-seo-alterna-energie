@@ -41,7 +41,9 @@ function buildHtml(p: z.infer<typeof BodySchema>): string {
 <tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · ${p.space === "strategie" ? "Stratégie PAC" : "Blog"}</td></tr>
 <tr><td style="padding:28px">
 ${p.kind === "relecture"
-  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article.</p>`
+  ? (p.cible === 'Professionnel' && !p.space
+    ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>La <strong>relecture de l’expert métier est validée</strong>. Merci de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article, à l'étape <strong>Image</strong>.</p>`
+    : `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article.</p>`)
   : p.kind === "integration"
   ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (visible dans la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.</p>`
   : p.kind === "published"
@@ -100,7 +102,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
         const recipients = allowedTo.length ? allowedTo : [toEmail];
         payload = { ...payload, deadline: notificationDeadline(payload.deadline, payload.kind, recipients) };
         const subject = isRel
-          ? `Relecture + image à faire : « ${payload.h1} »`
+          ? `${payload.cible === 'Professionnel' && !payload.space ? 'Image à ajouter' : 'Relecture + image à faire'} : « ${payload.h1} »`
           : isInt
           ? `À intégrer dans le site : « ${payload.h1} »`
           : isPub
@@ -118,8 +120,8 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
         ].join("\r\n") : isRel ? [
           "Bonjour,",
           "",
-          "L'article ci-dessous est passé à l'étape Relecture + Image.",
-          "Merci de le relire, de trouver une image et de l'ajouter dans la carte de l'article.",
+          payload.cible === 'Professionnel' && !payload.space ? "La relecture de l’expert métier est validée. L'article est passé à l'étape Image." : "L'article ci-dessous est passé à l'étape Relecture + Image.",
+          payload.cible === 'Professionnel' && !payload.space ? "Merci de trouver une image et de l'ajouter dans la carte de l'article." : "Merci de le relire, de trouver une image et de l'ajouter dans la carte de l'article.",
           "",
           `Nom de l'article (H1) : ${payload.h1}`,
           `Sujet : ${payload.sujet}`,
