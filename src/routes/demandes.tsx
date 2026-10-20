@@ -125,7 +125,7 @@ function RequestsPage() {
         {me && <section className="mb-6 border-y border-border py-5">
           <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-foreground"><UserPlus className="size-5" />Inviter une personne</h2>
           <form onSubmit={invite} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_auto]">
-            <div><label htmlFor="invite-name" className="mb-1 block text-sm text-foreground">Nom et prénom</label>
+            <div><label htmlFor="invite-name" className="mb-1 block text-sm text-foreground">Prénom et Nom</label>
               <Input id="invite-name" required maxLength={150} value={inviteName} onChange={(event) => setInviteName(event.target.value)} /></div>
             <div><label htmlFor="invite-email" className="mb-1 block text-sm text-foreground">Adresse e-mail</label>
               <Input id="invite-email" type="email" required value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} /></div>
