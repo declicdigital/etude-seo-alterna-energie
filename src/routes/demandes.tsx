@@ -4,6 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAccess, signOutAndGoToAuth } from "@/lib/access";
 import { SECTION_TREE, ALL_SECTION_KEYS } from "@/lib/sections";
 import logo from "@/assets/alterna-logo.png.asset.json";
+import { useServerFn } from "@tanstack/react-start";
+import { UserPlus, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { invitePerson } from "@/lib/invitations.functions";
 
 type Profile = {
   id: string;
@@ -41,6 +46,24 @@ function RequestsPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<Profile[] | null>(null);
   const [me, setMe] = useState<string | null>(null);
+  const sendInvitation = useServerFn(invitePerson);
+  const [inviteName, setInviteName] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviting, setInviting] = useState(false);
+  const [inviteError, setInviteError] = useState("");
+  const [inviteSuccess, setInviteSuccess] = useState("");
+
+  async function invite(event: React.FormEvent) {
+    event.preventDefault();
+    setInviting(true); setInviteError(""); setInviteSuccess("");
+    try {
+      const result = await sendInvitation({ data: { fullName: inviteName, email: inviteEmail } });
+      if (!result.ok) setInviteError(result.error);
+      else { setInviteSuccess(`Invitation envoyée à ${inviteEmail.trim()}. Son accès est validé.`); setInviteName(""); setInviteEmail(""); }
+      await load();
+    } catch { setInviteError("L’invitation n’a pas pu être envoyée. Réessayez."); }
+    finally { setInviting(false); }
+  }
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -83,7 +106,7 @@ function RequestsPage() {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-100 px-4 py-8">
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-6 flex items-center gap-3">
-          <img src={logo.url} alt="Alterna Énergie" className="h-8 w-auto shrink-0" />
+          <img src={logo.url} alt="Logo" className="h-8 w-auto shrink-0" />
           <div className="flex-1">
             <h1 className="text-xl font-semibold text-emerald-900">Demandes d'accès</h1>
             <p className="text-sm text-emerald-700/80">Validez ou refusez les personnes qui demandent un accès.</p>
@@ -98,6 +121,19 @@ function RequestsPage() {
             Déconnexion
           </button>
         </div>
+
+        {me && <section className="mb-6 border-y border-border py-5">
+          <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-foreground"><UserPlus className="size-5" />Inviter une personne</h2>
+          <form onSubmit={invite} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_auto]">
+            <div><label htmlFor="invite-name" className="mb-1 block text-sm text-foreground">Nom et prénom</label>
+              <Input id="invite-name" required maxLength={150} value={inviteName} onChange={(event) => setInviteName(event.target.value)} /></div>
+            <div><label htmlFor="invite-email" className="mb-1 block text-sm text-foreground">Adresse e-mail</label>
+              <Input id="invite-email" type="email" required value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} /></div>
+            <Button type="submit" disabled={inviting || !inviteName.trim() || !inviteEmail.trim()}><Send />{inviting ? "Envoi…" : "Envoyer l’invitation"}</Button>
+          </form>
+          {inviteError && <p role="alert" className="mt-3 text-sm text-destructive">{inviteError}</p>}
+          {inviteSuccess && <p role="status" className="mt-3 text-sm text-primary">{inviteSuccess}</p>}
+        </section>}
 
         {rows === null ? (
           <p className="text-sm text-emerald-700/70">Chargement…</p>

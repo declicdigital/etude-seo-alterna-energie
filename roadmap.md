@@ -1,3 +1,5 @@
+- [x] Invitations : formulaire nom et e-mail, envoi réservé à l’administrateur, accès directement approuvé, page de choix du mot de passe ; tests et contrôles compte existant/lien invalide réussis.
+- [ ] Invitations : vérifier la réception du mail et le choix du mot de passe avec une première personne réellement invitée (attend une adresse destinataire autorisée pour ce test).
 - [x] Icône supprimer sur les messages/tags du suivi éditorial (article_comments)
 - [x] Bouton « Enregistrer » dans À rédiger : crée l'article, enlève la ligne, ouvre la fiche
 - [x] Étape Brief SEO supprimée du pipeline (config + articles existants)
