@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AcceptInvitationRouteImport } from './routes/accept-invitation'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemandesRouteImport } from './routes/demandes'
 import { Route as EnAttenteRouteImport } from './routes/en-attente'
@@ -24,6 +25,11 @@ import { Route as ApiPublicJobsMonthlyRecapRouteImport } from './routes/api/publ
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcceptInvitationRoute = AcceptInvitationRouteImport.update({
+  id: '/accept-invitation',
+  path: '/accept-invitation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -83,6 +89,7 @@ const ApiPublicJobsMonthlyRecapRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/accept-invitation': typeof AcceptInvitationRoute
   '/auth': typeof AuthRoute
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/accept-invitation': typeof AcceptInvitationRoute
   '/auth': typeof AuthRoute
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
@@ -110,6 +118,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/accept-invitation': typeof AcceptInvitationRoute
   '/auth': typeof AuthRoute
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/accept-invitation'
     | '/auth'
     | '/demandes'
     | '/en-attente'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/accept-invitation'
     | '/auth'
     | '/demandes'
     | '/en-attente'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/accept-invitation'
     | '/auth'
     | '/demandes'
     | '/en-attente'
@@ -165,6 +177,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AcceptInvitationRoute: typeof AcceptInvitationRoute
   AuthRoute: typeof AuthRoute
   DemandesRoute: typeof DemandesRoute
   EnAttenteRoute: typeof EnAttenteRoute
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accept-invitation': {
+      id: '/accept-invitation'
+      path: '/accept-invitation'
+      fullPath: '/accept-invitation'
+      preLoaderRoute: typeof AcceptInvitationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -261,6 +281,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AcceptInvitationRoute: AcceptInvitationRoute,
   AuthRoute: AuthRoute,
   DemandesRoute: DemandesRoute,
   EnAttenteRoute: EnAttenteRoute,
