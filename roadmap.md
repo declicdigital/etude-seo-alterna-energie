@@ -14,3 +14,4 @@
 - [x] Espace FAQ (suivi + Particulier/Professionnel, demande, mail à Geoffrey)
 - [x] FAQ : renommer Suivi en Demande, valider avec lien et question avant ajout en tête de Particulier ou Professionnel
 - [x] Kit de communication : accès accueil et sous Guide, fichiers à l’unité et ZIP complet, notes de marque, vérification des téléchargements.
+- [x] Kit de communication : ajouter le guide de marque (Brand Guidelines) et retirer « décembre 2024 » du titre de la charte.
