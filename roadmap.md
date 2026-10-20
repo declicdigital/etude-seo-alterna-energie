@@ -29,3 +29,4 @@
 - [x] Cartes Blog, Stratégie PAC et FAQ : pastille Pro/Part., différence publiée/en cours marquée, toujours pliées par défaut.
 - [x] Logo Digicom limité à l'en-tête de la page « Demandes d'accès » ; logo Alterna rétabli sur l'accueil, la connexion, la page d'attente et le suivi éditorial.
 - [x] « Éditrice » remplacé par « Édition » : colonne de l'encart À rédiger (Blog et Stratégie PAC), ligne des mails de notification, guide et accueil.
+- [x] Accueil : rôle de Geoffrey affiché « Pilotage » sans « en copie ».
