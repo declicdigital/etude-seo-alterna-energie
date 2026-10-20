@@ -661,6 +661,8 @@ button{ font-family: inherit; cursor:pointer; }
 .td-linkwrap{display:flex;align-items:center;gap:4px}.td-linkwrap input{flex:1;min-width:0}.todo-open{flex:none;text-decoration:none;font-weight:700;color:#047857;padding:2px 6px;border-radius:6px;border:1px solid #d1d5db;background:#fff}.todo-open:hover{background:#ecfdf5}
 .todo-dot{ width:9px; height:9px; border-radius:50%; background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.16); flex:0 0 auto; }
 .no-cat .col-cat{display:none!important}
+.no-cat.show-blog-cat .col-cat{display:table-cell!important}
+.td-na{color:var(--muted);font-size:0.78rem;padding-left:8px}
 html:not(.no-cat) .col-brief{display:none!important}
 .no-cat .col-cible{display:none!important}
 .no-cat .col-energy{display:none!important}
@@ -737,6 +739,7 @@ const KEY = k => SPACE ? 'strat:' + k : k;
 const BLOG_SHEET = SPACE ? 'STRATEGIE - ARTICLES' : 'BLOG - ARTICLES';
 const BLOG_BASE_LEN = SPACE ? 1 : 424;
 if(NO_CAT) document.documentElement.classList.add('no-cat');
+if(NO_CAT){ const thc = document.querySelector('thead th.col-cat'); if(thc) thc.textContent = 'Catégorie du blog'; const hint = document.querySelector('.todo-hint'); if(hint) hint.textContent += ' Une ligne classée « Blog » doit aussi choisir sa catégorie du blog.'; }
 if(SPACE){ document.title = 'Suivi éditorial (Stratégie PAC) — Outil contenus'; document.addEventListener('DOMContentLoaded', () => { const h = document.querySelector('h1'); if(h) h.textContent = 'Suivi éditorial — Stratégie PAC'; }); const h0 = document.querySelector('h1'); if(h0) h0.textContent = 'Suivi éditorial — Stratégie PAC'; }
 const AUDIENCES = ['Particulier', 'Professionnel'];
 const DESTS = ['Blog', 'Éditorial'];
@@ -1199,12 +1202,14 @@ function missingFields(article, stepKey){
   if(stepKey === 'integration'){
     if(!step || !step.date) out.push('la date');
     if(!(article.finalLink||'').trim()) out.push("le lien de l'article publié");
+    if(SPACE && article.dest === 'Blog' && !(article.category||'').trim()) out.push('la catégorie du blog');
   }
   return out;
 }
 
 function categoriesFor(audience){
-  if(NO_CAT) return [];
+  /* Stratégie PAC : ces catégories ne servent que pour un article classé « Blog ». */
+  if(NO_CAT) return BLOG_CATEGORIES[audience] || BLOG_CATEGORIES['Particulier'] || [];
   return BLOG_CATEGORIES[audience] || [];
 }
 
@@ -1544,6 +1549,7 @@ function renderArticleCard(article){
       <div class="article-body">
         <div class="links-row">
           ${SPACE ? `<div class="link-field"><span class="link-tag">Type</span><select data-action="pick-type" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">—</option>${['Réécriture','Création'].map(o=>`<option ${article.type===o?'selected':''}>${o}</option>`).join('')}</select></div><div class="link-field"><span class="link-tag">Catégorie</span><select data-action="pick-dest" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">—</option>${DESTS.map(o=>`<option ${article.dest===o?'selected':''}>${o}</option>`).join('')}</select></div>` : ''}
+          ${SPACE && article.dest === 'Blog' ? `<div class="link-field"><span class="link-tag">Catégorie du blog</span><select data-action="pick-blog-cat" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">— Choisir —</option>${categoriesFor(article.audience || 'Particulier').map(o=>`<option ${article.category===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></div>` : ''}
           ${SPACE ? renderLinkField(article.id, 'brief-link', article.briefLink || '', 'Brief', 'Coller le lien du brief') : ''}
           ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Doc', 'Coller le lien du document Doc')}
           ${renderLinkField(article.id, 'final-link', article.finalLink, 'Article publié', "Coller le lien de l'article publié")}
@@ -1985,7 +1991,17 @@ document.getElementById('articlesContainer').addEventListener('change', async (e
   const act = e.target.dataset && e.target.dataset.action;
   if(act === 'pick-dest'){
     const article = getArticle(e.target.dataset.articleId);
-    if(article){ article.dest = e.target.value; await saveArticle(article); }
+    if(article){
+      article.dest = e.target.value;
+      if(article.dest !== 'Blog') article.category = '';
+      await saveArticle(article);
+      renderArticles();
+    }
+    return;
+  }
+  if(act === 'pick-blog-cat'){
+    const article = getArticle(e.target.dataset.articleId);
+    if(article){ article.category = e.target.value; await saveArticle(article); }
     return;
   }
   if(act === 'pick-type'){
@@ -2134,7 +2150,10 @@ async function saveTodos(){
 const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com'];
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
 function todoComplete(t){
-  return ['sujet','editrice','h1','audience','categorie','energie','deadline','docx'].concat(SPACE ? ['brief','type','dest'] : []).filter(f => !(NO_CAT && (f === 'categorie' || f === 'energie'))).every(f => (t[f]||'').trim());
+  const fields = ['sujet','editrice','h1','audience','deadline','docx'];
+  if(SPACE){ fields.push('brief','type','dest'); if(t.dest === 'Blog') fields.push('categorie'); }
+  else fields.push('categorie','energie');
+  return fields.every(f => (t[f]||'').trim());
 }
 /* Nombre de jours restants avant la deadline (négatif si dépassée, null si pas de date). */
 function todoDaysLeft(t){
@@ -2175,6 +2194,7 @@ function refreshTodoDot(tr, t){
 }
 function renderTodos(){
   const body = document.getElementById('todoBody');
+  document.documentElement.classList.toggle('show-blog-cat', !!SPACE && todos.some(t => (t.dest||'') === 'Blog'));
   if(!todos.length){ body.innerHTML = '<tr><td colspan="12" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
   const ro = !canEditTodo();
   const addBtn = document.getElementById('todoAddBtn'); if(addBtn) addBtn.style.display = ro ? 'none' : '';
@@ -2185,7 +2205,7 @@ function renderTodos(){
     <td><select data-f="editrice"><option value="">—</option>${(((getConfigFor('redaction')||{}).options)||['Aurorae','Marina']).map(o=>`<option ${t.editrice===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td class="col-cible"><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
-    <td class="col-cat"><select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
+    <td class="col-cat">${SPACE ? (t.dest === 'Blog' ? `<select data-f="categorie"><option value="">— Choisir —</option>${categoriesFor('Particulier').map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>` : '<span class="td-na">—</span>') : `<select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>`}</td>
     <td class="col-energy"><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><div class="td-dl">${isUrgentTodo(t) ? `<span class="todo-dot" title="${escapeAttr(urgentTitle(t))}"></span>` : ''}<input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></div></td>
     <td class="col-brief"><div class="td-linkwrap"><input data-f="brief" value="${escapeAttr(t.brief||'')}" placeholder="https://…">${(t.brief||'').trim() ? `<a class="todo-open" href="${escapeAttr(normalizeUrl(t.brief.trim()))}" target="_blank" rel="noopener noreferrer" title="Ouvrir le lien">↗</a>` : ''}</div></td>
@@ -2234,6 +2254,10 @@ document.getElementById('todoBody').addEventListener('change', async (e) => {
   const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
   t[f] = e.target.value;
   await saveTodos();
+  if(f === 'dest'){
+    if(t.dest !== 'Blog'){ t.categorie = ''; await saveTodos(); }
+    renderTodos(); return;
+  }
   if(f === 'editrice' || f === 'audience'){
     if(f === 'audience' && !categoriesFor(t.audience).includes(t.categorie)){ t.categorie = ''; await saveTodos(); }
     renderTodos(); return;
