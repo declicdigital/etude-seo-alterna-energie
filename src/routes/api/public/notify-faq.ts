@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { faqLink } from "@/lib/faq";
 
+import { MAIL_SENDER } from "@/lib/mail-sender";
 const BodySchema = z.object({
   kind: z.enum(["new", "mention"]),
   id: z.string().min(1).max(60),
@@ -19,7 +20,7 @@ const BodySchema = z.object({
 });
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
-const SENDER = { name: "Digicom", email: "g.delabarre.alterna@gmail.com" };
+const SENDER = MAIL_SENDER;
 const GEOFFREY = "geoffrey.delabarre@alterna-energie.fr";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
