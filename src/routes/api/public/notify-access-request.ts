@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-
 import { MAIL_SENDER } from "@/lib/mail-sender";
 const BodySchema = z.object({ userId: z.string().uuid() });
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";

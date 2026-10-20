@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { editorialLink } from "@/lib/editorial-links";
-
 import { MAIL_SENDER } from "@/lib/mail-sender";
 const BodySchema = z.object({
   space: z.enum(["strategie"]).optional(),

@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-
 import { MAIL_SENDER } from "@/lib/mail-sender";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = MAIL_SENDER;
