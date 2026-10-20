@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getAccess, signOutAndGoToAuth } from "@/lib/access";
 import { SECTION_TREE, ALL_SECTION_KEYS } from "@/lib/sections";
-import logo from "@/assets/alterna-logo.png.asset.json";
+import digicomWordmark from "@/assets/digicom-wordmark.png";
 import { useServerFn } from "@tanstack/react-start";
 import { UserPlus, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -106,7 +106,7 @@ function RequestsPage() {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-100 px-4 py-8">
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-6 flex items-center gap-3">
-          <img src={logo.url} alt="Logo" className="h-8 w-auto shrink-0" />
+          <img src={digicomWordmark} alt="Digicom" loading="lazy" width={1281} height={359} className="h-7 w-auto shrink-0" />
           <div className="flex-1">
             <h1 className="text-xl font-semibold text-emerald-900">Demandes d'accès</h1>
             <p className="text-sm text-emerald-700/80">Validez ou refusez les personnes qui demandent un accès.</p>
