@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemandesRouteImport } from './routes/demandes'
 import { Route as EnAttenteRouteImport } from './routes/en-attente'
+import { Route as KitCommunicationRouteImport } from './routes/kit-communication'
 import { Route as ApiPublicNotifyAccessRequestRouteImport } from './routes/api/public/notify-access-request'
 import { Route as ApiPublicNotifyArticleReadyRouteImport } from './routes/api/public/notify-article-ready'
 import { Route as ApiPublicNotifyFaqRouteImport } from './routes/api/public/notify-faq'
@@ -38,6 +39,11 @@ const DemandesRoute = DemandesRouteImport.update({
 const EnAttenteRoute = EnAttenteRouteImport.update({
   id: '/en-attente',
   path: '/en-attente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KitCommunicationRoute = KitCommunicationRouteImport.update({
+  id: '/kit-communication',
+  path: '/kit-communication',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicNotifyAccessRequestRoute =
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
+  '/kit-communication': typeof KitCommunicationRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-faq': typeof ApiPublicNotifyFaqRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
+  '/kit-communication': typeof KitCommunicationRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-faq': typeof ApiPublicNotifyFaqRoute
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
+  '/kit-communication': typeof KitCommunicationRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-faq': typeof ApiPublicNotifyFaqRoute
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/demandes'
     | '/en-attente'
+    | '/kit-communication'
     | '/api/public/notify-access-request'
     | '/api/public/notify-article-ready'
     | '/api/public/notify-faq'
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/demandes'
     | '/en-attente'
+    | '/kit-communication'
     | '/api/public/notify-access-request'
     | '/api/public/notify-article-ready'
     | '/api/public/notify-faq'
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/demandes'
     | '/en-attente'
+    | '/kit-communication'
     | '/api/public/notify-access-request'
     | '/api/public/notify-article-ready'
     | '/api/public/notify-faq'
@@ -156,6 +168,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DemandesRoute: typeof DemandesRoute
   EnAttenteRoute: typeof EnAttenteRoute
+  KitCommunicationRoute: typeof KitCommunicationRoute
   ApiPublicNotifyAccessRequestRoute: typeof ApiPublicNotifyAccessRequestRoute
   ApiPublicNotifyArticleReadyRoute: typeof ApiPublicNotifyArticleReadyRoute
   ApiPublicNotifyFaqRoute: typeof ApiPublicNotifyFaqRoute
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       path: '/en-attente'
       fullPath: '/en-attente'
       preLoaderRoute: typeof EnAttenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kit-communication': {
+      id: '/kit-communication'
+      path: '/kit-communication'
+      fullPath: '/kit-communication'
+      preLoaderRoute: typeof KitCommunicationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/notify-access-request': {
@@ -244,6 +264,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DemandesRoute: DemandesRoute,
   EnAttenteRoute: EnAttenteRoute,
+  KitCommunicationRoute: KitCommunicationRoute,
   ApiPublicNotifyAccessRequestRoute: ApiPublicNotifyAccessRequestRoute,
   ApiPublicNotifyArticleReadyRoute: ApiPublicNotifyArticleReadyRoute,
   ApiPublicNotifyFaqRoute: ApiPublicNotifyFaqRoute,
