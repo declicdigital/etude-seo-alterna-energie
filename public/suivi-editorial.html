@@ -1084,7 +1084,7 @@ function normalizeConfig(){
   // Adresses mail par défaut des responsables (modifiables dans les réglages).
   const DEFAULT_EMAILS = {
     redaction: { 'Aurorae': 'caroline@aurorae-editorial.com, elodie@aurorae-editorial.com', 'Marina': 'contact@marinatravert.com' },
-    validation: { 'Service Communication': 'fannie.laurendin@soregies.fr' },
+    validation: { 'Service Communication': 'fannie.laurendin@soregies.fr, coraline.prono@soregies.fr' },
     integration: { 'Marick': 'marick.navarro.ext@soregies.fr' },
   };
   for(const c of config){
@@ -2326,8 +2326,8 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
         method:'POST', headers:authHeaders(),
         body: JSON.stringify({ space: SPACE || undefined, articleId, stepKey: 'validation', kind:'relecture', to: (emailsFor(getConfigFor('validation'), 'Service Communication').length ? emailsFor(getConfigFor('validation'), 'Service Communication') : undefined), sujet:t.sujet, h1:t.h1, editrice:t.editrice, cible:t.audience, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
       });
-      if(!r.ok) alert('Article enregistré, mais le mail à Fannie Laurendin (relecture + image) n\'a pas pu partir.');
-    }catch(err){ alert('Article enregistré, mais le mail à Fannie Laurendin (relecture + image) n\'a pas pu partir.'); }
+      if(!r.ok) alert('Article enregistré, mais le mail au Service Communication (relecture + image) n\'a pas pu partir.');
+    }catch(err){ alert('Article enregistré, mais le mail au Service Communication (relecture + image) n\'a pas pu partir.'); }
     todos = todos.filter(x => x.id !== t.id);
     if(!expanded[articleId]){ expanded[articleId] = true; saveExpanded(); }
     await saveTodos(); renderTodos(); renderArticles();

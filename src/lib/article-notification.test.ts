@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { notificationCta, notificationDeadline } from "./article-notification";
+import { notificationCta, notificationDeadline, SERVICE_COMMUNICATION_EMAILS } from "./article-notification";
 
 describe("notificationDeadline", () => {
   it("removes the deadline from every notification addressed to Fannie", () => {
@@ -14,6 +14,20 @@ describe("notificationDeadline", () => {
 
   it("preserves the deadline for other recipients and notification stages", () => {
     expect(notificationDeadline("2026-10-23", "ready", ["geoffrey.delabarre@alterna-energie.fr"])).toBe("2026-10-23");
+  });
+});
+
+describe("Service Communication", () => {
+  it("lists Fannie and Coraline as the people behind relecture + image", () => {
+    expect(SERVICE_COMMUNICATION_EMAILS).toContain("fannie.laurendin@soregies.fr");
+    expect(SERVICE_COMMUNICATION_EMAILS).toContain("coraline.prono@soregies.fr");
+  });
+
+  it("keeps the deadline out of every mail addressed to the Service Communication", () => {
+    for (const email of SERVICE_COMMUNICATION_EMAILS) {
+      expect(notificationDeadline("2026-10-23", "image", [email])).toBeUndefined();
+    }
+    expect(notificationDeadline("2026-10-23", "image", ["geoffrey.delabarre@alterna-energie.fr"])).toBe("2026-10-23");
   });
 });
 

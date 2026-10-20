@@ -131,7 +131,7 @@ const ENTRIES = [
 const TEAM = [
   { name: "Aurorae", role: "Rédaction · Caroline & Elodie", color: "bg-emerald-500" },
   { name: "Marina", role: "Rédaction", color: "bg-violet-500" },
-  { name: "Fannie Laurendin", role: "Relecture + image", color: "bg-amber-500" },
+  { name: "Service Communication", role: "Relecture + image · Fannie & Coraline", color: "bg-amber-500" },
   { name: "Marick", role: "Intégration site", color: "bg-sky-500" },
   { name: "Geoffrey", role: "Pilotage", color: "bg-rose-500" },
 ];

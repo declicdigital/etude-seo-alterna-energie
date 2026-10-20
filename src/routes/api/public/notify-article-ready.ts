@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { notificationLink } from "@/lib/editorial-links";
-import { notificationCta, notificationDeadline } from "@/lib/article-notification";
+import { notificationCta, notificationDeadline, SERVICE_COMMUNICATION_EMAILS } from "@/lib/article-notification";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 const BodySchema = z.object({
   space: z.enum(["strategie"]).optional(),
@@ -23,7 +23,7 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = MAIL_SENDER;
 const ADMIN_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
-const RELECTURE_EMAIL = "fannie.laurendin@soregies.fr";
+const RELECTURE_EMAILS: readonly string[] = SERVICE_COMMUNICATION_EMAILS;
 const INTEGRATION_EMAIL = "marick.navarro.ext@soregies.fr";
 
 const esc = (s: string) =>
@@ -92,7 +92,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
         const isRel = payload.kind === "relecture";
         const isInt = payload.kind === "integration";
         const isPub = payload.kind === "published";
-        const toEmail = isRel ? RELECTURE_EMAIL : isInt ? INTEGRATION_EMAIL : ADMIN_EMAIL;
+        const defaultTo: readonly string[] = isRel ? RELECTURE_EMAILS : isInt ? [INTEGRATION_EMAIL] : [ADMIN_EMAIL];
         // Custom recipients are only allowed if they're configured in the pipeline settings.
         let allowedTo: string[] = [];
         if (!isPub && payload.to && payload.to.length) {
@@ -106,7 +106,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           } catch { /* ignore */ }
           allowedTo = [...new Set(payload.to.filter((m) => known.has(m.toLowerCase())))];
         }
-        const recipients = allowedTo.length ? allowedTo : [toEmail];
+        const recipients = allowedTo.length ? allowedTo : defaultTo;
         payload = { ...payload, deadline: notificationDeadline(payload.deadline, payload.kind, recipients) };
         const subject = isRel
           ? `${payload.cible === 'Professionnel' && !payload.space ? 'Image à ajouter' : 'Relecture + image à faire'} : « ${payload.h1} »`
