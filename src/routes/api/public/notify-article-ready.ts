@@ -67,6 +67,13 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const token = request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
+        if(!token) return Response.json({error:'unauthorized'}, {status:401});
+        const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+        const {data: {user}, error: authError} = await supabaseAdmin.auth.getUser(token);
+        if(authError || !user) return Response.json({error:'unauthorized'}, {status:401});
+        const {data: profile} = await supabaseAdmin.from('profiles').select('status').eq('id',user.id).maybeSingle();
+        if(profile?.status !== 'approved') return Response.json({error:'forbidden'}, {status:403});
         let payload: z.infer<typeof BodySchema>;
         try {
           payload = BodySchema.parse(await request.json());
