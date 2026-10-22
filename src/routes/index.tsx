@@ -1,5 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { sendStepReminder } from "@/lib/step-reminders.functions";
+import { canSendStepReminder, stepReminderSchema } from "@/lib/step-reminders";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { SheetSidebar } from "@/components/sheet-sidebar";
@@ -125,6 +128,32 @@ function Index() {
     sheetInfo?.group !== "Stratégie PAC" &&
     sheetInfo?.group !== "FAQ";
   const embedSrc = isGuide ? null : embedSrcOf(sheet);
+  const editorialFrame = useRef<HTMLIFrameElement>(null);
+  const sendReminder = useServerFn(sendStepReminder);
+  const canRemind = canSendStepReminder(access.isAdmin, access.email);
+  const sendReminderAccess = () => editorialFrame.current?.contentWindow?.postMessage(
+    { type: "digicom-reminder-access", allowed: canRemind }, window.location.origin,
+  );
+  useEffect(() => {
+    const handleReminder = async (event: MessageEvent) => {
+      const frame = editorialFrame.current?.contentWindow;
+      if (!frame || event.source !== frame || event.origin !== window.location.origin) return;
+      if (event.data?.type === "digicom-reminder-ready") {
+        frame.postMessage({ type: "digicom-reminder-access", allowed: canRemind }, window.location.origin);
+        return;
+      }
+      if (event.data?.type !== "digicom-step-reminder" || typeof event.data.requestId !== "string") return;
+      const parsed = stepReminderSchema.safeParse(event.data.input);
+      let result = { ok: false, error: "Vous ne pouvez pas envoyer ce rappel." };
+      if (canRemind && parsed.success) {
+        try { result = await sendReminder({ data: parsed.data }); }
+        catch { result = { ok: false, error: "Le rappel n’a pas pu être envoyé. Réessayez." }; }
+      }
+      frame.postMessage({ type: "digicom-reminder-result", requestId: event.data.requestId, ...result }, window.location.origin);
+    };
+    window.addEventListener("message", handleReminder);
+    return () => window.removeEventListener("message", handleReminder);
+  }, [canRemind, sendReminder]);
   const [pageHash, setPageHash] = useState(() => window.location.hash);
   useEffect(() => {
     const onHash = () => setPageHash(window.location.hash);
@@ -235,6 +264,8 @@ function Index() {
           <FaqView access={access} scope={scope} hash={pageHash} />
         ) : embedSrc ? (
           <iframe
+            ref={editorialFrame}
+            onLoad={sendReminderAccess}
             src={embedSrc + pageHash}
             title={sheetLabel}
             className="flex-1 w-full border-0 min-h-0"

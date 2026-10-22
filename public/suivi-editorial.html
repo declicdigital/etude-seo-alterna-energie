@@ -368,6 +368,10 @@ button{ font-family: inherit; cursor:pointer; }
 }
 .step-box .assignee{ font-size: 0.73rem; color: var(--ink-60); font-weight: 500; }
 .step-box .date{ font-size: 0.73rem; color: var(--ink-60); font-weight: 500; margin-top: 2px; }
+.step-box .reminder-btn{ display:flex; align-items:center; justify-content:center; width:30px; height:30px; padding:5px; margin-top:8px; border-radius:6px; border:1px solid var(--line); background:var(--bg); color:var(--ink); }
+.step-box .reminder-btn:hover{ background:var(--lgreen-bg); }
+.step-box .reminder-btn:disabled{ opacity:.5; cursor:wait; }
+.reminder-btn svg{ width:16px; height:16px; }
 .step-box .status-icon{
   position:absolute; top: 12px; right: 12px;
   width: 20px; height:20px; border-radius: 50%;
@@ -1121,6 +1125,20 @@ let config = [];
 let articles = [];
 let openPanels = {};
 let confirmingDelete = null;
+let canRemind = false;
+const reminderRequests = new Map();
+const REMINDER_ICON = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m3 6 9 7 9-7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+window.addEventListener('message', (event) => {
+  if(event.source !== window.parent || event.origin !== location.origin) return;
+  if(event.data?.type === 'digicom-reminder-access'){
+    const allowed = event.data.allowed === true;
+    if(canRemind !== allowed){ canRemind = allowed; renderArticles(); }
+  }
+  if(event.data?.type === 'digicom-reminder-result'){
+    const resolve = reminderRequests.get(event.data.requestId);
+    if(resolve){ reminderRequests.delete(event.data.requestId); resolve(event.data); }
+  }
+});
 /* Les cartes sont pliées par défaut : on ne mémorise que celles qu'on ouvre. */
 const EXPAND_KEY = 'editorial-expanded';
 let expanded = (() => {
@@ -1494,6 +1512,7 @@ function renderArticleCard(article){
         <div class="label">${escapeHtml(cfg.label)}</div>
         <div class="assignee">${escapeHtml(step.assignee) || '—'}</div>
         <div class="date">${fmtDate(step.date) || ''}</div>
+        ${canRemind ? `<button class="btn reminder-btn" data-action="remind-step" data-article-id="${escapeAttr(article.id)}" data-step-key="${escapeAttr(step.key)}" title="Envoyer un rappel — ${escapeAttr(cfg.label)}" aria-label="Envoyer un rappel — ${escapeAttr(cfg.label)}">${REMINDER_ICON}</button>` : ''}
       </div>`;
 
     if(i < article.steps.length - 1){
@@ -1792,6 +1811,35 @@ document.getElementById('cfgSaveBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('articlesContainer').addEventListener('click', async (e) => {
+  const reminderBtn = e.target.closest('[data-action="remind-step"]');
+  if(reminderBtn){
+    e.preventDefault(); e.stopPropagation();
+    if(!canRemind || reminderBtn.disabled) return;
+    const article = getArticle(reminderBtn.dataset.articleId);
+    const step = article?.steps.find(s => s.key === reminderBtn.dataset.stepKey);
+    if(!article || !step) return;
+    const cfg = getArticleConfig(article, step.key);
+    const who = isImageStep(step.key) ? 'Fannie et Coraline' : step.assignee || cfg?.assignee || (step.key === 'brief' ? 'Geoffrey' : 'le responsable');
+    if(!confirm(`Envoyer un rappel à ${who} pour l’étape « ${cfg?.label || step.key} » de « ${article.title} » ?`)) return;
+    reminderBtn.disabled = true;
+    const requestId = uid();
+    try{
+      const result = await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => { reminderRequests.delete(requestId); reject(new Error('L’envoi n’a pas pu être confirmé.')); }, 45000);
+        reminderRequests.set(requestId, result => { clearTimeout(timeout); resolve(result); });
+        window.parent.postMessage({ type:'digicom-step-reminder', requestId, input:{ articleId:article.id, stepKey:step.key, space:SPACE || undefined } }, location.origin);
+      });
+      if(!result.ok) throw new Error(result.error);
+      reminderBtn.textContent = '✓';
+      reminderBtn.title = 'Rappel envoyé';
+      reminderBtn.setAttribute('aria-label', 'Rappel envoyé');
+      setTimeout(() => { reminderBtn.innerHTML = REMINDER_ICON; reminderBtn.disabled = false; reminderBtn.title = 'Envoyer un rappel'; reminderBtn.setAttribute('aria-label', 'Envoyer un rappel — ' + (cfg?.label || step.key)); }, 3000);
+    }catch(error){
+      reminderBtn.disabled = false;
+      alert(error.message || 'Le rappel n’a pas pu être envoyé.');
+    }
+    return;
+  }
   const collapseBtn = e.target.closest('[data-action="toggle-collapse"]');
   if(collapseBtn){
     const id = collapseBtn.dataset.articleId;
@@ -2525,6 +2573,7 @@ async function init(){
   articles.forEach(syncArticleSteps);
   render();
   openArticleFromHash();
+  window.parent.postMessage({ type:'digicom-reminder-ready' }, location.origin);
   setInterval(async () => {
     await loadComments();
     updateBell();
