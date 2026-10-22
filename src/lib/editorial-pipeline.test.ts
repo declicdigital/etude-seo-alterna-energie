@@ -9,6 +9,32 @@ const config = [
   {key:'redaction', label:'Rédaction'}, {key:'expert', label:'Relecture de l’expert métier'},
   {key:'validation', label:'Relecture + Image'}, {key:'integration', label:'Intégration'}
 ];
+describe('PAC rewrites', () => {
+  const pacConfig = [{key:'brief',label:'Brief'}, ...config];
+  it('removes review and image from Réécriture, keeping brief, edition and integration', () => {
+    const article: any = {type:'Réécriture',audience:'Particulier',steps:[]};
+    pipeline.sync(article,pacConfig,'strategie');
+    expect(article.steps.map((s: any) => s.key)).toEqual(['brief','redaction','integration']);
+    expect(pipeline.nextNotification(article,'redaction','strategie')).toMatchObject({kind:'integration',next:'integration'});
+    expect(pipeline.nextNotification(article,'validation','strategie')).toBeNull();
+  });
+  it('keeps review and image for Création', () => {
+    const article: any = {type:'Création',audience:'Particulier',steps:[]};
+    pipeline.sync(article,pacConfig,'strategie');
+    expect(article.steps.map((s: any) => s.key)).toEqual(['brief','redaction','validation','integration']);
+    expect(pipeline.nextNotification(article,'redaction','strategie')).toMatchObject({kind:'relecture',next:'validation'});
+  });
+  it('preserves saved review attachments and published history when changing type', () => {
+    const review = {key:'validation',status:'done',attachments:[{id:'original'}]};
+    const article: any = {type:'Réécriture',blogRowId:42,steps:[review,{key:'integration',status:'done'}]};
+    pipeline.sync(article,pacConfig,'strategie');
+    expect(article.steps.find((s: any) => s.key === 'validation')).toBeUndefined();
+    expect(article.steps.find((s: any) => s.key === 'integration')?.status).toBe('done');
+    article.type = 'Création'; pipeline.sync(article,pacConfig,'strategie');
+    expect(article.steps.find((s: any) => s.key === 'validation')).toEqual(review);
+    expect(article.blogRowId).toBe(42);
+  });
+});
 describe('Blog Pro expert review', () => {
   it('puts expert review after edition and before image for Pro only', () => {
     const pro: any = {audience:'Professionnel', steps:[]};

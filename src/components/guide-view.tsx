@@ -17,7 +17,7 @@ const C = {
 
 const FLOWS: Flow[] = [
   {
-    title: "Stratégie PAC",
+    title: "Stratégie PAC · Création",
     intro: "Contenus Particulier uniquement · catégorie Blog ou Éditorial",
     steps: [
       { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Type : Réécriture / Création", "Titre H1", "Édition", "Catégorie Blog / Éditorial", "Catégorie du blog (si Blog)", "Deadline", "Lien du brief", "Lien du doc", "Tout rempli → Enregistrer"] },
@@ -25,6 +25,16 @@ const FLOWS: Flow[] = [
       { title: "1 · Brief + 2 · Rédaction", who: "Validés à l'enregistrement", color: C.prep, items: ["Carte créée", "Brief + doc liés", "Passage auto en relecture"], mail: "Mail → Service Communication" },
       { title: "3 · Relecture + Image", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Relire", "Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Marick" },
       { title: "4 · Intégration", who: "Marick", color: C.integ, items: ["Télécharger l'image", "Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
+    ],
+    end: ["En haut de « Contenus »", "Si Blog → aussi en haut de Blog › Particulier"],
+  },
+  {
+    title: "Stratégie PAC · Réécriture",
+    intro: "Contenus Particulier uniquement · catégorie Blog ou Éditorial",
+    steps: [
+      { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Type : Réécriture", "Sujet + titre H1", "Édition", "Catégorie Blog / Éditorial", "Deadline", "Lien du brief + lien du doc", "Tout rempli → Enregistrer"] },
+      { title: "1 · Brief + 2 · Rédaction", who: "Validés à l'enregistrement", color: C.prep, items: ["Carte créée", "Brief + doc liés", "Passage direct à l'intégration"], mail: "Mail → Marick" },
+      { title: "3 · Intégration", who: "Marick", color: C.integ, items: ["Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
     ],
     end: ["En haut de « Contenus »", "Si Blog → aussi en haut de Blog › Particulier"],
   },

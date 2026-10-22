@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { notificationLink } from "@/lib/editorial-links";
-import { notificationCta, notificationDeadline, SERVICE_COMMUNICATION_EMAILS } from "@/lib/article-notification";
+import { notificationCta, notificationDeadline, notificationRecipients, SERVICE_COMMUNICATION_EMAILS } from "@/lib/article-notification";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 const BodySchema = z.object({
   space: z.enum(["strategie"]).optional(),
+  type: z.enum(["Réécriture", "Création"]).optional(),
   articleId: z.string().max(200).optional(),
   stepKey: z.string().max(120).optional(),
   kind: z.enum(["ready", "relecture", "integration", "published"]).optional(),
@@ -45,7 +46,9 @@ ${p.kind === "relecture"
     ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>La <strong>relecture de l’expert métier est validée</strong>. Merci de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article, à l'étape <strong>Image</strong>.</p>`
     : `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article.</p>`)
   : p.kind === "integration"
-  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (visible dans la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.</p>`
+   ? (p.space === "strategie" && p.type === "Réécriture"
+     ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>La <strong>réécriture est terminée</strong>. L'article ci-dessous est prêt à être <strong>intégré dans le site</strong>.</p>`
+     : `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (visible dans la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.</p>`)
   : p.kind === "published"
   ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Geoffrey,<br><br>L'article ci-dessous a été <strong>intégré dans le site</strong> : toutes les étapes sont terminées et il a été ajouté au blog.</p>`
   : `<p style="margin:0 0 18px;font-size:16px">Un nouvel article est <strong>prêt à être rédigé</strong> : toutes les informations de la ligne « À rédiger » sont remplies et l'article a été créé dans le suivi.</p>`}
@@ -106,7 +109,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           } catch { /* ignore */ }
           allowedTo = [...new Set(payload.to.filter((m) => known.has(m.toLowerCase())))];
         }
-        const recipients = allowedTo.length ? allowedTo : defaultTo;
+        const recipients = notificationRecipients(payload.kind, allowedTo.length ? allowedTo : defaultTo);
         payload = { ...payload, deadline: notificationDeadline(payload.deadline, payload.kind, recipients) };
         const subject = isRel
           ? `${payload.cible === 'Professionnel' && !payload.space ? 'Image à ajouter' : 'Relecture + image à faire'} : « ${payload.h1} »`
@@ -138,7 +141,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
         ].filter((l): l is string => l !== null).join("\r\n") : isInt ? [
           "Bonjour,",
           "",
-          "L'article ci-dessous est prêt : la relecture est faite et l'image est validée (visible dans la carte de l'article).",
+          payload.space === "strategie" && payload.type === "Réécriture" ? "La réécriture est terminée. L'article ci-dessous est prêt à être intégré dans le site." : "L'article ci-dessous est prêt : la relecture est faite et l'image est validée (visible dans la carte de l'article).",
           "Il ne vous reste plus qu'à l'intégrer dans le site.",
           "",
           `Nom de l'article (H1) : ${payload.h1}`,
