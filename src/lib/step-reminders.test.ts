@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildStepReminder, canSendStepReminder, GEOFFREY_EMAIL } from "./step-reminders";
 
-const config = [
+const config: Parameters<typeof buildStepReminder>[2] = [
   { key: "redaction", label: "Rédaction" }, { key: "expert", label: "Relecture métier", emails: { Clément: "clement@example.org" } },
   { key: "validation", label: "Relecture + Image", emails: { "Service Communication": "fannie.laurendin@soregies.fr" } },
   { key: "integration", label: "Intégration", assignee: "Marick" }, { key: "brief", label: "Brief" },
