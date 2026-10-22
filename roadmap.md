@@ -1,4 +1,5 @@
-- [ ] Ajouter les rappels manuels par étape, réservés à Geoffrey, avec destinataires et message adaptés ; vérifier permissions et envoi.
+- [x] Rappels manuels par étape réservés à Geoffrey : boutons et confirmation vérifiés sur une carte réelle, fonction authentifiée vérifiée sans envoi, 27 tests réussis ; messages adaptés et Fannie + Coraline ensemble sans deadline.
+- [ ] Confirmer la réception d’un premier rappel réel (attend un premier envoi volontaire de Geoffrey ; aucun mail de test envoyé).
 - [x] Stratégie PAC : toujours envoyer Relecture + Image à Fannie et Coraline ensemble, même avec un ancien réglage partiel ; tests réussis, aucun mail de test envoyé.
 - [x] Stratégie PAC : retirer Relecture + Image pour les réécritures, conserver les créations ; création depuis À rédiger, mail d'intégration, rechargement et changement de type vérifiés avec le compte administrateur, cartes temporaires supprimées.
 - [x] Relecture métier : reprendre le responsable par défaut sur les étapes existantes sans responsable, sans remplacer les affectations individuelles.
