@@ -1,3 +1,4 @@
+- [ ] Corriger les briefs actuels au 14 octobre 2026 et conserver les dates réelles de chaque étape dans Blog et PAC ; ne pas inventer les dates historiques inconnues.
 - [x] Rappels manuels par étape réservés à Geoffrey : boutons et confirmation vérifiés sur une carte réelle, fonction authentifiée vérifiée sans envoi, 27 tests réussis ; messages adaptés et Fannie + Coraline ensemble sans deadline.
 - [ ] Confirmer la réception d’un premier rappel réel (attend un premier envoi volontaire de Geoffrey ; aucun mail de test envoyé).
 - [x] Stratégie PAC : toujours envoyer Relecture + Image à Fannie et Coraline ensemble, même avec un ancien réglage partiel ; tests réussis, aucun mail de test envoyé.
