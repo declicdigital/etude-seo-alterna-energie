@@ -35,5 +35,10 @@
     if(key === 'integration') return { kind:'published', who:'Geoffrey (article publié)' };
     return null;
   }
-  root.EditorialPipeline = { isPro, isRewrite, configFor, sync, nextNotification };
+  function completeStep(step) {
+    if(!step || !/^\d{4}-\d{2}-\d{2}$/.test(step.date || '')) return false;
+    step.status = 'done';
+    return true;
+  }
+  root.EditorialPipeline = { isPro, isRewrite, configFor, sync, nextNotification, completeStep };
 })(globalThis);
