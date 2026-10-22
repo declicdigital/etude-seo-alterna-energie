@@ -1511,7 +1511,7 @@ function renderArticleCard(article){
         <span class="status-icon">${iconContent}</span>
         <div class="label">${escapeHtml(cfg.label)}</div>
         <div class="assignee">${escapeHtml(step.assignee) || '—'}</div>
-        <div class="date">${fmtDate(step.date) || ''}</div>
+        <div class="date">${step.status === 'done' ? fmtDate(step.date) || '' : ''}</div>
         ${canRemind ? `<button class="btn reminder-btn" data-action="remind-step" data-article-id="${escapeAttr(article.id)}" data-step-key="${escapeAttr(step.key)}" title="Envoyer un rappel — ${escapeAttr(cfg.label)}" aria-label="Envoyer un rappel — ${escapeAttr(cfg.label)}">${REMINDER_ICON}</button>` : ''}
       </div>`;
 

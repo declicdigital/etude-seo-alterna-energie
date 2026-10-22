@@ -1,4 +1,5 @@
-- [ ] Corriger les briefs actuels au 14 octobre 2026 et conserver les dates réelles de chaque étape dans Blog et PAC ; ne pas inventer les dates historiques inconnues.
+- [x] Brief PAC existant et quatre briefs À rédiger corrigés au 14 octobre 2026 ; dates distinctes saisies à la création et conservées à la validation dans Blog et PAC ; étapes en attente sans date de réalisation affichée, 12 tests réussis, revalidation et rechargement réels vérifiés sans mail.
+- [ ] Reconstituer les anciennes dates Blog déjà écrasées (attend les dates réelles de Geoffrey ; aucun historique fiable disponible dans les données actuelles).
 - [x] Rappels manuels par étape réservés à Geoffrey : boutons et confirmation vérifiés sur une carte réelle, fonction authentifiée vérifiée sans envoi, 27 tests réussis ; messages adaptés et Fannie + Coraline ensemble sans deadline.
 - [ ] Confirmer la réception d’un premier rappel réel (attend un premier envoi volontaire de Geoffrey ; aucun mail de test envoyé).
 - [x] Stratégie PAC : toujours envoyer Relecture + Image à Fannie et Coraline ensemble, même avec un ancien réglage partiel ; tests réussis, aucun mail de test envoyé.
