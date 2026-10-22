@@ -1,3 +1,4 @@
+- [ ] Ajouter les rappels manuels par étape, réservés à Geoffrey, avec destinataires et message adaptés ; vérifier permissions et envoi.
 - [x] Stratégie PAC : toujours envoyer Relecture + Image à Fannie et Coraline ensemble, même avec un ancien réglage partiel ; tests réussis, aucun mail de test envoyé.
 - [x] Stratégie PAC : retirer Relecture + Image pour les réécritures, conserver les créations ; création depuis À rédiger, mail d'intégration, rechargement et changement de type vérifiés avec le compte administrateur, cartes temporaires supprimées.
 - [x] Relecture métier : reprendre le responsable par défaut sur les étapes existantes sans responsable, sans remplacer les affectations individuelles.
