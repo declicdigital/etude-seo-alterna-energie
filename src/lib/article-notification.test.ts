@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { notificationCta, notificationDeadline, SERVICE_COMMUNICATION_EMAILS } from "./article-notification";
+import { notificationCta, notificationDeadline, notificationRecipients, SERVICE_COMMUNICATION_EMAILS } from "./article-notification";
 
 describe("notificationDeadline", () => {
   it("removes the deadline from every notification addressed to Fannie", () => {
@@ -18,6 +18,19 @@ describe("notificationDeadline", () => {
 });
 
 describe("Service Communication", () => {
+  it("includes Fannie and Coraline together for PAC review with a legacy Fannie-only setting", () => {
+    expect(notificationRecipients("relecture", ["fannie.laurendin@soregies.fr"])).toEqual([
+      "fannie.laurendin@soregies.fr", "coraline.prono@soregies.fr",
+    ]);
+  });
+  it("includes Fannie when an old review setting only contains Coraline", () => {
+    expect(notificationRecipients("relecture", ["coraline.prono@soregies.fr"])).toEqual([
+      "fannie.laurendin@soregies.fr", "coraline.prono@soregies.fr",
+    ]);
+  });
+  it("does not add the Communication team to integration notifications", () => {
+    expect(notificationRecipients("integration", ["marick.navarro.ext@soregies.fr"])).toEqual(["marick.navarro.ext@soregies.fr"]);
+  });
   it("lists Fannie and Coraline as the people behind relecture + image", () => {
     expect(SERVICE_COMMUNICATION_EMAILS).toContain("fannie.laurendin@soregies.fr");
     expect(SERVICE_COMMUNICATION_EMAILS).toContain("coraline.prono@soregies.fr");

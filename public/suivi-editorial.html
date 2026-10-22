@@ -1105,6 +1105,9 @@ function normalizeConfig(){
   if(val){
     if(val.label !== 'Relecture + Image'){ val.label = 'Relecture + Image'; changed = true; }
     if(val.assignee !== 'Service Communication'){ val.assignee = 'Service Communication'; changed = true; }
+    val.emails = val.emails || {};
+    const teamEmails = [...new Set([...DEFAULT_EMAILS.validation['Service Communication'].split(/[,;\s]+/), ...emailsFor(val, 'Service Communication')])].filter(Boolean).join(', ');
+    if(val.emails['Service Communication'] !== teamEmails){ val.emails['Service Communication'] = teamEmails; changed = true; }
   }
   return changed;
 }
@@ -1544,7 +1547,7 @@ function renderArticleCard(article){
           </div>
         </div>
         <div class="attachments-block">
-          <label class="attachments-label">${step.key === 'integration' ? (EditorialPipeline.isPro(article, SPACE) ? 'Images validées (étape Image)' : 'Images validées (étape Relecture + Image)') : 'Pièces jointes'}</label>
+          <label class="attachments-label">${step.key === 'integration' && !EditorialPipeline.isRewrite(article, SPACE) ? (EditorialPipeline.isPro(article, SPACE) ? 'Images validées (étape Image)' : 'Images validées (étape Relecture + Image)') : 'Pièces jointes'}</label>
           <div class="attachments-list">${renderAttachments(article.id, step)}${step.key === 'integration' ? renderImagesReadonly(article, step.key) : ''}</div>
           ${isImageStep(step.key) ? `
           <label class="attach-image-label" data-article-id="${article.id}" data-step-key="${step.key}">
@@ -1938,7 +1941,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
       try{
         const r = await fetch('/api/public/notify-article-ready', {
           method:'POST', headers:authHeaders(),
-          body: JSON.stringify({ space: SPACE || undefined, articleId: id, stepKey: mail.next, kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', cible: article.audience || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
+          body: JSON.stringify({ space: SPACE || undefined, type: article.type || undefined, articleId: id, stepKey: mail.next, kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', cible: article.audience || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
         });
         if(!r.ok) alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.');
       }catch(err){ alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.'); }
@@ -2039,7 +2042,13 @@ document.getElementById('articlesContainer').addEventListener('change', async (e
   }
   if(act === 'pick-type'){
     const article = getArticle(e.target.dataset.articleId);
-    if(article){ article.type = e.target.value; await saveArticle(article); }
+    if(article){
+      article.type = e.target.value;
+      syncArticleSteps(article);
+      if(!article.steps.some(s => s.key === openPanels[article.id])) openPanels[article.id] = null;
+      await saveArticle(article);
+      renderArticles();
+    }
     return;
   }
   if(act === 'pick-category' || act === 'pick-energy'){
@@ -2321,18 +2330,21 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
     if(!t.articleId) return;
     const articleId = t.articleId;
     const createdArticle = getArticle(articleId);
-    if(createdArticle && !EditorialPipeline.isPro(createdArticle, SPACE)) try{
+    const mail = createdArticle ? EditorialPipeline.nextNotification(createdArticle, 'redaction', SPACE) : null;
+    if(createdArticle && mail) try{
+      const nextStep = createdArticle.steps.find(s => s.key === mail.next);
+      const to = emailsFor(getConfigFor(mail.next), nextStep?.assignee || '');
       const r = await fetch('/api/public/notify-article-ready', {
         method:'POST', headers:authHeaders(),
-        body: JSON.stringify({ space: SPACE || undefined, articleId, stepKey: 'validation', kind:'relecture', to: (emailsFor(getConfigFor('validation'), 'Service Communication').length ? emailsFor(getConfigFor('validation'), 'Service Communication') : undefined), sujet:t.sujet, h1:t.h1, editrice:t.editrice, cible:t.audience, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
+        body: JSON.stringify({ space: SPACE || undefined, type: createdArticle.type || undefined, articleId, stepKey: mail.next, kind:mail.kind, to: to.length ? to : undefined, sujet:t.sujet, h1:t.h1, editrice:t.editrice, cible:t.audience, categorie:t.categorie, energie:t.energie, deadline:t.deadline, docx:t.docx })
       });
-      if(!r.ok) alert('Article enregistré, mais le mail au Service Communication (relecture + image) n\'a pas pu partir.');
-    }catch(err){ alert('Article enregistré, mais le mail au Service Communication (relecture + image) n\'a pas pu partir.'); }
+      if(!r.ok) alert('Article enregistré, mais le mail à ' + mail.who + ' n\'a pas pu partir.');
+    }catch(err){ alert('Article enregistré, mais le mail à ' + mail.who + ' n\'a pas pu partir.'); }
     todos = todos.filter(x => x.id !== t.id);
     if(!expanded[articleId]){ expanded[articleId] = true; saveExpanded(); }
     await saveTodos(); renderTodos(); renderArticles();
-    if(createdArticle && EditorialPipeline.isPro(createdArticle, SPACE)){
-      openPanels[articleId] = 'expert';
+    if(createdArticle){
+      openPanels[articleId] = EditorialPipeline.isPro(createdArticle, SPACE) ? 'expert' : mail?.next || null;
       renderArticles();
     }
     const card = document.querySelector(`.article-card[data-article-id="${articleId}"]`);
