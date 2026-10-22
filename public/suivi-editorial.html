@@ -741,7 +741,7 @@ html:not(.no-cat) .col-brief{display:none!important}
     </div>
     <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th class="col-brief">Catégorie</th><th>Édition</th><th>Nom de l'article (H1)</th><th class="col-cible">Cible</th><th class="col-cat">Catégorie</th><th class="col-energy">Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th class="col-brief">Catégorie</th><th>Édition</th><th>Date de rédaction</th><th class="col-brief">Date du brief</th><th>Nom de l'article (H1)</th><th class="col-cible">Cible</th><th class="col-cat">Catégorie</th><th class="col-energy">Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
     <div id="todoComments" class="todo-comments"></div>
@@ -1248,6 +1248,7 @@ function newArticle(title){
 function missingFields(article, stepKey){
   const step = article.steps.find(s => s.key === stepKey);
   const out = [];
+  if(!step || !/^\d{4}-\d{2}-\d{2}$/.test(step.date || '')) out.push('la date de réalisation');
   if(EditorialPipeline.isPro(article, SPACE)){
     const index = article.steps.findIndex(s => s.key === stepKey);
     if(article.steps.slice(0, index).some(s => s.status === 'pending')) out.push('les étapes précédentes');
@@ -1259,7 +1260,6 @@ function missingFields(article, stepKey){
     if(!NO_CAT && !article.energy) out.push("l'énergie");
   }
   if(stepKey === 'integration'){
-    if(!step || !step.date) out.push('la date');
     if(!(article.finalLink||'').trim()) out.push("le lien de l'article publié");
     if(SPACE && article.dest === 'Blog' && !(article.category||'').trim()) out.push('la catégorie du blog');
   }
@@ -1972,8 +1972,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
       alert('Avant de valider cette étape, complète : ' + missing.join(', ') + '.');
       return;
     }
-    step.status = 'done';
-    if(key !== 'integration' || !step.date) step.date = new Date().toISOString().slice(0,10);
+    if(!EditorialPipeline.completeStep(step)) return;
     await saveArticle(article);
     if(key === 'integration') await pushToBlog(article);
     const mail = EditorialPipeline.nextNotification(article, key, SPACE);
@@ -2240,10 +2239,10 @@ async function saveTodos(){
 const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com'];
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
 function todoComplete(t){
-  const fields = ['sujet','editrice','h1','audience','deadline','docx'];
-  if(SPACE){ fields.push('brief','type','dest'); if(t.dest === 'Blog') fields.push('categorie'); }
+  const fields = ['sujet','editrice','redactionDate','h1','audience','deadline','docx'];
+  if(SPACE){ fields.push('brief','briefDate','type','dest'); if(t.dest === 'Blog') fields.push('categorie'); }
   else fields.push('categorie','energie');
-  return fields.every(f => (t[f]||'').trim());
+  return fields.every(f => (t[f]||'').trim()) && /^\d{4}-\d{2}-\d{2}$/.test(t.redactionDate || '') && (!SPACE || /^\d{4}-\d{2}-\d{2}$/.test(t.briefDate || ''));
 }
 /* Nombre de jours restants avant la deadline (négatif si dépassée, null si pas de date). */
 function todoDaysLeft(t){
@@ -2293,6 +2292,8 @@ function renderTodos(){
     <td class="col-brief"><select data-f="type"><option value="">—</option>${['Réécriture','Création'].map(o=>`<option ${t.type===o?'selected':''}>${o}</option>`).join('')}</select></td>
     <td class="col-brief"><select data-f="dest"><option value="">—</option>${DESTS.map(o=>`<option ${t.dest===o?'selected':''}>${o}</option>`).join('')}</select></td>
     <td><select data-f="editrice"><option value="">—</option>${(((getConfigFor('redaction')||{}).options)||['Aurorae','Marina']).map(o=>`<option ${t.editrice===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
+    <td><input type="date" data-f="redactionDate" aria-label="Date de rédaction" value="${escapeAttr(t.redactionDate||'')}"></td>
+    <td class="col-brief"><input type="date" data-f="briefDate" aria-label="Date du brief" value="${escapeAttr(t.briefDate||'')}"></td>
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td class="col-cible"><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td class="col-cat">${SPACE ? (t.dest === 'Blog' ? `<select data-f="categorie"><option value="">— Choisir —</option>${categoriesFor('Particulier').map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>` : '<span class="td-na">—</span>') : `<select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>`}</td>
@@ -2306,7 +2307,7 @@ function renderTodos(){
 }
 async function maybeCreateFromTodo(t){
   if(t.articleId) return;
-  if(!(t.sujet||'').trim() || !(t.h1||'').trim() || !t.editrice || !(t.docx||'').trim()) return;
+  if(!todoComplete(t)) return;
   const article = newArticle(t.h1.trim());
   article.docxLink = normalizeUrl(t.docx.trim());
   if(t.type) article.type = t.type;
@@ -2315,11 +2316,11 @@ async function maybeCreateFromTodo(t){
   article.subject = t.sujet.trim();
   article.deadline = t.deadline || '';
   const red = article.steps.find(s => s.key === 'redaction');
-  if(red){ red.assignee = t.editrice; red.status = 'done'; red.date = new Date().toISOString().slice(0,10); }
+  if(red){ red.assignee = t.editrice; red.date = t.redactionDate; EditorialPipeline.completeStep(red); }
   const idee = article.steps.find(s => s.key === 'idee');
   if(idee && idee.status === 'pending') idee.status = 'skipped';
   const brief = article.steps.find(s => s.key === 'brief');
-  if(brief && brief.status === 'pending'){ brief.status = 'done'; brief.date = new Date().toISOString().slice(0,10); }
+  if(brief && brief.status === 'pending'){ brief.date = t.briefDate; EditorialPipeline.completeStep(brief); }
   const aud = (t.audience||'').trim();
   if(aud === 'Professionnel' || aud === 'Particulier') article.audience = aud;
   const cat = (t.categorie||'').trim();

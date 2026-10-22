@@ -5,6 +5,30 @@ import { describe, expect, it } from 'vitest';
 const scope: any = {};
 runInNewContext(readFileSync('public/editorial-pipeline.js', 'utf8'), scope);
 const pipeline = scope.EditorialPipeline;
+describe('Actual completion dates', () => {
+  it('keeps the brief on October 14 and writing on October 21', () => {
+    const brief = { key:'brief', status:'pending', date:'2026-10-14' };
+    const writing = { key:'redaction', status:'pending', date:'2026-10-21' };
+    expect(pipeline.completeStep(brief)).toBe(true);
+    expect(pipeline.completeStep(writing)).toBe(true);
+    expect(brief.date).toBe('2026-10-14');
+    expect(writing.date).toBe('2026-10-21');
+  });
+  it('preserves each Blog step date on validation and revalidation', () => {
+    const writing = {key:'redaction',status:'pending',date:'2026-10-19'};
+    const review = {key:'validation',status:'pending',date:'2026-10-22'};
+    pipeline.completeStep(writing); pipeline.completeStep(review);
+    writing.status = 'pending'; pipeline.completeStep(writing);
+    expect(writing.date).toBe('2026-10-19');
+    expect(review.date).toBe('2026-10-22');
+  });
+  it('does not invent a completion date for an undated step', () => {
+    const step = {key:'validation',status:'pending',date:''};
+    expect(pipeline.completeStep(step)).toBe(false);
+    expect(step.status).toBe('pending');
+    expect(step.date).toBe('');
+  });
+});
 const config = [
   {key:'redaction', label:'Rédaction'}, {key:'expert', label:'Relecture de l’expert métier'},
   {key:'validation', label:'Relecture + Image'}, {key:'integration', label:'Intégration'}
