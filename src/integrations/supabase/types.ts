@@ -47,6 +47,30 @@ export type Database = {
         }
         Relationships: []
       }
+      benchmark_months: {
+        Row: {
+          data: Json
+          label: string
+          month_key: string
+          saved_at: string
+          updated_at: string
+        }
+        Insert: {
+          data: Json
+          label: string
+          month_key: string
+          saved_at?: string
+          updated_at?: string
+        }
+        Update: {
+          data?: Json
+          label?: string
+          month_key?: string
+          saved_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       editorial_kv: {
         Row: {
           created_at: string

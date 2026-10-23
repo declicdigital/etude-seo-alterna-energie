@@ -29,6 +29,13 @@
       "when": 1792490015458,
       "tag": "0003_admin_access_activity",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792748115339,
+      "tag": "0004_create_benchmark_months",
+      "breakpoints": true
     }
   ]
 }

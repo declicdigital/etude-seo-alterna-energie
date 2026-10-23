@@ -16,6 +16,7 @@ export const RETIRED_SHEETS = new Set(["BLOG - IDEE"]);
 export const EMBED_SHEETS: Record<string, string> = {
   "SUIVI EDITORIAL": "/suivi-editorial.html",
   "SUIVI STRATEGIE": "/suivi-editorial.html?space=strategie",
+  "BENCHMARK": "/benchmark.html",
 };
 
 /** FAQ space: request tracker + Particulier/Professionnel lists, rendered by FaqView. */
@@ -243,6 +244,7 @@ export const SHEET_META: Record<
   "STRATEGIE - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Contenus", group: "Stratégie PAC" },
   "SUIVI FAQ": { headerRow: 0, firstDataRow: 0, label: "Demande", group: "FAQ" },
   "FAQ - DEMANDES": { headerRow: 0, firstDataRow: 0, label: "FAQ", group: "FAQ" },
+  "BENCHMARK": { headerRow: 0, firstDataRow: 0, label: "Benchmark Énergie", group: "Benchmark" },
   "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon électricité", group: "Archives" },
   "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon gaz", group: "Archives" },
 };
