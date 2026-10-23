@@ -91,7 +91,7 @@ export const Route = createFileRoute("/api/public/benchmark-months")({
                 month_key: body.monthKey,
                 label: body.label ?? body.monthKey,
                 saved_at: body.savedAt ?? new Date().toISOString(),
-                data: body.data,
+                data: body.data as unknown as import("@/integrations/supabase/types").Json,
                 updated_at: new Date().toISOString(),
               },
               { onConflict: "month_key" },
