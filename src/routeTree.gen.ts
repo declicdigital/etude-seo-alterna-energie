@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemandesRouteImport } from './routes/demandes'
 import { Route as EnAttenteRouteImport } from './routes/en-attente'
 import { Route as KitCommunicationRouteImport } from './routes/kit-communication'
+import { Route as ApiPublicBenchmarkMonthsRouteImport } from './routes/api/public/benchmark-months'
 import { Route as ApiPublicNotifyAccessRequestRouteImport } from './routes/api/public/notify-access-request'
 import { Route as ApiPublicNotifyArticleReadyRouteImport } from './routes/api/public/notify-article-ready'
 import { Route as ApiPublicNotifyFaqRouteImport } from './routes/api/public/notify-faq'
@@ -52,6 +53,12 @@ const KitCommunicationRoute = KitCommunicationRouteImport.update({
   path: '/kit-communication',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBenchmarkMonthsRoute =
+  ApiPublicBenchmarkMonthsRouteImport.update({
+    id: '/api/public/benchmark-months',
+    path: '/api/public/benchmark-months',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicNotifyAccessRequestRoute =
   ApiPublicNotifyAccessRequestRouteImport.update({
     id: '/api/public/notify-access-request',
@@ -94,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
   '/kit-communication': typeof KitCommunicationRoute
+  '/api/public/benchmark-months': typeof ApiPublicBenchmarkMonthsRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-faq': typeof ApiPublicNotifyFaqRoute
@@ -108,6 +116,7 @@ export interface FileRoutesByTo {
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
   '/kit-communication': typeof KitCommunicationRoute
+  '/api/public/benchmark-months': typeof ApiPublicBenchmarkMonthsRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-faq': typeof ApiPublicNotifyFaqRoute
@@ -123,6 +132,7 @@ export interface FileRoutesById {
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
   '/kit-communication': typeof KitCommunicationRoute
+  '/api/public/benchmark-months': typeof ApiPublicBenchmarkMonthsRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-faq': typeof ApiPublicNotifyFaqRoute
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/demandes'
     | '/en-attente'
     | '/kit-communication'
+    | '/api/public/benchmark-months'
     | '/api/public/notify-access-request'
     | '/api/public/notify-article-ready'
     | '/api/public/notify-faq'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/demandes'
     | '/en-attente'
     | '/kit-communication'
+    | '/api/public/benchmark-months'
     | '/api/public/notify-access-request'
     | '/api/public/notify-article-ready'
     | '/api/public/notify-faq'
@@ -167,6 +179,7 @@ export interface FileRouteTypes {
     | '/demandes'
     | '/en-attente'
     | '/kit-communication'
+    | '/api/public/benchmark-months'
     | '/api/public/notify-access-request'
     | '/api/public/notify-article-ready'
     | '/api/public/notify-faq'
@@ -182,6 +195,7 @@ export interface RootRouteChildren {
   DemandesRoute: typeof DemandesRoute
   EnAttenteRoute: typeof EnAttenteRoute
   KitCommunicationRoute: typeof KitCommunicationRoute
+  ApiPublicBenchmarkMonthsRoute: typeof ApiPublicBenchmarkMonthsRoute
   ApiPublicNotifyAccessRequestRoute: typeof ApiPublicNotifyAccessRequestRoute
   ApiPublicNotifyArticleReadyRoute: typeof ApiPublicNotifyArticleReadyRoute
   ApiPublicNotifyFaqRoute: typeof ApiPublicNotifyFaqRoute
@@ -232,6 +246,13 @@ declare module '@tanstack/react-router' {
       path: '/kit-communication'
       fullPath: '/kit-communication'
       preLoaderRoute: typeof KitCommunicationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/benchmark-months': {
+      id: '/api/public/benchmark-months'
+      path: '/api/public/benchmark-months'
+      fullPath: '/api/public/benchmark-months'
+      preLoaderRoute: typeof ApiPublicBenchmarkMonthsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/notify-access-request': {
@@ -286,6 +307,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemandesRoute: DemandesRoute,
   EnAttenteRoute: EnAttenteRoute,
   KitCommunicationRoute: KitCommunicationRoute,
+  ApiPublicBenchmarkMonthsRoute: ApiPublicBenchmarkMonthsRoute,
   ApiPublicNotifyAccessRequestRoute: ApiPublicNotifyAccessRequestRoute,
   ApiPublicNotifyArticleReadyRoute: ApiPublicNotifyArticleReadyRoute,
   ApiPublicNotifyFaqRoute: ApiPublicNotifyFaqRoute,

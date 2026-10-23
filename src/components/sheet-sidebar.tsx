@@ -8,7 +8,7 @@ import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 import { sheetAllowed } from "@/lib/sections";
 
-const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "FAQ", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
+const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "FAQ", "Benchmark", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
 const REMOVED_GROUPS = new Set(["Arborescence", "Suivi", "Docs", "Archives", "Autres"]);
 const ORDER_KEY = "sidebar.groupOrder.v1";
 const PROMOTED_KEY = "sidebar.orderPromoted.v1";
@@ -100,6 +100,12 @@ const GROUP_STYLES: Record<string, {
     active: "bg-teal-500/15 text-teal-800 dark:text-teal-200 font-semibold ring-1 ring-inset ring-teal-500/30",
     hover: "hover:bg-teal-500/10 hover:text-teal-700 dark:hover:text-teal-300",
     bar: "bg-teal-500",
+  },
+  Benchmark: {
+    header: "bg-emerald-700 text-white",
+    active: "bg-emerald-600/15 text-emerald-900 dark:text-emerald-100 font-semibold ring-1 ring-inset ring-emerald-600/30",
+    hover: "hover:bg-emerald-600/10 hover:text-emerald-800 dark:hover:text-emerald-200",
+    bar: "bg-emerald-600",
   },
   Docs: {
     header: "bg-rose-500 text-white",

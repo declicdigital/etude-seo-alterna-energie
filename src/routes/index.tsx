@@ -126,7 +126,8 @@ function Index() {
     !baseSheet.toUpperCase().startsWith("SUIVI ") &&
     !baseSheet.toUpperCase().startsWith("STRATEGIE") &&
     sheetInfo?.group !== "Stratégie PAC" &&
-    sheetInfo?.group !== "FAQ";
+    sheetInfo?.group !== "FAQ" &&
+    sheetInfo?.group !== "Benchmark";
   const embedSrc = isGuide ? null : embedSrcOf(sheet);
   const editorialFrame = useRef<HTMLIFrameElement>(null);
   const sendReminder = useServerFn(sendStepReminder);
