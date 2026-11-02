@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   GRANDS_COMPTES,
+  GRANDS_COMPTES_CADENCE,
   INTERNE,
+  INTERNE_CADENCE,
+  generateNewsletters,
+  isPublicHoliday,
+  isWorkingDay,
   NEWSLETTER_CALENDARS,
   daysUntil,
   isWeekend,
@@ -74,7 +79,8 @@ describe("newsletter calendars", () => {
       "2026-12 proposition 16",
     ]);
     expect(nextSend(GRANDS_COMPTES, day(2026, 11, 2))?.id).toBe("2026-11");
-    expect(nextSend(GRANDS_COMPTES, day(2026, 12, 4))).toBeNull();
+    expect(nextSend(GRANDS_COMPTES, day(2026, 12, 4))?.id).toBe("2027-01");
+    expect(nextSend(GRANDS_COMPTES, day(2027, 12, 10))).toBeNull();
   });
 
   it("follows the internal newsletter's quarterly cycle", () => {
@@ -116,5 +122,45 @@ describe("newsletter calendars", () => {
     expect(
       sheetAllowed("NEWSLETTER GRANDS COMPTES", ["Blog", "!Calendriers newsletters/Interne"]),
     ).toBe(true);
+  });
+
+  describe("2027, generated from the cadences", () => {
+    const of2027 = (cal: NewsletterCalendar) => cal.newsletters.filter((n) => n.year === 2027);
+
+    it("continues every month for Grands Comptes and every quarter for Interne", () => {
+      expect(of2027(GRANDS_COMPTES).map((n) => n.month)).toEqual([
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+      ]);
+      expect(of2027(INTERNE).map((n) => n.month)).toEqual([2, 5, 8, 11]);
+    });
+
+    it.each(NEWSLETTER_CALENDARS)("$title: only working days, steps in order", (cal) => {
+      for (const n of of2027(cal)) {
+        for (const d of n.dates) expect(isWorkingDay(d), `${n.id} ${d}`).toBe(true);
+        expect([...n.dates].sort()).toEqual(n.dates);
+      }
+    });
+
+    it("uses the same rules that produced the 2026 plan", () => {
+      // Interne: every 2026 date, including the 8 May and 11 Nov shifts.
+      expect(generateNewsletters(INTERNE_CADENCE, 2026, [2, 5, 8, 11]).map((n) => n.dates)).toEqual(
+        INTERNE.newsletters.filter((n) => n.year === 2026).map((n) => n.dates),
+      );
+      // Grands Comptes: the regular 2026 months.
+      for (const month of [6, 8, 10, 11]) {
+        const [n] = generateNewsletters(GRANDS_COMPTES_CADENCE, 2026, [month]);
+        expect(n.dates).toEqual(byId(GRANDS_COMPTES, n.id).dates);
+      }
+    });
+
+    it("moves deadlines off public holidays", () => {
+      expect(isPublicHoliday("2027-05-06")).toBe(true); // Ascension
+      expect(isPublicHoliday("2027-05-17")).toBe(true); // Lundi de Pentecôte
+      expect(isPublicHoliday("2027-03-29")).toBe(true); // Lundi de Pâques
+      expect(isPublicHoliday("2027-05-05")).toBe(false);
+      expect(byId(GRANDS_COMPTES, "2027-05").dates.at(-1)).toBe("2027-05-05");
+      expect(byId(GRANDS_COMPTES, "2027-11").dates[3]).toBe("2027-10-29");
+      expect(byId(INTERNE, "2027-05").dates.at(-1)).toBe("2027-05-14");
+    });
   });
 });

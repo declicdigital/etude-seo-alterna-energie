@@ -172,6 +172,9 @@ export function NewsletterCalendarView({
         : states.get(n.id) !== "sent",
   );
   if (filter === "sent") shown.reverse();
+  const years = [...new Set(shown.map((n) => n.year))];
+  const span = [...new Set(cal.newsletters.map((n) => n.year))];
+  const period = span.length > 1 ? `${span[0]}–${span[span.length - 1]}` : String(span[0]);
 
   async function copyForExcel() {
     try {
@@ -189,7 +192,7 @@ export function NewsletterCalendarView({
     );
     const a = document.createElement("a");
     a.href = url;
-    a.download = `newsletters-${cal.id}-2026.ics`;
+    a.download = `newsletters-${cal.id}-${period}.ics`;
     a.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
@@ -246,7 +249,7 @@ export function NewsletterCalendarView({
         <section className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Planning 2026
+              Planning {period}
             </h3>
             <div
               role="tablist"
@@ -281,19 +284,33 @@ export function NewsletterCalendarView({
             <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
               {filter === "sent"
                 ? "Aucune newsletter envoyée pour le moment."
-                : "Toutes les newsletters de l'année sont envoyées."}
+                : "Toutes les newsletters prévues sont envoyées."}
             </p>
           ) : (
-            <div className="space-y-3">
-              {shown.map((n) => (
-                <NewsletterRow
-                  key={n.id}
-                  cal={cal}
-                  theme={theme}
-                  newsletter={n}
-                  state={states.get(n.id)!}
-                  today={today}
-                />
+            <div className="space-y-6">
+              {years.map((year) => (
+                <div key={year} className="space-y-3">
+                  {years.length > 1 && (
+                    <h4
+                      className={cn("flex items-center gap-3 text-lg font-semibold", theme.title)}
+                    >
+                      {year}
+                      <span className="h-px flex-1 bg-border" aria-hidden />
+                    </h4>
+                  )}
+                  {shown
+                    .filter((n) => n.year === year)
+                    .map((n) => (
+                      <NewsletterRow
+                        key={n.id}
+                        cal={cal}
+                        theme={theme}
+                        newsletter={n}
+                        state={states.get(n.id)!}
+                        today={today}
+                      />
+                    ))}
+                </div>
               ))}
             </div>
           )}
@@ -311,7 +328,7 @@ function NextSendCard({ cal, theme, today }: CardProps) {
     return (
       <div className={cn("min-w-0 rounded-xl p-5 text-white shadow-sm", theme.hero)}>
         <p className="text-xs font-medium uppercase tracking-wider text-white/70">Prochain envoi</p>
-        <p className="mt-2 text-lg font-semibold">Toutes les newsletters 2026 sont envoyées.</p>
+        <p className="mt-2 text-lg font-semibold">Toutes les newsletters prévues sont envoyées.</p>
       </div>
     );
   }
@@ -426,7 +443,7 @@ function UpcomingCard({ cal, theme, today }: CardProps) {
     <div className="min-w-0 rounded-xl border border-border bg-card p-5 shadow-sm lg:col-span-2">
       <h3 className={cn("text-sm font-semibold", theme.title)}>Prochaines échéances</h3>
       {items.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Plus aucune échéance prévue en 2026.</p>
+        <p className="mt-3 text-sm text-muted-foreground">Plus aucune échéance prévue.</p>
       ) : (
         <ul className="mt-3 divide-y divide-border">
           {items.map((d) => {

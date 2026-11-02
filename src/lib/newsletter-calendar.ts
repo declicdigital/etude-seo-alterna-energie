@@ -19,6 +19,126 @@ export type Newsletter = { id: string; month: number; year: number; dates: strin
 
 export type TeamMember = { role: string; people: string; step: number };
 
+/* ── Cadences ─────────────────────────────────────────────────────────────
+ * Newsletters after the dated 2026 plan are generated from each calendar's
+ * cadence: a send day per month and fixed offsets (in days) for each step.
+ * Deadlines only fall on working days: a date on a weekend or French public
+ * holiday moves to the previous working day, or to the next one if moving
+ * earlier would reach the previous step's date (as done in 2026 for 8 May
+ * and 11 November).
+ */
+
+const toIso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+function shiftDay(iso: string, days: number): string {
+  const d = parseDay(iso);
+  return toIso(new Date(d.getFullYear(), d.getMonth(), d.getDate() + days));
+}
+
+/** Easter Sunday (Gregorian calendar, anonymous algorithm). */
+function easterSunday(year: number): Date {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+const FIXED_HOLIDAYS = ["01-01", "05-01", "05-08", "07-14", "08-15", "11-01", "11-11", "12-25"];
+
+/** French public holidays: fixed ones plus Easter Monday, Ascension, Whit Monday. */
+export function isPublicHoliday(iso: string): boolean {
+  if (FIXED_HOLIDAYS.includes(iso.slice(5))) return true;
+  const easter = toIso(easterSunday(Number(iso.slice(0, 4))));
+  return [1, 39, 50].some((offset) => shiftDay(easter, offset) === iso);
+}
+
+export function isWorkingDay(iso: string): boolean {
+  const day = parseDay(iso).getDay();
+  return day !== 0 && day !== 6 && !isPublicHoliday(iso);
+}
+
+function workingDayFrom(iso: string, direction: 1 | -1): string {
+  let d = iso;
+  while (!isWorkingDay(d)) d = shiftDay(d, direction);
+  return d;
+}
+
+/** Moves each date to a working day, keeping the steps in order. */
+export function toWorkingDays(dates: string[]): string[] {
+  const out: string[] = [];
+  dates.forEach((iso, i) => {
+    let d = iso;
+    if (!isWorkingDay(d)) {
+      d = workingDayFrom(iso, -1);
+      if (i > 0 && d <= out[i - 1]) d = workingDayFrom(iso, 1);
+    }
+    out.push(i > 0 && d < out[i - 1] ? out[i - 1] : d);
+  });
+  return out;
+}
+
+type Cadence = {
+  /** Nominal send date for a month (before working-day adjustment). */
+  sendDay: (year: number, month: number) => string;
+  /** Day offsets of each step from the send date, in step order. */
+  offsets: number[];
+};
+
+function nthWeekday(
+  year: number,
+  month: number,
+  weekday: number,
+  fromDay: number,
+  nth = 1,
+): string {
+  const first = new Date(year, month - 1, fromDay);
+  const delta = (weekday - first.getDay() + 7) % 7;
+  return toIso(new Date(year, month - 1, fromDay + delta + 7 * (nth - 1)));
+}
+
+/** Monthly, sent on the first Thursday from the 3rd; steps Mon J-17 → Thu. */
+export const GRANDS_COMPTES_CADENCE: Cadence = {
+  sendDay: (year, month) => nthWeekday(year, month, 4, 3),
+  offsets: [-17, -15, -8, -3, -2, 0],
+};
+
+/** Quarterly, sent on the third Monday; steps Fri J-10 → Mon. */
+export const INTERNE_CADENCE: Cadence = {
+  sendDay: (year, month) => nthWeekday(year, month, 1, 1, 3),
+  offsets: [-10, -6, -6, -5, 0],
+};
+
+export function generateNewsletters(
+  cadence: Cadence,
+  year: number,
+  months: number[],
+): Newsletter[] {
+  return months.map((month) => {
+    const send = cadence.sendDay(year, month);
+    return {
+      id: `${year}-${String(month).padStart(2, "0")}`,
+      month,
+      year,
+      dates: toWorkingDays(cadence.offsets.map((o) => shiftDay(send, o))),
+    };
+  });
+}
+
+const ALL_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const QUARTER_MONTHS = [2, 5, 8, 11];
+
 export type NewsletterCalendar = {
   id: "grands-comptes" | "interne";
   title: string;
@@ -33,7 +153,7 @@ export type NewsletterCalendar = {
 export const GRANDS_COMPTES: NewsletterCalendar = {
   id: "grands-comptes",
   title: "Grands Comptes",
-  description: "Planning 2026 de production et d'envoi des newsletters Grands Comptes.",
+  description: "Production et envoi de la newsletter mensuelle Grands Comptes.",
   actors: {
     presta: { label: "Prestataire", short: "Presta", people: "Watt's Next" },
     b2b: { label: "B2B", short: "B2B", people: "Guillaume" },
@@ -139,13 +259,14 @@ export const GRANDS_COMPTES: NewsletterCalendar = {
       year: 2026,
       dates: ["2026-11-18", "2026-11-23", "2026-11-30", "2026-12-02", "2026-12-02", "2026-12-03"],
     },
+    ...generateNewsletters(GRANDS_COMPTES_CADENCE, 2027, ALL_MONTHS),
   ],
 };
 
 export const INTERNE: NewsletterCalendar = {
   id: "interne",
   title: "Interne",
-  description: "Planning 2026 de production et d'envoi de la newsletter interne (trimestrielle).",
+  description: "Production et envoi de la newsletter interne trimestrielle.",
   actors: {
     comm: { label: "Communication", short: "Comm.", people: "Geoffrey & Matthieu" },
     personnel: { label: "Personnel", short: "Personnel", people: "Tous les internes" },
@@ -196,6 +317,7 @@ export const INTERNE: NewsletterCalendar = {
       year: 2026,
       dates: ["2026-11-06", "2026-11-10", "2026-11-10", "2026-11-12", "2026-11-16"],
     },
+    ...generateNewsletters(INTERNE_CADENCE, 2027, QUARTER_MONTHS),
   ],
 };
 
