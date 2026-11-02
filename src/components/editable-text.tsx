@@ -37,8 +37,11 @@ export function EditableText({
         ref={ref}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
-        onClick={(e) => e.stopPropagation()}
-        onDoubleClick={(e) => e.stopPropagation()}
+        // The field can sit inside a <Link> (sidebar). Stopping propagation alone
+        // skips the router's click handler, so the browser would follow the <a>
+        // natively and reload the whole page: also cancel the default action.
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        onDoubleClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
         onBlur={() => {
           setEditing(false);
           if (draft !== value) onCommit(draft);
@@ -61,7 +64,12 @@ export function EditableText({
       className={cn(className)}
       title={title ?? "Double-cliquez pour renommer"}
       onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
-      onClick={onClickCapture}
+      onClick={(e) => {
+        // Second click of a double-click: don't re-trigger the parent's click
+        // action (navigation, row selection…) right before editing opens.
+        if (e.detail > 1) { e.preventDefault(); e.stopPropagation(); return; }
+        onClickCapture?.(e);
+      }}
     >
       {value || <span className="text-muted-foreground italic">{placeholder ?? "Sans nom"}</span>}
     </As>

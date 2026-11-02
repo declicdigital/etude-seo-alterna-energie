@@ -634,6 +634,9 @@ function SheetItem({
       <Link
         to="/"
         search={{ sheet }}
+        // Already on this sheet: don't navigate again (it re-runs the access
+        // check and refreshes the page, which breaks double-click to rename).
+        onClick={(e) => { if (isActive) e.preventDefault(); }}
         className={cn(
           "group/item relative flex items-center rounded-md pl-4 pr-2 py-2 text-sm transition-colors",
           isActive ? cn("font-medium", ctx.style.active) : cn("text-foreground/80", ctx.style.hover),

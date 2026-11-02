@@ -1143,8 +1143,9 @@ function buildMonthBar() {
     var border = active ? 'var(--blue)' : 'var(--border)';
     var bg = active ? 'var(--blue)' : 'transparent';
     var col = active ? 'white' : 'var(--blue)';
-    var onclick = isEc ? 'loadMonth(null)' : 'loadMonth(' + JSON.stringify(k) + ')';
-    var ondbl = isEc ? 'renameEnCours()' : 'renameMonth(' + JSON.stringify(k) + ')';
+    var tabKey = isEc ? 'null' : JSON.stringify(k);
+    var onclick = 'monthTabClick(' + tabKey + ')';
+    var ondbl = 'monthTabDblClick(' + tabKey + ')';
     return '<span style="display:inline-flex;align-items:center;gap:1px;">'
       + '<button ondblclick=\'' + ondbl + '\' onclick=\'' + onclick + '\' title="Double-clic pour renommer" style="font-size:11px;padding:3px 8px;border-radius:4px 0 0 4px;border:1px solid ' + border + ';background:' + bg + ';color:' + col + ';cursor:pointer;">' + getMonthLabel(k) + '</button>'
       + (isEditor?'<button class="editor-only" onclick=\'deleteMonth(' + JSON.stringify(k) + ')\' title="Supprimer ce mois" style="font-size:10px;padding:3px 5px;border-radius:0 4px 4px 0;border:1px solid ' + border + ';border-left:none;background:' + bg + ';color:' + (active?'rgba(255,255,255,0.7)':'var(--text3)') + ';cursor:pointer;line-height:1;">✕</button>':'')
@@ -1159,7 +1160,7 @@ function buildMonthBar() {
     var hasWork = Array.isArray(wl) && wl.some(function(s){ return s && s[bk] && s[bk].status === 'done'; });
     if (hasWork) {
       var dLabel = (window.monthLabels && monthLabels['__en_cours__']) || 'Nouveau mois';
-      draftBtn = '<button onclick="loadMonth(null)" ondblclick="renameEnCours()" title="Double-clic pour renommer" style="font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;border:1px solid var(--blue);background:var(--blue);color:white;">' + dLabel + '</button>';
+      draftBtn = '<button onclick="monthTabClick(null)" ondblclick="monthTabDblClick(null)" title="Double-clic pour renommer" style="font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;border:1px solid var(--blue);background:var(--blue);color:white;">' + dLabel + '</button>';
     }
   }
 
@@ -1191,6 +1192,22 @@ function deleteMonth(key) {
     showToast('✓ Mois supprimé (local) — synchronisation…', 'success');
     deleteMonthOnServer(key);
   });
+}
+
+// Onglets de mois : un clic charge le mois, un double-clic le renomme.
+// Charger un mois redessine toute la barre : si on le fait immédiatement, le
+// bouton est remplacé entre les deux clics et le double-clic ne part jamais.
+// On attend donc un court instant avant de charger, et le double-clic annule.
+var _monthClickTimer = null;
+function monthTabClick(key) {
+  if (_monthClickTimer) { clearTimeout(_monthClickTimer); _monthClickTimer = null; }
+  if (currentMonthKey === key) return; // déjà affiché : rien à recharger
+  _monthClickTimer = setTimeout(function() { _monthClickTimer = null; loadMonth(key); }, 300);
+}
+function monthTabDblClick(key) {
+  if (_monthClickTimer) { clearTimeout(_monthClickTimer); _monthClickTimer = null; }
+  if (!isEditor) { if (currentMonthKey !== key) loadMonth(key); return; }
+  if (key === null) renameEnCours(); else renameMonth(key);
 }
 
 function renameMonth(key) {
