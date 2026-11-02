@@ -1,121 +1,211 @@
 /**
- * Calendrier des newsletters Grands Comptes (rubrique « Calendriers newsletters »).
- * Chaque newsletter suit 6 étapes datées, du choix des sujets à l'envoi aux clients.
+ * Calendriers des newsletters (rubrique « Calendriers newsletters »).
+ * Chaque calendrier a ses étapes, son équipe et ses newsletters datées.
  * Les statuts se déduisent uniquement des dates et du jour courant.
  */
 
-export type Actor = "presta" | "b2b" | "comm" | "clients";
+export type Actor = { label: string; short: string; people: string };
 
-export const ACTORS: Record<Actor, { label: string; people: string }> = {
-  presta: { label: "Prestataire", people: "Watt's Next" },
-  b2b: { label: "B2B", people: "Guillaume" },
-  comm: { label: "Communication", people: "Geoffrey & Matthieu" },
-  clients: { label: "Clients", people: "Envoi aux clients Grands Comptes" },
+export type Step = {
+  key: string;
+  label: string;
+  short: string;
+  from: string;
+  /** Absent for a step done within one team (e.g. writing by Communication). */
+  to?: string;
 };
-
-/** Relecture is shared between B2B and Communication. */
-export const REVIEWERS = "Lidvine & Guillaume";
-
-export type Step = { key: string; label: string; short: string; from: Actor; to: Actor };
-
-export const STEPS: Step[] = [
-  {
-    key: "proposition",
-    label: "Proposition de sujets",
-    short: "Sujets",
-    from: "presta",
-    to: "b2b",
-  },
-  {
-    key: "validation",
-    label: "Validation / ajustement",
-    short: "Validation",
-    from: "b2b",
-    to: "presta",
-  },
-  {
-    key: "redaction",
-    label: "Envoi de la rédaction",
-    short: "Rédaction",
-    from: "presta",
-    to: "b2b",
-  },
-  {
-    key: "relecture",
-    label: "Relecture & modifications",
-    short: "Relecture",
-    from: "b2b",
-    to: "comm",
-  },
-  { key: "bat", label: "BAT", short: "BAT", from: "comm", to: "b2b" },
-  { key: "envoi", label: "Envoi de la newsletter", short: "Envoi", from: "comm", to: "clients" },
-];
 
 export type Newsletter = { id: string; month: number; year: number; dates: string[] };
 
-/** Dates des 6 étapes (AAAA-MM-JJ), dans l'ordre de STEPS. */
-export const NEWSLETTERS: Newsletter[] = [
-  {
-    id: "2026-03",
-    month: 3,
-    year: 2026,
-    dates: ["2026-02-18", "2026-02-23", "2026-03-02", "2026-03-04", "2026-03-04", "2026-03-05"],
+export type TeamMember = { role: string; people: string; step: number };
+
+export type NewsletterCalendar = {
+  id: "grands-comptes" | "interne";
+  title: string;
+  description: string;
+  actors: Record<string, Actor>;
+  steps: Step[];
+  /** Who's who; `step` borrows that step's colour for the chip. */
+  team: TeamMember[];
+  newsletters: Newsletter[];
+};
+
+export const GRANDS_COMPTES: NewsletterCalendar = {
+  id: "grands-comptes",
+  title: "Grands Comptes",
+  description: "Planning 2026 de production et d'envoi des newsletters Grands Comptes.",
+  actors: {
+    presta: { label: "Prestataire", short: "Presta", people: "Watt's Next" },
+    b2b: { label: "B2B", short: "B2B", people: "Guillaume" },
+    comm: { label: "Communication", short: "Comm.", people: "Geoffrey & Matthieu" },
+    clients: { label: "Clients", short: "Clients", people: "Clients Grands Comptes" },
   },
-  {
-    id: "2026-04",
-    month: 4,
-    year: 2026,
-    dates: ["2026-03-18", "2026-03-23", "2026-04-02", "2026-04-04", "2026-04-04", "2026-04-05"],
+  steps: [
+    {
+      key: "proposition",
+      label: "Proposition de sujets",
+      short: "Sujets",
+      from: "presta",
+      to: "b2b",
+    },
+    {
+      key: "validation",
+      label: "Validation / ajustement",
+      short: "Validation",
+      from: "b2b",
+      to: "presta",
+    },
+    {
+      key: "redaction",
+      label: "Envoi de la rédaction",
+      short: "Rédaction",
+      from: "presta",
+      to: "b2b",
+    },
+    {
+      key: "relecture",
+      label: "Relecture & modifications",
+      short: "Relecture",
+      from: "b2b",
+      to: "comm",
+    },
+    { key: "bat", label: "BAT", short: "BAT", from: "comm", to: "b2b" },
+    { key: "envoi", label: "Envoi de la newsletter", short: "Envoi", from: "comm", to: "clients" },
+  ],
+  team: [
+    { role: "Prestataire", people: "Watt's Next", step: 0 },
+    { role: "B2B", people: "Guillaume", step: 1 },
+    { role: "Relecture", people: "Lidvine & Guillaume", step: 3 },
+    { role: "Communication", people: "Geoffrey & Matthieu", step: 4 },
+  ],
+  newsletters: [
+    {
+      id: "2026-03",
+      month: 3,
+      year: 2026,
+      dates: ["2026-02-18", "2026-02-23", "2026-03-02", "2026-03-04", "2026-03-04", "2026-03-05"],
+    },
+    {
+      id: "2026-04",
+      month: 4,
+      year: 2026,
+      dates: ["2026-03-18", "2026-03-23", "2026-04-02", "2026-04-04", "2026-04-04", "2026-04-05"],
+    },
+    {
+      id: "2026-05",
+      month: 5,
+      year: 2026,
+      dates: ["2026-04-20", "2026-04-23", "2026-04-29", "2026-05-04", "2026-05-05", "2026-05-07"],
+    },
+    {
+      id: "2026-06",
+      month: 6,
+      year: 2026,
+      dates: ["2026-05-18", "2026-05-20", "2026-05-27", "2026-06-01", "2026-06-02", "2026-06-04"],
+    },
+    {
+      id: "2026-07",
+      month: 7,
+      year: 2026,
+      dates: ["2026-06-22", "2026-06-24", "2026-07-01", "2026-07-06", "2026-07-06", "2026-07-09"],
+    },
+    {
+      id: "2026-08",
+      month: 8,
+      year: 2026,
+      dates: ["2026-07-20", "2026-07-22", "2026-07-29", "2026-08-03", "2026-08-04", "2026-08-06"],
+    },
+    {
+      id: "2026-09",
+      month: 9,
+      year: 2026,
+      dates: ["2026-08-19", "2026-08-24", "2026-08-31", "2026-09-01", "2026-09-02", "2026-09-03"],
+    },
+    {
+      id: "2026-10",
+      month: 10,
+      year: 2026,
+      dates: ["2026-09-21", "2026-09-23", "2026-09-30", "2026-10-05", "2026-10-06", "2026-10-08"],
+    },
+    {
+      id: "2026-11",
+      month: 11,
+      year: 2026,
+      dates: ["2026-10-19", "2026-10-21", "2026-10-28", "2026-11-02", "2026-11-03", "2026-11-05"],
+    },
+    {
+      id: "2026-12",
+      month: 12,
+      year: 2026,
+      dates: ["2026-11-18", "2026-11-23", "2026-11-30", "2026-12-02", "2026-12-02", "2026-12-03"],
+    },
+  ],
+};
+
+export const INTERNE: NewsletterCalendar = {
+  id: "interne",
+  title: "Interne",
+  description: "Planning 2026 de production et d'envoi de la newsletter interne (trimestrielle).",
+  actors: {
+    comm: { label: "Communication", short: "Comm.", people: "Geoffrey & Matthieu" },
+    personnel: { label: "Personnel", short: "Personnel", people: "Tous les internes" },
+    b2c: { label: "B2C", short: "B2C", people: "Christophe" },
+    pdg: { label: "PDG", short: "PDG", people: "Henri" },
   },
-  {
-    id: "2026-05",
-    month: 5,
-    year: 2026,
-    dates: ["2026-04-20", "2026-04-23", "2026-04-29", "2026-05-04", "2026-05-05", "2026-05-07"],
-  },
-  {
-    id: "2026-06",
-    month: 6,
-    year: 2026,
-    dates: ["2026-05-18", "2026-05-20", "2026-05-27", "2026-06-01", "2026-06-02", "2026-06-04"],
-  },
-  {
-    id: "2026-07",
-    month: 7,
-    year: 2026,
-    dates: ["2026-06-22", "2026-06-24", "2026-07-01", "2026-07-06", "2026-07-06", "2026-07-09"],
-  },
-  {
-    id: "2026-08",
-    month: 8,
-    year: 2026,
-    dates: ["2026-07-20", "2026-07-22", "2026-07-29", "2026-08-03", "2026-08-04", "2026-08-06"],
-  },
-  {
-    id: "2026-09",
-    month: 9,
-    year: 2026,
-    dates: ["2026-08-19", "2026-08-24", "2026-08-31", "2026-09-01", "2026-09-02", "2026-09-03"],
-  },
-  {
-    id: "2026-10",
-    month: 10,
-    year: 2026,
-    dates: ["2026-09-21", "2026-09-23", "2026-09-30", "2026-10-05", "2026-10-06", "2026-10-08"],
-  },
-  {
-    id: "2026-11",
-    month: 11,
-    year: 2026,
-    dates: ["2026-10-19", "2026-10-21", "2026-10-28", "2026-11-02", "2026-11-03", "2026-11-05"],
-  },
-  {
-    id: "2026-12",
-    month: 12,
-    year: 2026,
-    dates: ["2026-11-18", "2026-11-23", "2026-11-30", "2026-12-02", "2026-12-02", "2026-12-03"],
-  },
-];
+  steps: [
+    { key: "sujets", label: "Récolte des sujets", short: "Sujets", from: "comm", to: "personnel" },
+    { key: "redaction", label: "Rédaction", short: "Rédaction", from: "comm" },
+    { key: "bat", label: "BAT", short: "BAT", from: "comm", to: "b2c" },
+    { key: "bat-final", label: "BAT final", short: "BAT final", from: "comm", to: "pdg" },
+    {
+      key: "envoi",
+      label: "Envoi de la newsletter",
+      short: "Envoi",
+      from: "comm",
+      to: "personnel",
+    },
+  ],
+  team: [
+    { role: "Communication", people: "Geoffrey & Matthieu", step: 1 },
+    { role: "B2C", people: "Christophe", step: 2 },
+    { role: "PDG", people: "Henri", step: 3 },
+    { role: "Personnel", people: "Tous les internes", step: 4 },
+  ],
+  newsletters: [
+    {
+      id: "2026-02",
+      month: 2,
+      year: 2026,
+      dates: ["2026-02-06", "2026-02-10", "2026-02-10", "2026-02-11", "2026-02-16"],
+    },
+    {
+      id: "2026-05",
+      month: 5,
+      year: 2026,
+      dates: ["2026-05-07", "2026-05-12", "2026-05-12", "2026-05-13", "2026-05-18"],
+    },
+    {
+      id: "2026-08",
+      month: 8,
+      year: 2026,
+      dates: ["2026-08-07", "2026-08-11", "2026-08-11", "2026-08-12", "2026-08-17"],
+    },
+    {
+      id: "2026-11",
+      month: 11,
+      year: 2026,
+      dates: ["2026-11-06", "2026-11-10", "2026-11-10", "2026-11-12", "2026-11-16"],
+    },
+  ],
+};
+
+export const NEWSLETTER_CALENDARS = [GRANDS_COMPTES, INTERNE];
+
+/** "B2B → Communication", or just "Communication" for an in-team step. */
+export function stepFlow(cal: NewsletterCalendar, step: Step, short = false): string {
+  const name = (key: string) => (short ? cal.actors[key].short : cal.actors[key].label);
+  return step.to ? `${name(step.from)} → ${name(step.to)}` : name(step.from);
+}
 
 const MONTHS = [
   "janvier",
@@ -226,12 +316,12 @@ export type Deadline = {
 };
 
 /** Every step from today on, soonest first (steps sharing a date keep their order). */
-export function upcomingDeadlines(today: Date, list = NEWSLETTERS): Deadline[] {
+export function upcomingDeadlines(cal: NewsletterCalendar, today: Date): Deadline[] {
   const out: Deadline[] = [];
-  for (const n of list) {
+  for (const n of cal.newsletters) {
     n.dates.forEach((date, index) => {
       const days = daysUntil(date, today);
-      if (days >= 0) out.push({ newsletter: n, step: STEPS[index], index, date, days });
+      if (days >= 0) out.push({ newsletter: n, step: cal.steps[index], index, date, days });
     });
   }
   return out.sort(
@@ -241,17 +331,14 @@ export function upcomingDeadlines(today: Date, list = NEWSLETTERS): Deadline[] {
 }
 
 /** Next newsletter still to be sent (its send date is today or later). */
-export function nextSend(today: Date, list = NEWSLETTERS): Newsletter | null {
-  return list.find((n) => daysUntil(n.dates[n.dates.length - 1], today) >= 0) ?? null;
+export function nextSend(cal: NewsletterCalendar, today: Date): Newsletter | null {
+  return cal.newsletters.find((n) => daysUntil(n.dates[n.dates.length - 1], today) >= 0) ?? null;
 }
 
 /** Tab-separated table, ready to paste into Excel. */
-export function toSpreadsheetText(list = NEWSLETTERS): string {
-  const head = [
-    "Newsletter",
-    ...STEPS.map((s) => `${s.label} (${ACTORS[s.from].label} → ${ACTORS[s.to].label})`),
-  ];
-  const rows = list.map((n) => [
+export function toSpreadsheetText(cal: NewsletterCalendar): string {
+  const head = ["Newsletter", ...cal.steps.map((s) => `${s.label} (${stepFlow(cal, s)})`)];
+  const rows = cal.newsletters.map((n) => [
     newsletterTitle(n),
     ...n.dates.map((d) => parseDay(d).toLocaleDateString("fr-FR")),
   ]);
@@ -259,31 +346,29 @@ export function toSpreadsheetText(list = NEWSLETTERS): string {
 }
 
 /** iCalendar file with one all-day event per step, for Outlook / Google Agenda. */
-export function toICalendar(list = NEWSLETTERS): string {
+export function toICalendar(cal: NewsletterCalendar): string {
   const esc = (s: string) => s.replace(/[\\;,]/g, (c) => `\\${c}`);
-  const day = (iso: string) => iso.replaceAll("-", "");
-  const next = (iso: string) => {
-    const d = parseDay(iso);
-    d.setDate(d.getDate() + 1);
-    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
-  };
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Digicom//Calendrier newsletters Grands Comptes//FR",
+    `PRODID:-//Digicom//Calendrier newsletters ${cal.title}//FR`,
     "CALSCALE:GREGORIAN",
   ];
-  for (const n of list) {
+  for (const n of cal.newsletters) {
     n.dates.forEach((iso, i) => {
-      const s = STEPS[i];
+      const s = cal.steps[i];
+      const start = parseDay(iso);
+      const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
       lines.push(
         "BEGIN:VEVENT",
-        `UID:newsletter-gc-${n.id}-${s.key}@digicom`,
+        `UID:newsletter-${cal.id}-${n.id}-${s.key}@digicom`,
         "DTSTAMP:20260101T000000Z",
-        `DTSTART;VALUE=DATE:${day(iso)}`,
-        `DTEND;VALUE=DATE:${next(iso)}`,
-        `SUMMARY:${esc(`NL Grands Comptes ${newsletterTitle(n)} · ${s.label}`)}`,
-        `DESCRIPTION:${esc(`${ACTORS[s.from].label} → ${ACTORS[s.to].label}`)}`,
+        `DTSTART;VALUE=DATE:${fmt(start)}`,
+        `DTEND;VALUE=DATE:${fmt(end)}`,
+        `SUMMARY:${esc(`NL ${cal.title} ${newsletterTitle(n)} · ${s.label}`)}`,
+        `DESCRIPTION:${esc(stepFlow(cal, s))}`,
         "END:VEVENT",
       );
     });

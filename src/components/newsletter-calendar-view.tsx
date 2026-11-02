@@ -4,10 +4,6 @@ import { Button } from "@/components/ui/button";
 import { EditableText } from "@/components/editable-text";
 import { cn } from "@/lib/utils";
 import {
-  ACTORS,
-  NEWSLETTERS,
-  REVIEWERS,
-  STEPS,
   formatDay,
   formatLongDay,
   isWeekend,
@@ -16,48 +12,118 @@ import {
   nextSend,
   parseDay,
   relativeDay,
+  stepFlow,
   stepStates,
   toICalendar,
   toSpreadsheetText,
   upcomingDeadlines,
-  type Actor,
   type Newsletter,
+  type NewsletterCalendar,
   type NewsletterState,
   type StepState,
 } from "@/lib/newsletter-calendar";
 
-/* Colours kept from the original calendar (Vattenfall blue / yellow + phase tints). */
-type Phase = "presta" | "b2b" | "comm" | "client";
-const STEP_PHASE: Phase[] = ["presta", "b2b", "presta", "comm", "comm", "client"];
-const PHASE: Record<Phase, { cell: string; dot: string; label: string }> = {
-  presta: {
-    cell: "bg-[#e8f4fd] border-[#b6d4fe] text-[#0057B8]",
-    dot: "bg-[#0057B8]",
-    label: "Prestataire",
-  },
-  b2b: { cell: "bg-[#cfe2ff] border-[#9ec5fe] text-[#003d82]", dot: "bg-[#003d82]", label: "B2B" },
-  comm: {
-    cell: "bg-[#fff9e6] border-[#f5d76e] text-[#7a5c00]",
-    dot: "bg-[#FDD20A]",
-    label: "Communication",
-  },
-  client: {
-    cell: "bg-[#ffe6e6] border-[#f5c2c2] text-[#a12a2a]",
-    dot: "bg-[#e57373]",
-    label: "Clients",
-  },
-};
-const ACTOR_SHORT: Record<Actor, string> = {
-  presta: "Presta",
-  b2b: "B2B",
-  comm: "Comm.",
-  clients: "Clients",
+/**
+ * Colours kept from each original calendar. Class names are written out in
+ * full so Tailwind picks them up.
+ */
+type Theme = {
+  header: string;
+  chip: string;
+  title: string;
+  hero: string;
+  /** Highlight colour: today's step, active newsletter, progress. */
+  accent: string;
+  accentSoft: string;
+  accentText: string;
+  onAccent: string;
+  ring: string;
+  activeCard: string;
+  todayBox: string;
+  soonChip: string;
+  tab: string;
+  stepGrid: string;
+  status: Record<NewsletterState, string>;
+  /** One entry per step: tinted cell and matching dot. */
+  cells: string[];
+  dots: string[];
 };
 
-const STATUS: Record<NewsletterState, { label: string; className: string }> = {
-  sent: { label: "Envoyée", className: "bg-[#d4edda] text-[#155724]" },
-  active: { label: "En cours", className: "bg-[#FDD20A] text-[#003d82]" },
-  upcoming: { label: "À venir", className: "bg-[#cfe2ff] text-[#0057B8]" },
+const THEMES: Record<NewsletterCalendar["id"], Theme> = {
+  // Vattenfall blue / yellow with the original phase tints.
+  "grands-comptes": {
+    header: "border-[#0057B8]/20 bg-gradient-to-r from-[#0057B8]/12 via-[#0057B8]/5 to-transparent",
+    chip: "text-[#0057B8]",
+    title: "text-[#003d82]",
+    hero: "bg-[#003d82]",
+    accent: "bg-[#FDD20A]",
+    accentSoft: "bg-[#FDD20A]/50",
+    accentText: "text-[#FDD20A]",
+    onAccent: "text-[#003d82]",
+    ring: "ring-[#FDD20A]",
+    activeCard: "border-[#FDD20A] ring-1 ring-[#FDD20A]/60",
+    todayBox: "border-[#FDD20A] bg-[#FDD20A]/20",
+    soonChip: "bg-[#cfe2ff] text-[#003d82]",
+    tab: "text-[#003d82]",
+    stepGrid: "lg:grid-cols-6",
+    status: {
+      sent: "bg-[#d4edda] text-[#155724]",
+      active: "bg-[#FDD20A] text-[#003d82]",
+      upcoming: "bg-[#cfe2ff] text-[#0057B8]",
+    },
+    cells: [
+      "bg-[#e8f4fd] border-[#b6d4fe] text-[#0057B8]",
+      "bg-[#cfe2ff] border-[#9ec5fe] text-[#003d82]",
+      "bg-[#e8f4fd] border-[#b6d4fe] text-[#0057B8]",
+      "bg-[#fff9e6] border-[#f5d76e] text-[#7a5c00]",
+      "bg-[#fff9e6] border-[#f5d76e] text-[#7a5c00]",
+      "bg-[#ffe6e6] border-[#f5c2c2] text-[#a12a2a]",
+    ],
+    dots: [
+      "bg-[#0057B8]",
+      "bg-[#003d82]",
+      "bg-[#0057B8]",
+      "bg-[#FDD20A]",
+      "bg-[#FDD20A]",
+      "bg-[#e57373]",
+    ],
+  },
+  // Burgundy / amber with the original peach tints.
+  interne: {
+    header: "border-[#7a1430]/20 bg-gradient-to-r from-[#7a1430]/12 via-[#7a1430]/5 to-transparent",
+    chip: "text-[#7a1430]",
+    title: "text-[#4a0d1c]",
+    hero: "bg-gradient-to-br from-[#7a1430] to-[#4a0d1c]",
+    accent: "bg-[#fbbf24]",
+    accentSoft: "bg-[#fbbf24]/50",
+    accentText: "text-[#fbbf24]",
+    onAccent: "text-[#4a0d1c]",
+    ring: "ring-[#fbbf24]",
+    activeCard: "border-[#fbbf24] ring-1 ring-[#fbbf24]/60",
+    todayBox: "border-[#fbbf24] bg-[#fbbf24]/20",
+    soonChip: "bg-[#fde7dc] text-[#7a1430]",
+    tab: "text-[#7a1430]",
+    stepGrid: "lg:grid-cols-5",
+    status: {
+      sent: "bg-[#dcfce7] text-[#166534]",
+      active: "bg-[#ffedd5] text-[#9a3412]",
+      upcoming: "bg-[#e0e7ff] text-[#3730a3]",
+    },
+    cells: [
+      "bg-[#fde7dc] border-[#f6c9b3] text-[#7a1430]",
+      "bg-[#fcd6c4] border-[#f3b89c] text-[#7a1430]",
+      "bg-[#fde7dc] border-[#f6c9b3] text-[#7a1430]",
+      "bg-[#fcd6c4] border-[#f3b89c] text-[#7a1430]",
+      "bg-[#fbc3a8] border-[#ee9f7d] text-[#4a0d1c]",
+    ],
+    dots: ["bg-[#e8a07f]", "bg-[#c2410c]", "bg-[#e8a07f]", "bg-[#c2410c]", "bg-[#7a1430]"],
+  },
+};
+
+const STATUS_LABEL: Record<NewsletterState, string> = {
+  sent: "Envoyée",
+  active: "En cours",
+  upcoming: "À venir",
 };
 
 type Filter = "next" | "sent" | "all";
@@ -72,30 +138,33 @@ function useToday() {
 }
 
 export function NewsletterCalendarView({
+  calendar: cal,
   groupLabel,
   sheetLabel,
   onRenameGroup,
   onRenameSheet,
 }: {
+  calendar: NewsletterCalendar;
   groupLabel: string;
   sheetLabel: string;
   onRenameGroup: (v: string) => void;
   onRenameSheet: (v: string) => void;
 }) {
+  const theme = THEMES[cal.id];
   const today = useToday();
   const [filter, setFilter] = useState<Filter>("next");
   const [copied, setCopied] = useState<"ok" | "error" | null>(null);
 
   const states = useMemo(
-    () => new Map(NEWSLETTERS.map((n) => [n.id, newsletterState(n, today)])),
-    [today],
+    () => new Map(cal.newsletters.map((n) => [n.id, newsletterState(n, today)])),
+    [cal, today],
   );
   const counts = {
-    next: NEWSLETTERS.filter((n) => states.get(n.id) !== "sent").length,
-    sent: NEWSLETTERS.filter((n) => states.get(n.id) === "sent").length,
-    all: NEWSLETTERS.length,
+    next: cal.newsletters.filter((n) => states.get(n.id) !== "sent").length,
+    sent: cal.newsletters.filter((n) => states.get(n.id) === "sent").length,
+    all: cal.newsletters.length,
   };
-  const shown = NEWSLETTERS.filter((n) =>
+  const shown = cal.newsletters.filter((n) =>
     filter === "all"
       ? true
       : filter === "sent"
@@ -106,7 +175,7 @@ export function NewsletterCalendarView({
 
   async function copyForExcel() {
     try {
-      await navigator.clipboard.writeText(toSpreadsheetText());
+      await navigator.clipboard.writeText(toSpreadsheetText(cal));
       setCopied("ok");
     } catch {
       setCopied("error");
@@ -116,35 +185,33 @@ export function NewsletterCalendarView({
 
   function downloadCalendar() {
     const url = URL.createObjectURL(
-      new Blob([toICalendar()], { type: "text/calendar;charset=utf-8" }),
+      new Blob([toICalendar(cal)], { type: "text/calendar;charset=utf-8" }),
     );
     const a = document.createElement("a");
     a.href = url;
-    a.download = "newsletters-grands-comptes-2026.ics";
+    a.download = `newsletters-${cal.id}-2026.ics`;
     a.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <header className="border-b border-[#0057B8]/20 bg-gradient-to-r from-[#0057B8]/12 via-[#0057B8]/5 to-transparent px-5 py-6 md:px-8">
+      <header className={cn("border-b px-5 py-6 md:px-8", theme.header)}>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
             <EditableText
               as="div"
-              className="text-[11px] font-semibold uppercase tracking-widest text-[#0057B8]"
+              className={cn("text-[11px] font-semibold uppercase tracking-widest", theme.chip)}
               value={groupLabel}
               onCommit={onRenameGroup}
             />
             <EditableText
               as="h2"
-              className="mt-1 text-2xl font-semibold tracking-tight text-[#003d82]"
+              className={cn("mt-1 text-2xl font-semibold tracking-tight", theme.title)}
               value={sheetLabel}
               onCommit={onRenameSheet}
             />
-            <p className="mt-1 text-sm text-muted-foreground">
-              Planning 2026 de production et d'envoi des newsletters Grands Comptes.
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{cal.description}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -170,11 +237,11 @@ export function NewsletterCalendarView({
 
       <div className="mx-auto max-w-6xl space-y-6 px-5 py-6 md:px-8">
         <div className="grid gap-4 lg:grid-cols-3">
-          <NextSendCard today={today} />
-          <UpcomingCard today={today} />
+          <NextSendCard cal={cal} theme={theme} today={today} />
+          <UpcomingCard cal={cal} theme={theme} today={today} />
         </div>
 
-        <TeamStrip />
+        <TeamStrip cal={cal} theme={theme} />
 
         <section className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -201,7 +268,7 @@ export function NewsletterCalendarView({
                   className={cn(
                     "rounded-md px-3 py-1 text-xs font-medium transition-colors",
                     filter === key
-                      ? "bg-card text-[#003d82] shadow-sm"
+                      ? cn("bg-card shadow-sm", theme.tab)
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -219,7 +286,14 @@ export function NewsletterCalendarView({
           ) : (
             <div className="space-y-3">
               {shown.map((n) => (
-                <NewsletterRow key={n.id} newsletter={n} state={states.get(n.id)!} today={today} />
+                <NewsletterRow
+                  key={n.id}
+                  cal={cal}
+                  theme={theme}
+                  newsletter={n}
+                  state={states.get(n.id)!}
+                  today={today}
+                />
               ))}
             </div>
           )}
@@ -229,11 +303,13 @@ export function NewsletterCalendarView({
   );
 }
 
-function NextSendCard({ today }: { today: Date }) {
-  const n = nextSend(today);
+type CardProps = { cal: NewsletterCalendar; theme: Theme; today: Date };
+
+function NextSendCard({ cal, theme, today }: CardProps) {
+  const n = nextSend(cal, today);
   if (!n) {
     return (
-      <div className="min-w-0 rounded-xl bg-[#003d82] p-5 text-white shadow-sm">
+      <div className={cn("min-w-0 rounded-xl p-5 text-white shadow-sm", theme.hero)}>
         <p className="text-xs font-medium uppercase tracking-wider text-white/70">Prochain envoi</p>
         <p className="mt-2 text-lg font-semibold">Toutes les newsletters 2026 sont envoyées.</p>
       </div>
@@ -241,10 +317,14 @@ function NextSendCard({ today }: { today: Date }) {
   }
   const send = n.dates[n.dates.length - 1];
   const steps = stepStates(n, today);
-  const doneCount = steps.filter((s) => s === "done").length;
   const focus = steps.findIndex((s) => s === "today" || s === "current");
   return (
-    <div className="relative min-w-0 overflow-hidden rounded-xl bg-[#003d82] p-5 text-white shadow-sm">
+    <div
+      className={cn(
+        "relative min-w-0 overflow-hidden rounded-xl p-5 text-white shadow-sm",
+        theme.hero,
+      )}
+    >
       <div
         className="pointer-events-none absolute -right-10 -top-10 size-36 rounded-full bg-white/[0.06]"
         aria-hidden
@@ -255,7 +335,13 @@ function NextSendCard({ today }: { today: Date }) {
       <p className="mt-2 text-2xl font-semibold">{newsletterTitle(n)}</p>
       <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-white/85">
         <span className="first-letter:uppercase">{formatLongDay(send)}</span>
-        <span className="rounded-full bg-[#FDD20A] px-2 py-0.5 text-xs font-semibold text-[#003d82]">
+        <span
+          className={cn(
+            "rounded-full px-2 py-0.5 text-xs font-semibold",
+            theme.accent,
+            theme.onAccent,
+          )}
+        >
           {relativeDay(send, today)}
         </span>
       </div>
@@ -267,9 +353,9 @@ function NextSendCard({ today }: { today: Date }) {
               className={cn(
                 "h-1.5 flex-1 rounded-full",
                 s === "done"
-                  ? "bg-[#FDD20A]"
+                  ? theme.accent
                   : s === "today" || s === "current"
-                    ? "bg-[#FDD20A]/50"
+                    ? theme.accentSoft
                     : "bg-white/20",
               )}
             />
@@ -278,30 +364,30 @@ function NextSendCard({ today }: { today: Date }) {
         <p className="mt-2 text-sm text-white/85">
           {focus >= 0 ? (
             <>
-              Étape {focus + 1} sur {STEPS.length} :{" "}
-              <span className="font-semibold text-white">{STEPS[focus].label}</span>
+              Étape {focus + 1} sur {cal.steps.length} :{" "}
+              <span className="font-semibold text-white">{cal.steps[focus].label}</span>
             </>
           ) : (
             <>
-              {doneCount} étape{doneCount > 1 ? "s" : ""} sur {STEPS.length} terminée
-              {doneCount > 1 ? "s" : ""} · démarre le {formatDay(n.dates[0])}
+              Démarre le {formatDay(n.dates[0])} :{" "}
+              <span className="font-semibold text-white">{cal.steps[0].label}</span>
             </>
           )}
         </p>
       </div>
       <ol className="mt-4 space-y-1.5 border-t border-white/15 pt-4">
-        {STEPS.map((step, i) => {
+        {cal.steps.map((step, i) => {
           const st = steps[i];
           const focused = st === "today" || st === "current";
           return (
             <li key={step.key} className="flex items-center gap-2.5 text-sm">
               {st === "done" ? (
-                <Check className="size-4 shrink-0 text-[#FDD20A]" aria-label="Terminé" />
+                <Check className={cn("size-4 shrink-0", theme.accentText)} aria-label="Terminé" />
               ) : (
                 <span
                   className={cn(
                     "mx-1 size-2 shrink-0 rounded-full",
-                    focused ? "bg-[#FDD20A] ring-4 ring-[#FDD20A]/25" : "bg-white/30",
+                    focused ? cn(theme.accent, "ring-4 ring-white/15") : "bg-white/30",
                   )}
                   aria-hidden
                 />
@@ -321,7 +407,7 @@ function NextSendCard({ today }: { today: Date }) {
               <span
                 className={cn(
                   "shrink-0 text-xs tabular-nums",
-                  focused ? "text-[#FDD20A]" : "text-white/55",
+                  focused ? theme.accentText : "text-white/55",
                 )}
               >
                 {st === "today" ? "Aujourd'hui" : formatDay(n.dates[i])}
@@ -334,17 +420,16 @@ function NextSendCard({ today }: { today: Date }) {
   );
 }
 
-function UpcomingCard({ today }: { today: Date }) {
-  const items = upcomingDeadlines(today).slice(0, 5);
+function UpcomingCard({ cal, theme, today }: CardProps) {
+  const items = upcomingDeadlines(cal, today).slice(0, 5);
   return (
     <div className="min-w-0 rounded-xl border border-border bg-card p-5 shadow-sm lg:col-span-2">
-      <h3 className="text-sm font-semibold text-[#003d82]">Prochaines échéances</h3>
+      <h3 className={cn("text-sm font-semibold", theme.title)}>Prochaines échéances</h3>
       {items.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">Plus aucune échéance prévue en 2026.</p>
       ) : (
         <ul className="mt-3 divide-y divide-border">
           {items.map((d) => {
-            const phase = PHASE[STEP_PHASE[d.index]];
             const date = parseDay(d.date);
             const isToday = d.days === 0;
             return (
@@ -355,32 +440,42 @@ function UpcomingCard({ today }: { today: Date }) {
                 <div
                   className={cn(
                     "flex w-11 shrink-0 flex-col items-center rounded-lg border py-1 leading-none",
-                    isToday ? "border-[#FDD20A] bg-[#FDD20A]/20" : "border-border bg-muted/40",
+                    isToday ? theme.todayBox : "border-border bg-muted/40",
                   )}
                 >
-                  <span className="text-base font-semibold text-[#003d82]">{date.getDate()}</span>
+                  <span className={cn("text-base font-semibold", theme.title)}>
+                    {date.getDate()}
+                  </span>
                   <span className="mt-0.5 text-[10px] uppercase text-muted-foreground">
                     {date.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "")}
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-1.5 truncate text-sm font-medium">
-                    <span className={cn("size-2 shrink-0 rounded-full", phase.dot)} aria-hidden />
+                    <span
+                      className={cn("size-2 shrink-0 rounded-full", theme.dots[d.index])}
+                      aria-hidden
+                    />
                     {d.step.label}
                     {isWeekend(d.date) && <WeekendFlag />}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {newsletterTitle(d.newsletter)} · {ACTORS[d.step.from].label}{" "}
-                    <ArrowRight className="inline size-3" /> {ACTORS[d.step.to].label}
+                    {newsletterTitle(d.newsletter)} · {cal.actors[d.step.from].label}
+                    {d.step.to && (
+                      <>
+                        {" "}
+                        <ArrowRight className="inline size-3" /> {cal.actors[d.step.to].label}
+                      </>
+                    )}
                   </p>
                 </div>
                 <span
                   className={cn(
                     "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
                     isToday
-                      ? "bg-[#FDD20A] text-[#003d82]"
+                      ? cn(theme.accent, theme.onAccent)
                       : d.days <= 7
-                        ? "bg-[#cfe2ff] text-[#003d82]"
+                        ? theme.soonChip
                         : "bg-muted text-muted-foreground",
                   )}
                 >
@@ -395,24 +490,18 @@ function UpcomingCard({ today }: { today: Date }) {
   );
 }
 
-function TeamStrip() {
-  const team: { phase: Phase; role: string; people: string }[] = [
-    { phase: "presta", role: "Prestataire", people: ACTORS.presta.people },
-    { phase: "b2b", role: "B2B", people: ACTORS.b2b.people },
-    { phase: "comm", role: "Relecture", people: REVIEWERS },
-    { phase: "comm", role: "Communication", people: ACTORS.comm.people },
-  ];
+function TeamStrip({ cal, theme }: { cal: NewsletterCalendar; theme: Theme }) {
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
       <span className="mr-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         <Users className="size-3.5" /> Équipe
       </span>
-      {team.map((t) => (
+      {cal.team.map((t) => (
         <span
           key={t.role}
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
-            PHASE[t.phase].cell,
+            theme.cells[t.step],
           )}
         >
           <span className="font-semibold">{t.role}</span>
@@ -424,22 +513,25 @@ function TeamStrip() {
 }
 
 function NewsletterRow({
+  cal,
+  theme,
   newsletter: n,
   state,
   today,
 }: {
+  cal: NewsletterCalendar;
+  theme: Theme;
   newsletter: Newsletter;
   state: NewsletterState;
   today: Date;
 }) {
   const steps = stepStates(n, today);
   const send = n.dates[n.dates.length - 1];
-  const status = STATUS[state];
   return (
     <article
       className={cn(
         "rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md",
-        state === "active" ? "border-[#FDD20A] ring-1 ring-[#FDD20A]/60" : "border-border",
+        state === "active" ? theme.activeCard : "border-border",
         state === "sent" && "bg-muted/30",
       )}
     >
@@ -447,42 +539,60 @@ function NewsletterRow({
         <h4
           className={cn(
             "text-base font-semibold",
-            state === "sent" ? "text-muted-foreground" : "text-[#003d82]",
+            state === "sent" ? "text-muted-foreground" : theme.title,
           )}
         >
           {newsletterTitle(n)}
         </h4>
         <span
-          className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", status.className)}
+          className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", theme.status[state])}
         >
-          {status.label}
+          {STATUS_LABEL[state]}
         </span>
         <span className="ml-auto text-xs text-muted-foreground">
           Envoi <span className="font-medium text-foreground">{formatDay(send)}</span>
           {state !== "sent" && <> · {relativeDay(send, today)}</>}
         </span>
       </div>
-      <ol className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        {STEPS.map((step, i) => (
-          <StepCell key={step.key} index={i} date={n.dates[i]} state={steps[i]} />
+      <ol className={cn("mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3", theme.stepGrid)}>
+        {cal.steps.map((step, i) => (
+          <StepCell
+            key={step.key}
+            cal={cal}
+            theme={theme}
+            index={i}
+            date={n.dates[i]}
+            state={steps[i]}
+          />
         ))}
       </ol>
     </article>
   );
 }
 
-function StepCell({ index, date, state }: { index: number; date: string; state: StepState }) {
-  const step = STEPS[index];
-  const phase = PHASE[STEP_PHASE[index]];
+function StepCell({
+  cal,
+  theme,
+  index,
+  date,
+  state,
+}: {
+  cal: NewsletterCalendar;
+  theme: Theme;
+  index: number;
+  date: string;
+  state: StepState;
+}) {
+  const step = cal.steps[index];
   const focus = state === "today" || state === "current";
   return (
     <li
-      title={`${step.label} · ${ACTORS[step.from].label} → ${ACTORS[step.to].label}`}
+      title={`${step.label} · ${stepFlow(cal, step)}`}
       className={cn(
         "relative rounded-lg border px-2.5 py-2",
-        phase.cell,
+        theme.cells[index],
         state === "done" && "opacity-55",
-        focus && "ring-2 ring-[#FDD20A] ring-offset-1",
+        focus && cn("ring-2 ring-offset-1", theme.ring),
       )}
     >
       <div className="flex items-center gap-1.5">
@@ -490,7 +600,13 @@ function StepCell({ index, date, state }: { index: number; date: string; state: 
         <span className="truncate text-xs font-semibold">{step.short}</span>
         {state === "done" && <Check className="ml-auto size-3.5 shrink-0" aria-label="Terminé" />}
         {state === "today" && (
-          <span className="ml-auto shrink-0 rounded bg-[#FDD20A] px-1 text-[10px] font-bold text-[#003d82]">
+          <span
+            className={cn(
+              "ml-auto shrink-0 rounded px-1 text-[10px] font-bold",
+              theme.accent,
+              theme.onAccent,
+            )}
+          >
             Auj.
           </span>
         )}
@@ -499,9 +615,7 @@ function StepCell({ index, date, state }: { index: number; date: string; state: 
         {formatDay(date)}
         {isWeekend(date) && <WeekendFlag />}
       </p>
-      <p className="mt-0.5 truncate text-[10px] opacity-75">
-        {ACTOR_SHORT[step.from]} → {ACTOR_SHORT[step.to]}
-      </p>
+      <p className="mt-0.5 truncate text-[10px] opacity-75">{stepFlow(cal, step, true)}</p>
     </li>
   );
 }

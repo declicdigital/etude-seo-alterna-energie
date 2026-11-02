@@ -1,27 +1,36 @@
 import { describe, expect, it } from "vitest";
 import {
-  NEWSLETTERS,
-  STEPS,
+  GRANDS_COMPTES,
+  INTERNE,
+  NEWSLETTER_CALENDARS,
   daysUntil,
   isWeekend,
   newsletterState,
   nextSend,
   relativeDay,
+  stepFlow,
   stepStates,
   toICalendar,
   toSpreadsheetText,
   upcomingDeadlines,
+  type NewsletterCalendar,
 } from "@/lib/newsletter-calendar";
+import { sheetAllowed } from "@/lib/sections";
 
-const byId = (id: string) => NEWSLETTERS.find((n) => n.id === id)!;
+const byId = (cal: NewsletterCalendar, id: string) => cal.newsletters.find((n) => n.id === id)!;
 const day = (y: number, m: number, d: number, h = 12) => new Date(y, m - 1, d, h);
 
-describe("newsletter calendar", () => {
-  it("has six dated steps per newsletter, in order", () => {
-    for (const n of NEWSLETTERS) {
-      expect(n.dates).toHaveLength(STEPS.length);
+describe("newsletter calendars", () => {
+  it.each(NEWSLETTER_CALENDARS)("$title: one date per step, in order, known actors", (cal) => {
+    for (const n of cal.newsletters) {
+      expect(n.dates).toHaveLength(cal.steps.length);
       expect([...n.dates].sort()).toEqual(n.dates);
     }
+    for (const s of cal.steps) {
+      expect(cal.actors[s.from]).toBeDefined();
+      if (s.to) expect(cal.actors[s.to]).toBeDefined();
+    }
+    for (const t of cal.team) expect(cal.steps[t.step]).toBeDefined();
   });
 
   it("counts whole days regardless of the time of day", () => {
@@ -32,7 +41,7 @@ describe("newsletter calendar", () => {
 
   it("marks past steps done, today's step, and the next one as upcoming", () => {
     const today = day(2026, 11, 2);
-    expect(stepStates(byId("2026-11"), today)).toEqual([
+    expect(stepStates(byId(GRANDS_COMPTES, "2026-11"), today)).toEqual([
       "done",
       "done",
       "done",
@@ -40,13 +49,13 @@ describe("newsletter calendar", () => {
       "upcoming",
       "upcoming",
     ]);
-    expect(newsletterState(byId("2026-11"), today)).toBe("active");
-    expect(newsletterState(byId("2026-10"), today)).toBe("sent");
-    expect(newsletterState(byId("2026-12"), today)).toBe("upcoming");
+    expect(newsletterState(byId(GRANDS_COMPTES, "2026-11"), today)).toBe("active");
+    expect(newsletterState(byId(GRANDS_COMPTES, "2026-10"), today)).toBe("sent");
+    expect(newsletterState(byId(GRANDS_COMPTES, "2026-12"), today)).toBe("upcoming");
   });
 
   it("points at the current step between two deadlines", () => {
-    expect(stepStates(byId("2026-11"), day(2026, 10, 25))).toEqual([
+    expect(stepStates(byId(GRANDS_COMPTES, "2026-11"), day(2026, 10, 25))).toEqual([
       "done",
       "done",
       "current",
@@ -57,15 +66,29 @@ describe("newsletter calendar", () => {
   });
 
   it("lists the next deadlines across overlapping newsletters", () => {
-    const next = upcomingDeadlines(day(2026, 11, 2)).slice(0, 4);
+    const next = upcomingDeadlines(GRANDS_COMPTES, day(2026, 11, 2)).slice(0, 4);
     expect(next.map((d) => `${d.newsletter.id} ${d.step.key} ${d.days}`)).toEqual([
       "2026-11 relecture 0",
       "2026-11 bat 1",
       "2026-11 envoi 3",
       "2026-12 proposition 16",
     ]);
-    expect(nextSend(day(2026, 11, 2))?.id).toBe("2026-11");
-    expect(nextSend(day(2026, 12, 4))).toBeNull();
+    expect(nextSend(GRANDS_COMPTES, day(2026, 11, 2))?.id).toBe("2026-11");
+    expect(nextSend(GRANDS_COMPTES, day(2026, 12, 4))).toBeNull();
+  });
+
+  it("follows the internal newsletter's quarterly cycle", () => {
+    const today = day(2026, 11, 2);
+    expect(nextSend(INTERNE, today)?.id).toBe("2026-11");
+    expect(newsletterState(byId(INTERNE, "2026-11"), today)).toBe("upcoming");
+    expect(newsletterState(byId(INTERNE, "2026-08"), today)).toBe("sent");
+    expect(upcomingDeadlines(INTERNE, today)[0]).toMatchObject({ date: "2026-11-06", days: 4 });
+  });
+
+  it("describes who hands over to whom", () => {
+    expect(stepFlow(INTERNE, INTERNE.steps[3])).toBe("Communication → PDG");
+    expect(stepFlow(INTERNE, INTERNE.steps[1])).toBe("Communication");
+    expect(stepFlow(GRANDS_COMPTES, GRANDS_COMPTES.steps[3], true)).toBe("B2B → Comm.");
   });
 
   it("flags weekend deadlines", () => {
@@ -74,11 +97,24 @@ describe("newsletter calendar", () => {
   });
 
   it("exports to Excel and to calendar apps", () => {
-    const tsv = toSpreadsheetText().split("\n");
-    expect(tsv).toHaveLength(NEWSLETTERS.length + 1);
-    expect(tsv[1].split("\t")[0]).toBe("Mars 2026");
-    const ics = toICalendar();
-    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(NEWSLETTERS.length * STEPS.length);
+    const tsv = toSpreadsheetText(INTERNE).split("\n");
+    expect(tsv).toHaveLength(INTERNE.newsletters.length + 1);
+    expect(tsv[1].split("\t")[0]).toBe("Février 2026");
+    const ics = toICalendar(GRANDS_COMPTES);
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(
+      GRANDS_COMPTES.newsletters.length * GRANDS_COMPTES.steps.length,
+    );
     expect(ics).toContain("DTSTART;VALUE=DATE:20261105\r\nDTEND;VALUE=DATE:20261106");
+    expect(toICalendar(INTERNE)).toContain("UID:newsletter-interne-2026-11-bat-final@digicom");
+  });
+
+  it("keeps access to the internal calendar for existing accounts unless refused", () => {
+    expect(sheetAllowed("NEWSLETTER INTERNE", ["Blog"])).toBe(true);
+    expect(sheetAllowed("NEWSLETTER INTERNE", ["Blog", "!Calendriers newsletters/Interne"])).toBe(
+      false,
+    );
+    expect(
+      sheetAllowed("NEWSLETTER GRANDS COMPTES", ["Blog", "!Calendriers newsletters/Interne"]),
+    ).toBe(true);
   });
 });
