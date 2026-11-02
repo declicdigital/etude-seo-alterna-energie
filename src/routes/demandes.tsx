@@ -2,12 +2,13 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getAccess, signOutAndGoToAuth } from "@/lib/access";
-import { SECTION_TREE, ALL_SECTION_KEYS } from "@/lib/sections";
+import { SECTION_TREE, ALL_SECTION_KEYS, grantedSections, serializeSections } from "@/lib/sections";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
 import { useServerFn } from "@tanstack/react-start";
-import { UserPlus, Send } from "lucide-react";
+import { Check, UserPlus, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { invitePerson } from "@/lib/invitations.functions";
 import { getAccessActivity } from "@/lib/access-activity.functions";
 import { formatLastConnection, invitationState, type AccessActivity } from "@/lib/access-activity";
@@ -113,12 +114,16 @@ function RequestsPage() {
     await load();
   }
 
-  async function toggleSection(r: Profile, key: string) {
-    const cur = new Set(r.allowed_sections ?? ALL_SECTION_KEYS);
-    if (cur.has(key)) cur.delete(key); else cur.add(key);
-    const next = ALL_SECTION_KEYS.filter((k) => cur.has(k));
+  async function saveSections(r: Profile, granted: Set<string>) {
+    const next = serializeSections(granted);
     setRows((rs) => (rs ?? []).map((x) => (x.id === r.id ? { ...x, allowed_sections: next } : x)));
     await supabase.from("profiles").update({ allowed_sections: next }).eq("id", r.id);
+  }
+
+  async function toggleSection(r: Profile, key: string) {
+    const cur = grantedSections(r.allowed_sections);
+    if (cur.has(key)) cur.delete(key); else cur.add(key);
+    await saveSections(r, cur);
   }
 
   const pending = (rows ?? []).filter((r) => r.status === "pending");
@@ -192,7 +197,10 @@ function RequestsPage() {
                 <p className="px-4 py-5 text-sm text-emerald-700/70">Rien pour le moment.</p>
               ) : (
                 others.map((r) => (
-                  <Row key={r.id} row={r} extra={r.status === "approved" && r.id !== me ? <SectionToggles row={r} onToggle={(k) => toggleSection(r, k)} /> : null}>
+                  <Row key={r.id} row={r} extra={r.status === "approved" && r.id !== me ? <SectionToggles row={r} onToggle={(k) => toggleSection(r, k)} onSetAll={(on) => {
+                    if (!on && !window.confirm(`Retirer tous les accès de ${r.full_name || r.email} ?`)) return;
+                    void saveSections(r, new Set(on ? ALL_SECTION_KEYS : []));
+                  }} /> : null}>
                     <span
                       className={
                         r.status === "approved"
@@ -228,34 +236,87 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function SectionToggles({ row, onToggle }: { row: Profile; onToggle: (key: string) => void }) {
-  const allowed = new Set(row.allowed_sections ?? ALL_SECTION_KEYS);
-  const chip = (key: string, label: string, on: boolean, dim = false) => (
-    <button
-      key={key}
-      type="button"
-      onClick={() => onToggle(key)}
-      title={on ? "Accès autorisé — cliquer pour retirer" : "Pas d'accès — cliquer pour autoriser"}
-      className={
-        "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors " +
-        (on ? "border-emerald-500 bg-emerald-500 text-white hover:bg-emerald-600" : "border-gray-200 bg-gray-50 text-gray-400 line-through hover:bg-gray-100") +
-        (dim ? " opacity-40" : "")
-      }
-    >
-      {label}
-    </button>
-  );
+function SectionToggles({ row, onToggle, onSetAll }: {
+  row: Profile;
+  onToggle: (key: string) => void;
+  onSetAll: (on: boolean) => void;
+}) {
+  const granted = grantedSections(row.allowed_sections);
+  const openGroups = SECTION_TREE.filter((t) => granted.has(t.group)).length;
   return (
-    <div className="mt-2 flex w-full flex-wrap gap-x-4 gap-y-2">
-      {SECTION_TREE.map((t) => {
-        const g = allowed.has(t.group);
-        return (
-          <div key={t.group} className="flex flex-wrap items-center gap-1.5">
-            {chip(t.group, t.group, g)}
-            {t.subs.map((s) => chip(`${t.group}/${s}`, s, allowed.has(`${t.group}/${s}`), !g))}
-          </div>
-        );
-      })}
+    <div className="w-full rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
+      <div className="mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="text-xs font-semibold uppercase tracking-wide text-emerald-900">Accès</span>
+        <span className="text-xs text-muted-foreground">
+          {openGroups} rubrique{openGroups > 1 ? "s" : ""} sur {SECTION_TREE.length}
+        </span>
+        <div className="ml-auto flex items-center gap-1 text-xs">
+          <button type="button" onClick={() => onSetAll(true)} className="rounded-md px-2 py-1 text-emerald-800 hover:bg-emerald-100">
+            Tout autoriser
+          </button>
+          <span className="text-emerald-200">|</span>
+          <button type="button" onClick={() => onSetAll(false)} className="rounded-md px-2 py-1 text-muted-foreground hover:bg-emerald-100 hover:text-foreground">
+            Tout retirer
+          </button>
+        </div>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {SECTION_TREE.map((t) => {
+          const on = granted.has(t.group);
+          const switchId = `access-${row.id}-${t.group}`;
+          return (
+            <div
+              key={t.group}
+              className={
+                "rounded-lg border p-2.5 transition-colors " +
+                (on ? "border-emerald-200 bg-white shadow-sm" : "border-dashed border-gray-200 bg-white/50")
+              }
+            >
+              <div className="flex items-center gap-2">
+                <span className={"size-2 shrink-0 rounded-full " + t.accent + (on ? "" : " opacity-30")} aria-hidden />
+                <label htmlFor={switchId} className={"min-w-0 flex-1 cursor-pointer truncate text-sm font-medium " + (on ? "text-foreground" : "text-muted-foreground")}>
+                  {t.group}
+                </label>
+                <Switch
+                  id={switchId}
+                  checked={on}
+                  onCheckedChange={() => onToggle(t.group)}
+                  className="data-[state=checked]:bg-emerald-600"
+                />
+              </div>
+              {t.subs.length > 0 ? (
+                <div className="mt-2 flex flex-wrap gap-1.5 pl-4">
+                  {t.subs.map((sub) => {
+                    const key = `${t.group}/${sub}`;
+                    const subOn = granted.has(key);
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        disabled={!on}
+                        aria-pressed={subOn}
+                        onClick={() => onToggle(key)}
+                        title={subOn ? "Accès autorisé — cliquer pour retirer" : "Pas d'accès — cliquer pour autoriser"}
+                        className={
+                          "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 " +
+                          (subOn
+                            ? "border-emerald-200 bg-emerald-50 font-medium text-emerald-800 enabled:hover:bg-emerald-100"
+                            : "border-gray-200 text-muted-foreground enabled:hover:bg-gray-50")
+                        }
+                      >
+                        {subOn && <Check className="size-3" aria-hidden />}
+                        {sub}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="mt-1.5 pl-4 text-xs text-muted-foreground">Toute la rubrique</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

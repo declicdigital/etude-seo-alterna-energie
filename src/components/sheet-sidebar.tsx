@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
-import { sheetAllowed } from "@/lib/sections";
+import { grantedSections, sheetAllowed } from "@/lib/sections";
 
 const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "FAQ", "Benchmark", "Calendriers newsletters", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
 const REMOVED_GROUPS = new Set(["Arborescence", "Suivi", "Docs", "Archives", "Autres"]);
@@ -420,7 +420,8 @@ type RenderCtx = {
 };
 
 function renderGroupBody(group: string, sheets: string[], ctx: RenderCtx) {
-  const structure = SUB_STRUCTURE[group]?.filter((sc) => !ctx.allowed || ctx.allowed.includes(`${group}/${sc.name}`));
+  const granted = ctx.allowed ? grantedSections(ctx.allowed) : null;
+  const structure = SUB_STRUCTURE[group]?.filter((sc) => !granted || granted.has(`${group}/${sc.name}`));
   if (!structure) {
     return (
       <ul className="space-y-0.5">

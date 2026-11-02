@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { canEditBenchmark } from "@/lib/benchmark";
+import { sheetAllowed } from "@/lib/sections";
 
 /**
  * Données de l'outil Benchmark Énergie (rubrique Benchmark de Digicom).
- * Lecture : tout compte Digicom validé. Écriture : Geoffrey uniquement
+ * Lecture : tout compte Digicom validé ayant accès à la rubrique Benchmark.
+ * Écriture : Geoffrey uniquement
  * (rôle admin + son e-mail), vérifié côté serveur à chaque requête.
  */
 
@@ -42,11 +44,13 @@ async function authenticate(request: Request) {
   if (error || !user) return null;
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("status")
+    .select("status, allowed_sections")
     .eq("id", user.id)
     .maybeSingle();
   if (profile?.status !== "approved") return null;
   const { data: isAdmin } = await supabaseAdmin.rpc("has_role", { _user_id: user.id, _role: "admin" });
+  // Same rule as the app's menu: admins see everything, others need Benchmark.
+  if (isAdmin !== true && !sheetAllowed("BENCHMARK", profile.allowed_sections)) return "forbidden" as const;
   return { user, editor: canEditBenchmark(isAdmin === true, user.email) };
 }
 
@@ -56,6 +60,7 @@ export const Route = createFileRoute("/api/public/benchmark-months")({
       GET: async ({ request }) => {
         const auth = await authenticate(request);
         if (!auth) return json({ error: "unauthorized" }, 401);
+        if (auth === "forbidden") return json({ error: "Accès au Benchmark non autorisé." }, 403);
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data, error } = await supabaseAdmin
           .from("benchmark_months")
@@ -67,6 +72,7 @@ export const Route = createFileRoute("/api/public/benchmark-months")({
       POST: async ({ request }) => {
         const auth = await authenticate(request);
         if (!auth) return json({ error: "unauthorized" }, 401);
+        if (auth === "forbidden") return json({ error: "Accès au Benchmark non autorisé." }, 403);
         if (!auth.editor) return json({ error: "Seul Geoffrey peut modifier le benchmark." }, 403);
 
         let raw: unknown;
