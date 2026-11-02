@@ -17,6 +17,7 @@ export const EMBED_SHEETS: Record<string, string> = {
   "SUIVI EDITORIAL": "/suivi-editorial.html",
   "SUIVI STRATEGIE": "/suivi-editorial.html?space=strategie",
   "BENCHMARK": "/benchmark.html",
+  "NEWSLETTER GRANDS COMPTES": "/calendrier-newsletters-grands-comptes.html",
 };
 
 /** FAQ space: request tracker + Particulier/Professionnel lists, rendered by FaqView. */
@@ -245,6 +246,7 @@ export const SHEET_META: Record<
   "SUIVI FAQ": { headerRow: 0, firstDataRow: 0, label: "Demande", group: "FAQ" },
   "FAQ - DEMANDES": { headerRow: 0, firstDataRow: 0, label: "FAQ", group: "FAQ" },
   "BENCHMARK": { headerRow: 0, firstDataRow: 0, label: "Benchmark Énergie", group: "Benchmark" },
+  "NEWSLETTER GRANDS COMPTES": { headerRow: 0, firstDataRow: 0, label: "Grands Comptes", group: "Calendriers newsletters" },
   "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon électricité", group: "Archives" },
   "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon gaz", group: "Archives" },
 };

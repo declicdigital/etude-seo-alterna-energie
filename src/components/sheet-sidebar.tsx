@@ -8,7 +8,7 @@ import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 import { sheetAllowed } from "@/lib/sections";
 
-const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "FAQ", "Benchmark", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
+const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "FAQ", "Benchmark", "Calendriers newsletters", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
 const REMOVED_GROUPS = new Set(["Arborescence", "Suivi", "Docs", "Archives", "Autres"]);
 const ORDER_KEY = "sidebar.groupOrder.v1";
 const PROMOTED_KEY = "sidebar.orderPromoted.v1";
@@ -106,6 +106,12 @@ const GROUP_STYLES: Record<string, {
     active: "bg-emerald-600/15 text-emerald-900 dark:text-emerald-100 font-semibold ring-1 ring-inset ring-emerald-600/30",
     hover: "hover:bg-emerald-600/10 hover:text-emerald-800 dark:hover:text-emerald-200",
     bar: "bg-emerald-600",
+  },
+  "Calendriers newsletters": {
+    header: "bg-blue-700 text-white",
+    active: "bg-blue-600/15 text-blue-900 dark:text-blue-100 font-semibold ring-1 ring-inset ring-blue-600/30",
+    hover: "hover:bg-blue-600/10 hover:text-blue-800 dark:hover:text-blue-200",
+    bar: "bg-blue-600",
   },
   Docs: {
     header: "bg-rose-500 text-white",

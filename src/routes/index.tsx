@@ -127,7 +127,8 @@ function Index() {
     !baseSheet.toUpperCase().startsWith("STRATEGIE") &&
     sheetInfo?.group !== "Stratégie PAC" &&
     sheetInfo?.group !== "FAQ" &&
-    sheetInfo?.group !== "Benchmark";
+    sheetInfo?.group !== "Benchmark" &&
+    sheetInfo?.group !== "Calendriers newsletters";
   const embedSrc = isGuide ? null : embedSrcOf(sheet);
   const editorialFrame = useRef<HTMLIFrameElement>(null);
   const sendReminder = useServerFn(sendStepReminder);
