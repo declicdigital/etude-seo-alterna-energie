@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  SME,
   B2C,
   B2C_CADENCE,
   GRANDS_COMPTES,
@@ -187,6 +188,26 @@ describe("newsletter calendars", () => {
       expect(sheetAllowed("NEWSLETTER B2C", ["Blog"])).toBe(true);
       expect(sheetAllowed("NEWSLETTER B2C", ["Blog", "!Calendriers newsletters/B2C"])).toBe(false);
     });
+  });
+});
+
+describe("SME", () => {
+  it("shares Grands Comptes' steps and dates, one newsletter a quarter", () => {
+    for (const n of SME.newsletters) {
+      expect(n.dates).toEqual(byId(GRANDS_COMPTES, n.id).dates);
+    }
+    expect(SME.newsletters.map((n) => n.id)).toEqual([
+      "2026-03",
+      "2026-06",
+      "2026-09",
+      "2026-12",
+      "2027-03",
+      "2027-06",
+      "2027-09",
+      "2027-12",
+    ]);
+    expect(SME.actors.b2b.people).toBe("Killian & Yves");
+    expect(sheetAllowed("NEWSLETTER SME", ["Blog"])).toBe(true);
   });
 });
 

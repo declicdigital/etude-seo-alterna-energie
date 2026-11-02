@@ -89,6 +89,44 @@ const THEMES: Record<NewsletterCalendar["id"], Theme> = {
     ],
   },
   // Burgundy / amber with the original peach tints.
+  // Indigo / teal with amber highlights and the original pastel phases.
+  sme: {
+    header: "border-[#6366f1]/20 bg-gradient-to-r from-[#6366f1]/12 via-[#14b8a6]/8 to-transparent",
+    chip: "text-[#4f46e5]",
+    title: "text-[#0f172a]",
+    hero: "bg-gradient-to-br from-[#4f46e5] to-[#0f766e]",
+    accent: "bg-[#f59e0b]",
+    accentSoft: "bg-[#f59e0b]/50",
+    accentText: "text-[#fbbf24]",
+    onAccent: "text-[#0f172a]",
+    ring: "ring-[#f59e0b]",
+    activeCard: "border-[#f59e0b] ring-1 ring-[#f59e0b]/50",
+    todayBox: "border-[#f59e0b] bg-[#f59e0b]/15",
+    soonChip: "bg-[#e0e7ff] text-[#3730a3]",
+    tab: "text-[#4f46e5]",
+    stepGrid: "lg:grid-cols-6",
+    status: {
+      sent: "bg-[#dcfce7] text-[#166534]",
+      active: "bg-[#ffedd5] text-[#9a3412]",
+      upcoming: "bg-[#e0e7ff] text-[#3730a3]",
+    },
+    cells: [
+      "bg-[#e0f2fe] border-[#bae6fd] text-[#0369a1]",
+      "bg-[#ede9fe] border-[#c4b5fd] text-[#5b21b6]",
+      "bg-[#e0f2fe] border-[#bae6fd] text-[#0369a1]",
+      "bg-[#fff7ed] border-[#fed7aa] text-[#9a3412]",
+      "bg-[#fff7ed] border-[#fed7aa] text-[#9a3412]",
+      "bg-[#dcfce7] border-[#86efac] text-[#166534]",
+    ],
+    dots: [
+      "bg-[#0ea5e9]",
+      "bg-[#7c3aed]",
+      "bg-[#0ea5e9]",
+      "bg-[#f59e0b]",
+      "bg-[#f59e0b]",
+      "bg-[#16a34a]",
+    ],
+  },
   // Deep green / lime with the original green tints.
   b2c: {
     header:
