@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  B2C,
+  B2C_CADENCE,
   GRANDS_COMPTES,
   GRANDS_COMPTES_CADENCE,
   INTERNE,
@@ -132,6 +134,7 @@ describe("newsletter calendars", () => {
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
       ]);
       expect(of2027(INTERNE).map((n) => n.month)).toEqual([2, 5, 8, 11]);
+      expect(of2027(B2C).map((n) => n.month)).toEqual([1, 4, 7, 10]);
     });
 
     it.each(NEWSLETTER_CALENDARS)("$title: only working days, steps in order", (cal) => {
@@ -163,4 +166,30 @@ describe("newsletter calendars", () => {
       expect(byId(INTERNE, "2027-05").dates.at(-1)).toBe("2027-05-14");
     });
   });
+
+  describe("B2C", () => {
+    it("generates 2027 with the rhythm of April, July and October 2026", () => {
+      for (const month of [4, 7, 10]) {
+        const [n] = generateNewsletters(B2C_CADENCE, 2026, [month]);
+        expect(n.dates).toEqual(byId(B2C, n.id).dates);
+      }
+      expect(of2027B2C()).toEqual([
+        ["2027-01-13", "2027-01-18", "2027-01-21"],
+        ["2027-04-07", "2027-04-12", "2027-04-15"],
+        ["2027-07-07", "2027-07-12", "2027-07-15"],
+        ["2027-10-13", "2027-10-18", "2027-10-21"],
+      ]);
+    });
+
+    it("shows writing as an in-team step and is open by default", () => {
+      expect(stepFlow(B2C, B2C.steps[0])).toBe("Communication");
+      expect(stepFlow(B2C, B2C.steps[1])).toBe("Communication → B2C");
+      expect(sheetAllowed("NEWSLETTER B2C", ["Blog"])).toBe(true);
+      expect(sheetAllowed("NEWSLETTER B2C", ["Blog", "!Calendriers newsletters/B2C"])).toBe(false);
+    });
+  });
 });
+
+function of2027B2C() {
+  return B2C.newsletters.filter((n) => n.year === 2027).map((n) => n.dates);
+}

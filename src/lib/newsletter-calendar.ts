@@ -140,8 +140,16 @@ export function generateNewsletters(
 const ALL_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const QUARTER_MONTHS = [2, 5, 8, 11];
 
+/** Quarterly (Jan, Apr, Jul, Oct), sent on the third Thursday; Wed J-8, Mon J-3. */
+export const B2C_CADENCE: Cadence = {
+  sendDay: (year, month) => nthWeekday(year, month, 4, 1, 3),
+  offsets: [-8, -3, 0],
+};
+
+const B2C_MONTHS = [1, 4, 7, 10];
+
 export type NewsletterCalendar = {
-  id: "grands-comptes" | "interne";
+  id: "grands-comptes" | "interne" | "b2c";
   title: string;
   description: string;
   actors: Record<string, Actor>;
@@ -322,7 +330,34 @@ export const INTERNE: NewsletterCalendar = {
   ],
 };
 
-export const NEWSLETTER_CALENDARS = [GRANDS_COMPTES, INTERNE];
+export const B2C: NewsletterCalendar = {
+  id: "b2c",
+  title: "B2C",
+  description: "Production et envoi de la newsletter B2C trimestrielle.",
+  actors: {
+    comm: { label: "Communication", short: "Comm.", people: "Geoffrey & Matthieu" },
+    b2c: { label: "B2C", short: "B2C", people: "Christophe" },
+    clients: { label: "Clients", short: "Clients", people: "Clients B2C" },
+  },
+  steps: [
+    { key: "redaction", label: "Rédaction", short: "Rédaction", from: "comm" },
+    { key: "bat", label: "BAT", short: "BAT", from: "comm", to: "b2c" },
+    { key: "envoi", label: "Envoi de la newsletter", short: "Envoi", from: "comm", to: "clients" },
+  ],
+  team: [
+    { role: "Communication", people: "Geoffrey & Matthieu", step: 0 },
+    { role: "B2C", people: "Christophe", step: 1 },
+  ],
+  newsletters: [
+    { id: "2026-01", month: 1, year: 2026, dates: ["2026-01-07", "2026-01-13", "2026-01-20"] },
+    { id: "2026-04", month: 4, year: 2026, dates: ["2026-04-08", "2026-04-13", "2026-04-16"] },
+    { id: "2026-07", month: 7, year: 2026, dates: ["2026-07-08", "2026-07-13", "2026-07-16"] },
+    { id: "2026-10", month: 10, year: 2026, dates: ["2026-10-07", "2026-10-12", "2026-10-15"] },
+    ...generateNewsletters(B2C_CADENCE, 2027, B2C_MONTHS),
+  ],
+};
+
+export const NEWSLETTER_CALENDARS = [GRANDS_COMPTES, INTERNE, B2C];
 
 /** "B2B → Communication", or just "Communication" for an in-team step. */
 export function stepFlow(cal: NewsletterCalendar, step: Step, short = false): string {

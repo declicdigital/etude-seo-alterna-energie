@@ -26,6 +26,7 @@ export const FAQ_LIST = "FAQ - DEMANDES";
 /** Newsletter calendars, rendered by NewsletterCalendarView. */
 export const NEWSLETTER_GRANDS_COMPTES = "NEWSLETTER GRANDS COMPTES";
 export const NEWSLETTER_INTERNE = "NEWSLETTER INTERNE";
+export const NEWSLETTER_B2C = "NEWSLETTER B2C";
 
 export const sheetNames = [
   ...Object.keys(workbook).filter((n) => !RETIRED_SHEETS.has(n)),
@@ -34,6 +35,7 @@ export const sheetNames = [
   FAQ_LIST,
   NEWSLETTER_GRANDS_COMPTES,
   NEWSLETTER_INTERNE,
+  NEWSLETTER_B2C,
 ];
 
 export function embedSrcOf(sheet: string): string | null {
@@ -253,6 +255,7 @@ export const SHEET_META: Record<
   "BENCHMARK": { headerRow: 0, firstDataRow: 0, label: "Benchmark Énergie", group: "Benchmark" },
   "NEWSLETTER GRANDS COMPTES": { headerRow: 0, firstDataRow: 0, label: "Grands Comptes", group: "Calendriers newsletters" },
   "NEWSLETTER INTERNE": { headerRow: 0, firstDataRow: 0, label: "Interne", group: "Calendriers newsletters" },
+  "NEWSLETTER B2C": { headerRow: 0, firstDataRow: 0, label: "B2C", group: "Calendriers newsletters" },
   "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon électricité", group: "Archives" },
   "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon gaz", group: "Archives" },
 };

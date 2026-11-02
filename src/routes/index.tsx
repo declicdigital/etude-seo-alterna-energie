@@ -12,10 +12,10 @@ import { WebflowView } from "@/components/webflow-view";
 import { GuideView, HomeView } from "@/components/guide-view";
 import { FaqView } from "@/components/faq-view";
 import { NewsletterCalendarView } from "@/components/newsletter-calendar-view";
-import { GRANDS_COMPTES, INTERNE } from "@/lib/newsletter-calendar";
+import { B2C, GRANDS_COMPTES, INTERNE } from "@/lib/newsletter-calendar";
 import { DetailPanel } from "@/components/detail-panel";
 import { useEdits } from "@/lib/use-edits";
-import { baseSheetOf, embedSrcOf, isStructureSheet, nextRowId, NEWSLETTER_INTERNE, SHEET_META, sheetNames } from "@/lib/workbook";
+import { baseSheetOf, embedSrcOf, isStructureSheet, nextRowId, NEWSLETTER_B2C, NEWSLETTER_INTERNE, SHEET_META, sheetNames } from "@/lib/workbook";
 import { groupColorForSheet } from "@/lib/group-colors";
 import { cn } from "@/lib/utils";
 import { useMeta, metaGet } from "@/lib/use-meta";
@@ -269,7 +269,7 @@ function Index() {
         ) : sheetInfo?.group === "Calendriers newsletters" ? (
           <NewsletterCalendarView
             key={baseSheet}
-            calendar={baseSheet === NEWSLETTER_INTERNE ? INTERNE : GRANDS_COMPTES}
+            calendar={baseSheet === NEWSLETTER_INTERNE ? INTERNE : baseSheet === NEWSLETTER_B2C ? B2C : GRANDS_COMPTES}
             groupLabel={groupLabel}
             sheetLabel={sheetLabel}
             onRenameGroup={(v) => setMetaValue("group", groupName, v)}

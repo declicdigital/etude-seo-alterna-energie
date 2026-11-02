@@ -14,7 +14,7 @@ export const SECTION_TREE: SectionGroup[] = [
   { group: "Blog", subs: ["Particulier", "Professionnel"], accent: "bg-sky-500" },
   { group: "FAQ", subs: ["Particulier", "Professionnel"], accent: "bg-teal-500" },
   { group: "Benchmark", subs: [], defaultOn: true, accent: "bg-emerald-600" },
-  { group: "Calendriers newsletters", subs: ["Grands Comptes", "Interne"], defaultOn: true, accent: "bg-blue-600" },
+  { group: "Calendriers newsletters", subs: ["Grands Comptes", "Interne", "B2C"], defaultOn: true, accent: "bg-blue-600" },
 ];
 
 export const ALL_SECTION_KEYS = SECTION_TREE.flatMap((t) => [t.group, ...t.subs.map((s) => `${t.group}/${s}`)]);
@@ -31,6 +31,7 @@ const FIXED_SUB: Record<string, string> = {
   "STRATEGIE - ARTICLES": "Contenus",
   "NEWSLETTER GRANDS COMPTES": "Grands Comptes",
   "NEWSLETTER INTERNE": "Interne",
+  "NEWSLETTER B2C": "B2C",
 };
 
 /** Keys a person can actually open, resolving defaults and explicit refusals. */
