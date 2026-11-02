@@ -92,7 +92,7 @@ describe("newsletter calendars", () => {
   });
 
   it("describes who hands over to whom", () => {
-    expect(stepFlow(INTERNE, INTERNE.steps[3])).toBe("Communication → PDG");
+    expect(stepFlow(INTERNE, INTERNE.steps[3])).toBe("Communication → Géraldine");
     expect(stepFlow(INTERNE, INTERNE.steps[1])).toBe("Communication");
     expect(stepFlow(GRANDS_COMPTES, GRANDS_COMPTES.steps[3], true)).toBe("B2B → Comm.");
   });

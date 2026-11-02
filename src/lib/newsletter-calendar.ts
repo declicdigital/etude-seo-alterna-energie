@@ -17,7 +17,8 @@ export type Step = {
 
 export type Newsletter = { id: string; month: number; year: number; dates: string[] };
 
-export type TeamMember = { role: string; people: string; step: number };
+/** `people` is omitted when the person has no role label (shown by name only). */
+export type TeamMember = { role: string; people?: string; step: number };
 
 /* ── Cadences ─────────────────────────────────────────────────────────────
  * Newsletters after the dated 2026 plan are generated from each calendar's
@@ -271,13 +272,13 @@ export const INTERNE: NewsletterCalendar = {
     comm: { label: "Communication", short: "Comm.", people: "Geoffrey & Matthieu" },
     personnel: { label: "Personnel", short: "Personnel", people: "Tous les internes" },
     b2c: { label: "B2C", short: "B2C", people: "Christophe" },
-    pdg: { label: "PDG", short: "PDG", people: "Henri" },
+    geraldine: { label: "Géraldine", short: "Géraldine", people: "Géraldine" },
   },
   steps: [
     { key: "sujets", label: "Récolte des sujets", short: "Sujets", from: "comm", to: "personnel" },
     { key: "redaction", label: "Rédaction", short: "Rédaction", from: "comm" },
     { key: "bat", label: "BAT", short: "BAT", from: "comm", to: "b2c" },
-    { key: "bat-final", label: "BAT final", short: "BAT final", from: "comm", to: "pdg" },
+    { key: "bat-final", label: "BAT final", short: "BAT final", from: "comm", to: "geraldine" },
     {
       key: "envoi",
       label: "Envoi de la newsletter",
@@ -289,7 +290,7 @@ export const INTERNE: NewsletterCalendar = {
   team: [
     { role: "Communication", people: "Geoffrey & Matthieu", step: 1 },
     { role: "B2C", people: "Christophe", step: 2 },
-    { role: "PDG", people: "Henri", step: 3 },
+    { role: "Géraldine", step: 3 },
     { role: "Personnel", people: "Tous les internes", step: 4 },
   ],
   newsletters: [

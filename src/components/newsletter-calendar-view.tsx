@@ -522,7 +522,7 @@ function TeamStrip({ cal, theme }: { cal: NewsletterCalendar; theme: Theme }) {
           )}
         >
           <span className="font-semibold">{t.role}</span>
-          <span className="text-foreground/80">{t.people}</span>
+          {t.people && <span className="text-foreground/80">{t.people}</span>}
         </span>
       ))}
     </div>
