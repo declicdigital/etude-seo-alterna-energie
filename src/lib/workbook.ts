@@ -17,18 +17,21 @@ export const EMBED_SHEETS: Record<string, string> = {
   "SUIVI EDITORIAL": "/suivi-editorial.html",
   "SUIVI STRATEGIE": "/suivi-editorial.html?space=strategie",
   "BENCHMARK": "/benchmark.html",
-  "NEWSLETTER GRANDS COMPTES": "/calendrier-newsletters-grands-comptes.html",
 };
 
 /** FAQ space: request tracker + Particulier/Professionnel lists, rendered by FaqView. */
 export const FAQ_SUIVI = "SUIVI FAQ";
 export const FAQ_LIST = "FAQ - DEMANDES";
 
+/** Newsletter calendars, rendered by NewsletterCalendarView. */
+export const NEWSLETTER_GRANDS_COMPTES = "NEWSLETTER GRANDS COMPTES";
+
 export const sheetNames = [
   ...Object.keys(workbook).filter((n) => !RETIRED_SHEETS.has(n)),
   ...Object.keys(EMBED_SHEETS),
   FAQ_SUIVI,
   FAQ_LIST,
+  NEWSLETTER_GRANDS_COMPTES,
 ];
 
 export function embedSrcOf(sheet: string): string | null {

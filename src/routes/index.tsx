@@ -11,6 +11,7 @@ import { TableView } from "@/components/table-view";
 import { WebflowView } from "@/components/webflow-view";
 import { GuideView, HomeView } from "@/components/guide-view";
 import { FaqView } from "@/components/faq-view";
+import { NewsletterCalendarView } from "@/components/newsletter-calendar-view";
 import { DetailPanel } from "@/components/detail-panel";
 import { useEdits } from "@/lib/use-edits";
 import { baseSheetOf, embedSrcOf, isStructureSheet, nextRowId, SHEET_META, sheetNames } from "@/lib/workbook";
@@ -264,6 +265,13 @@ function Index() {
           />
         ) : sheetInfo?.group === "FAQ" ? (
           <FaqView access={access} scope={scope} hash={pageHash} />
+        ) : sheetInfo?.group === "Calendriers newsletters" ? (
+          <NewsletterCalendarView
+            groupLabel={groupLabel}
+            sheetLabel={sheetLabel}
+            onRenameGroup={(v) => setMetaValue("group", groupName, v)}
+            onRenameSheet={(v) => setMetaValue("sheet", sheet, v)}
+          />
         ) : embedSrc ? (
           <iframe
             ref={editorialFrame}
