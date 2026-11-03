@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { faqLink } from "@/lib/faq";
 import { MAIL_SENDER } from "@/lib/mail-sender";
+import { authenticateRequest } from "@/lib/route-auth.server";
 const BodySchema = z.object({
   kind: z.enum(["new", "mention"]),
   id: z.string().min(1).max(60),
@@ -60,6 +61,10 @@ export const Route = createFileRoute("/api/public/notify-faq")({
         } catch {
           return Response.json({ error: "invalid_body" }, { status: 400 });
         }
+        const auth = await authenticateRequest(request);
+        if (!auth) return Response.json({ error: "unauthorized" }, { status: 401 });
+        if (auth.profile.status !== "approved") return Response.json({ error: "forbidden" }, { status: 403 });
+        p.authorName = auth.profile.full_name || auth.profile.email;
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         // The request must exist in the tracker: prevents using this route as an open relay.
         const { data: row } = await supabaseAdmin.from("editorial_kv").select("key").eq("key", `faq:${p.id}`).maybeSingle();

@@ -49,9 +49,11 @@ function mentionedIn(text: string, users: User[]): string[] {
 
 async function notify(body: Record<string, unknown>) {
   try {
+    const { data: s } = await supabase.auth.getSession();
+    const token = s.session?.access_token;
     const r = await fetch("/api/public/notify-faq", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify(body),
     });
     if (!r.ok) alert("La demande est enregistrée, mais le mail n'a pas pu partir.");

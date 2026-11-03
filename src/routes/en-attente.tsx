@@ -43,10 +43,14 @@ function PendingPage() {
       setEmail(a.email);
       if (a.status === "pending" && !notified) {
         notified = true;
-        fetch("/api/public/notify-access-request", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: a.userId }),
+        supabase.auth.getSession().then(({ data }) => {
+          const token = data.session?.access_token;
+          if (!token) return;
+          return fetch("/api/public/notify-access-request", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ userId: a.userId }),
+          });
         }).catch(() => {});
       }
     };

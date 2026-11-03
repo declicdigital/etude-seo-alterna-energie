@@ -970,7 +970,7 @@ async function sendComment(articleId, textarea){
     try{
       const r = await fetch('/api/public/notify-mention', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({
           space: SPACE || undefined,
           articleId,
