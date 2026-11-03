@@ -970,7 +970,7 @@ async function sendComment(articleId, textarea){
     try{
       const r = await fetch('/api/public/notify-mention', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({
           space: SPACE || undefined,
           articleId,
@@ -1046,7 +1046,7 @@ async function deleteComment(articleId, commentId){
 
 const storage = {
   async get(key){
-    const res = await fetch(REST + '?select=value&key=eq.' + encodeURIComponent(KEY(key)), { headers: HEADERS });
+    const res = await fetch(REST + '?select=value&key=eq.' + encodeURIComponent(KEY(key)), { headers: authHeaders() });
     if(!res.ok) throw new Error('Erreur de lecture');
     const rows = await res.json();
     if(!rows.length) throw new Error('Clé absente');
@@ -1055,13 +1055,13 @@ const storage = {
   async set(key, value){
     const res = await fetch(REST + '?on_conflict=key', {
       method: 'POST',
-      headers: Object.assign({}, HEADERS, { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+      headers: Object.assign({}, authHeaders(), { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
       body: JSON.stringify({ key: KEY(key), value, updated_at: new Date().toISOString() })
     });
     if(!res.ok) throw new Error('Erreur d\'enregistrement');
   },
   async delete(key){
-    await fetch(REST + '?key=eq.' + encodeURIComponent(KEY(key)), { method: 'DELETE', headers: HEADERS });
+    await fetch(REST + '?key=eq.' + encodeURIComponent(KEY(key)), { method: 'DELETE', headers: authHeaders() });
   }
 };
 
@@ -1277,7 +1277,7 @@ async function nextBlogRowId(sheet, base){
   if(base === undefined) base = BLOG_BASE_LEN;
   let max = base - 1;
   try{
-    const res = await fetch(CELLS_REST + '?select=row_id&sheet=eq.' + encodeURIComponent(sheet) + '&order=row_id.desc&limit=1', { headers: HEADERS });
+    const res = await fetch(CELLS_REST + '?select=row_id&sheet=eq.' + encodeURIComponent(sheet) + '&order=row_id.desc&limit=1', { headers: authHeaders() });
     if(res.ok){
       const rows = await res.json();
       if(rows.length) max = Math.max(max, rows[0].row_id);
@@ -1303,7 +1303,7 @@ async function insertBlogRow(article, sheet, base){
   const body = values.map(v => ({ sheet, row_id: rowId, col: v[0], value: String(v[1]), updated_at: now }));
   const res = await fetch(CELLS_REST + '?on_conflict=sheet,row_id,col', {
     method: 'POST',
-    headers: Object.assign({}, HEADERS, { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+    headers: Object.assign({}, authHeaders(), { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
     body: JSON.stringify(body)
   });
   if(!res.ok) throw new Error('insert');

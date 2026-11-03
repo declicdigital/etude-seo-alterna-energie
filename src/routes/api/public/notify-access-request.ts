@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { MAIL_SENDER } from "@/lib/mail-sender";
+import { authenticateRequest } from "@/lib/route-auth.server";
 const BodySchema = z.object({ userId: z.string().uuid() });
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const ADMIN_EMAIL = "geoffrey.delabarre@gmail.com";
@@ -18,10 +19,13 @@ export const Route = createFileRoute("/api/public/notify-access-request")({
         try { payload = BodySchema.parse(await request.json()); }
         catch { return Response.json({ error: "invalid_body" }, { status: 400 }); }
 
+        const auth = await authenticateRequest(request);
+        if (!auth) return Response.json({ error: "unauthorized" }, { status: 401 });
+        // Callers may only notify about their own account.
+        if (auth.user.id !== payload.userId) return Response.json({ error: "forbidden" }, { status: 403 });
+        const profile = auth.profile;
+        if (profile.status !== "pending") return Response.json({ sent: 0 });
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data: profile } = await supabaseAdmin
-          .from("profiles").select("email, full_name, status").eq("id", payload.userId).maybeSingle();
-        if (!profile || profile.status !== "pending") return Response.json({ sent: 0 });
 
         // Only one mail per request.
         const key = `access-notified:${payload.userId}`;

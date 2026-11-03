@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { getAccess, signOutAndGoToAuth, type AccessStatus } from "@/lib/access";
 import { pendingEditorialDestination } from "@/lib/editorial-links";
 import logo from "@/assets/alterna-logo.png.asset.json";
@@ -43,10 +44,14 @@ function PendingPage() {
       setEmail(a.email);
       if (a.status === "pending" && !notified) {
         notified = true;
-        fetch("/api/public/notify-access-request", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: a.userId }),
+        supabase.auth.getSession().then(({ data }) => {
+          const token = data.session?.access_token;
+          if (!token) return;
+          return fetch("/api/public/notify-access-request", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ userId: a.userId }),
+          });
         }).catch(() => {});
       }
     };

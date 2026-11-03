@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { editorialLink } from "@/lib/editorial-links";
 import { MAIL_SENDER } from "@/lib/mail-sender";
+import { authenticateRequest } from "@/lib/route-auth.server";
 const BodySchema = z.object({
   space: z.enum(["strategie"]).optional(),
   articleId: z.string().max(200).optional(),
@@ -81,6 +82,12 @@ export const Route = createFileRoute("/api/public/notify-mention")({
         } catch {
           return Response.json({ error: "invalid_body" }, { status: 400 });
         }
+        const auth = await authenticateRequest(request);
+        if (!auth) return Response.json({ error: "unauthorized" }, { status: 401 });
+        if (auth.profile.status !== "approved") return Response.json({ error: "forbidden" }, { status: 403 });
+        // The author is always the verified caller, never a client-supplied value.
+        payload.authorEmail = auth.profile.email;
+        payload.authorName = auth.profile.full_name || payload.authorName;
 
         // Only notify people whose access to the tool has been approved.
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
