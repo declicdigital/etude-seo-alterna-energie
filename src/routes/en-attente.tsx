@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { getAccess, signOutAndGoToAuth, type AccessStatus } from "@/lib/access";
 import { pendingEditorialDestination } from "@/lib/editorial-links";
 import logo from "@/assets/alterna-logo.png.asset.json";
