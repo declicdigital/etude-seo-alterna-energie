@@ -13,7 +13,8 @@ export function editorialLink(id?: string, step?: string, focus?: string, todo =
 }
 
 export function notificationLink(kind: string | undefined, id?: string, step?: string, space?: string): string {
-  if (kind === "relecture") return editorialLink(id, step || "validation", "images", false, space);
+  if (kind === "image") return editorialLink(id, "image", "images", false, space);
+  if (kind === "relecture") return editorialLink(id, "relecture", undefined, false, space);
   if (kind === "integration" || kind === "published") return editorialLink(id, "integration", undefined, false, space);
   return editorialLink(id, step || "redaction", undefined, false, space);
 }
@@ -29,8 +30,9 @@ export function rememberEditorialDestination(href: string): void {
 export function pendingEditorialDestination() {
   const saved = sessionStorage.getItem(RETURN_KEY);
   const url = saved ? new URL(saved, window.location.origin) : null;
-  if (url?.origin === window.location.origin && url.pathname === "/" && SHEETS.includes(url!.searchParams.get("sheet") ?? "") && /^#(article|todo)-/.test(url.hash)) {
-    return { to: "/" as const, search: { sheet: url.searchParams.get("sheet")! }, hash: url.hash.slice(1) };
+  const sheet = url?.searchParams.get("sheet");
+  if (url?.origin === window.location.origin && url.pathname === "/" && sheet && SHEETS.includes(sheet) && /^#(article|todo)-/.test(url.hash)) {
+    return { to: "/" as const, search: { sheet }, hash: url.hash.slice(1) };
   }
   return { to: "/" as const };
 }
