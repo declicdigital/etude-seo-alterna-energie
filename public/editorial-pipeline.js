@@ -22,7 +22,7 @@
   function sync(article, config, space) {
     const existing = Object.fromEntries((article.steps || []).map(s => [s.key, s]));
     const published = !!article.blogRowId || existing.integration?.status === 'done';
-    const legacy = existing.validation || (!existing.image ? existing.relecture : undefined);
+    const legacy = existing.validation || (!existing.image && !article.reviewSteps?.image && !article.legacyReviewStep ? existing.relecture : undefined);
     if(legacy){
       article.legacyReviewStep = article.legacyReviewStep || JSON.parse(JSON.stringify(legacy));
       const pro = isPro(article, space);

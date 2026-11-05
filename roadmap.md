@@ -1,5 +1,7 @@
-- [ ] Reconnecter Brevo et Gmail dans le nouvel espace de travail ; les anciennes connexions ne s'appliquent plus.
-- [ ] Séparer Image (mail Geoffrey seul) puis Relecture (Fannie + Coraline) dans Blog et créations PAC ; garder expert Pro et contournement réécriture PAC, préserver l'historique, adapter rappels et guide, vérifier les transitions.
+- [x] Gmail relié et vérifié dans le nouvel espace (lecture réussie).
+- [ ] Brevo relié mais envoi bloqué : clé refusée par Brevo (« Key not found »), reconnexion proposée et refusée ; attend une clé valide.
+- [x] Image (Geoffrey seul) puis Relecture (Fannie + Coraline) implémentées dans Blog et créations PAC ; expert Pro et contournement réécriture PAC conservés, historique préservé, rappels et guide adaptés ; 43 tests réussis, cases et responsables vérifiés sur les vraies cartes.
+- [ ] Confirmer validation/sauvegarde de bout en bout du nouveau parcours : erreurs intermittentes de lecture/écriture Cloud pendant les contrôles ; aucun mail envoyé, article de contrôle rétabli ; envoi réel attend aussi Brevo valide.
 - [x] Outil Benchmark intégré en rubrique « Benchmark » : 13 mois réels (jan–oct 2026) importés, lecture pour tous les comptes validés, modification réservée à Geoffrey (vérifiée côté serveur), affichage et mode édition contrôlés à l'écran avec son compte ; 5 tests réussis.
 - [x] Brief PAC existant et quatre briefs À rédiger corrigés au 14 octobre 2026 ; dates distinctes saisies à la création et conservées à la validation dans Blog et PAC ; étapes en attente sans date de réalisation affichée, 12 tests réussis, revalidation et rechargement réels vérifiés sans mail.
 - [ ] Reconstituer les anciennes dates Blog déjà écrasées (attend les dates réelles de Geoffrey ; aucun historique fiable disponible dans les données actuelles).
