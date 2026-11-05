@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeft,
-  ArrowRight,
-  CalendarDays,
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
   MoreHorizontal,
   NotebookPen,
   Plus,
@@ -21,8 +21,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EditableText } from "@/components/editable-text";
 import {
+  CardNote,
   MemberAvatar,
+  NOTE_FONT,
   OrganisationCardDialog,
+  StatusMark,
   type CardPatch,
 } from "@/components/organisation-card-dialog";
 import type { Access } from "@/lib/access";
@@ -53,7 +56,7 @@ function errorMessage(e: { message?: string } | null): string {
   if (m.includes("tagged_without_access"))
     return "Une personne taguée n'a pas accès à Organisation.";
   if (m.includes("foreign key") || m.includes("violates"))
-    return "Videz la colonne avant de la supprimer.";
+    return "Videz la section avant de la supprimer.";
   return "L'enregistrement a échoué. Vérifiez votre connexion et réessayez.";
 }
 
@@ -105,6 +108,9 @@ export function OrganisationBoard({
   const [drag, setDrag] = useState<{ id: string; column: string | null; index: number } | null>(
     null,
   );
+  const [folded, setFolded] = useState<Set<string>>(new Set());
+  const wide = useWideScreen();
+  const flushRef = useRef<(() => Promise<void>) | null>(null);
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
 
@@ -175,7 +181,10 @@ export function OrganisationBoard({
     if (id) setOpenId(id);
   }, [hash]);
 
-  function openCard(id: string) {
+  async function openCard(id: string) {
+    if (id === openId) return;
+    // Save what was being typed in the note we leave.
+    await flushRef.current?.();
     setOpenId(id);
     setNotice(null);
     window.history.replaceState(
@@ -231,15 +240,19 @@ export function OrganisationBoard({
     return true;
   }
 
-  async function addCard(columnId: string, title: string) {
+  async function addCard(columnId: string, title: string): Promise<OrgCard | null> {
     const position = positionForDrop(cardsRef.current, "", columnId, Number.MAX_SAFE_INTEGER);
     const { data, error: err } = await supabase
       .from("org_cards")
       .insert({ column_id: columnId, title, position })
       .select(CARD_FIELDS)
       .single();
-    if (err || !data) return setError(errorMessage(err));
+    if (err || !data) {
+      setError(errorMessage(err));
+      return null;
+    }
     setCards((cs) => (cs.some((c) => c.id === data.id) ? cs : [...cs, data as OrgCard]));
+    return data as OrgCard;
   }
 
   async function moveCard(id: string, columnId: string, position: number) {
@@ -270,7 +283,9 @@ export function OrganisationBoard({
   }
 
   async function addColumn() {
-    const title = window.prompt("Nom de la nouvelle colonne", "")?.trim();
+    const title = window
+      .prompt("Nom de la nouvelle section (par exemple « En attente »)", "")
+      ?.trim();
     if (!title) return;
     const last = sortedColumns[sortedColumns.length - 1];
     const { data, error: err } = await supabase
@@ -312,8 +327,8 @@ export function OrganisationBoard({
     const col = columns.find((c) => c.id === id);
     if (!col) return;
     if (cards.some((c) => c.column_id === id))
-      return setError("Videz la colonne avant de la supprimer.");
-    if (!window.confirm(`Supprimer la colonne « ${col.title} » ?`)) return;
+      return setError("Videz la section avant de la supprimer.");
+    if (!window.confirm(`Supprimer la section « ${col.title} » ?`)) return;
     setColumns((cs) => cs.filter((c) => c.id !== id));
     const { error: err } = await supabase.from("org_columns").delete().eq("id", id);
     if (err) {
@@ -329,6 +344,7 @@ export function OrganisationBoard({
   const openCardData = cards.find((c) => c.id === openId) ?? null;
   const mineCount = cards.filter((c) => c.assignee_id === me).length;
   const taggedCount = cards.filter((c) => me && c.tagged_ids.includes(me)).length;
+  const lastColumn = sortedColumns[sortedColumns.length - 1];
 
   function onDrop(columnId: string) {
     if (!drag) return;
@@ -344,189 +360,280 @@ export function OrganisationBoard({
     setDrag(null);
   }
 
+  /** The round mark moves a card one step forward; from the last step it starts over. */
+  function advance(card: OrgCard) {
+    const i = sortedColumns.findIndex((c) => c.id === card.column_id);
+    const next = sortedColumns[(i + 1) % sortedColumns.length];
+    if (next && next.id !== card.column_id) void updateCard(card.id, { column_id: next.id });
+  }
+
+  async function newCard() {
+    const first = sortedColumns[0];
+    if (!first) return;
+    setFilter("all");
+    setQuery("");
+    const card = await addCard(first.id, "Nouvelle fiche");
+    if (card) void openCard(card.id);
+  }
+
+  const noteProps = {
+    columns: sortedColumns,
+    members,
+    me,
+    onChange: updateCard,
+    onDelete: (id: string) => void deleteCard(id),
+    notice,
+  };
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="border-b border-amber-500/25 bg-gradient-to-r from-amber-500/12 via-amber-500/5 to-transparent px-5 py-5 md:px-8">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="min-w-0">
-            <EditableText
-              as="div"
-              className="text-[11px] font-semibold uppercase tracking-widest text-amber-700 dark:text-amber-300"
-              value={groupLabel}
-              onCommit={onRenameGroup}
-            />
-            <EditableText
-              as="h2"
-              className="mt-1 text-2xl font-semibold tracking-tight text-amber-950 dark:text-amber-50"
-              value={sheetLabel}
-              onCommit={onRenameSheet}
-            />
-            <p className="mt-1 text-sm text-muted-foreground">
-              Les fiches de l'équipe : cliquez sur une fiche pour l'ouvrir en note, glissez-la pour
-              la déplacer.
-            </p>
-          </div>
-          <Button size="sm" variant="outline" onClick={() => void addColumn()}>
-            <Plus /> Colonne
-          </Button>
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 border-b border-border px-5 pb-4 pt-6 md:px-8">
+        <div className="min-w-0">
+          <EditableText
+            as="div"
+            className="text-sm font-medium text-amber-700 dark:text-amber-300"
+            value={groupLabel}
+            onCommit={onRenameGroup}
+          />
+          <EditableText
+            as="h2"
+            className={cn("text-3xl font-semibold tracking-tight text-foreground", NOTE_FONT)}
+            value={sheetLabel}
+            onCommit={onRenameSheet}
+          />
         </div>
-
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <label className="relative w-full min-w-0 sm:w-auto sm:max-w-xs sm:flex-1">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <label className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <span className="sr-only">Rechercher dans les fiches</span>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher dans les fiches…"
-              className="h-8 w-full rounded-md border border-border bg-card pl-8 pr-8 text-sm outline-none focus:ring-2 focus:ring-amber-500/40"
+              placeholder="Rechercher"
+              className="h-9 w-full rounded-full border border-border bg-background pl-8 pr-8 text-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
             />
             {query && (
               <button
                 type="button"
                 onClick={() => setQuery("")}
                 aria-label="Effacer la recherche"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
               >
                 <X className="size-3.5" />
               </button>
             )}
           </label>
-          <div
-            role="tablist"
-            aria-label="Filtrer les fiches"
-            className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5"
+          <Button
+            size="sm"
+            className="h-9 rounded-full bg-amber-700 px-4 text-white hover:bg-amber-800"
+            onClick={() => void newCard()}
           >
-            {(
-              [
-                ["all", "Toutes", cards.length],
-                ["mine", "Assignées à moi", mineCount],
-                ["tagged", "Où je suis tagué", taggedCount],
-              ] as const
-            ).map(([key, label, count]) => (
-              <button
-                key={key}
-                role="tab"
-                aria-selected={filter === key}
-                onClick={() => setFilter(key)}
-                className={cn(
-                  "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
-                  filter === key
-                    ? "bg-card text-amber-800 shadow-sm dark:text-amber-200"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {label} <span className="ml-0.5 tabular-nums opacity-60">{count}</span>
-              </button>
-            ))}
-          </div>
+            <Plus /> Nouvelle fiche
+          </Button>
         </div>
-        {error && (
-          <p role="alert" className="mt-3 flex items-center gap-2 text-sm text-destructive">
-            {error}
+        <nav aria-label="Filtrer les fiches" className="-mb-4 flex w-full gap-5 text-sm">
+          {(
+            [
+              ["all", "Toutes", cards.length],
+              ["mine", "Mes fiches", mineCount],
+              ["tagged", "Où je suis tagué", taggedCount],
+            ] as const
+          ).map(([key, label, count]) => (
             <button
+              key={key}
               type="button"
-              onClick={() => setError(null)}
-              className="rounded p-0.5 hover:bg-destructive/10"
-              aria-label="Fermer"
+              aria-current={filter === key}
+              onClick={() => setFilter(key)}
+              className={cn(
+                "border-b-2 pb-3 transition-colors",
+                filter === key
+                  ? "border-amber-600 font-medium text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
             >
-              <X className="size-3.5" />
+              {label} <span className="tabular-nums text-muted-foreground">{count}</span>
             </button>
-          </p>
-        )}
+          ))}
+        </nav>
       </header>
 
-      <div className="flex-1 overflow-x-auto overflow-y-hidden">
-        {loading ? (
-          <div className="flex gap-4 p-5 md:px-8">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-64 w-72 shrink-0 animate-pulse rounded-xl bg-muted/60" />
-            ))}
-          </div>
-        ) : (
-          <div className="flex h-full snap-x snap-mandatory items-start gap-4 p-5 md:snap-none md:px-8">
-            {sortedColumns.map((col, ci) => {
-              const colCards = sortByPosition(visible.filter((c) => c.column_id === col.id));
-              const total = cards.filter((c) => c.column_id === col.id).length;
-              return (
-                <BoardColumn
+      {error && (
+        <p
+          role="alert"
+          className="flex items-center gap-2 border-b border-destructive/20 bg-destructive/5 px-5 py-2 text-sm text-destructive md:px-8"
+        >
+          {error}
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="ml-auto rounded p-0.5 hover:bg-destructive/10"
+            aria-label="Fermer"
+          >
+            <X className="size-3.5" />
+          </button>
+        </p>
+      )}
+
+      <div className="flex min-h-0 flex-1">
+        <div
+          className={cn(
+            "min-h-0 overflow-y-auto",
+            wide ? "w-[28rem] shrink-0 border-r border-border xl:w-[32rem]" : "flex-1",
+          )}
+        >
+          {loading ? (
+            <div className="space-y-3 p-6">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="h-10 animate-pulse rounded-md bg-muted/70" />
+              ))}
+            </div>
+          ) : (
+            <div className="pb-10">
+              {sortedColumns.map((col, ci) => (
+                <Section
                   key={col.id}
                   column={col}
-                  cards={colCards}
-                  total={total}
-                  isFirst={ci === 0}
-                  isLast={ci === sortedColumns.length - 1}
+                  index={ci}
+                  total={sortedColumns.length}
+                  cards={sortByPosition(visible.filter((c) => c.column_id === col.id))}
+                  count={cards.filter((c) => c.column_id === col.id).length}
+                  folded={folded.has(col.id)}
+                  onFold={() =>
+                    setFolded((f) => {
+                      const n = new Set(f);
+                      if (n.has(col.id)) n.delete(col.id);
+                      else n.add(col.id);
+                      return n;
+                    })
+                  }
                   members={byMember}
+                  selected={openId}
                   drag={drag}
                   setDrag={setDrag}
                   onDrop={() => onDrop(col.id)}
-                  onOpen={openCard}
+                  onOpen={(id) => void openCard(id)}
+                  onAdvance={advance}
                   onAdd={(t) => void addCard(col.id, t)}
                   onRename={(t) => void updateColumn(col.id, { title: t.slice(0, 120) })}
                   onShift={(d) => shiftColumn(col.id, d)}
                   onDelete={() => void deleteColumn(col.id)}
+                  isDone={col.id === lastColumn?.id && sortedColumns.length > 1}
                 />
-              );
-            })}
-            {!sortedColumns.length && (
-              <div className="rounded-xl border border-dashed border-border p-8 text-sm text-muted-foreground">
-                Aucune colonne. Ajoutez-en une pour commencer.
+              ))}
+              <button
+                type="button"
+                onClick={() => void addColumn()}
+                className="mx-5 mt-4 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-muted hover:text-foreground md:mx-8"
+              >
+                <Plus className="size-4" /> Ajouter une section
+              </button>
+            </div>
+          )}
+        </div>
+
+        {wide && (
+          <div className="min-h-0 flex-1 overflow-y-auto bg-amber-50/40 dark:bg-muted/20">
+            {openCardData ? (
+              <div className="mx-auto max-w-3xl">
+                <CardNote
+                  key={openCardData.id}
+                  card={openCardData}
+                  flushRef={flushRef}
+                  {...noteProps}
+                />
+              </div>
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
+                <NotebookPen className="size-8 text-amber-700/40" />
+                <p className={cn("max-w-xs text-lg text-muted-foreground", NOTE_FONT)}>
+                  Ouvrez une fiche pour lire ou écrire sa note.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => void newCard()}
+                >
+                  <Plus /> Nouvelle fiche
+                </Button>
               </div>
             )}
-            <div className="w-1 shrink-0" aria-hidden />
           </div>
         )}
       </div>
 
-      <OrganisationCardDialog
-        card={openCardData}
-        columns={sortedColumns}
-        members={members}
-        me={me}
-        open={!!openCardData}
-        onClose={closeCard}
-        onChange={updateCard}
-        onDelete={(id) => void deleteCard(id)}
-        notice={notice}
-      />
+      {!wide && (
+        <OrganisationCardDialog
+          card={openCardData}
+          open={!!openCardData}
+          onClose={closeCard}
+          {...noteProps}
+        />
+      )}
     </div>
   );
 }
 
-function BoardColumn({
+/** Two panes from 1024 px; below, the note opens full screen. */
+function useWideScreen() {
+  const query = "(min-width: 1024px)";
+  const [wide, setWide] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(query).matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const on = () => setWide(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return wide;
+}
+
+type DragState = { id: string; column: string | null; index: number } | null;
+
+function Section({
   column,
-  cards,
+  index,
   total,
-  isFirst,
-  isLast,
+  cards,
+  count,
+  folded,
+  onFold,
   members,
+  selected,
   drag,
   setDrag,
   onDrop,
   onOpen,
+  onAdvance,
   onAdd,
   onRename,
   onShift,
   onDelete,
+  isDone,
 }: {
   column: OrgColumn;
-  cards: OrgCard[];
+  index: number;
   total: number;
-  isFirst: boolean;
-  isLast: boolean;
+  cards: OrgCard[];
+  count: number;
+  folded: boolean;
+  onFold: () => void;
   members: Map<string, OrgMember>;
-  drag: { id: string; column: string | null; index: number } | null;
-  setDrag: (d: { id: string; column: string | null; index: number } | null) => void;
+  selected: string | null;
+  drag: DragState;
+  setDrag: (d: DragState) => void;
   onDrop: () => void;
   onOpen: (id: string) => void;
+  onAdvance: (card: OrgCard) => void;
   onAdd: (title: string) => void;
   onRename: (title: string) => void;
   onShift: (dir: -1 | 1) => void;
   onDelete: () => void;
+  isDone: boolean;
 }) {
-  const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
-  const listRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const over = drag?.column === column.id;
 
   function indexAt(clientY: number): number {
@@ -540,28 +647,22 @@ function BoardColumn({
     return i === -1 ? items.length : i;
   }
 
-  function submit() {
-    const t = draft.trim();
-    if (t) onAdd(t.slice(0, 300));
-    setDraft("");
-  }
-
   const shown = cards.filter((c) => c.id !== drag?.id || !over);
 
   return (
     <section
       aria-label={column.title}
       className={cn(
-        "flex max-h-full w-[85vw] max-w-[19rem] shrink-0 snap-start flex-col rounded-xl border bg-muted/40 transition-colors sm:w-72",
-        over ? "border-amber-400 bg-amber-50/60 dark:bg-amber-950/20" : "border-border",
+        "mt-6 transition-colors first:mt-4",
+        over && "bg-amber-50/70 dark:bg-amber-950/20",
       )}
       onDragOver={(e) => {
         if (!drag) return;
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
-        const index = indexAt(e.clientY);
-        if (drag.column !== column.id || drag.index !== index)
-          setDrag({ ...drag, column: column.id, index });
+        const i = folded ? count : indexAt(e.clientY);
+        if (drag.column !== column.id || drag.index !== i)
+          setDrag({ ...drag, column: column.id, index: i });
       }}
       onDragLeave={(e) => {
         if (drag?.column === column.id && !e.currentTarget.contains(e.relatedTarget as Node)) {
@@ -573,142 +674,136 @@ function BoardColumn({
         onDrop();
       }}
     >
-      <div className="flex items-center gap-2 px-3 pb-2 pt-3">
+      <div className="group/head flex items-center gap-2 px-5 md:px-8">
+        <button
+          type="button"
+          onClick={onFold}
+          aria-expanded={!folded}
+          aria-label={folded ? `Afficher ${column.title}` : `Replier ${column.title}`}
+          className="-ml-1 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <ChevronDown className={cn("size-4 transition-transform", folded && "-rotate-90")} />
+        </button>
+        <StatusMark index={index} total={total} className="size-4" />
         <EditableText
           as="h3"
           value={column.title}
           onCommit={(v) => v.trim() && onRename(v.trim())}
-          className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground"
+          className={cn("min-w-0 truncate text-[1.05rem] font-semibold text-foreground", NOTE_FONT)}
           title="Double-cliquez pour renommer"
         />
-        <span className="rounded-full bg-background px-1.5 text-xs tabular-nums text-muted-foreground">
-          {total}
-        </span>
+        <span className="text-sm tabular-nums text-muted-foreground">{count}</span>
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="rounded-md p-1 text-muted-foreground hover:bg-background hover:text-foreground"
-            aria-label={`Options de la colonne ${column.title}`}
+            className="ml-auto rounded-md p-1 text-muted-foreground opacity-60 hover:bg-muted hover:text-foreground group-hover/head:opacity-100 focus-visible:opacity-100"
+            aria-label={`Options de la section ${column.title}`}
           >
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem disabled={isFirst} onSelect={() => onShift(-1)}>
-              <ArrowLeft /> Déplacer à gauche
+            <DropdownMenuItem disabled={index === 0} onSelect={() => onShift(-1)}>
+              <ArrowUp /> Monter
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={isLast} onSelect={() => onShift(1)}>
-              <ArrowRight /> Déplacer à droite
+            <DropdownMenuItem disabled={index === total - 1} onSelect={() => onShift(1)}>
+              <ArrowDown /> Descendre
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              disabled={total > 0}
+              disabled={count > 0}
               onSelect={onDelete}
               className="text-destructive focus:text-destructive"
             >
-              <Trash2 /> {total > 0 ? "Videz la colonne pour la supprimer" : "Supprimer la colonne"}
+              <Trash2 /> {count > 0 ? "Videz la section pour la supprimer" : "Supprimer la section"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      <div ref={listRef} className="flex min-h-12 flex-col gap-2 overflow-y-auto px-2 pb-2">
-        {shown.map((card, i) => (
-          <div key={card.id}>
-            {over && drag?.index === i && <DropMarker />}
-            <CardTile
-              card={card}
-              members={members}
-              dragging={drag?.id === card.id}
-              onOpen={() => onOpen(card.id)}
-              onDragStart={() => setDrag({ id: card.id, column: null, index: 0 })}
-              onDragEnd={() => setDrag(null)}
-            />
-          </div>
-        ))}
-        {over && (drag?.index ?? 0) >= shown.length && <DropMarker />}
-      </div>
-
-      <div className="px-2 pb-2">
-        {adding ? (
-          <div className="rounded-lg border border-border bg-card p-2 shadow-sm">
-            <textarea
-              autoFocus
-              rows={2}
+      {!folded && (
+        <>
+          <ul ref={listRef} className="mt-2">
+            {shown.map((card, i) => (
+              <li key={card.id}>
+                {over && drag?.index === i && <DropMarker />}
+                <CardRow
+                  card={card}
+                  index={index}
+                  total={total}
+                  members={members}
+                  selected={selected === card.id}
+                  done={isDone}
+                  dragging={drag?.id === card.id}
+                  onOpen={() => onOpen(card.id)}
+                  onAdvance={() => onAdvance(card)}
+                  onDragStart={() => setDrag({ id: card.id, column: null, index: 0 })}
+                  onDragEnd={() => setDrag(null)}
+                />
+              </li>
+            ))}
+            {over && (drag?.index ?? 0) >= shown.length && <DropMarker />}
+          </ul>
+          <form
+            className="flex items-center gap-3 px-5 py-1.5 md:px-8"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const t = draft.trim();
+              if (t) onAdd(t.slice(0, 300));
+              setDraft("");
+            }}
+          >
+            <Plus className="ml-0.5 size-4 shrink-0 text-muted-foreground/70" />
+            <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  submit();
-                }
-                if (e.key === "Escape") {
-                  setAdding(false);
-                  setDraft("");
-                }
-              }}
-              placeholder="Titre de la fiche…"
-              aria-label="Titre de la nouvelle fiche"
-              className="w-full resize-none bg-transparent text-sm outline-none"
+              onKeyDown={(e) => e.key === "Escape" && setDraft("")}
+              placeholder="Ajouter une fiche"
+              aria-label={`Ajouter une fiche dans ${column.title}`}
+              className="h-8 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/70"
             />
-            <div className="mt-1 flex items-center gap-1">
-              <Button
-                size="sm"
-                className="h-7 bg-amber-600 text-white hover:bg-amber-700"
-                onClick={submit}
-              >
-                Ajouter
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7"
-                onClick={() => {
-                  setAdding(false);
-                  setDraft("");
-                }}
-              >
-                Annuler
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-          >
-            <Plus className="size-4" /> Ajouter une fiche
-          </button>
-        )}
-      </div>
+          </form>
+        </>
+      )}
     </section>
   );
 }
 
 function DropMarker() {
-  return <div className="mb-2 h-1 rounded-full bg-amber-500" aria-hidden />;
+  return <div className="mx-5 h-0.5 rounded-full bg-amber-500 md:mx-8" aria-hidden />;
 }
 
-function CardTile({
+function CardRow({
   card,
+  index,
+  total,
   members,
+  selected,
+  done,
   dragging,
   onOpen,
+  onAdvance,
   onDragStart,
   onDragEnd,
 }: {
   card: OrgCard;
+  index: number;
+  total: number;
   members: Map<string, OrgMember>;
+  selected: boolean;
+  done: boolean;
   dragging: boolean;
   onOpen: () => void;
+  onAdvance: () => void;
   onDragStart: () => void;
   onDragEnd: () => void;
 }) {
   const due = card.due_date ? dueState(card.due_date, new Date()) : null;
-  const preview = excerpt(card.content);
-  const tagged = card.tagged_ids.filter((id) => id !== card.assignee_id);
+  const preview = excerpt(card.content, 90);
+  const people = [
+    card.assignee_id,
+    ...card.tagged_ids.filter((id) => id !== card.assignee_id),
+  ].filter((id): id is string => !!id);
   return (
-    <button
-      type="button"
+    <div
       data-card-id={card.id}
       draggable
       onDragStart={(e) => {
@@ -717,68 +812,78 @@ function CardTile({
         onDragStart();
       }}
       onDragEnd={onDragEnd}
-      onClick={onOpen}
       className={cn(
-        "group w-full cursor-pointer rounded-lg border border-border bg-card p-3 text-left shadow-sm transition-shadow hover:border-amber-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 dark:hover:border-amber-700",
+        "group relative flex items-start gap-3 px-5 py-2.5 transition-colors md:px-8",
+        selected ? "bg-amber-100/60 dark:bg-amber-900/25" : "hover:bg-muted/60",
         dragging && "opacity-40",
       )}
     >
-      <p className="text-sm font-medium leading-snug text-foreground">{card.title}</p>
-      {preview && (
-        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{preview}</p>
+      {selected && (
+        <span className="absolute inset-y-1 left-0 w-[3px] rounded-r bg-amber-600" aria-hidden />
       )}
-      {(due || preview || card.assignee_id || tagged.length > 0) && (
-        <div className="mt-2.5 flex items-center gap-2">
-          {card.due_date && (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium",
-                due === "overdue"
-                  ? "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300"
-                  : due === "today" || due === "soon"
-                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-200"
-                    : "bg-muted text-muted-foreground",
-              )}
-            >
-              <CalendarDays className="size-3" />
-              {new Date(`${card.due_date}T00:00:00`).toLocaleDateString("fr-FR", {
-                day: "numeric",
-                month: "short",
-              })}
-            </span>
+      <button
+        type="button"
+        onClick={onAdvance}
+        title="Passer à l'étape suivante"
+        aria-label={`Faire avancer « ${card.title} »`}
+        className="mt-0.5 rounded-full p-0.5 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
+      >
+        <StatusMark index={index} total={total} />
+      </button>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="min-w-0 flex-1 text-left focus-visible:outline-none"
+      >
+        <span
+          className={cn(
+            "block text-[15px] leading-snug",
+            done
+              ? "text-muted-foreground line-through decoration-muted-foreground/40"
+              : "text-foreground",
           )}
-          {preview && (
-            <NotebookPen
-              className="size-3.5 text-muted-foreground"
-              aria-label="Contient une note"
-            />
-          )}
-          <span className="ml-auto flex items-center">
-            {tagged.length > 0 && (
+        >
+          {card.title}
+        </span>
+        {(preview || card.due_date) && (
+          <span className="mt-0.5 flex items-baseline gap-2 text-[13px] text-muted-foreground">
+            {card.due_date && (
               <span
-                className="flex -space-x-1"
-                title={`Tagués : ${tagged.map((id) => memberName(members.get(id))).join(", ")}`}
-              >
-                {tagged.slice(0, 3).map((id) => (
-                  <MemberAvatar key={id} member={members.get(id)} id={id} size="sm" />
-                ))}
-                {tagged.length > 3 && (
-                  <span className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground ring-2 ring-card">
-                    +{tagged.length - 3}
-                  </span>
+                className={cn(
+                  "shrink-0 tabular-nums",
+                  !done && due === "overdue" && "font-medium text-red-600 dark:text-red-400",
+                  !done &&
+                    (due === "today" || due === "soon") &&
+                    "font-medium text-amber-700 dark:text-amber-300",
                 )}
+              >
+                {due === "today"
+                  ? "Aujourd'hui"
+                  : new Date(`${card.due_date}T00:00:00`).toLocaleDateString("fr-FR", {
+                      day: "numeric",
+                      month: "short",
+                    })}
               </span>
             )}
-            {card.assignee_id && (
-              <MemberAvatar
-                member={members.get(card.assignee_id)}
-                id={card.assignee_id}
-                className={cn("outline outline-2 outline-amber-500", tagged.length > 0 && "ml-1.5")}
-              />
-            )}
+            {preview && <span className="truncate">{preview}</span>}
           </span>
-        </div>
+        )}
+      </button>
+      {people.length > 0 && (
+        <span
+          className="mt-0.5 flex shrink-0 -space-x-0.5"
+          title={people.map((id) => memberName(members.get(id))).join(", ")}
+        >
+          {people.slice(0, 3).map((id) => (
+            <MemberAvatar key={id} member={members.get(id)} id={id} size="xs" />
+          ))}
+          {people.length > 3 && (
+            <span className="inline-flex size-5 items-center justify-center rounded-full bg-muted text-[9px] font-semibold text-muted-foreground ring-2 ring-background">
+              +{people.length - 3}
+            </span>
+          )}
+        </span>
       )}
-    </button>
+    </div>
   );
 }
