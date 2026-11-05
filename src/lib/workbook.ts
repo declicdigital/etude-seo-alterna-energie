@@ -29,6 +29,9 @@ export const NEWSLETTER_INTERNE = "NEWSLETTER INTERNE";
 export const NEWSLETTER_B2C = "NEWSLETTER B2C";
 export const NEWSLETTER_SME = "NEWSLETTER SME";
 
+/** Organisation board, rendered by OrganisationBoard. */
+export const ORGANISATION = "ORGANISATION";
+
 export const sheetNames = [
   ...Object.keys(workbook).filter((n) => !RETIRED_SHEETS.has(n)),
   ...Object.keys(EMBED_SHEETS),
@@ -38,6 +41,7 @@ export const sheetNames = [
   NEWSLETTER_INTERNE,
   NEWSLETTER_B2C,
   NEWSLETTER_SME,
+  ORGANISATION,
 ];
 
 export function embedSrcOf(sheet: string): string | null {
@@ -259,6 +263,7 @@ export const SHEET_META: Record<
   "NEWSLETTER INTERNE": { headerRow: 0, firstDataRow: 0, label: "Interne", group: "Calendriers newsletters" },
   "NEWSLETTER B2C": { headerRow: 0, firstDataRow: 0, label: "B2C", group: "Calendriers newsletters" },
   "NEWSLETTER SME": { headerRow: 0, firstDataRow: 0, label: "SME", group: "Calendriers newsletters" },
+  "ORGANISATION": { headerRow: 0, firstDataRow: 0, label: "Tableau", group: "Organisation" },
   "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon électricité", group: "Archives" },
   "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon gaz", group: "Archives" },
 };

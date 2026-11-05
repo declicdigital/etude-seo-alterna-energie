@@ -92,6 +92,80 @@ export type Database = {
         }
         Relationships: []
       }
+      org_cards: {
+        Row: {
+          assignee_id: string | null
+          column_id: string
+          content: string
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          id: string
+          position: number
+          tagged_ids: string[]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          assignee_id?: string | null
+          column_id: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          position?: number
+          tagged_ids?: string[]
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          assignee_id?: string | null
+          column_id?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          position?: number
+          tagged_ids?: string[]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_cards_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "org_columns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_columns: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           allowed_sections: string[] | null
@@ -213,6 +287,7 @@ export type Database = {
           id: string
         }[]
       }
+      can_use_organisation: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -221,6 +296,14 @@ export type Database = {
         Returns: boolean
       }
       is_approved: { Args: { _user_id: string }; Returns: boolean }
+      organisation_members: {
+        Args: never
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "member"

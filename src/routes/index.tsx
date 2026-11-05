@@ -12,6 +12,7 @@ import { WebflowView } from "@/components/webflow-view";
 import { GuideView, HomeView } from "@/components/guide-view";
 import { FaqView } from "@/components/faq-view";
 import { NewsletterCalendarView } from "@/components/newsletter-calendar-view";
+import { OrganisationBoard } from "@/components/organisation-board";
 import { B2C, GRANDS_COMPTES, INTERNE, SME, type NewsletterCalendar } from "@/lib/newsletter-calendar";
 import { DetailPanel } from "@/components/detail-panel";
 import { useEdits } from "@/lib/use-edits";
@@ -136,7 +137,8 @@ function Index() {
     sheetInfo?.group !== "Stratégie PAC" &&
     sheetInfo?.group !== "FAQ" &&
     sheetInfo?.group !== "Benchmark" &&
-    sheetInfo?.group !== "Calendriers newsletters";
+    sheetInfo?.group !== "Calendriers newsletters" &&
+    sheetInfo?.group !== "Organisation";
   const embedSrc = isGuide ? null : embedSrcOf(sheet);
   const editorialFrame = useRef<HTMLIFrameElement>(null);
   const sendReminder = useServerFn(sendStepReminder);
@@ -272,6 +274,15 @@ function Index() {
           />
         ) : sheetInfo?.group === "FAQ" ? (
           <FaqView access={access} scope={scope} hash={pageHash} />
+        ) : sheetInfo?.group === "Organisation" ? (
+          <OrganisationBoard
+            access={access}
+            hash={pageHash}
+            groupLabel={groupLabel}
+            sheetLabel={sheetLabel}
+            onRenameGroup={(v) => setMetaValue("group", groupName, v)}
+            onRenameSheet={(v) => setMetaValue("sheet", sheet, v)}
+          />
         ) : sheetInfo?.group === "Calendriers newsletters" ? (
           <NewsletterCalendarView
             key={baseSheet}

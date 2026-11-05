@@ -43,6 +43,13 @@
       "when": 1793696032946,
       "tag": "0005_harden_access_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793882898749,
+      "tag": "0006_organisation_board",
+      "breakpoints": true
     }
   ]
 }

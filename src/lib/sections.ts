@@ -15,6 +15,8 @@ export const SECTION_TREE: SectionGroup[] = [
   { group: "FAQ", subs: ["Particulier", "Professionnel"], accent: "bg-teal-500" },
   { group: "Benchmark", subs: [], defaultOn: true, accent: "bg-emerald-600" },
   { group: "Calendriers newsletters", subs: ["Grands Comptes", "Interne", "B2C", "SME"], defaultOn: true, accent: "bg-blue-600" },
+  // Closed by default: opened per account. Also enforced in the database (can_use_organisation).
+  { group: "Organisation", subs: [], accent: "bg-amber-500" },
 ];
 
 export const ALL_SECTION_KEYS = SECTION_TREE.flatMap((t) => [t.group, ...t.subs.map((s) => `${t.group}/${s}`)]);

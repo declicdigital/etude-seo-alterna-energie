@@ -20,6 +20,7 @@ import { Route as ApiPublicNotifyAccessRequestRouteImport } from './routes/api/p
 import { Route as ApiPublicNotifyArticleReadyRouteImport } from './routes/api/public/notify-article-ready'
 import { Route as ApiPublicNotifyFaqRouteImport } from './routes/api/public/notify-faq'
 import { Route as ApiPublicNotifyMentionRouteImport } from './routes/api/public/notify-mention'
+import { Route as ApiPublicNotifyOrganisationRouteImport } from './routes/api/public/notify-organisation'
 import { Route as ApiPublicJobsDeadlineRemindersRouteImport } from './routes/api/public/jobs/deadline-reminders'
 import { Route as ApiPublicJobsMonthlyRecapRouteImport } from './routes/api/public/jobs/monthly-recap'
 
@@ -81,6 +82,12 @@ const ApiPublicNotifyMentionRoute = ApiPublicNotifyMentionRouteImport.update({
   path: '/api/public/notify-mention',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicNotifyOrganisationRoute =
+  ApiPublicNotifyOrganisationRouteImport.update({
+    id: '/api/public/notify-organisation',
+    path: '/api/public/notify-organisation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicJobsDeadlineRemindersRoute =
   ApiPublicJobsDeadlineRemindersRouteImport.update({
     id: '/api/public/jobs/deadline-reminders',
@@ -106,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-faq': typeof ApiPublicNotifyFaqRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
+  '/api/public/notify-organisation': typeof ApiPublicNotifyOrganisationRoute
   '/api/public/jobs/deadline-reminders': typeof ApiPublicJobsDeadlineRemindersRoute
   '/api/public/jobs/monthly-recap': typeof ApiPublicJobsMonthlyRecapRoute
 }
@@ -121,6 +129,7 @@ export interface FileRoutesByTo {
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-faq': typeof ApiPublicNotifyFaqRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
+  '/api/public/notify-organisation': typeof ApiPublicNotifyOrganisationRoute
   '/api/public/jobs/deadline-reminders': typeof ApiPublicJobsDeadlineRemindersRoute
   '/api/public/jobs/monthly-recap': typeof ApiPublicJobsMonthlyRecapRoute
 }
@@ -137,6 +146,7 @@ export interface FileRoutesById {
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
   '/api/public/notify-faq': typeof ApiPublicNotifyFaqRoute
   '/api/public/notify-mention': typeof ApiPublicNotifyMentionRoute
+  '/api/public/notify-organisation': typeof ApiPublicNotifyOrganisationRoute
   '/api/public/jobs/deadline-reminders': typeof ApiPublicJobsDeadlineRemindersRoute
   '/api/public/jobs/monthly-recap': typeof ApiPublicJobsMonthlyRecapRoute
 }
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/api/public/notify-article-ready'
     | '/api/public/notify-faq'
     | '/api/public/notify-mention'
+    | '/api/public/notify-organisation'
     | '/api/public/jobs/deadline-reminders'
     | '/api/public/jobs/monthly-recap'
   fileRoutesByTo: FileRoutesByTo
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/api/public/notify-article-ready'
     | '/api/public/notify-faq'
     | '/api/public/notify-mention'
+    | '/api/public/notify-organisation'
     | '/api/public/jobs/deadline-reminders'
     | '/api/public/jobs/monthly-recap'
   id:
@@ -184,6 +196,7 @@ export interface FileRouteTypes {
     | '/api/public/notify-article-ready'
     | '/api/public/notify-faq'
     | '/api/public/notify-mention'
+    | '/api/public/notify-organisation'
     | '/api/public/jobs/deadline-reminders'
     | '/api/public/jobs/monthly-recap'
   fileRoutesById: FileRoutesById
@@ -200,6 +213,7 @@ export interface RootRouteChildren {
   ApiPublicNotifyArticleReadyRoute: typeof ApiPublicNotifyArticleReadyRoute
   ApiPublicNotifyFaqRoute: typeof ApiPublicNotifyFaqRoute
   ApiPublicNotifyMentionRoute: typeof ApiPublicNotifyMentionRoute
+  ApiPublicNotifyOrganisationRoute: typeof ApiPublicNotifyOrganisationRoute
   ApiPublicJobsDeadlineRemindersRoute: typeof ApiPublicJobsDeadlineRemindersRoute
   ApiPublicJobsMonthlyRecapRoute: typeof ApiPublicJobsMonthlyRecapRoute
 }
@@ -283,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNotifyMentionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/notify-organisation': {
+      id: '/api/public/notify-organisation'
+      path: '/api/public/notify-organisation'
+      fullPath: '/api/public/notify-organisation'
+      preLoaderRoute: typeof ApiPublicNotifyOrganisationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jobs/deadline-reminders': {
       id: '/api/public/jobs/deadline-reminders'
       path: '/api/public/jobs/deadline-reminders'
@@ -312,6 +333,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicNotifyArticleReadyRoute: ApiPublicNotifyArticleReadyRoute,
   ApiPublicNotifyFaqRoute: ApiPublicNotifyFaqRoute,
   ApiPublicNotifyMentionRoute: ApiPublicNotifyMentionRoute,
+  ApiPublicNotifyOrganisationRoute: ApiPublicNotifyOrganisationRoute,
   ApiPublicJobsDeadlineRemindersRoute: ApiPublicJobsDeadlineRemindersRoute,
   ApiPublicJobsMonthlyRecapRoute: ApiPublicJobsMonthlyRecapRoute,
 }
