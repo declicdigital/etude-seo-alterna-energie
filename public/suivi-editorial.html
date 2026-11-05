@@ -780,7 +780,7 @@ if(SPACE){ document.title = 'Suivi éditorial (' + SPACE_LABEL + ') — Outil co
 if(PLANETE){
   document.documentElement.classList.add('planete');
   const hint = document.querySelector('.todo-hint');
-  if(hint) hint.textContent = "Remplissez toutes les cases de la ligne, catégorie et sous-catégorie comprises, pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi et Geoffrey reçoit un mail pour l'intégrer. Une fois intégré, il s'ajoute à Parlons Planète > Blog dans sa catégorie et sa sous-catégorie. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.";
+  if(hint) hint.textContent = "Remplissez toutes les cases de la ligne, catégorie comprise (la sous-catégorie est facultative), pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi et Geoffrey reçoit un mail pour l'intégrer. Une fois intégré, il s'ajoute à Parlons Planète > Blog dans sa catégorie (et sa sous-catégorie si elle en a une). Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.";
 }
 const AUDIENCES = ['Particulier', 'Professionnel'];
 const DESTS = ['Blog', 'Éditorial'];
@@ -823,7 +823,7 @@ const PLANETE_SUBCATEGORIES = {
 function subcategoriesFor(category){ return PLANETE_SUBCATEGORIES[category] || []; }
 function subcatSelectHtml(attrs, category, value){
   const subs = subcategoriesFor(category);
-  return `<select ${attrs} ${category ? '' : 'disabled'}><option value="">${category ? '— Choisir —' : '— catégorie d\'abord —'}</option>${subs.map(o=>`<option ${value===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>`;
+  return `<select ${attrs} ${category ? '' : 'disabled'}><option value="">${category ? '— Aucune —' : '— catégorie d\'abord —'}</option>${subs.map(o=>`<option ${value===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>`;
 }
 const HEADERS = {
   'apikey': SUPABASE_KEY,
@@ -1299,7 +1299,6 @@ function missingFields(article, stepKey){
     if(!(article.finalLink||'').trim()) out.push("le lien de l'article publié");
     if(STRAT && article.dest === 'Blog' && !(article.category||'').trim()) out.push('la catégorie du blog');
     if(PLANETE && !(article.category||'').trim()) out.push('la catégorie');
-    if(PLANETE && !(article.subcategory||'').trim()) out.push('la sous-catégorie');
   }
   return out;
 }
@@ -2294,7 +2293,7 @@ function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').tr
 function todoComplete(t){
   const fields = ['sujet','editrice','redactionDate','h1','audience','deadline','docx'];
   if(STRAT){ fields.push('brief','briefDate','type','dest'); if(t.dest === 'Blog') fields.push('categorie'); }
-  else if(PLANETE) fields.push('categorie','souscategorie','energie');
+  else if(PLANETE) fields.push('categorie','energie');
   else fields.push('categorie','energie');
   return fields.every(f => (t[f]||'').trim()) && /^\d{4}-\d{2}-\d{2}$/.test(t.redactionDate || '') && (!STRAT || /^\d{4}-\d{2}-\d{2}$/.test(t.briefDate || ''));
 }
