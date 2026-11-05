@@ -695,7 +695,7 @@ html:not(.no-cat) .col-brief{display:none!important}
 .no-cat .col-cible{display:none!important}
 .no-cat .col-energy{display:none!important}
 /* Parlons Planète : un seul blog, sans cible, avec ses propres catégories. */
-.planete .col-cible{display:none!important}
+.planete .col-cible, .planete .col-energy{display:none!important}
 .col-subcat{display:none}
 .planete .col-subcat{display:table-cell}
 </style>
@@ -743,9 +743,9 @@ html:not(.no-cat) .col-brief{display:none!important}
       </div>
       <button class="btn" id="todoAddBtn">+ Ajouter une ligne</button>
     </div>
-    <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
+    <p class="hint todo-hint">Dès que le lien du doc est collé, le bouton « Enregistrer » est actif, même si d'autres cases sont vides : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Les cases laissées vides se complètent ensuite dans la fiche de l'article. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th class="col-brief">Catégorie</th><th>Édition</th><th>Date de rédaction</th><th class="col-brief">Date du brief</th><th>Nom de l'article (H1)</th><th class="col-cible">Cible</th><th class="col-cat">Catégorie</th><th class="col-subcat">Sous-catégorie</th><th class="col-energy">Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th class="col-brief">Catégorie</th><th>Édition</th><th>Date de rédaction</th><th>Nom de l'article (H1)</th><th class="col-cible">Cible</th><th class="col-cat">Catégorie</th><th class="col-subcat">Sous-catégorie</th><th class="col-energy">Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
     <div id="todoComments" class="todo-comments"></div>
@@ -775,12 +775,12 @@ const KEY = k => STRAT ? 'strat:' + k : PLANETE ? 'planete:' + k : k;
 const BLOG_SHEET = STRAT ? 'STRATEGIE - ARTICLES' : PLANETE ? 'PLANETE - ARTICLES' : 'BLOG - ARTICLES';
 const BLOG_BASE_LEN = SPACE ? 1 : 424;
 if(NO_CAT) document.documentElement.classList.add('no-cat');
-if(NO_CAT){ const thc = document.querySelector('thead th.col-cat'); if(thc) thc.textContent = 'Catégorie du blog'; const hint = document.querySelector('.todo-hint'); if(hint) hint.textContent += ' Une ligne classée « Blog » doit aussi choisir sa catégorie du blog.'; }
+if(NO_CAT){ const thc = document.querySelector('thead th.col-cat'); if(thc) thc.textContent = 'Catégorie du blog'; const hint = document.querySelector('.todo-hint'); if(hint) hint.textContent += ' Pour une ligne classée « Blog », pensez à choisir sa catégorie du blog.'; }
 if(SPACE){ document.title = 'Suivi éditorial (' + SPACE_LABEL + ') — Outil contenus'; document.addEventListener('DOMContentLoaded', () => { const h = document.querySelector('h1'); if(h) h.textContent = 'Suivi éditorial — ' + SPACE_LABEL; }); const h0 = document.querySelector('h1'); if(h0) h0.textContent = 'Suivi éditorial — ' + SPACE_LABEL; }
 if(PLANETE){
   document.documentElement.classList.add('planete');
   const hint = document.querySelector('.todo-hint');
-  if(hint) hint.textContent = "Remplissez toutes les cases de la ligne, catégorie comprise (la sous-catégorie est facultative), pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi et Geoffrey reçoit un mail pour l'intégrer. Une fois intégré, il s'ajoute à Parlons Planète > Blog dans sa catégorie (et sa sous-catégorie si elle en a une). Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.";
+  if(hint) hint.textContent = "Dès que le lien du doc est collé, le bouton « Enregistrer » est actif, même si d'autres cases sont vides : l'article est alors créé dans le suivi et Geoffrey reçoit un mail pour l'intégrer. La catégorie reste obligatoire avant l'intégration (elle peut être choisie ici ou dans la fiche). Une fois intégré, il s'ajoute à Parlons Planète > Blog dans sa catégorie (et sa sous-catégorie si elle en a une). Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.";
 }
 const AUDIENCES = ['Particulier', 'Professionnel'];
 const DESTS = ['Blog', 'Éditorial'];
@@ -1293,7 +1293,7 @@ function missingFields(article, stepKey){
     if(!article.audience) out.push('Particulier / Professionnel');
     if(!(article.title||'').trim() || article.title.trim() === 'Nouvel article') out.push("le titre de l'article");
     if(!NO_CAT && !article.category) out.push('la catégorie');
-    if(!NO_CAT && !article.energy) out.push("l'énergie");
+    if(!NO_CAT && !PLANETE && !article.energy) out.push("l'énergie");
   }
   if(stepKey === 'integration'){
     if(!(article.finalLink||'').trim()) out.push("le lien de l'article publié");
@@ -1338,7 +1338,7 @@ async function insertBlogRow(article, sheet, base){
     ...(PLANETE && sheet === BLOG_SHEET ? [[7, article.subcategory || '']] : []),
     [9, normalizeUrl(article.finalLink)],
     [10, article.energy || '']
-  ].filter(v => !(PLANETE && sheet === BLOG_SHEET && v[0] === 5));
+  ].filter(v => !(PLANETE && sheet === BLOG_SHEET && (v[0] === 5 || v[0] === 10)));
   const body = values.map(v => ({ sheet, row_id: rowId, col: v[0], value: String(v[1]), updated_at: now }));
   const res = await fetch(CELLS_REST + '?on_conflict=sheet,row_id,col', {
     method: 'POST',
@@ -2290,13 +2290,15 @@ async function saveTodos(){
 }
 const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com'];
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
-function todoComplete(t){
-  const fields = ['sujet','editrice','redactionDate','h1','audience','deadline','docx'];
-  if(STRAT){ fields.push('brief','briefDate','type','dest'); if(t.dest === 'Blog') fields.push('categorie'); }
-  else if(PLANETE) fields.push('categorie','energie');
-  else fields.push('categorie','energie');
-  return fields.every(f => (t[f]||'').trim()) && /^\d{4}-\d{2}-\d{2}$/.test(t.redactionDate || '') && (!STRAT || /^\d{4}-\d{2}-\d{2}$/.test(t.briefDate || ''));
+function todayIso(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
+/* Le lien du doc suffit pour enregistrer : le reste se complète ensuite dans la fiche de l'article. */
+function todoComplete(t){
+  return !!(t.docx||'').trim();
+}
+const TODO_SAVE_HINT = 'Collez le lien du doc pour enregistrer';
 /* Nombre de jours restants avant la deadline (négatif si dépassée, null si pas de date). */
 function todoDaysLeft(t){
   const d = (t.deadline || '').trim();
@@ -2346,35 +2348,37 @@ function renderTodos(){
     <td class="col-brief"><select data-f="dest"><option value="">—</option>${DESTS.map(o=>`<option ${t.dest===o?'selected':''}>${o}</option>`).join('')}</select></td>
     <td><select data-f="editrice"><option value="">—</option>${(((getConfigFor('redaction')||{}).options)||['Aurorae','Marina']).map(o=>`<option ${t.editrice===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input type="date" data-f="redactionDate" aria-label="Date de rédaction" value="${escapeAttr(t.redactionDate||'')}"></td>
-    <td class="col-brief"><input type="date" data-f="briefDate" aria-label="Date du brief" value="${escapeAttr(t.briefDate||'')}"></td>
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td class="col-cible"><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td class="col-cat">${STRAT ? (t.dest === 'Blog' ? `<select data-f="categorie"><option value="">— Choisir —</option>${categoriesFor('Particulier').map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>` : '<span class="td-na">—</span>') : PLANETE ? `<select data-f="categorie"><option value="">— Choisir —</option>${PLANETE_CATEGORIES.map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>` : `<select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>`}</td>
     <td class="col-subcat">${PLANETE ? subcatSelectHtml('data-f="souscategorie"', t.categorie, t.souscategorie) : ''}</td>
-    <td class="col-energy"><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
+    <td class="col-energy">${PLANETE ? '' : `<select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>`}</td>
     <td><div class="td-dl">${isUrgentTodo(t) ? `<span class="todo-dot" title="${escapeAttr(urgentTitle(t))}"></span>` : ''}<input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></div></td>
     <td class="col-brief"><div class="td-linkwrap"><input data-f="brief" value="${escapeAttr(t.brief||'')}" placeholder="https://…">${(t.brief||'').trim() ? `<a class="todo-open" href="${escapeAttr(normalizeUrl(t.brief.trim()))}" target="_blank" rel="noopener noreferrer" title="Ouvrir le lien">↗</a>` : ''}</div></td>
     <td><div class="td-linkwrap"><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…">${(t.docx||'').trim() ? `<a class="todo-open" href="${escapeAttr(normalizeUrl(t.docx.trim()))}" target="_blank" rel="noopener noreferrer" title="Ouvrir le lien">↗</a>` : ''}</div></td>
-    <td style="white-space:nowrap">${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : ro ? '<span style="color:var(--muted);font-size:0.75rem">Lecture seule</span>' : `<button class="btn" data-todo-save ${todoComplete(t) ? '' : 'disabled'} style="padding:4px 10px;font-size:0.78rem" title="${todoComplete(t) ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'}">Enregistrer</button> <button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
+    <td style="white-space:nowrap">${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : ro ? '<span style="color:var(--muted);font-size:0.75rem">Lecture seule</span>' : `<button class="btn" data-todo-save ${todoComplete(t) ? '' : 'disabled'} style="padding:4px 10px;font-size:0.78rem" title="${todoComplete(t) ? 'Enregistrer' : TODO_SAVE_HINT}">Enregistrer</button> <button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
   </tr>`).join('');
   if(ro) body.querySelectorAll('input,select').forEach(el => { el.disabled = true; el.title = 'Seules Marina, Elodie, Caroline et Geoffrey peuvent modifier cette liste'; });
 }
 async function maybeCreateFromTodo(t){
   if(t.articleId) return;
   if(!todoComplete(t)) return;
-  const article = newArticle(t.h1.trim());
+  const article = newArticle((t.h1||'').trim() || (t.sujet||'').trim() || 'Nouvel article');
   article.docxLink = normalizeUrl(t.docx.trim());
   if(t.type) article.type = t.type;
   if(t.dest) article.dest = t.dest;
   if((t.brief||'').trim()) article.briefLink = normalizeUrl(t.brief.trim());
-  article.subject = t.sujet.trim();
+  article.subject = (t.sujet||'').trim();
   article.deadline = t.deadline || '';
   const red = article.steps.find(s => s.key === 'redaction');
-  if(red){ red.assignee = t.editrice; red.date = t.redactionDate; EditorialPipeline.completeStep(red); }
+  /* Enregistrer = le doc est rédigé : sans date saisie, la rédaction est datée du jour de l'enregistrement. */
+  const savedOn = todayIso();
+  const redDate = /^\d{4}-\d{2}-\d{2}$/.test(t.redactionDate || '') ? t.redactionDate : savedOn;
+  if(red){ red.assignee = t.editrice || ''; red.date = redDate; EditorialPipeline.completeStep(red); }
   const idee = article.steps.find(s => s.key === 'idee');
   if(idee && idee.status === 'pending') idee.status = 'skipped';
   const brief = article.steps.find(s => s.key === 'brief');
-  if(brief && brief.status === 'pending'){ brief.date = t.briefDate; EditorialPipeline.completeStep(brief); }
+  if(brief && brief.status === 'pending'){ brief.date = /^\d{4}-\d{2}-\d{2}$/.test(t.briefDate || '') ? t.briefDate : redDate; EditorialPipeline.completeStep(brief); }
   const aud = (t.audience||'').trim();
   if(aud === 'Professionnel' || aud === 'Particulier') article.audience = aud;
   const cat = (t.categorie||'').trim();
@@ -2416,7 +2420,7 @@ document.getElementById('todoBody').addEventListener('change', async (e) => {
   }
   if(f === 'deadline') refreshTodoDot(tr, t);
   const btn = tr.querySelector('[data-todo-save]');
-  if(btn){ const ok = todoComplete(t); btn.disabled = !ok; btn.title = ok ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'; }
+  if(btn){ const ok = todoComplete(t); btn.disabled = !ok; btn.title = ok ? 'Enregistrer' : TODO_SAVE_HINT; }
 });
 document.getElementById('todoBody').addEventListener('input', (e) => {
   const tr = e.target.closest('tr[data-todo-id]'); const f = e.target.dataset.f;
@@ -2425,7 +2429,7 @@ document.getElementById('todoBody').addEventListener('input', (e) => {
   t[f] = e.target.value;
   if(f === 'deadline') refreshTodoDot(tr, t);
   const btn = tr.querySelector('[data-todo-save]');
-  if(btn){ const ok = todoComplete(t); btn.disabled = !ok; btn.title = ok ? 'Enregistrer' : 'Remplissez toutes les cases de la ligne pour enregistrer'; }
+  if(btn){ const ok = todoComplete(t); btn.disabled = !ok; btn.title = ok ? 'Enregistrer' : TODO_SAVE_HINT; }
 });
 document.getElementById('todoBody').addEventListener('click', async (e) => {
   if(!canEditTodo()) return;

@@ -117,7 +117,8 @@ describe("Parlons Planète", () => {
     expect(extraColumnsOf("PLANETE - ARTICLES").find((c) => c.col === 6)?.options).toContain(
       "Énergies vertes",
     );
-    expect(headers[10]).toBe("Énergie");
+    expect(headers[10] ?? "").toBe("");
+    expect(extraColumnsOf("PLANETE - ARTICLES").some((c) => c.label === "Énergie")).toBe(false);
   });
 
   it("narrows the Blog's sub-categories to the row's category", () => {

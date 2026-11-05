@@ -138,7 +138,6 @@ export const EXTRA_COLUMNS: Record<string, ExtraColumn[]> = {
       options: Object.values(PLANETE_SUBCATEGORIES).flat(),
       dependsOn: { col: 6, options: PLANETE_SUBCATEGORIES },
     },
-    { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
   ],
 };
 
