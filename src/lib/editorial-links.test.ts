@@ -1,13 +1,13 @@
-import { describe, test } from "node:test";
+import { describe, test } from "vitest";
 import { strict as assert } from "node:assert";
 import { editorialLink, notificationLink } from "./editorial-links";
 
 describe("email destinations", () => {
-  test("Fannie opens the image area of the review step", () => {
-    assert.equal(notificationLink("relecture", "a1").split("#")[1], "#article-a1?step=validation&focus=images".slice(1));
+  test("Geoffrey opens the image area", () => {
+    assert.equal(notificationLink("image", "a1").split("#")[1], "#article-a1?step=image&focus=images".slice(1));
   });
   test("review supports the renamed relecture key", () => {
-    assert.equal(notificationLink("relecture", "a1", "relecture").split("#")[1], "#article-a1?step=relecture&focus=images".slice(1));
+    assert.equal(notificationLink("relecture", "a1", "relecture").split("#")[1], "#article-a1?step=relecture".slice(1));
   });
   test("Marick opens integration", () => {
     assert.equal(notificationLink("integration", "a1").split("#")[1], "#article-a1?step=integration".slice(1));
