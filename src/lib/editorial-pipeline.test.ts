@@ -45,17 +45,17 @@ describe('PAC rewrites', () => {
   it('keeps review and image for Création', () => {
     const article: any = {type:'Création',audience:'Particulier',steps:[]};
     pipeline.sync(article,pacConfig,'strategie');
-    expect(article.steps.map((s: any) => s.key)).toEqual(['brief','redaction','validation','integration']);
-    expect(pipeline.nextNotification(article,'redaction','strategie')).toMatchObject({kind:'relecture',next:'validation'});
+    expect(article.steps.map((s: any) => s.key)).toEqual(['brief','redaction','image','relecture','integration']);
+    expect(pipeline.nextNotification(article,'redaction','strategie')).toMatchObject({kind:'image',next:'image'});
   });
   it('preserves saved review attachments and published history when changing type', () => {
-    const review = {key:'validation',status:'done',attachments:[{id:'original'}]};
+    const review = {key:'validation',status:'done',date:'2026-10-22',attachments:[{id:'original'}]};
     const article: any = {type:'Réécriture',blogRowId:42,steps:[review,{key:'integration',status:'done'}]};
     pipeline.sync(article,pacConfig,'strategie');
     expect(article.steps.find((s: any) => s.key === 'validation')).toBeUndefined();
     expect(article.steps.find((s: any) => s.key === 'integration')?.status).toBe('done');
     article.type = 'Création'; pipeline.sync(article,pacConfig,'strategie');
-    expect(article.steps.find((s: any) => s.key === 'validation')).toEqual(review);
+    expect(article.steps.find((s: any) => s.key === 'relecture')?.date).toBe(review.date);
     expect(article.blogRowId).toBe(42);
   });
 });
@@ -63,24 +63,24 @@ describe('Blog Pro expert review', () => {
   it('puts expert review after edition and before image for Pro only', () => {
     const pro: any = {audience:'Professionnel', steps:[]};
     pipeline.sync(pro, config, '');
-    expect(pro.steps.map((s: any) => s.key)).toEqual(['redaction','expert','validation','integration']);
-    expect(pipeline.configFor(pro, config, '').map((s: any) => s.label)).toEqual(['Édition','Relecture de l’expert métier','Image','Intégration']);
+    expect(pro.steps.map((s: any) => s.key)).toEqual(['redaction','expert','image','relecture','integration']);
+    expect(pipeline.configFor(pro, config, '').map((s: any) => s.label)).toEqual(['Édition','Relecture de l’expert métier','Image','Relecture','Intégration']);
   });
   it('leaves Particulier and PAC without expert review', () => {
     for(const [audience,space] of [['Particulier',''],['Professionnel','strategie']]) {
       const article: any = {audience,steps:[]}; pipeline.sync(article,config,space);
-      expect(article.steps.map((s: any) => s.key)).toEqual(['redaction','validation','integration']);
+      expect(article.steps.map((s: any) => s.key)).toEqual(['redaction','image','relecture','integration']);
     }
   });
   it('preserves published articles and existing image attachments', () => {
     const article: any = {audience:'Professionnel',blogRowId:42,steps:[{key:'validation',status:'done',attachments:[{id:'original'}]}]};
     pipeline.sync(article,config,'');
     expect(article.steps.find((s: any) => s.key === 'expert')?.status).toBe('skipped');
-    expect(article.steps.find((s: any) => s.key === 'validation')?.attachments).toEqual([{id:'original'}]);
+    expect(article.steps.find((s: any) => s.key === 'image')?.attachments).toEqual([{id:'original'}]);
   });
   it('does not request images before expert review completes', () => {
     expect(pipeline.nextNotification({audience:'Professionnel'},'redaction','')).toBeNull();
-    expect(pipeline.nextNotification({audience:'Professionnel'},'expert','')).toMatchObject({kind:'relecture',next:'validation'});
+    expect(pipeline.nextNotification({audience:'Professionnel'},'expert','')).toMatchObject({kind:'image',next:'image'});
   });
   it('applies Clément as the default expert to an existing unassigned step', () => {
     const article: any = {audience:'Professionnel', steps:[{key:'expert',status:'pending',assignee:''}]};
@@ -93,5 +93,30 @@ describe('Blog Pro expert review', () => {
     const defaults = config.map(c => c.key === 'expert' ? {...c,assignee:'Clément'} : c);
     pipeline.sync(article,defaults,'');
     expect(article.steps.find((s: any) => s.key === 'expert')?.assignee).toBe('Autre expert');
+  });
+});
+describe('Separate Image and Relecture', () => {
+  it('routes writing to Geoffrey image, then Communication review, then Marick', () => {
+    for(const space of ['', 'strategie']) {
+      const article = {audience:'Particulier',type:'Création'};
+      expect(pipeline.nextNotification(article,'redaction',space)).toMatchObject({kind:'image',next:'image',who:'Geoffrey'});
+      expect(pipeline.nextNotification(article,'image',space)).toMatchObject({kind:'relecture',next:'relecture'});
+      expect(pipeline.nextNotification(article,'relecture',space)).toMatchObject({kind:'integration',next:'integration'});
+    }
+  });
+  it('preserves the combined historical completion date without inventing an image date', () => {
+    const article: any = {audience:'Particulier',steps:[{key:'validation',status:'done',date:'2026-10-22',attachments:[{id:'photo',type:'image'}]}]};
+    pipeline.sync(article,config,'');
+    expect(article.steps.find((s: any) => s.key === 'relecture').date).toBe('2026-10-22');
+    expect(article.steps.find((s: any) => s.key === 'image').date).toBe('');
+    expect(article.steps.find((s: any) => s.key === 'image').attachments).toEqual([{id:'photo',type:'image'}]);
+    const before = JSON.stringify(article); pipeline.sync(article,config,'');
+    expect(JSON.stringify(article)).toBe(before);
+  });
+  it('does not mark the new Pro Communication review completed for an unpublished article', () => {
+    const article: any = {audience:'Professionnel',steps:[{key:'validation',status:'done',date:'2026-10-22',attachments:[]}]};
+    pipeline.sync(article,config,'');
+    expect(article.steps.find((s: any) => s.key === 'image').date).toBe('2026-10-22');
+    expect(article.steps.find((s: any) => s.key === 'relecture').status).toBe('pending');
   });
 });

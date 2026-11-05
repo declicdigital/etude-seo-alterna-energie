@@ -1,4 +1,5 @@
-/** « Relecture + image » is handled by the Service Communication: Fannie and Coraline. */
+/** Relecture is handled by the Service Communication; Image belongs to Geoffrey. */
+export const IMAGE_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 export const SERVICE_COMMUNICATION_EMAILS: readonly string[] = [
   "fannie.laurendin@soregies.fr",
   "coraline.prono@soregies.fr",
@@ -6,7 +7,8 @@ export const SERVICE_COMMUNICATION_EMAILS: readonly string[] = [
 
 /** Review notifications always include the whole Communication team, even with legacy settings. */
 export function notificationRecipients(kind: string | undefined, recipients: readonly string[]): string[] {
-  return [...new Set((kind === "relecture" ? [...SERVICE_COMMUNICATION_EMAILS, ...recipients] : recipients).map(email => email.trim().toLowerCase()))];
+  const selected = kind === "image" ? [IMAGE_EMAIL] : kind === "relecture" ? SERVICE_COMMUNICATION_EMAILS : recipients;
+  return [...new Set(selected.map(email => email.trim().toLowerCase()))];
 }
 
 /** Keep deadlines out of review notifications and any mail addressed to the Service Communication. */
@@ -21,7 +23,7 @@ export function notificationDeadline(
   return deadline;
 }
 
-/** The review step asks the Service Communication to add the image, so its button says exactly that. */
+/** Each CTA names the work expected at its own step. */
 export function notificationCta(kind: string | undefined): string {
-  return kind === "relecture" ? "Ajouter l'image" : "Ouvrir Digicom";
+  return kind === "image" ? "Ajouter l'image" : kind === "relecture" ? "Relire l'article" : "Ouvrir Digicom";
 }

@@ -8,7 +8,7 @@ const BodySchema = z.object({
   type: z.enum(["Réécriture", "Création"]).optional(),
   articleId: z.string().max(200).optional(),
   stepKey: z.string().max(120).optional(),
-  kind: z.enum(["ready", "relecture", "integration", "published"]).optional(),
+  kind: z.enum(["ready", "image", "relecture", "integration", "published"]).optional(),
   to: z.array(z.string().email()).max(10).optional(),
   sujet: z.string().max(300).optional().default(""),
   h1: z.string().max(300).optional().default(""),
@@ -41,10 +41,10 @@ function buildHtml(p: z.infer<typeof BodySchema>): string {
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
 <tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · ${p.space === "strategie" ? "Stratégie PAC" : "Blog"}</td></tr>
 <tr><td style="padding:28px">
-${p.kind === "relecture"
-  ? (p.cible === 'Professionnel' && !p.space
-    ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>La <strong>relecture de l’expert métier est validée</strong>. Merci de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article, à l'étape <strong>Image</strong>.</p>`
-    : `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est passé à l'étape <strong>Relecture + Image</strong>. Merci de le <strong>relire</strong>, de <strong>trouver une image</strong> adaptée et de l'<strong>ajouter</strong> dans la carte de l'article.</p>`)
+${p.kind === "image"
+  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Geoffrey,<br><br>L'article a été rédigé${p.cible === 'Professionnel' && !p.space ? ' et relu par l’expert métier' : ''}. Merci de <strong>trouver une image</strong>, de l'<strong>ajouter</strong> dans la carte et de valider l'étape <strong>Image</strong>.</p>`
+  : p.kind === "relecture"
+  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article a été rédigé et son image a été ajoutée. Merci de <strong>relire l'article</strong> et de valider l'étape <strong>Relecture</strong>.</p>`
   : p.kind === "integration"
    ? (p.space === "strategie" && p.type === "Réécriture"
      ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>La <strong>réécriture est terminée</strong>. L'article ci-dessous est prêt à être <strong>intégré dans le site</strong>.</p>`
@@ -92,13 +92,14 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
         }
 
         const appUrl = notificationLink(payload.kind, payload.articleId, payload.stepKey, payload.space);
+        const isImage = payload.kind === "image";
         const isRel = payload.kind === "relecture";
         const isInt = payload.kind === "integration";
         const isPub = payload.kind === "published";
         const defaultTo: readonly string[] = isRel ? RELECTURE_EMAILS : isInt ? [INTEGRATION_EMAIL] : [ADMIN_EMAIL];
         // Custom recipients are only allowed if they're configured in the pipeline settings.
         let allowedTo: string[] = [];
-        if (!isPub && payload.to && payload.to.length) {
+        if (!isPub && !isImage && !isRel && payload.to && payload.to.length) {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data: cfgRow } = await supabaseAdmin.from("editorial_kv").select("value").eq("key", "pipeline-config").maybeSingle();
           const known = new Set<string>();
@@ -111,8 +112,8 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
         }
         const recipients = notificationRecipients(payload.kind, allowedTo.length ? allowedTo : defaultTo);
         payload = { ...payload, deadline: notificationDeadline(payload.deadline, payload.kind, recipients) };
-        const subject = isRel
-          ? `${payload.cible === 'Professionnel' && !payload.space ? 'Image à ajouter' : 'Relecture + image à faire'} : « ${payload.h1} »`
+        const subject = isImage ? `Image à ajouter : « ${payload.h1} »` : isRel
+          ? `Relecture à faire : « ${payload.h1} »`
           : isInt
           ? `À intégrer dans le site : « ${payload.h1} »`
           : isPub
@@ -127,11 +128,17 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           `Sujet : ${payload.sujet}`,
           "",
           `Ouvrir Digicom : ${appUrl}`,
-        ].join("\r\n") : isRel ? [
+        ].join("\r\n") : isImage ? [
+          "Bonjour Geoffrey,", "",
+          "L'article a été rédigé. Merci de trouver une image, de l'ajouter dans la carte et de valider l'étape Image.",
+          `Nom de l'article (H1) : ${payload.h1}`, `Sujet : ${payload.sujet}`,
+          payload.docx ? `Lien du doc : ${payload.docx}` : null,
+          `${notificationCta("image")} : ${appUrl}`,
+        ].filter((l): l is string => l !== null).join("\r\n") : isRel ? [
           "Bonjour,",
           "",
-          payload.cible === 'Professionnel' && !payload.space ? "La relecture de l’expert métier est validée. L'article est passé à l'étape Image." : "L'article ci-dessous est passé à l'étape Relecture + Image.",
-          payload.cible === 'Professionnel' && !payload.space ? "Merci de trouver une image et de l'ajouter dans la carte de l'article." : "Merci de le relire, de trouver une image et de l'ajouter dans la carte de l'article.",
+          "L'article a été rédigé et son image a été ajoutée.",
+          "Merci de relire l'article et de valider l'étape Relecture dans la carte.",
           "",
           `Nom de l'article (H1) : ${payload.h1}`,
           `Sujet : ${payload.sujet}`,

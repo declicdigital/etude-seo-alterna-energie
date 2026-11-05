@@ -46,12 +46,20 @@ describe("Service Communication", () => {
 
 describe("notificationCta", () => {
   it("asks for the image on the review step", () => {
-    expect(notificationCta("relecture")).toBe("Ajouter l'image");
+    expect(notificationCta("image")).toBe("Ajouter l'image");
   });
 
   it("keeps the generic label on every other stage", () => {
     for (const kind of ["ready", "integration", "published", undefined]) {
       expect(notificationCta(kind)).toBe("Ouvrir Digicom");
     }
+  });
+});
+describe('split notification recipients', () => {
+  it('sends Image only to Geoffrey even with a legacy Communication destination', () => {
+    expect(notificationRecipients('image', SERVICE_COMMUNICATION_EMAILS)).toEqual(['geoffrey.delabarre@alterna-energie.fr']);
+  });
+  it('sends Relecture only to Fannie and Coraline even with another configured recipient', () => {
+    expect(notificationRecipients('relecture', ['other@example.org'])).toEqual([...SERVICE_COMMUNICATION_EMAILS]);
   });
 });

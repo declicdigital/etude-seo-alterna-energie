@@ -22,9 +22,10 @@ const FLOWS: Flow[] = [
     steps: [
       { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Type : Réécriture / Création", "Titre H1", "Édition", "Catégorie Blog / Éditorial", "Catégorie du blog (si Blog)", "Deadline", "Lien du brief", "Lien du doc", "Tout rempli → Enregistrer"] },
       { title: "Rappel deadline", who: "Automatique · 9 h", color: C.remind, items: ["Le lundi avant la deadline", "Aurorae : Caroline + Elodie", "Marina seule", "Point rouge < 5 jours"], mail: "Mail rappel édition" },
-      { title: "1 · Brief + 2 · Rédaction", who: "Validés à l'enregistrement", color: C.prep, items: ["Carte créée", "Brief + doc liés", "Passage auto en relecture"], mail: "Mail → Service Communication" },
-      { title: "3 · Relecture + Image", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Relire", "Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Marick" },
-      { title: "4 · Intégration", who: "Marick", color: C.integ, items: ["Télécharger l'image", "Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
+      { title: "1 · Brief + 2 · Rédaction", who: "Validés à l'enregistrement", color: C.prep, items: ["Carte créée", "Brief + doc liés", "Passage auto à Image"], mail: "Mail → Geoffrey" },
+      { title: "3 · Image", who: "Geoffrey", color: C.remind, items: ["Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Fannie & Coraline" },
+      { title: "4 · Relecture", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Relire l'article", "Valider l'étape"], mail: "Mail → Marick" },
+      { title: "5 · Intégration", who: "Marick", color: C.integ, items: ["Télécharger l'image", "Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
     ],
     end: ["En haut de « Contenus »", "Si Blog → aussi en haut de Blog › Particulier"],
   },
@@ -44,9 +45,10 @@ const FLOWS: Flow[] = [
     steps: [
       { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Titre H1", "Édition", "Cible Particulier / Pro", "Catégorie + Énergie", "Deadline", "Lien du doc", "Tout rempli → Enregistrer"] },
       { title: "Rappel deadline", who: "Automatique · 9 h", color: C.remind, items: ["Le lundi avant la deadline", "Aurorae : Caroline + Elodie", "Marina seule", "Point rouge < 5 jours"], mail: "Mail rappel édition" },
-      { title: "1 · Rédaction", who: "Validée à l'enregistrement", color: C.prep, items: ["Carte créée", "Couleur selon la cible", "Passage auto en relecture"], mail: "Mail → Service Communication" },
-      { title: "2 · Relecture + Image", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Relire", "Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Marick" },
-      { title: "3 · Intégration", who: "Marick", color: C.integ, items: ["Télécharger l'image", "Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
+      { title: "1 · Rédaction", who: "Validée à l'enregistrement", color: C.prep, items: ["Carte créée", "Couleur selon la cible", "Passage auto à Image"], mail: "Mail → Geoffrey" },
+      { title: "2 · Image", who: "Geoffrey", color: C.remind, items: ["Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Fannie & Coraline" },
+      { title: "3 · Relecture", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Relire l'article", "Valider l'étape"], mail: "Mail → Marick" },
+      { title: "4 · Intégration", who: "Marick", color: C.integ, items: ["Télécharger l'image", "Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
     ],
     end: ["En haut du Blog de la bonne cible", "Coché « Publié »"],
   },
@@ -55,9 +57,10 @@ const FLOWS: Flow[] = [
     intro: "Professionnel · cartes bleues",
     steps: [
       { title: "1 · Édition", who: "Édition", color: C.prep, items: ["Titre H1", "Catégorie + Énergie", "Document rédigé", "Validée à l'enregistrement"] },
-      { title: "2 · Relecture de l’expert métier", who: "Expert métier à renseigner dans la carte", color: C.remind, items: ["Relire le document", "Vérifier les informations métier", "Valider la relecture"] },
-      { title: "3 · Image", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Ajouter l'image", "Valider l'étape"], mail: "Mail → Marick" },
-      { title: "4 · Intégration", who: "Marick", color: C.integ, items: ["Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
+      { title: "2 · Relecture de l’expert métier", who: "Expert métier à renseigner dans la carte", color: C.remind, items: ["Relire le document", "Vérifier les informations métier", "Valider la relecture"], mail: "Mail → Geoffrey" },
+      { title: "3 · Image", who: "Geoffrey", color: C.remind, items: ["Ajouter l'image", "Valider l'étape"], mail: "Mail → Fannie & Coraline" },
+      { title: "4 · Relecture", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Relire l'article", "Valider l'étape"], mail: "Mail → Marick" },
+      { title: "5 · Intégration", who: "Marick", color: C.integ, items: ["Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
     ],
     end: ["En haut du Blog Pro", "Coché « Publié »"],
   },
@@ -132,7 +135,7 @@ export function GuideView(_: { onOpenSheet: (sheet: string) => void }) {
 }
 
 const ENTRIES = [
-  { icon: Target, title: "Stratégie PAC", sheet: "SUIVI STRATEGIE", text: "Suivi éditorial des contenus PAC : brief, rédaction, relecture + image, intégration." },
+  { icon: Target, title: "Stratégie PAC", sheet: "SUIVI STRATEGIE", text: "Suivi éditorial des contenus PAC : brief, rédaction, image, relecture, intégration." },
   { icon: Newspaper, title: "Blog", sheet: "SUIVI EDITORIAL", text: "Suivi éditorial des articles de blog Particulier et Professionnel." },
   { icon: HelpCircle, title: "FAQ", sheet: "SUIVI FAQ", text: "Demandes de questions fréquentes Particulier et Professionnel, validées puis ajoutées en ligne." },
   { icon: BookOpen, title: "Guide de l'outil", sheet: "__guide", text: "Les modes opératoires schématisés de chaque suivi." },
@@ -141,14 +144,15 @@ const ENTRIES = [
 const TEAM = [
   { name: "Aurorae", role: "Rédaction · Caroline & Elodie", color: "bg-emerald-500" },
   { name: "Marina", role: "Rédaction", color: "bg-violet-500" },
-  { name: "Service Communication", role: "Relecture + image · Fannie & Coraline", color: "bg-amber-500" },
+  { name: "Service Communication", role: "Relecture · Fannie & Coraline", color: "bg-amber-500" },
   { name: "Marick", role: "Intégration site", color: "bg-sky-500" },
-  { name: "Geoffrey", role: "Pilotage", color: "bg-rose-500" },
+  { name: "Geoffrey", role: "Pilotage · Image", color: "bg-rose-500" },
 ];
 
 const PIPE = [
   { label: "À rédiger", icon: PenLine, tone: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" },
-  { label: "Relecture + image", icon: ImageIcon, tone: "bg-violet-500/15 text-violet-700 dark:text-violet-300" },
+  { label: "Image", icon: ImageIcon, tone: "bg-violet-500/15 text-violet-700 dark:text-violet-300" },
+  { label: "Relecture", icon: BookOpen, tone: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
   { label: "Intégration", icon: Globe, tone: "bg-sky-500/15 text-sky-700 dark:text-sky-300" },
   { label: "Publié", icon: CheckCircle2, tone: "bg-rose-500/15 text-rose-700 dark:text-rose-300" },
 ];
