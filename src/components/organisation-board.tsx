@@ -5,6 +5,7 @@ import {
   ChevronDown,
   MoreHorizontal,
   NotebookPen,
+  Paperclip,
   Plus,
   Search,
   Trash2,
@@ -31,6 +32,7 @@ import {
 import type { Access } from "@/lib/access";
 import { cn } from "@/lib/utils";
 import {
+  attachmentsOf,
   cardHash,
   cardIdFromHash,
   dueState,
@@ -38,6 +40,7 @@ import {
   matchesFilter,
   memberName,
   newlyInvolved,
+  ORG_FILES_BUCKET,
   positionBetween,
   positionForDrop,
   sortByPosition,
@@ -48,7 +51,7 @@ import {
 } from "@/lib/organisation";
 
 const CARD_FIELDS =
-  "id, column_id, title, content, position, assignee_id, tagged_ids, due_date, created_by, created_at, updated_by, updated_at";
+  "id, column_id, title, content, position, assignee_id, tagged_ids, due_date, attachments, created_by, created_at, updated_by, updated_at";
 
 function errorMessage(e: { message?: string } | null): string {
   const m = e?.message ?? "";
@@ -279,7 +282,10 @@ export function OrganisationBoard({
     if (err) {
       setCards((cs) => [...cs, card]);
       setError(errorMessage(err));
+      return;
     }
+    const paths = attachmentsOf(card).flatMap((a) => (a.path ? [a.path] : []));
+    if (paths.length) await supabase.storage.from(ORG_FILES_BUCKET).remove(paths);
   }
 
   async function addColumn() {
@@ -798,6 +804,7 @@ function CardRow({
 }) {
   const due = card.due_date ? dueState(card.due_date, new Date()) : null;
   const preview = excerpt(card.content, 90);
+  const attached = attachmentsOf(card).length;
   const people = [
     card.assignee_id,
     ...card.tagged_ids.filter((id) => id !== card.assignee_id),
@@ -845,7 +852,7 @@ function CardRow({
         >
           {card.title}
         </span>
-        {(preview || card.due_date) && (
+        {(preview || card.due_date || attached > 0) && (
           <span className="mt-0.5 flex items-baseline gap-2 text-[13px] text-muted-foreground">
             {card.due_date && (
               <span
@@ -863,6 +870,15 @@ function CardRow({
                       day: "numeric",
                       month: "short",
                     })}
+              </span>
+            )}
+            {attached > 0 && (
+              <span
+                className="inline-flex shrink-0 items-center gap-0.5 tabular-nums"
+                title={`${attached} fichier${attached > 1 ? "s" : ""} ou lien${attached > 1 ? "s" : ""}`}
+              >
+                <Paperclip className="size-3 self-center" />
+                {attached}
               </span>
             )}
             {preview && <span className="truncate">{preview}</span>}

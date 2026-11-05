@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  attachmentsOf,
   cardIdFromHash,
+  formatSize,
+  linkify,
+  normalizeLink,
+  storageName,
   dueState,
   excerpt,
   initials,
@@ -27,6 +32,7 @@ const card = (
   assignee_id: null,
   tagged_ids: [],
   due_date: null,
+  attachments: [],
   created_by: null,
   created_at: "2026-11-05T10:00:00Z",
   updated_by: null,
@@ -136,5 +142,40 @@ describe("organisation board", () => {
     expect(sheetAllowed("ORGANISATION", ["Blog"])).toBe(false);
     expect(sheetAllowed("ORGANISATION", ["Blog", "Organisation"])).toBe(true);
     expect(sheetAllowed("ORGANISATION", null)).toBe(true);
+  });
+});
+
+describe("liens et pièces jointes", () => {
+  it("rend un lien tapé utilisable et refuse le reste", () => {
+    expect(normalizeLink("parlonsplanete.com/blog")).toBe("https://parlonsplanete.com/blog");
+    expect(normalizeLink(" https://exemple.fr ")).toBe("https://exemple.fr/");
+    expect(normalizeLink("javascript:alert(1)")).toBeNull();
+    expect(normalizeLink("pas un lien")).toBeNull();
+    expect(normalizeLink("bonjour")).toBeNull();
+  });
+
+  it("repère les liens dans une note sans avaler la ponctuation", () => {
+    const parts = linkify("Voir https://exemple.fr/doc, et www.alterna-energie.fr.");
+    expect(parts.filter((p) => p.href).map((p) => p.href)).toEqual([
+      "https://exemple.fr/doc",
+      "https://www.alterna-energie.fr/",
+    ]);
+    expect(parts.map((p) => p.text).join("")).toBe(
+      "Voir https://exemple.fr/doc, et www.alterna-energie.fr.",
+    );
+    expect(linkify("Rien ici")).toEqual([{ text: "Rien ici" }]);
+  });
+
+  it("lit la liste des pièces jointes d'une fiche avec tolérance", () => {
+    const ok = { id: "a", kind: "link", name: "Doc", url: "https://x.fr/", added_at: "" };
+    expect(attachmentsOf({ attachments: [ok, { id: 1 }, null] })).toEqual([ok]);
+    expect(attachmentsOf({})).toEqual([]);
+  });
+
+  it("nomme les fichiers stockés sans accents ni espaces", () => {
+    expect(storageName("Compte rendu Réunion (v2).pdf")).toBe("Compte-rendu-Reunion-v2-.pdf");
+    expect(storageName("???")).toBe("fichier");
+    expect(formatSize(2048)).toBe("2 Ko");
+    expect(formatSize(3 * 1024 * 1024 + 200000)).toBe("3,2 Mo");
   });
 });

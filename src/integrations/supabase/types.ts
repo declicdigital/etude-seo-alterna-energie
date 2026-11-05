@@ -95,6 +95,7 @@ export type Database = {
       org_cards: {
         Row: {
           assignee_id: string | null
+          attachments: Json
           column_id: string
           content: string
           created_at: string
@@ -109,6 +110,7 @@ export type Database = {
         }
         Insert: {
           assignee_id?: string | null
+          attachments?: Json
           column_id: string
           content?: string
           created_at?: string
@@ -123,6 +125,7 @@ export type Database = {
         }
         Update: {
           assignee_id?: string | null
+          attachments?: Json
           column_id?: string
           content?: string
           created_at?: string

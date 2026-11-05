@@ -1,5 +1,20 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { CalendarDays, Check, Mail, Trash2, UserPlus, UserRound, X } from "lucide-react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  CalendarDays,
+  Check,
+  Download,
+  FileText,
+  Image as ImageIcon,
+  Link2,
+  Loader2,
+  Mail,
+  Paperclip,
+  Trash2,
+  UserPlus,
+  UserRound,
+  X,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -11,17 +26,29 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import {
+  attachmentsOf,
   avatarColour,
   dueState,
+  formatSize,
   initials,
+  linkify,
+  linkLabel,
   memberName,
+  normalizeLink,
+  ORG_FILE_MAX_BYTES,
+  ORG_FILES_BUCKET,
+  storageName,
+  type OrgAttachment,
   type OrgCard,
   type OrgColumn,
   type OrgMember,
 } from "@/lib/organisation";
 
 export type CardPatch = Partial<
-  Pick<OrgCard, "title" | "content" | "column_id" | "assignee_id" | "tagged_ids" | "due_date">
+  Pick<
+    OrgCard,
+    "title" | "content" | "column_id" | "assignee_id" | "tagged_ids" | "due_date" | "attachments"
+  >
 >;
 
 const SAVE_DELAY = 700;
@@ -126,6 +153,10 @@ export function CardNote({
   const timer = useRef<number | null>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
+  // The note reads with clickable links; a click on the text switches to editing.
+  const [editing, setEditing] = useState(() => !!autoFocus && !card.content);
+  const files = useCardAttachments(card, me, onChange);
+  const [dropping, setDropping] = useState(false);
 
   // Someone else edited this card: follow along unless I'm typing.
   useEffect(() => {
@@ -142,12 +173,20 @@ export function CardNote({
       el.style.height = "auto";
       el.style.height = `${el.scrollHeight}px`;
     }
-  }, [content, title]);
+  }, [content, title, editing]);
 
   useEffect(() => {
-    if (autoFocus && !card.content) textRef.current?.focus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const el = textRef.current;
+    if (!editing || !el || document.activeElement === el) return;
+    el.focus();
+    el.setSelectionRange(el.value.length, el.value.length);
+  }, [editing]);
+
+  function startEditing() {
+    // Selecting text to copy it should not switch to editing.
+    if (window.getSelection()?.toString()) return;
+    setEditing(true);
+  }
 
   async function flush() {
     if (timer.current) {
@@ -202,7 +241,27 @@ export function CardNote({
     });
 
   return (
-    <article className="flex min-h-full flex-col">
+    <article
+      className={cn(
+        "relative flex min-h-full flex-col",
+        dropping && "outline-dashed outline-2 -outline-offset-8 outline-amber-500/70",
+      )}
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes("Files")) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+        setDropping(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropping(false);
+      }}
+      onDrop={(e) => {
+        if (!e.dataTransfer.files.length) return;
+        e.preventDefault();
+        setDropping(false);
+        void files.addFiles(Array.from(e.dataTransfer.files));
+      }}
+    >
       <div className="px-6 pb-2 pt-7 sm:px-10">
         <div className="mb-4 flex flex-wrap items-center gap-1.5">
           {columns.map((c, i) => {
@@ -302,6 +361,10 @@ export function CardNote({
               </button>
             )}
           </dd>
+          <dt className="self-start pt-1.5 text-muted-foreground">Fichiers et liens</dt>
+          <dd className="min-w-0">
+            <AttachmentList state={files} />
+          </dd>
         </dl>
         {notice && (
           <p
@@ -315,23 +378,63 @@ export function CardNote({
 
       <div className="mx-6 my-4 border-t border-dashed border-amber-900/15 sm:mx-10 dark:border-amber-100/15" />
 
-      <div
-        className="flex-1 cursor-text px-6 pb-8 sm:px-10"
-        onClick={() => textRef.current?.focus()}
-      >
-        <textarea
-          ref={textRef}
-          value={content}
-          onChange={(e) => onContentChange(e.target.value)}
-          onBlur={() => void flush()}
-          onClick={(e) => e.stopPropagation()}
-          placeholder="Écrivez ici : contexte, décisions, liens, compte rendu…"
-          aria-label="Note"
-          className={cn(
-            "min-h-[30vh] w-full resize-none overflow-hidden bg-transparent text-[17px] leading-[1.75] text-foreground/90 outline-none placeholder:text-muted-foreground/60",
-            NOTE_FONT,
-          )}
-        />
+      <div className="flex-1 cursor-text px-6 pb-8 sm:px-10" onClick={startEditing}>
+        {editing ? (
+          <textarea
+            ref={textRef}
+            value={content}
+            onChange={(e) => onContentChange(e.target.value)}
+            onBlur={() => {
+              void flush();
+              setEditing(false);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            placeholder="Écrivez ici : contexte, décisions, liens, compte rendu…"
+            aria-label="Note"
+            className={cn(
+              "min-h-[30vh] w-full resize-none overflow-hidden bg-transparent text-[17px] leading-[1.75] text-foreground/90 outline-none placeholder:text-muted-foreground/60",
+              NOTE_FONT,
+            )}
+          />
+        ) : (
+          <div
+            tabIndex={0}
+            aria-label="Note, cliquer pour modifier"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.target === e.currentTarget) {
+                e.preventDefault();
+                setEditing(true);
+              }
+            }}
+            className={cn(
+              "min-h-[30vh] whitespace-pre-wrap break-words text-[17px] leading-[1.75] text-foreground/90 outline-none",
+              NOTE_FONT,
+            )}
+          >
+            {content ? (
+              linkify(content).map((part, i) =>
+                part.href ? (
+                  <a
+                    key={i}
+                    href={part.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="break-all text-amber-800 underline decoration-amber-800/30 underline-offset-2 hover:decoration-amber-800 dark:text-amber-300 dark:decoration-amber-300/40"
+                  >
+                    {part.text}
+                  </a>
+                ) : (
+                  <Fragment key={i}>{part.text}</Fragment>
+                ),
+              )
+            ) : (
+              <span className="text-muted-foreground/60">
+                Écrivez ici : contexte, décisions, liens, compte rendu…
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <footer className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 px-6 pb-5 text-xs text-muted-foreground sm:px-10">
@@ -361,6 +464,275 @@ export function CardNote({
         </span>
       </footer>
     </article>
+  );
+}
+
+type AttachmentState = ReturnType<typeof useCardAttachments>;
+
+/** Links and files of a card: files go to the private « org-files » bucket. */
+function useCardAttachments(card: OrgCard, me: string | null, onChange: NoteProps["onChange"]) {
+  const items = attachmentsOf(card);
+  const latest = useRef(items);
+  latest.current = items;
+  const [uploading, setUploading] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = (next: OrgAttachment[]) => onChange(card.id, { attachments: next });
+  const stamp = () => ({ added_by: me, added_at: new Date().toISOString() });
+
+  async function addLink(rawUrl: string, rawName: string): Promise<boolean> {
+    const url = normalizeLink(rawUrl);
+    if (!url) {
+      setError("Ce lien n'est pas valide (exemple : https://exemple.fr/page).");
+      return false;
+    }
+    setError(null);
+    return save([
+      ...latest.current,
+      {
+        id: crypto.randomUUID(),
+        kind: "link",
+        name: rawName.trim() || linkLabel(url),
+        url,
+        ...stamp(),
+      },
+    ]);
+  }
+
+  async function addFiles(list: File[]) {
+    setError(null);
+    const tooBig = list.filter((f) => f.size > ORG_FILE_MAX_BYTES);
+    const ok = list.filter((f) => f.size > 0 && f.size <= ORG_FILE_MAX_BYTES);
+    if (tooBig.length) {
+      setError(
+        `${tooBig.map((f) => `« ${f.name} »`).join(", ")} dépasse 50 Mo : partagez-le plutôt par un lien.`,
+      );
+    }
+    if (!ok.length) return;
+    setUploading((u) => [...u, ...ok.map((f) => f.name)]);
+    const added: OrgAttachment[] = [];
+    for (const f of ok) {
+      const path = `${card.id}/${crypto.randomUUID()}-${storageName(f.name)}`;
+      const { error: err } = await supabase.storage
+        .from(ORG_FILES_BUCKET)
+        .upload(path, f, { contentType: f.type || undefined, upsert: false });
+      setUploading((u) => {
+        const i = u.indexOf(f.name);
+        return i < 0 ? u : [...u.slice(0, i), ...u.slice(i + 1)];
+      });
+      if (err) {
+        setError(`« ${f.name} » n'a pas pu être envoyé. Réessayez.`);
+        continue;
+      }
+      added.push({
+        id: crypto.randomUUID(),
+        kind: "file",
+        name: f.name,
+        path,
+        size: f.size,
+        mime: f.type || undefined,
+        ...stamp(),
+      });
+    }
+    if (!added.length) return;
+    if (!(await save([...latest.current, ...added]))) {
+      await supabase.storage.from(ORG_FILES_BUCKET).remove(added.map((a) => a.path as string));
+    }
+  }
+
+  async function openFile(a: OrgAttachment, download = false) {
+    if (!a.path) return;
+    // Open the tab now: browsers block windows opened after an await.
+    const tab = download ? null : window.open("", "_blank");
+    const { data, error: err } = await supabase.storage
+      .from(ORG_FILES_BUCKET)
+      .createSignedUrl(a.path, 300, download ? { download: a.name } : undefined);
+    if (err || !data) {
+      tab?.close();
+      setError(`Impossible d'ouvrir « ${a.name} ».`);
+      return;
+    }
+    if (tab) {
+      tab.opener = null;
+      tab.location.href = data.signedUrl;
+    } else {
+      window.location.href = data.signedUrl;
+    }
+  }
+
+  async function remove(a: OrgAttachment) {
+    const what = a.kind === "file" ? "le fichier" : "le lien";
+    if (!window.confirm(`Retirer ${what} « ${a.name} » de la fiche ?`)) return;
+    const ok = await save(latest.current.filter((x) => x.id !== a.id));
+    if (ok && a.path) await supabase.storage.from(ORG_FILES_BUCKET).remove([a.path]);
+  }
+
+  return { items, uploading, error, setError, addLink, addFiles, openFile, remove };
+}
+
+function AttachmentList({ state }: { state: AttachmentState }) {
+  const { items, uploading, error, setError, addLink, addFiles, openFile, remove } = state;
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [url, setUrl] = useState("");
+  const [name, setName] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const action =
+    "inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-muted-foreground hover:bg-muted hover:text-foreground";
+
+  return (
+    <div className="space-y-1">
+      {items.length > 0 && (
+        <ul className="space-y-0.5">
+          {items.map((a) => {
+            const Icon =
+              a.kind === "link" ? Link2 : a.mime?.startsWith("image/") ? ImageIcon : FileText;
+            const meta = a.kind === "link" && a.url ? linkLabel(a.url) : formatSize(a.size);
+            const label = (
+              <>
+                <Icon className="size-4 shrink-0 text-amber-700 dark:text-amber-400" />
+                <span className="min-w-0 truncate text-foreground underline decoration-foreground/20 underline-offset-2 group-hover/item:decoration-foreground/60">
+                  {a.name}
+                </span>
+                {meta && meta !== a.name && (
+                  <span className="hidden shrink-0 truncate text-xs text-muted-foreground sm:inline sm:max-w-[45%]">
+                    {meta}
+                  </span>
+                )}
+              </>
+            );
+            return (
+              <li
+                key={a.id}
+                className="group/item -mx-2 flex items-center gap-1 rounded-md px-2 hover:bg-muted/70"
+              >
+                {a.kind === "link" ? (
+                  <a
+                    href={a.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={a.url}
+                    className="flex min-w-0 flex-1 items-center gap-2 py-1.5"
+                  >
+                    {label}
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => void openFile(a)}
+                    title={`Ouvrir ${a.name}`}
+                    className="flex min-w-0 flex-1 items-center gap-2 py-1.5 text-left"
+                  >
+                    {label}
+                  </button>
+                )}
+                {a.kind === "file" && (
+                  <button
+                    type="button"
+                    onClick={() => void openFile(a, true)}
+                    aria-label={`Télécharger ${a.name}`}
+                    title="Télécharger"
+                    className="rounded p-1 text-muted-foreground opacity-100 hover:bg-background hover:text-foreground sm:opacity-0 sm:group-hover/item:opacity-100 sm:focus-visible:opacity-100"
+                  >
+                    <Download className="size-3.5" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void remove(a)}
+                  aria-label={`Retirer ${a.name}`}
+                  title="Retirer"
+                  className="rounded p-1 text-muted-foreground opacity-100 hover:bg-background hover:text-destructive sm:opacity-0 sm:group-hover/item:opacity-100 sm:focus-visible:opacity-100"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {uploading.map((n, i) => (
+        <p key={`${n}-${i}`} className="flex items-center gap-2 py-1 text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
+          <span className="truncate">Envoi de « {n} »…</span>
+        </p>
+      ))}
+
+      {linkOpen ? (
+        <form
+          className="flex flex-col gap-1.5 rounded-lg border border-border bg-background p-2 sm:flex-row sm:items-center"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (await addLink(url, name)) {
+              setUrl("");
+              setName("");
+              setLinkOpen(false);
+            }
+          }}
+        >
+          <input
+            autoFocus
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Escape" && setLinkOpen(false)}
+            placeholder="https://…"
+            aria-label="Adresse du lien"
+            inputMode="url"
+            className="h-8 min-w-0 flex-[3] rounded-md bg-muted/60 px-2 outline-none focus:ring-2 focus:ring-amber-500/40"
+          />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === "Escape" && setLinkOpen(false)}
+            placeholder="Nom (facultatif)"
+            aria-label="Nom du lien"
+            className="h-8 min-w-0 flex-[2] rounded-md bg-muted/60 px-2 outline-none focus:ring-2 focus:ring-amber-500/40"
+          />
+          <div className="flex gap-1">
+            <button
+              type="submit"
+              disabled={!url.trim()}
+              className="h-8 rounded-md bg-foreground px-3 text-background disabled:opacity-40"
+            >
+              Ajouter
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLinkOpen(false);
+                setError(null);
+              }}
+              className="h-8 rounded-md px-2 text-muted-foreground hover:bg-muted"
+            >
+              Annuler
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="-ml-2 flex flex-wrap items-center gap-1">
+          <button type="button" className={action} onClick={() => setLinkOpen(true)}>
+            <Link2 className="size-4" /> Ajouter un lien
+          </button>
+          <button type="button" className={action} onClick={() => fileRef.current?.click()}>
+            <Paperclip className="size-4" /> Joindre un fichier
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            multiple
+            hidden
+            onChange={(e) => {
+              void addFiles(Array.from(e.target.files ?? []));
+              e.target.value = "";
+            }}
+          />
+        </div>
+      )}
+      {error && (
+        <p role="alert" className="text-xs text-destructive">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 
