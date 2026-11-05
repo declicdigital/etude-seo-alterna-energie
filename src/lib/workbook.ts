@@ -16,7 +16,15 @@ workbook[STRATEGIE_SHEET] ??= [[...(workbook["BLOG - ARTICLES"]?.[0] ?? [])]];
 export const PLANETE_SHEET = "PLANETE - ARTICLES";
 workbook[PLANETE_SHEET] ??= [
   (workbook["BLOG - ARTICLES"]?.[0] ?? []).map((h, i) =>
-    i === 5 ? "" : i === 6 ? "Catégorie" : i === 7 ? "Sous-catégorie" : h,
+    i === 2 || i === 3 || i === 5
+      ? ""
+      : i === 4
+        ? "Date de publication"
+        : i === 6
+          ? "Catégorie"
+          : i === 7
+            ? "Sous-catégorie"
+            : h,
   ),
 ];
 

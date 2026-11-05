@@ -108,6 +108,9 @@ describe("Parlons Planète", () => {
   it("lists articles in a single « Blog » with categories but no audience", () => {
     const headers = headersOf("PLANETE - ARTICLES");
     expect(headers[1]).toBe("Articles");
+    expect(headers[2]).toBe("");
+    expect(headers[3]).toBe("");
+    expect(headers[4]).toBe("Date de publication");
     expect(headers[5]).toBe("");
     expect(headers[6]).toBe("Catégorie");
     expect(headers[7]).toBe("Sous-catégorie");
