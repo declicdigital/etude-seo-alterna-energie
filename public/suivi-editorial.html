@@ -1284,7 +1284,8 @@ function newArticle(title){
 function missingFields(article, stepKey){
   const step = article.steps.find(s => s.key === stepKey);
   const out = [];
-  if(!step || !/^\d{4}-\d{2}-\d{2}$/.test(step.date || '')) out.push('la date de réalisation');
+  /* Pas de date saisie : la date du jour est mise au moment de valider. */
+  if(!step) out.push('la date de réalisation');
   if(['image', 'relecture', 'integration'].includes(stepKey) || EditorialPipeline.isPro(article, SPACE)){
     const index = article.steps.findIndex(s => s.key === stepKey);
     if(article.steps.slice(0, index).some(s => s.status === 'pending')) out.push('les étapes précédentes');
@@ -2012,6 +2013,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
       alert('Avant de valider cette étape, complète : ' + missing.join(', ') + '.');
       return;
     }
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(step.date || '')) step.date = todayIso();
     if(!EditorialPipeline.completeStep(step)) return;
     await saveArticle(article);
     if(key === 'integration') await pushToBlog(article);
