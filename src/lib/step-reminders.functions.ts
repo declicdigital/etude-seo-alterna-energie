@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { MAIL_SENDER } from "./mail-sender";
+import { spaceLabel, spacePrefix } from "./editorial-spaces";
 import { buildStepReminder, canSendStepReminder, GEOFFREY_EMAIL, reminderArticleSchema, reminderConfigSchema, stepReminderSchema } from "./step-reminders";
 
 export const sendStepReminder = createServerFn({ method: "POST" })
@@ -11,7 +12,7 @@ export const sendStepReminder = createServerFn({ method: "POST" })
     if (roleError || !canSendStepReminder(isAdmin === true, typeof context.claims.email === "string" ? context.claims.email : undefined)) {
       return { ok: false, error: "Seul Geoffrey peut envoyer ces rappels." };
     }
-    const prefix = data.space === "strategie" ? "strat:" : "";
+    const prefix = spacePrefix(data.space);
     const keys = [`${prefix}article:${data.articleId}`, `${prefix}pipeline-config`, `${prefix}articles-index`];
     const { data: rows, error } = await context.supabase.from("editorial_kv").select("key,value").in("key", keys);
     if (error || !rows) return { ok: false, error: "L’article n’a pas pu être chargé." };
@@ -29,7 +30,7 @@ export const sendStepReminder = createServerFn({ method: "POST" })
       const escape = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
       const details = [article.title, article.subject, reminder.deadline ? `Deadline : ${reminder.deadline}` : undefined, article.docxLink].filter((s): s is string => !!s);
       const textContent = ["Bonjour,", "", reminder.message, "", ...details, "", `${reminder.cta} : ${reminder.url}`, "", "Notification de Digicom."].join("\r\n");
-      const htmlContent = `<html><body style="font-family:Arial,sans-serif"><h2>Digicom · ${data.space === "strategie" ? "Stratégie PAC" : "Blog"}</h2><p>Bonjour,</p><p>${escape(reminder.message)}</p>${details.map(line => `<p>${escape(line)}</p>`).join("")}<p><a href="${escape(reminder.url)}">${escape(reminder.cta)}</a></p><p>Notification de Digicom.</p></body></html>`;
+      const htmlContent = `<html><body style="font-family:Arial,sans-serif"><h2>Digicom · ${spaceLabel(data.space)}</h2><p>Bonjour,</p><p>${escape(reminder.message)}</p>${details.map(line => `<p>${escape(line)}</p>`).join("")}<p><a href="${escape(reminder.url)}">${escape(reminder.cta)}</a></p><p>Notification de Digicom.</p></body></html>`;
       const response = await fetch("https://connector-gateway.lovable.dev/brevo/smtp/email", {
         method: "POST",
         headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": brevoKey, "Content-Type": "application/json" },

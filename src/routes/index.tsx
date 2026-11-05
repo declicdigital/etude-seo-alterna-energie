@@ -134,6 +134,7 @@ function Index() {
     !baseSheet.toUpperCase().startsWith("BLOG") &&
     !baseSheet.toUpperCase().startsWith("SUIVI ") &&
     !baseSheet.toUpperCase().startsWith("STRATEGIE") &&
+    sheetInfo?.group !== "Parlons Planète" &&
     sheetInfo?.group !== "Stratégie PAC" &&
     sheetInfo?.group !== "FAQ" &&
     sheetInfo?.group !== "Benchmark" &&

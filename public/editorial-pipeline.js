@@ -1,7 +1,18 @@
 (function (root) {
   const isPro = (article, space) => !space && article.audience === 'Professionnel';
   const isRewrite = (article, space) => space === 'strategie' && article.type === 'Réécriture';
-  function normalizeConfig(config) {
+  const PLANETE_STEPS = ['redaction', 'integration'];
+  // Parlons Planète: Rédaction (Aurorae) then Intégration (Geoffrey), nothing in between.
+  function normalizePlanete(config) {
+    const red = config.find(c => c.key === 'redaction') || { key:'redaction', label:'Rédaction', assignee:'', skippable:false };
+    const int = config.find(c => c.key === 'integration') || { key:'integration', label:'Intégration', skippable:false };
+    return [
+      { ...red, options: Array.isArray(red.options) && red.options.length ? red.options : ['Aurorae'] },
+      { ...int, assignee:'Geoffrey', options:[], emails:{ Geoffrey:'geoffrey.delabarre@alterna-energie.fr', ...(int.emails || {}) } },
+    ];
+  }
+  function normalizeConfig(config, space) {
+    if(space === 'planete') return normalizePlanete(config);
     const result = config.filter(c => !['validation', 'image', 'relecture'].includes(c.key)).map(c => ({ ...c }));
     const index = result.findIndex(c => c.key === 'integration');
     const legacy = config.find(c => c.key === 'validation');
@@ -14,7 +25,8 @@
   }
   function configFor(article, config, space) {
     const pro = isPro(article, space);
-    return normalizeConfig(config).filter(c => (pro || c.key !== 'expert') && (!isRewrite(article, space) || !['image', 'relecture'].includes(c.key))).map(c => ({
+    if(space === 'planete') return normalizeConfig(config, space);
+    return normalizeConfig(config, space).filter(c => (pro || c.key !== 'expert') && (!isRewrite(article, space) || !['image', 'relecture'].includes(c.key))).map(c => ({
       ...c,
       label: pro && c.key === 'redaction' ? 'Édition' : c.label
     }));
@@ -42,12 +54,13 @@
       const step = saved || { key: c.key, status: c.key === 'expert' && published ? 'skipped' : 'pending', assignee: c.assignee || '', date: '', attachments: [] };
       if(!step.attachments) step.attachments = [];
       if(c.key === 'expert' && !(step.assignee || '').trim()) step.assignee = c.assignee || '';
-      if(c.key === 'image') step.assignee = 'Geoffrey';
+      if(c.key === 'image' || (space === 'planete' && c.key === 'integration')) step.assignee = 'Geoffrey';
       if(c.key === 'relecture') step.assignee = 'Service Communication';
       return step;
     });
   }
   function nextNotification(article, key, space) {
+    if(space === 'planete') return key === 'redaction' ? { kind:'integration', next:'integration', who:'Geoffrey (intégration)' } : null;
     if(isRewrite(article, space)){
       if(key === 'redaction') return { kind:'integration', next:'integration', who:'Marick (intégration)' };
       if(['image', 'validation', 'relecture'].includes(key)) return null;
@@ -64,5 +77,5 @@
     step.status = 'done';
     return true;
   }
-  root.EditorialPipeline = { isPro, isRewrite, normalizeConfig, configFor, sync, nextNotification, completeStep };
+  root.EditorialPipeline = { PLANETE_STEPS, isPro, isRewrite, normalizeConfig, configFor, sync, nextNotification, completeStep };
 })(globalThis);

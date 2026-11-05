@@ -73,6 +73,15 @@ const MAP: Record<string, GroupColor> = {
     activeRow: "bg-blue-600/15 hover:bg-blue-600/20",
     accent: "bg-blue-600",
   },
+  "Parlons Planète": {
+    header:
+      "bg-gradient-to-r from-lime-600/15 via-lime-600/5 to-transparent border-lime-600/30",
+    chip: "text-lime-700 dark:text-lime-300",
+    title: "text-lime-950 dark:text-lime-100",
+    rowTint: "hover:bg-lime-600/10",
+    activeRow: "bg-lime-600/15 hover:bg-lime-600/20",
+    accent: "bg-lime-600",
+  },
   Organisation: {
     header:
       "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/30",

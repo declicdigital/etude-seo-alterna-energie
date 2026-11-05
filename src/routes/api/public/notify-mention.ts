@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { editorialLink } from "@/lib/editorial-links";
+import { EDITORIAL_SPACES, spaceLabel } from "@/lib/editorial-spaces";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { authenticateRequest } from "@/lib/route-auth.server";
 const BodySchema = z.object({
-  space: z.enum(["strategie"]).optional(),
+  space: z.enum(EDITORIAL_SPACES).optional(),
   articleId: z.string().max(200).optional(),
   articleTitle: z.string().min(1).max(300),
   stepLabel: z.string().max(120).optional(),
@@ -28,7 +29,7 @@ function buildHtml(p: { author: string; title: string; step?: string; message: s
   return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;padding:32px 12px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
-<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · ${p.space === "strategie" ? "Stratégie PAC" : "Blog"}</td></tr>
+<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · ${spaceLabel(p.space)}</td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 16px;font-size:16px"><strong>${esc(p.author)}</strong> vous a mentionné.</p>
 <p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">Article</p>

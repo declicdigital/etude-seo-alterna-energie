@@ -694,6 +694,8 @@ button{ font-family: inherit; cursor:pointer; }
 html:not(.no-cat) .col-brief{display:none!important}
 .no-cat .col-cible{display:none!important}
 .no-cat .col-energy{display:none!important}
+/* Parlons Planète : un seul blog, sans cible ni catégorie. */
+.planete .col-cible,.planete .col-cat{display:none!important}
 </style>
 </head>
 <body>
@@ -762,14 +764,22 @@ const REST = SUPABASE_URL + '/rest/v1/editorial_kv';
 const CELLS_REST = SUPABASE_URL + '/rest/v1/sheet_cells';
 
 /* Publication automatique vers l'onglet Blog de l'outil. */
-const SPACE = new URLSearchParams(location.search).get('space') === 'strategie' ? 'strategie' : '';
-const NO_CAT = SPACE === 'strategie';
-const KEY = k => SPACE ? 'strat:' + k : k;
-const BLOG_SHEET = SPACE ? 'STRATEGIE - ARTICLES' : 'BLOG - ARTICLES';
+const SPACE = (p => p === 'strategie' || p === 'planete' ? p : '')(new URLSearchParams(location.search).get('space'));
+const STRAT = SPACE === 'strategie';
+const PLANETE = SPACE === 'planete';
+const SPACE_LABEL = STRAT ? 'Stratégie PAC' : PLANETE ? 'Parlons Planète' : '';
+const NO_CAT = STRAT;
+const KEY = k => STRAT ? 'strat:' + k : PLANETE ? 'planete:' + k : k;
+const BLOG_SHEET = STRAT ? 'STRATEGIE - ARTICLES' : PLANETE ? 'PLANETE - ARTICLES' : 'BLOG - ARTICLES';
 const BLOG_BASE_LEN = SPACE ? 1 : 424;
 if(NO_CAT) document.documentElement.classList.add('no-cat');
 if(NO_CAT){ const thc = document.querySelector('thead th.col-cat'); if(thc) thc.textContent = 'Catégorie du blog'; const hint = document.querySelector('.todo-hint'); if(hint) hint.textContent += ' Une ligne classée « Blog » doit aussi choisir sa catégorie du blog.'; }
-if(SPACE){ document.title = 'Suivi éditorial (Stratégie PAC) — Outil contenus'; document.addEventListener('DOMContentLoaded', () => { const h = document.querySelector('h1'); if(h) h.textContent = 'Suivi éditorial — Stratégie PAC'; }); const h0 = document.querySelector('h1'); if(h0) h0.textContent = 'Suivi éditorial — Stratégie PAC'; }
+if(SPACE){ document.title = 'Suivi éditorial (' + SPACE_LABEL + ') — Outil contenus'; document.addEventListener('DOMContentLoaded', () => { const h = document.querySelector('h1'); if(h) h.textContent = 'Suivi éditorial — ' + SPACE_LABEL; }); const h0 = document.querySelector('h1'); if(h0) h0.textContent = 'Suivi éditorial — ' + SPACE_LABEL; }
+if(PLANETE){
+  document.documentElement.classList.add('planete');
+  const hint = document.querySelector('.todo-hint');
+  if(hint) hint.textContent = "Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi et Geoffrey reçoit un mail pour l'intégrer. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.";
+}
 const AUDIENCES = ['Particulier', 'Professionnel'];
 const DESTS = ['Blog', 'Éditorial'];
 const BLOG_CATEGORIES = {
@@ -1069,7 +1079,10 @@ const storage = {
 /* L'ajout d'images appartient à l'étape Image. */
 function isImageStep(key){ return key === 'image'; }
 
-const DEFAULT_CONFIG = [
+const DEFAULT_CONFIG = PLANETE ? [
+  { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae'], skippable:false },
+  { key:'integration', label:'Intégration', assignee:'Geoffrey', skippable:false }
+] : [
   { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae','Marina'], skippable:false },
   { key:'image', label:'Image', assignee:'Geoffrey', skippable:false },
   { key:'relecture', label:'Relecture', assignee:'Service Communication', skippable:false },
@@ -1085,21 +1098,21 @@ function normalizeConfig(){
     changed = true;
   }
   const red = config.find(c => c.key === 'redaction');
-  if(red && !Array.isArray(red.options)){ red.options = ['Aurorae','Marina']; changed = true; }
+  if(red && !Array.isArray(red.options)){ red.options = PLANETE ? ['Aurorae'] : ['Aurorae','Marina']; changed = true; }
   // Adresses mail par défaut des responsables (modifiables dans les réglages).
   const DEFAULT_EMAILS = {
     redaction: { 'Aurorae': 'caroline@aurorae-editorial.com, elodie@aurorae-editorial.com', 'Marina': 'contact@marinatravert.com' },
     image: { Geoffrey: 'geoffrey.delabarre@alterna-energie.fr' },
     relecture: { 'Service Communication': 'fannie.laurendin@soregies.fr, coraline.prono@soregies.fr' },
-    integration: { 'Marick': 'marick.navarro.ext@soregies.fr' },
+    integration: PLANETE ? { Geoffrey: 'geoffrey.delabarre@alterna-energie.fr' } : { 'Marick': 'marick.navarro.ext@soregies.fr' },
   };
   for(const c of config){
     if(DEFAULT_EMAILS[c.key] && !c.emails){ c.emails = { ...DEFAULT_EMAILS[c.key] }; changed = true; }
   }
   // Brief SEO est supprimée ; Image et Relecture restent distinctes.
   // Stratégie PAC : étape « Brief » en tout premier, avant la rédaction.
-  const drop = SPACE ? ['idee', 'validation_geoffrey'] : ['idee', 'brief', 'validation_geoffrey'];
-  if(SPACE && !config.some(c => c.key === 'brief')){
+  const drop = STRAT ? ['idee', 'validation_geoffrey'] : ['idee', 'brief', 'validation_geoffrey'];
+  if(STRAT && !config.some(c => c.key === 'brief')){
     config.unshift({ key:'brief', label:'Brief', assignee:'', skippable:false });
     changed = true;
   }
@@ -1107,7 +1120,7 @@ function normalizeConfig(){
     config = config.filter(c => !drop.includes(c.key));
     changed = true;
   }
-  const normalized = EditorialPipeline.normalizeConfig(config);
+  const normalized = EditorialPipeline.normalizeConfig(config, SPACE);
   if(JSON.stringify(config) !== JSON.stringify(normalized)){ config = normalized; changed = true; }
   return changed;
 }
@@ -1187,8 +1200,8 @@ async function loadArticles(){
         const a = JSON.parse(r.value);
         let articleChanged = false;
         // Retire l'étape Brief SEO des articles existants.
-        if(Array.isArray(a.steps) && a.steps.some(s => s.key === 'idee' || (!SPACE && s.key === 'brief'))){
-          a.steps = a.steps.filter(s => s.key !== 'idee' && (SPACE || s.key !== 'brief'));
+        if(Array.isArray(a.steps) && a.steps.some(s => s.key === 'idee' || (!STRAT && s.key === 'brief'))){
+          a.steps = a.steps.filter(s => s.key !== 'idee' && (STRAT || s.key !== 'brief'));
           articleChanged = true;
         }
         if(a.category === 'Guides pratiques'){
@@ -1253,12 +1266,12 @@ function missingFields(article, stepKey){
   if(stepKey === 'redaction'){
     if(!article.audience) out.push('Particulier / Professionnel');
     if(!(article.title||'').trim() || article.title.trim() === 'Nouvel article') out.push("le titre de l'article");
-    if(!NO_CAT && !article.category) out.push('la catégorie');
+    if(!NO_CAT && !PLANETE && !article.category) out.push('la catégorie');
     if(!NO_CAT && !article.energy) out.push("l'énergie");
   }
   if(stepKey === 'integration'){
     if(!(article.finalLink||'').trim()) out.push("le lien de l'article publié");
-    if(SPACE && article.dest === 'Blog' && !(article.category||'').trim()) out.push('la catégorie du blog');
+    if(STRAT && article.dest === 'Blog' && !(article.category||'').trim()) out.push('la catégorie du blog');
   }
   return out;
 }
@@ -1296,7 +1309,7 @@ async function insertBlogRow(article, sheet, base){
     [6, article.category || ''],
     [9, normalizeUrl(article.finalLink)],
     [10, article.energy || '']
-  ];
+  ].filter(v => !(PLANETE && sheet === BLOG_SHEET && (v[0] === 5 || v[0] === 6)));
   const body = values.map(v => ({ sheet, row_id: rowId, col: v[0], value: String(v[1]), updated_at: now }));
   const res = await fetch(CELLS_REST + '?on_conflict=sheet,row_id,col', {
     method: 'POST',
@@ -1317,7 +1330,7 @@ async function pushToBlog(article){
       article.blogSheet = sheet;
       await saveArticle(article);
     }
-    if(SPACE && article.dest === 'Blog' && !article.mainBlogRowId){
+    if(STRAT && article.dest === 'Blog' && !article.mainBlogRowId){
       article.mainBlogRowId = await insertBlogRow(article, 'BLOG - ARTICLES::Particulier', 424);
       await saveArticle(article);
     }
@@ -1563,7 +1576,7 @@ function renderArticleCard(article){
           </div>
         </div>
         <div class="attachments-block">
-          <label class="attachments-label">${step.key === 'integration' && !EditorialPipeline.isRewrite(article, SPACE) ? 'Images validées (étape Image)' : 'Pièces jointes'}</label>
+          <label class="attachments-label">${step.key === 'integration' && !PLANETE && !EditorialPipeline.isRewrite(article, SPACE) ? 'Images validées (étape Image)' : 'Pièces jointes'}</label>
           <div class="attachments-list">${renderAttachments(article.id, step)}${['relecture', 'integration'].includes(step.key) ? renderImagesReadonly(article, step.key) : ''}</div>
           ${isImageStep(step.key) ? `
           <label class="attach-image-label" data-article-id="${article.id}" data-step-key="${step.key}">
@@ -1581,10 +1594,10 @@ function renderArticleCard(article){
 
   const isConfirming = confirmingDelete === article.id;
   const isCollapsed = !expanded[article.id];
-  const audCls = article.audience === 'Professionnel' ? 'aud-pro'
+  const audCls = PLANETE ? '' : article.audience === 'Professionnel' ? 'aud-pro'
     : article.audience === 'Particulier' ? 'aud-part' : '';
   const isPublished = !!article.blogRowId || (article.steps || []).some(s => s.key === 'integration' && s.status === 'done');
-  const audPill = article.audience === 'Professionnel' ? '<span class="aud-pill">Pro</span>'
+  const audPill = PLANETE ? '' : article.audience === 'Professionnel' ? '<span class="aud-pill">Pro</span>'
     : article.audience === 'Particulier' ? '<span class="aud-pill">Part.</span>' : '';
   const statusPill = isPublished ? '<span class="status-pill">✓ Publié</span>' : '<span class="status-pill ongoing">En cours</span>';
 
@@ -1596,7 +1609,7 @@ function renderArticleCard(article){
         ${audPill}${statusPill}
         <input class="title-input" data-action="edit-title" data-article-id="${article.id}" value="${escapeAttr(article.title)}" placeholder="Titre de l'article">
         <div class="article-meta">
-          ${article.blogRowId ? `<span class="blog-badge">${SPACE ? 'Ajouté aux contenus' : 'Ajouté au blog'}</span>` : ''}${article.mainBlogRowId ? `<span class="blog-badge">Ajouté au blog</span>` : ''}
+          ${article.blogRowId ? `<span class="blog-badge">${STRAT ? 'Ajouté aux contenus' : 'Ajouté au blog'}</span>` : ''}${article.mainBlogRowId ? `<span class="blog-badge">Ajouté au blog</span>` : ''}
           <span class="progress-tag">${doneCount}/${total} étapes</span>
           <button class="btn-ghost copy-link-btn" data-action="copy-link" data-article-id="${article.id}" title="Copier le lien vers cette carte">🔗 Lien</button>
           <button class="delete-btn ${isConfirming?'confirming':''}" data-action="delete-article" data-article-id="${article.id}">${isConfirming ? 'Confirmer la suppression' : 'Supprimer'}</button>
@@ -1604,9 +1617,9 @@ function renderArticleCard(article){
       </div>
       <div class="article-body">
         <div class="links-row">
-          ${SPACE ? `<div class="link-field"><span class="link-tag">Type</span><select data-action="pick-type" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">—</option>${['Réécriture','Création'].map(o=>`<option ${article.type===o?'selected':''}>${o}</option>`).join('')}</select></div><div class="link-field"><span class="link-tag">Catégorie</span><select data-action="pick-dest" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">—</option>${DESTS.map(o=>`<option ${article.dest===o?'selected':''}>${o}</option>`).join('')}</select></div>` : ''}
-          ${SPACE && article.dest === 'Blog' ? `<div class="link-field"><span class="link-tag">Catégorie du blog</span><select data-action="pick-blog-cat" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">— Choisir —</option>${categoriesFor(article.audience || 'Particulier').map(o=>`<option ${article.category===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></div>` : ''}
-          ${SPACE ? renderLinkField(article.id, 'brief-link', article.briefLink || '', 'Brief', 'Coller le lien du brief') : ''}
+          ${STRAT ? `<div class="link-field"><span class="link-tag">Type</span><select data-action="pick-type" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">—</option>${['Réécriture','Création'].map(o=>`<option ${article.type===o?'selected':''}>${o}</option>`).join('')}</select></div><div class="link-field"><span class="link-tag">Catégorie</span><select data-action="pick-dest" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">—</option>${DESTS.map(o=>`<option ${article.dest===o?'selected':''}>${o}</option>`).join('')}</select></div>` : ''}
+          ${STRAT && article.dest === 'Blog' ? `<div class="link-field"><span class="link-tag">Catégorie du blog</span><select data-action="pick-blog-cat" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">— Choisir —</option>${categoriesFor(article.audience || 'Particulier').map(o=>`<option ${article.category===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></div>` : ''}
+          ${STRAT ? renderLinkField(article.id, 'brief-link', article.briefLink || '', 'Brief', 'Coller le lien du brief') : ''}
           ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Doc', 'Coller le lien du document Doc')}
           ${renderLinkField(article.id, 'final-link', article.finalLink, 'Article publié', "Coller le lien de l'article publié")}
         </div>
@@ -2237,9 +2250,10 @@ const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com'
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
 function todoComplete(t){
   const fields = ['sujet','editrice','redactionDate','h1','audience','deadline','docx'];
-  if(SPACE){ fields.push('brief','briefDate','type','dest'); if(t.dest === 'Blog') fields.push('categorie'); }
+  if(STRAT){ fields.push('brief','briefDate','type','dest'); if(t.dest === 'Blog') fields.push('categorie'); }
+  else if(PLANETE) fields.push('energie');
   else fields.push('categorie','energie');
-  return fields.every(f => (t[f]||'').trim()) && /^\d{4}-\d{2}-\d{2}$/.test(t.redactionDate || '') && (!SPACE || /^\d{4}-\d{2}-\d{2}$/.test(t.briefDate || ''));
+  return fields.every(f => (t[f]||'').trim()) && /^\d{4}-\d{2}-\d{2}$/.test(t.redactionDate || '') && (!STRAT || /^\d{4}-\d{2}-\d{2}$/.test(t.briefDate || ''));
 }
 /* Nombre de jours restants avant la deadline (négatif si dépassée, null si pas de date). */
 function todoDaysLeft(t){
@@ -2280,7 +2294,7 @@ function refreshTodoDot(tr, t){
 }
 function renderTodos(){
   const body = document.getElementById('todoBody');
-  document.documentElement.classList.toggle('show-blog-cat', !!SPACE && todos.some(t => (t.dest||'') === 'Blog'));
+  document.documentElement.classList.toggle('show-blog-cat', STRAT && todos.some(t => (t.dest||'') === 'Blog'));
   if(!todos.length){ body.innerHTML = '<tr><td colspan="12" style="color:var(--muted);font-size:0.82rem;padding:10px">Aucun sujet à rédiger.</td></tr>'; return; }
   const ro = !canEditTodo();
   const addBtn = document.getElementById('todoAddBtn'); if(addBtn) addBtn.style.display = ro ? 'none' : '';
@@ -2293,7 +2307,7 @@ function renderTodos(){
     <td class="col-brief"><input type="date" data-f="briefDate" aria-label="Date du brief" value="${escapeAttr(t.briefDate||'')}"></td>
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td class="col-cible"><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
-    <td class="col-cat">${SPACE ? (t.dest === 'Blog' ? `<select data-f="categorie"><option value="">— Choisir —</option>${categoriesFor('Particulier').map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>` : '<span class="td-na">—</span>') : `<select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>`}</td>
+    <td class="col-cat">${STRAT ? (t.dest === 'Blog' ? `<select data-f="categorie"><option value="">— Choisir —</option>${categoriesFor('Particulier').map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>` : '<span class="td-na">—</span>') : `<select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>`}</td>
     <td class="col-energy"><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><div class="td-dl">${isUrgentTodo(t) ? `<span class="todo-dot" title="${escapeAttr(urgentTitle(t))}"></span>` : ''}<input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></div></td>
     <td class="col-brief"><div class="td-linkwrap"><input data-f="brief" value="${escapeAttr(t.brief||'')}" placeholder="https://…">${(t.brief||'').trim() ? `<a class="todo-open" href="${escapeAttr(normalizeUrl(t.brief.trim()))}" target="_blank" rel="noopener noreferrer" title="Ouvrir le lien">↗</a>` : ''}</div></td>
@@ -2404,7 +2418,7 @@ document.getElementById('todoBody').addEventListener('click', async (e) => {
 });
 
 /* ===== Commentaires du bloc « À rédiger » ===== */
-const TODO_ARTICLE_ID = SPACE ? '__todo_strat__' : '__todo__';
+const TODO_ARTICLE_ID = STRAT ? '__todo_strat__' : PLANETE ? '__todo_planete__' : '__todo__';
 function renderTodoComments(){
   const el = document.getElementById('todoComments');
   if(el) el.innerHTML = renderComments(TODO_ARTICLE_ID);

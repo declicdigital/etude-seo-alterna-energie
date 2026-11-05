@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { editorialLink } from "@/lib/editorial-links";
+import { ALL_SPACES, spaceLabel, spacePrefix } from "@/lib/editorial-spaces";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = MAIL_SENDER;
@@ -27,7 +28,7 @@ function buildHtml(p: { days: number; space: string; id: string; sujet: string; 
   return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;padding:32px 12px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
-<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · ${p.space === "strategie" ? "Stratégie PAC" : "Blog"}</td></tr>
+<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · ${spaceLabel(p.space)}</td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 16px;font-size:16px"><strong>Rappel de deadline</strong></p>
 <p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">Sujet</p>
@@ -85,10 +86,10 @@ export const Route = createFileRoute("/api/public/jobs/deadline-reminders")({
           return Response.json({ error: "unauthorized" }, { status: 401 });
         }
 
-        // Each editorial space (Blog, Stratégie PAC) has its own todo list and pipeline settings.
+        // Each editorial space (Blog, Stratégie PAC, Parlons Planète) has its own todo list and pipeline settings.
         const todos: (Todo & { space: string; emails: Record<string, string[]> })[] = [];
-        for (const space of ["", "strategie"]) {
-          const pfx = space ? "strat:" : "";
+        for (const space of ALL_SPACES) {
+          const pfx = spacePrefix(space);
           const { data: todoRow, error: todoError } = await supabaseAdmin
             .from("editorial_kv").select("value").eq("key", pfx + "todo-redaction").maybeSingle();
           if (todoError) {

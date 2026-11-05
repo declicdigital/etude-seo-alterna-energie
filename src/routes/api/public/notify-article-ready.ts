@@ -3,8 +3,9 @@ import { z } from "zod";
 import { notificationLink } from "@/lib/editorial-links";
 import { notificationCta, notificationDeadline, notificationRecipients, SERVICE_COMMUNICATION_EMAILS } from "@/lib/article-notification";
 import { MAIL_SENDER } from "@/lib/mail-sender";
+import { EDITORIAL_SPACES, spaceLabel, spacePrefix } from "@/lib/editorial-spaces";
 const BodySchema = z.object({
-  space: z.enum(["strategie"]).optional(),
+  space: z.enum(EDITORIAL_SPACES).optional(),
   type: z.enum(["Réécriture", "Création"]).optional(),
   articleId: z.string().max(200).optional(),
   stepKey: z.string().max(120).optional(),
@@ -39,14 +40,16 @@ function buildHtml(p: z.infer<typeof BodySchema>): string {
   return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;padding:32px 12px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
-<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · ${p.space === "strategie" ? "Stratégie PAC" : "Blog"}</td></tr>
+<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · ${spaceLabel(p.space)}</td></tr>
 <tr><td style="padding:28px">
 ${p.kind === "image"
   ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Geoffrey,<br><br>L'article a été rédigé${p.cible === 'Professionnel' && !p.space ? ' et relu par l’expert métier' : ''}. Merci de <strong>trouver une image</strong>, de l'<strong>ajouter</strong> dans la carte et de valider l'étape <strong>Image</strong>.</p>`
   : p.kind === "relecture"
   ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article a été rédigé et son image a été ajoutée. Merci de <strong>relire l'article</strong> et de valider l'étape <strong>Relecture</strong>.</p>`
   : p.kind === "integration"
-   ? (p.space === "strategie" && p.type === "Réécriture"
+   ? (p.space === "planete"
+     ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Geoffrey,<br><br>L'article ci-dessous a été <strong>rédigé</strong>. Il est prêt à être <strong>intégré dans le site</strong>.</p>`
+     : p.space === "strategie" && p.type === "Réécriture"
      ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>La <strong>réécriture est terminée</strong>. L'article ci-dessous est prêt à être <strong>intégré dans le site</strong>.</p>`
      : `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (visible dans la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.</p>`)
   : p.kind === "published"
@@ -96,12 +99,13 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
         const isRel = payload.kind === "relecture";
         const isInt = payload.kind === "integration";
         const isPub = payload.kind === "published";
-        const defaultTo: readonly string[] = isRel ? RELECTURE_EMAILS : isInt ? [INTEGRATION_EMAIL] : [ADMIN_EMAIL];
+        // Parlons Planète: Geoffrey integrates the articles himself.
+        const defaultTo: readonly string[] = isRel ? RELECTURE_EMAILS : isInt && payload.space !== "planete" ? [INTEGRATION_EMAIL] : [ADMIN_EMAIL];
         // Custom recipients are only allowed if they're configured in the pipeline settings.
         let allowedTo: string[] = [];
         if (!isPub && !isImage && !isRel && payload.to && payload.to.length) {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          const { data: cfgRow } = await supabaseAdmin.from("editorial_kv").select("value").eq("key", "pipeline-config").maybeSingle();
+          const { data: cfgRow } = await supabaseAdmin.from("editorial_kv").select("value").eq("key", `${spacePrefix(payload.space)}pipeline-config`).maybeSingle();
           const known = new Set<string>();
           try {
             const cfg = cfgRow?.value ? (JSON.parse(cfgRow.value) as { emails?: Record<string, string> }[]) : [];
@@ -148,7 +152,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
         ].filter((l): l is string => l !== null).join("\r\n") : isInt ? [
           "Bonjour,",
           "",
-          payload.space === "strategie" && payload.type === "Réécriture" ? "La réécriture est terminée. L'article ci-dessous est prêt à être intégré dans le site." : "L'article ci-dessous est prêt : la relecture est faite et l'image est validée (visible dans la carte de l'article).",
+          payload.space === "planete" ? "L'article ci-dessous a été rédigé. Il est prêt à être intégré dans le site." : payload.space === "strategie" && payload.type === "Réécriture" ? "La réécriture est terminée. L'article ci-dessous est prêt à être intégré dans le site." : "L'article ci-dessous est prêt : la relecture est faite et l'image est validée (visible dans la carte de l'article).",
           "Il ne vous reste plus qu'à l'intégrer dans le site.",
           "",
           `Nom de l'article (H1) : ${payload.h1}`,

@@ -1,10 +1,10 @@
+import { spaceSuiviSheet, SUIVI_SHEET_NAMES } from "./editorial-spaces";
+
 const APP = "https://etude-seo-alterna-energie.lovable.app/";
-const EDITORIAL_URL = `${APP}?sheet=SUIVI+EDITORIAL`;
-const STRATEGIE_URL = `${APP}?sheet=SUIVI+STRATEGIE`;
-const SHEETS = ["SUIVI EDITORIAL", "SUIVI STRATEGIE"];
+const SHEETS = SUIVI_SHEET_NAMES;
 
 export function editorialLink(id?: string, step?: string, focus?: string, todo = false, space?: string): string {
-  const base = space === "strategie" ? STRATEGIE_URL : EDITORIAL_URL;
+  const base = `${APP}?sheet=${encodeURIComponent(spaceSuiviSheet(space)).replace(/%20/g, "+")}`;
   if (!id) return base;
   const params = new URLSearchParams();
   if (step) params.set("step", step);

@@ -9,6 +9,12 @@ export const workbook = raw as unknown as Workbook;
 export const STRATEGIE_SHEET = "STRATEGIE - ARTICLES";
 workbook[STRATEGIE_SHEET] ??= [[...(workbook["BLOG - ARTICLES"]?.[0] ?? [])]];
 
+/** Parlons Planète articles: the blog's columns without Audience and Catégorie (one single blog). */
+export const PLANETE_SHEET = "PLANETE - ARTICLES";
+workbook[PLANETE_SHEET] ??= [
+  (workbook["BLOG - ARTICLES"]?.[0] ?? []).map((h, i) => (i === 5 || i === 6 ? "" : h)),
+];
+
 /** Sheets retired from the tool (kept in the raw data, hidden everywhere). */
 export const RETIRED_SHEETS = new Set(["BLOG - IDEE"]);
 
@@ -16,6 +22,7 @@ export const RETIRED_SHEETS = new Set(["BLOG - IDEE"]);
 export const EMBED_SHEETS: Record<string, string> = {
   "SUIVI EDITORIAL": "/suivi-editorial.html",
   "SUIVI STRATEGIE": "/suivi-editorial.html?space=strategie",
+  "SUIVI PLANETE": "/suivi-editorial.html?space=planete",
   "BENCHMARK": "/benchmark.html",
 };
 
@@ -77,6 +84,9 @@ export const EXTRA_COLUMNS: Record<
     { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
   ],
   "STRATEGIE - ARTICLES": [
+    { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
+  ],
+  "PLANETE - ARTICLES": [
     { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
   ],
 };
@@ -256,6 +266,8 @@ export const SHEET_META: Record<
   "SUIVI EDITORIAL": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Blog" },
   "SUIVI STRATEGIE": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Stratégie PAC" },
   "STRATEGIE - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Contenus", group: "Stratégie PAC" },
+  "SUIVI PLANETE": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Parlons Planète" },
+  "PLANETE - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Blog", group: "Parlons Planète" },
   "SUIVI FAQ": { headerRow: 0, firstDataRow: 0, label: "Demande", group: "FAQ" },
   "FAQ - DEMANDES": { headerRow: 0, firstDataRow: 0, label: "FAQ", group: "FAQ" },
   "BENCHMARK": { headerRow: 0, firstDataRow: 0, label: "Benchmark Énergie", group: "Benchmark" },

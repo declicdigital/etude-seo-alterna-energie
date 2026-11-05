@@ -8,7 +8,7 @@ import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 import { grantedSections, sheetAllowed } from "@/lib/sections";
 
-const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "FAQ", "Benchmark", "Calendriers newsletters", "Organisation", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
+const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "Parlons Planète", "FAQ", "Benchmark", "Calendriers newsletters", "Organisation", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
 const REMOVED_GROUPS = new Set(["Arborescence", "Suivi", "Docs", "Archives", "Autres"]);
 const ORDER_KEY = "sidebar.groupOrder.v1";
 const PROMOTED_KEY = "sidebar.orderPromoted.v1";
@@ -39,6 +39,10 @@ const SUB_STRUCTURE: Record<string, { name: string; subs: string[] }[]> = {
   "Stratégie PAC": [
     { name: "Contenus", subs: [] },
   ],
+  // One single blog: "Suivi éditorial" on top, the "Blog" list under it.
+  "Parlons Planète": [
+    { name: "Blog", subs: [] },
+  ],
   FAQ: [
     { name: "Particulier", subs: [] },
     { name: "Professionnel", subs: [] },
@@ -52,6 +56,7 @@ const DEFAULT_SUBPATHS: Record<string, string> = {
   "Structure RES": "Particulier",
   "Structure PRO": "Professionnel",
   "STRATEGIE - ARTICLES": "Contenus",
+  "PLANETE - ARTICLES": "Blog",
   "FAQ - DEMANDES": "*",
 };
 
@@ -94,6 +99,12 @@ const GROUP_STYLES: Record<string, {
     active: "bg-violet-500/15 text-violet-800 dark:text-violet-200 font-semibold ring-1 ring-inset ring-violet-500/30",
     hover: "hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300",
     bar: "bg-violet-500",
+  },
+  "Parlons Planète": {
+    header: "bg-lime-700 text-white",
+    active: "bg-lime-600/15 text-lime-900 dark:text-lime-100 font-semibold ring-1 ring-inset ring-lime-600/30",
+    hover: "hover:bg-lime-600/10 hover:text-lime-800 dark:hover:text-lime-200",
+    bar: "bg-lime-600",
   },
   FAQ: {
     header: "bg-teal-600 text-white",

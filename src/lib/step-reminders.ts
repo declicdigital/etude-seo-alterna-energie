@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { editorialLink } from "./editorial-links";
+import { EDITORIAL_SPACES } from "./editorial-spaces";
 import { notificationCta, notificationDeadline, notificationRecipients } from "./article-notification";
 
 export const GEOFFREY_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 export const stepReminderSchema = z.object({
   articleId: z.string().min(1).max(200),
   stepKey: z.string().min(1).max(120),
-  space: z.enum(["strategie"]).optional(),
+  space: z.enum(EDITORIAL_SPACES).optional(),
 });
 export function canSendStepReminder(isAdmin: boolean, email: string | null | undefined) {
   return isAdmin && email?.toLowerCase() === GEOFFREY_EMAIL;
@@ -23,7 +24,7 @@ export const reminderConfigSchema = z.array(z.object({
 }));
 const defaults: Record<string, Record<string, string>> = {
   redaction: { Aurorae: "caroline@aurorae-editorial.com, elodie@aurorae-editorial.com", Marina: "contact@marinatravert.com" },
-  integration: { Marick: "marick.navarro.ext@soregies.fr" },
+  integration: { Marick: "marick.navarro.ext@soregies.fr", Geoffrey: GEOFFREY_EMAIL },
   brief: { Geoffrey: GEOFFREY_EMAIL },
 };
 export function buildStepReminder(
@@ -34,13 +35,14 @@ export function buildStepReminder(
 ) {
   const review = ["validation", "relecture"].includes(input.stepKey);
   const pro = !input.space && article.audience === "Professionnel";
-   if ((input.space === "strategie" && article.type === "Réécriture" && (review || input.stepKey === "image")) || (!pro && input.stepKey === "expert") || input.stepKey === "validation") {
+  const planete = input.space === "planete";
+  if ((input.space === "strategie" && article.type === "Réécriture" && (review || input.stepKey === "image")) || (!pro && input.stepKey === "expert") || input.stepKey === "validation" || (planete && !["redaction", "integration"].includes(input.stepKey))) {
     throw new Error("Cette étape n’existe pas pour cet article.");
   }
   const step = article.steps.find(s => s.key === input.stepKey);
   const cfg = config.find(c => c.key === input.stepKey);
   if (!step || !cfg) throw new Error("Cette étape n’existe plus. Rechargez la page.");
-  const assignee = step.assignee?.trim() || cfg.assignee?.trim() || (input.stepKey === "brief" ? "Geoffrey" : "");
+  const assignee = step.assignee?.trim() || cfg.assignee?.trim() || (input.stepKey === "brief" || (planete && input.stepKey === "integration") ? "Geoffrey" : "");
   const raw = cfg.emails?.[assignee] || defaults[input.stepKey]?.[assignee] || "";
   const configured = raw.split(/[,;\s]+/).filter(Boolean);
   const matched = users.filter(u => u.full_name?.trim().toLowerCase() === assignee.toLowerCase()).map(u => u.email);

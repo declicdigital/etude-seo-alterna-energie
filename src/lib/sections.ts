@@ -15,6 +15,8 @@ export const SECTION_TREE: SectionGroup[] = [
   { group: "FAQ", subs: ["Particulier", "Professionnel"], accent: "bg-teal-500" },
   { group: "Benchmark", subs: [], defaultOn: true, accent: "bg-emerald-600" },
   { group: "Calendriers newsletters", subs: ["Grands Comptes", "Interne", "B2C", "SME"], defaultOn: true, accent: "bg-blue-600" },
+  // Closed by default: opened per account in « Demandes d'accès ».
+  { group: "Parlons Planète", subs: ["Blog"], accent: "bg-lime-600" },
   // Closed by default: opened per account. Also enforced in the database (can_use_organisation).
   { group: "Organisation", subs: [], accent: "bg-amber-500" },
 ];
@@ -35,6 +37,7 @@ const FIXED_SUB: Record<string, string> = {
   "NEWSLETTER INTERNE": "Interne",
   "NEWSLETTER B2C": "B2C",
   "NEWSLETTER SME": "SME",
+  "PLANETE - ARTICLES": "Blog",
 };
 
 /** Keys a person can actually open, resolving defaults and explicit refusals. */
