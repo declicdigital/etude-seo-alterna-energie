@@ -39,7 +39,7 @@ export const EMBED_SHEETS: Record<string, string> = {
   "SUIVI EDITORIAL": "/suivi-editorial.html",
   "SUIVI STRATEGIE": "/suivi-editorial.html?space=strategie",
   "SUIVI PLANETE": "/suivi-editorial.html?space=planete",
-  "BENCHMARK": "/benchmark.html",
+  BENCHMARK: "/benchmark.html",
 };
 
 /** FAQ space: request tracker + Particulier/Professionnel lists, rendered by FaqView. */
@@ -75,10 +75,7 @@ export function embedSrcOf(sheet: string): string | null {
  * Columns that don't exist in the Excel source but are added by the tool.
  * `col` is the index right after the last source column of the sheet.
  */
-export const EXTRA_COLUMNS: Record<
-  string,
-  { col: number; label: string; options: string[] }[]
-> = {
+export const EXTRA_COLUMNS: Record<string, { col: number; label: string; options: string[] }[]> = {
   "BLOG - ARTICLES": [
     {
       col: 6,
@@ -94,7 +91,6 @@ export const EXTRA_COLUMNS: Record<
         "Comprendre l'énergie",
         "Transition énergétique",
         "Comprendre votre facture",
-
       ],
     },
     { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
@@ -232,16 +228,17 @@ export function getCell(
     return null;
   }
   const row = workbook[base]?.[rowId];
-  return row ? row[col] ?? null : null;
+  return row ? (row[col] ?? null) : null;
 }
 
 export function getRow(sheet: string, rowId: number, edits: EditsMap): Row {
   const { base: b, scope } = parseSheetKey(sheet);
   const baseRow = workbook[b]?.[rowId];
-  const base =
-    scope
-      ? baseRow && rowMatchesScope(b, scope, baseRow) ? baseRow : []
-      : (baseRow ?? []);
+  const base = scope
+    ? baseRow && rowMatchesScope(b, scope, baseRow)
+      ? baseRow
+      : []
+    : (baseRow ?? []);
   const over = edits[sheet]?.[rowId];
   if (!over) return base;
   const width = Math.max(base.length, ...Object.keys(over).map((k) => Number(k) + 1));
@@ -268,32 +265,113 @@ export const SHEET_META: Record<
   string,
   { headerRow: number; treeCols?: number; firstDataRow: number; label: string; group: string }
 > = {
-  "Structure proposée (V2)": { headerRow: 4, treeCols: 8, firstDataRow: 6, label: "Structure proposée V2", group: "Arborescence" },
-  "Structure RES": { headerRow: 0, treeCols: 8, firstDataRow: 2, label: "Particulier", group: "Arborescence" },
-  "Structure PRO": { headerRow: 5, treeCols: 8, firstDataRow: 7, label: "Professionnel", group: "Arborescence" },
-  "Structure (resi) (OLD V3)": { headerRow: 0, treeCols: 8, firstDataRow: 2, label: "Structure Particulier (V3 archivée)", group: "Arborescence" },
-  "Structure pour migration AE-AEF": { headerRow: 0, treeCols: 8, firstDataRow: 2, label: "Migration AE → AEF", group: "Arborescence" },
+  "Structure proposée (V2)": {
+    headerRow: 4,
+    treeCols: 8,
+    firstDataRow: 6,
+    label: "Structure proposée V2",
+    group: "Arborescence",
+  },
+  "Structure RES": {
+    headerRow: 0,
+    treeCols: 8,
+    firstDataRow: 2,
+    label: "Particulier",
+    group: "Arborescence",
+  },
+  "Structure PRO": {
+    headerRow: 5,
+    treeCols: 8,
+    firstDataRow: 7,
+    label: "Professionnel",
+    group: "Arborescence",
+  },
+  "Structure (resi) (OLD V3)": {
+    headerRow: 0,
+    treeCols: 8,
+    firstDataRow: 2,
+    label: "Structure Particulier (V3 archivée)",
+    group: "Arborescence",
+  },
+  "Structure pour migration AE-AEF": {
+    headerRow: 0,
+    treeCols: 8,
+    firstDataRow: 2,
+    label: "Migration AE → AEF",
+    group: "Arborescence",
+  },
   "TODO GENERALE": { headerRow: 0, firstDataRow: 1, label: "TODO générale", group: "Suivi" },
   "BLOG - IDEE": { headerRow: 1, firstDataRow: 2, label: "Idées", group: "Blog" },
-  "BLOG - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Articles & publication", group: "Blog" },
-  "Netlinking": { headerRow: 1, firstDataRow: 2, label: "Netlinking", group: "Suivi" },
+  "BLOG - ARTICLES": {
+    headerRow: 0,
+    firstDataRow: 1,
+    label: "Articles & publication",
+    group: "Blog",
+  },
+  Netlinking: { headerRow: 1, firstDataRow: 2, label: "Netlinking", group: "Suivi" },
   "Roadmap 2026 - WIP": { headerRow: 1, firstDataRow: 2, label: "Roadmap 2026", group: "Suivi" },
   "Temps passé": { headerRow: 0, firstDataRow: 1, label: "Temps passé", group: "Suivi" },
-  "Webflow - fonctionnement": { headerRow: 1, treeCols: 5, firstDataRow: 2, label: "Webflow - fonctionnement", group: "Docs" },
+  "Webflow - fonctionnement": {
+    headerRow: 1,
+    treeCols: 5,
+    firstDataRow: 2,
+    label: "Webflow - fonctionnement",
+    group: "Docs",
+  },
   "SUIVI EDITORIAL": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Blog" },
-  "SUIVI STRATEGIE": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Stratégie PAC" },
-  "STRATEGIE - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Contenus", group: "Stratégie PAC" },
-  "SUIVI PLANETE": { headerRow: 0, firstDataRow: 0, label: "Suivi éditorial", group: "Parlons Planète" },
+  "SUIVI STRATEGIE": {
+    headerRow: 0,
+    firstDataRow: 0,
+    label: "Suivi éditorial",
+    group: "Stratégie PAC",
+  },
+  "STRATEGIE - ARTICLES": {
+    headerRow: 0,
+    firstDataRow: 1,
+    label: "Contenus",
+    group: "Stratégie PAC",
+  },
+  "SUIVI PLANETE": {
+    headerRow: 0,
+    firstDataRow: 0,
+    label: "Suivi éditorial",
+    group: "Parlons Planète",
+  },
   "PLANETE - ARTICLES": { headerRow: 0, firstDataRow: 1, label: "Blog", group: "Parlons Planète" },
   "SUIVI FAQ": { headerRow: 0, firstDataRow: 0, label: "Demande", group: "FAQ" },
   "FAQ - DEMANDES": { headerRow: 0, firstDataRow: 0, label: "FAQ", group: "FAQ" },
-  "BENCHMARK": { headerRow: 0, firstDataRow: 0, label: "Benchmark Énergie", group: "Benchmark" },
-  "NEWSLETTER GRANDS COMPTES": { headerRow: 0, firstDataRow: 0, label: "Grands Comptes", group: "Calendriers newsletters" },
-  "NEWSLETTER INTERNE": { headerRow: 0, firstDataRow: 0, label: "Interne", group: "Calendriers newsletters" },
-  "NEWSLETTER B2C": { headerRow: 0, firstDataRow: 0, label: "B2C", group: "Calendriers newsletters" },
-  "NEWSLETTER SME": { headerRow: 0, firstDataRow: 0, label: "SME", group: "Calendriers newsletters" },
-  "ORGANISATION": { headerRow: 0, firstDataRow: 0, label: "Tableau", group: "Organisation" },
-  "Articles cocon éléctricité": { headerRow: 0, firstDataRow: 1, label: "Cocon électricité", group: "Archives" },
+  BENCHMARK: { headerRow: 0, firstDataRow: 0, label: "Benchmark Énergie", group: "Benchmark" },
+  "NEWSLETTER GRANDS COMPTES": {
+    headerRow: 0,
+    firstDataRow: 0,
+    label: "Grands Comptes",
+    group: "Calendriers newsletters",
+  },
+  "NEWSLETTER INTERNE": {
+    headerRow: 0,
+    firstDataRow: 0,
+    label: "Interne",
+    group: "Calendriers newsletters",
+  },
+  "NEWSLETTER B2C": {
+    headerRow: 0,
+    firstDataRow: 0,
+    label: "B2C",
+    group: "Calendriers newsletters",
+  },
+  "NEWSLETTER SME": {
+    headerRow: 0,
+    firstDataRow: 0,
+    label: "SME",
+    group: "Calendriers newsletters",
+  },
+  ORGANISATION: { headerRow: 0, firstDataRow: 0, label: "Tableau", group: "Organisation" },
+  "Articles cocon éléctricité": {
+    headerRow: 0,
+    firstDataRow: 1,
+    label: "Cocon électricité",
+    group: "Archives",
+  },
   "Articles cocon Gaz": { headerRow: 0, firstDataRow: 1, label: "Cocon gaz", group: "Archives" },
 };
 
@@ -303,7 +381,8 @@ export function headersOf(sheet: string, edits?: EditsMap): string[] {
   if (!meta) return [];
   const row = workbook[bs]?.[meta.headerRow] ?? [];
   const base = row.map((c) => (c == null ? "" : String(c)));
-  const over = edits?.[bs]?.[meta.headerRow] ?? (scope ? edits?.[sheet]?.[meta.headerRow] : undefined);
+  const over =
+    edits?.[bs]?.[meta.headerRow] ?? (scope ? edits?.[sheet]?.[meta.headerRow] : undefined);
   const width = Math.max(base.length, ...Object.keys(over ?? {}).map((k) => Number(k) + 1));
   const out: string[] = [];
   for (let c = 0; c < width; c++) {

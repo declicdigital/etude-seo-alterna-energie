@@ -111,7 +111,9 @@ describe("Parlons Planète", () => {
     expect(headers[5]).toBe("");
     expect(headers[6]).toBe("Catégorie");
     expect(headers[7]).toBe("Sous-catégorie");
-    expect(extraColumnsOf("PLANETE - ARTICLES").find((c) => c.col === 6)?.options).toContain("Énergies vertes");
+    expect(extraColumnsOf("PLANETE - ARTICLES").find((c) => c.col === 6)?.options).toContain(
+      "Énergies vertes",
+    );
     expect(headers[10]).toBe("Énergie");
   });
 
