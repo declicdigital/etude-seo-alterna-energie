@@ -5,7 +5,7 @@ import { editorialLink, notificationLink } from "@/lib/editorial-links";
 import { spaceLabel, spacePrefix } from "@/lib/editorial-spaces";
 import { buildStepReminder } from "@/lib/step-reminders";
 import { sheetAllowed } from "@/lib/sections";
-import { headersOf } from "@/lib/workbook";
+import { extraColumnsOf, headersOf } from "@/lib/workbook";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const scope: any = {};
@@ -105,11 +105,13 @@ describe("Parlons Planète", () => {
     ).toThrow();
   });
 
-  it("lists articles in a single « Blog » without audience or category columns", () => {
+  it("lists articles in a single « Blog » with categories but no audience", () => {
     const headers = headersOf("PLANETE - ARTICLES");
     expect(headers[1]).toBe("Articles");
     expect(headers[5]).toBe("");
-    expect(headers[6]).toBe("");
+    expect(headers[6]).toBe("Catégorie");
+    expect(headers[7]).toBe("Sous-catégorie");
+    expect(extraColumnsOf("PLANETE - ARTICLES").find((c) => c.col === 6)?.options).toContain("Énergies vertes");
     expect(headers[10]).toBe("Énergie");
   });
 

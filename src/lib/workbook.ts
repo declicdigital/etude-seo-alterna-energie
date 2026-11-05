@@ -9,10 +9,26 @@ export const workbook = raw as unknown as Workbook;
 export const STRATEGIE_SHEET = "STRATEGIE - ARTICLES";
 workbook[STRATEGIE_SHEET] ??= [[...(workbook["BLOG - ARTICLES"]?.[0] ?? [])]];
 
-/** Parlons Planète articles: the blog's columns without Audience and Catégorie (one single blog). */
+/**
+ * Parlons Planète articles: the blog's columns without Audience (one single
+ * blog), with the site's categories and sub-categories instead of tags.
+ */
 export const PLANETE_SHEET = "PLANETE - ARTICLES";
 workbook[PLANETE_SHEET] ??= [
-  (workbook["BLOG - ARTICLES"]?.[0] ?? []).map((h, i) => (i === 5 || i === 6 ? "" : h)),
+  (workbook["BLOG - ARTICLES"]?.[0] ?? []).map((h, i) =>
+    i === 5 ? "" : i === 6 ? "Catégorie" : i === 7 ? "Sous-catégorie" : h,
+  ),
+];
+
+/** Categories of parlonsplanete.com, also used by its editorial tracker. */
+export const PLANETE_CATEGORIES = [
+  "Planète",
+  "Décryptage",
+  "Énergies vertes",
+  "Économies d'énergie",
+  "Engagements écologiques",
+  "Innovations environnementales",
+  "Transports verts",
 ];
 
 /** Sheets retired from the tool (kept in the raw data, hidden everywhere). */
@@ -87,6 +103,7 @@ export const EXTRA_COLUMNS: Record<
     { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
   ],
   "PLANETE - ARTICLES": [
+    { col: 6, label: "Catégorie", options: PLANETE_CATEGORIES },
     { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
   ],
 };
