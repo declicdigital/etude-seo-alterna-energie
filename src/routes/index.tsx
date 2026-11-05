@@ -268,9 +268,10 @@ function Index() {
             <p className="text-sm text-muted-foreground">Seule la section Blog est disponible.</p>
           </div>
         ) : isHome ? (
-          <HomeView onOpenSheet={(s) => navigate({ to: "/", search: { sheet: s } })} />
+          <HomeView allowed={access.allowedSections} onOpenSheet={(s) => navigate({ to: "/", search: { sheet: s } })} />
         ) : isGuide ? (
           <GuideView
+            allowed={access.allowedSections}
             onOpenSheet={(s) => navigate({ to: "/", search: { sheet: s } })}
           />
         ) : sheetInfo?.group === "FAQ" ? (

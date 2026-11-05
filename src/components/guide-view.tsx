@@ -1,11 +1,38 @@
-import { BookOpen, Newspaper, Target, ArrowRight, Mail, CheckCircle2, PenLine, Image as ImageIcon, Globe, Users, Bell, AtSign, HelpCircle } from "lucide-react";
+import {
+  BookOpen,
+  Newspaper,
+  Target,
+  ArrowRight,
+  Mail,
+  CheckCircle2,
+  PenLine,
+  Image as ImageIcon,
+  Globe,
+  Users,
+  Bell,
+  AtSign,
+  HelpCircle,
+  Leaf,
+  BarChart3,
+  CalendarDays,
+  KanbanSquare,
+  type LucideIcon,
+} from "lucide-react";
 import logo from "@/assets/alterna-logo.png.asset.json";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { FolderDown } from "lucide-react";
+import { visibleRubriqueEntries, type RubriqueKey } from "@/lib/rubriques";
 type Step = { title: string; who: string; color: string; items: string[]; mail?: string };
-type Flow = { title: string; intro: string; steps: Step[]; end: string[] };
+type Flow = {
+  title: string;
+  intro: string;
+  steps: Step[];
+  end: string[];
+  /** Last card; « Publié » for editorial flows. */
+  endTitle?: string;
+};
 
 const C = {
   prep: "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10",
@@ -15,17 +42,25 @@ const C = {
   done: "border-rose-500 bg-rose-50 dark:bg-rose-500/10",
 };
 
-const FLOWS: Flow[] = [
+const REMINDER: Step = {
+  title: "Rappel deadline",
+  who: "Automatique · 9 h",
+  color: C.remind,
+  items: ["Le lundi avant la deadline", "Aurorae : Caroline + Elodie", "Marina seule", "Point rouge < 5 jours"],
+  mail: "Mail rappel édition",
+};
+
+const PAC_FLOWS: Flow[] = [
   {
     title: "Stratégie PAC · Création",
     intro: "Contenus Particulier uniquement · catégorie Blog ou Éditorial",
     steps: [
-      { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Type : Réécriture / Création", "Titre H1", "Édition", "Catégorie Blog / Éditorial", "Catégorie du blog (si Blog)", "Deadline", "Lien du brief", "Lien du doc", "Tout rempli → Enregistrer"] },
-      { title: "Rappel deadline", who: "Automatique · 9 h", color: C.remind, items: ["Le lundi avant la deadline", "Aurorae : Caroline + Elodie", "Marina seule", "Point rouge < 5 jours"], mail: "Mail rappel édition" },
-      { title: "1 · Brief + 2 · Rédaction", who: "Validés à l'enregistrement", color: C.prep, items: ["Carte créée", "Brief + doc liés", "Passage auto à Image"], mail: "Mail → Geoffrey" },
+      { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Type : Réécriture / Création", "Titre H1", "Édition", "Catégorie Blog / Éditorial", "Catégorie du blog (si Blog)", "Deadline", "Lien du brief", "Lien du doc → Enregistrer", "Le reste peut se compléter ensuite"] },
+      REMINDER,
+      { title: "1 · Brief + 2 · Rédaction", who: "Validés à l'enregistrement", color: C.prep, items: ["Carte créée", "Brief + doc liés", "Sans date : date du jour", "Passage auto à Image"], mail: "Mail → Geoffrey" },
       { title: "3 · Image", who: "Geoffrey", color: C.remind, items: ["Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Fannie & Coraline" },
       { title: "4 · Relecture", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Relire l'article", "Valider l'étape"], mail: "Mail → Marick" },
-      { title: "5 · Intégration", who: "Marick", color: C.integ, items: ["Télécharger l'image", "Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
+      { title: "5 · Intégration", who: "Marick", color: C.integ, items: ["Télécharger l'image", "Intégrer sur le site", "Lien publié obligatoire", "Valider"], mail: "Mail → Geoffrey" },
     ],
     end: ["En haut de « Contenus »", "Si Blog → aussi en haut de Blog › Particulier"],
   },
@@ -33,22 +68,25 @@ const FLOWS: Flow[] = [
     title: "Stratégie PAC · Réécriture",
     intro: "Contenus Particulier uniquement · catégorie Blog ou Éditorial",
     steps: [
-      { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Type : Réécriture", "Sujet + titre H1", "Édition", "Catégorie Blog / Éditorial", "Deadline", "Lien du brief + lien du doc", "Tout rempli → Enregistrer"] },
+      { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Type : Réécriture", "Sujet + titre H1", "Édition", "Catégorie Blog / Éditorial", "Deadline", "Lien du brief", "Lien du doc → Enregistrer"] },
       { title: "1 · Brief + 2 · Rédaction", who: "Validés à l'enregistrement", color: C.prep, items: ["Carte créée", "Brief + doc liés", "Passage direct à l'intégration"], mail: "Mail → Marick" },
-      { title: "3 · Intégration", who: "Marick", color: C.integ, items: ["Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
+      { title: "3 · Intégration", who: "Marick", color: C.integ, items: ["Intégrer sur le site", "Lien publié obligatoire", "Valider"], mail: "Mail → Geoffrey" },
     ],
     end: ["En haut de « Contenus »", "Si Blog → aussi en haut de Blog › Particulier"],
   },
+];
+
+const BLOG_FLOWS: Flow[] = [
   {
     title: "Blog Particulier",
     intro: "Particulier · cartes roses",
     steps: [
-      { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Titre H1", "Édition", "Cible Particulier / Pro", "Catégorie + Énergie", "Deadline", "Lien du doc", "Tout rempli → Enregistrer"] },
-      { title: "Rappel deadline", who: "Automatique · 9 h", color: C.remind, items: ["Le lundi avant la deadline", "Aurorae : Caroline + Elodie", "Marina seule", "Point rouge < 5 jours"], mail: "Mail rappel édition" },
-      { title: "1 · Rédaction", who: "Validée à l'enregistrement", color: C.prep, items: ["Carte créée", "Couleur selon la cible", "Passage auto à Image"], mail: "Mail → Geoffrey" },
+      { title: "À rédiger", who: "Marina · Caroline · Elodie · Geoffrey", color: C.prep, items: ["Sujet", "Titre H1", "Édition", "Cible Particulier / Pro", "Catégorie + Énergie", "Deadline", "Lien du doc → Enregistrer", "Le reste peut se compléter ensuite"] },
+      REMINDER,
+      { title: "1 · Rédaction", who: "Validée à l'enregistrement", color: C.prep, items: ["Carte créée", "Couleur selon la cible", "Sans date : date du jour", "Passage auto à Image"], mail: "Mail → Geoffrey" },
       { title: "2 · Image", who: "Geoffrey", color: C.remind, items: ["Ajouter l'image (glisser / clic)", "Valider l'étape"], mail: "Mail → Fannie & Coraline" },
       { title: "3 · Relecture", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Relire l'article", "Valider l'étape"], mail: "Mail → Marick" },
-      { title: "4 · Intégration", who: "Marick", color: C.integ, items: ["Télécharger l'image", "Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
+      { title: "4 · Intégration", who: "Marick", color: C.integ, items: ["Télécharger l'image", "Intégrer sur le site", "Lien publié obligatoire", "Valider"], mail: "Mail → Geoffrey" },
     ],
     end: ["En haut du Blog de la bonne cible", "Coché « Publié »"],
   },
@@ -56,14 +94,31 @@ const FLOWS: Flow[] = [
     title: "Blog Pro",
     intro: "Professionnel · cartes bleues",
     steps: [
-      { title: "1 · Édition", who: "Édition", color: C.prep, items: ["Titre H1", "Catégorie + Énergie", "Document rédigé", "Validée à l'enregistrement"] },
+      { title: "1 · Édition", who: "Édition", color: C.prep, items: ["Titre H1", "Catégorie + Énergie", "Lien du doc → Enregistrer", "Validée à l'enregistrement"] },
       { title: "2 · Relecture de l’expert métier", who: "Expert métier à renseigner dans la carte", color: C.remind, items: ["Relire le document", "Vérifier les informations métier", "Valider la relecture"], mail: "Mail → Geoffrey" },
       { title: "3 · Image", who: "Geoffrey", color: C.remind, items: ["Ajouter l'image", "Valider l'étape"], mail: "Mail → Fannie & Coraline" },
       { title: "4 · Relecture", who: "Service Communication · Fannie & Coraline", color: C.review, items: ["Relire l'article", "Valider l'étape"], mail: "Mail → Marick" },
-      { title: "5 · Intégration", who: "Marick", color: C.integ, items: ["Intégrer sur le site", "Date + lien obligatoires", "Valider"], mail: "Mail → Geoffrey" },
+      { title: "5 · Intégration", who: "Marick", color: C.integ, items: ["Intégrer sur le site", "Lien publié obligatoire", "Valider"], mail: "Mail → Geoffrey" },
     ],
     end: ["En haut du Blog Pro", "Coché « Publié »"],
   },
+];
+
+const PLANETE_FLOWS: Flow[] = [
+  {
+    title: "Parlons Planète",
+    intro: "Articles de parlonsplanete.com · rédaction Aurorae, intégration Geoffrey",
+    steps: [
+      { title: "À rédiger", who: "Aurorae · Caroline & Elodie", color: C.prep, items: ["Sujet", "Titre H1", "Catégorie", "Sous-catégorie (si elle existe)", "Deadline", "Lien du doc → Enregistrer", "Le reste peut se compléter ensuite"] },
+      REMINDER,
+      { title: "1 · Rédaction", who: "Validée à l'enregistrement", color: C.prep, items: ["Carte créée", "Doc lié", "Sans date : date du jour", "Passage auto à l'intégration"], mail: "Mail → Geoffrey" },
+      { title: "2 · Intégration", who: "Geoffrey", color: C.integ, items: ["Intégrer sur parlonsplanete.com", "Catégorie obligatoire", "Lien publié obligatoire", "Valider"] },
+    ],
+    end: ["En haut du Blog Parlons Planète", "Catégorie, sous-catégorie et date de publication", "Coché « Publié »"],
+  },
+];
+
+const FAQ_FLOWS: Flow[] = [
   {
     title: "FAQ",
     intro: "Demandes de FAQ · Particulier (cartes roses) · Professionnel (cartes bleues)",
@@ -76,11 +131,74 @@ const FLOWS: Flow[] = [
   },
 ];
 
+const BENCHMARK_FLOWS: Flow[] = [
+  {
+    title: "Benchmark Énergie",
+    intro: "Suivi concurrentiel mensuel · prix TTC uniquement",
+    steps: [
+      { title: "Choisir", who: "Tout le monde", color: C.prep, items: ["Électricité ou Gaz", "Le mois à consulter", "Historique des mois précédents"] },
+      { title: "Classement", who: "Tout le monde · lecture", color: C.review, items: ["Offres comparées entre fournisseurs", "Notre référence Alterna", "Export PDF"] },
+      { title: "Saisie", who: "Geoffrey", color: C.remind, items: ["Un fournisseur à la fois", "Prix TTC uniquement", "Remise en % dans sa case", "Tarifs extraits d'un PDF ou d'un texte collé"] },
+      { title: "Validation", who: "Geoffrey", color: C.integ, items: ["Valider chaque fournisseur", "Badge « Validé »", "Enregistrer le mois"] },
+    ],
+    endTitle: "Mois à jour",
+    end: ["Classement du mois visible par tous", "Les autres comptes sont en lecture seule"],
+  },
+];
+
+const NEWSLETTER_FLOWS: Flow[] = [
+  {
+    title: "Calendriers newsletters",
+    intro: "Grands Comptes · Interne · B2C · SME · jusqu'à fin 2027",
+    steps: [
+      { title: "Choisir", who: "Tout le monde", color: C.prep, items: ["Grands Comptes, Interne, B2C ou SME", "Prochain envoi en haut", "Prochaines échéances listées"] },
+      { title: "Les étapes", who: "Qui → qui", color: C.review, items: ["Sujets, rédaction, relecture, BAT, envoi", "Chaque étape dit qui envoie à qui", "Dates en semaine uniquement", "Cadence propre à chaque newsletter"] },
+      { title: "Filtrer", who: "Tout le monde", color: C.remind, items: ["Filtrer les newsletters", "Étapes passées marquées « Terminé »"] },
+      { title: "Agenda", who: "Tout le monde", color: C.integ, items: ["Fichier .ics", "À ouvrir dans Outlook ou Google Agenda"] },
+    ],
+    endTitle: "Envoi",
+    end: ["Newsletter envoyée à la date prévue", "Passage automatique au mois suivant"],
+  },
+];
+
+const ORGANISATION_FLOWS: Flow[] = [
+  {
+    title: "Organisation",
+    intro: "Tâches de l'équipe sous forme de fiches · visible seulement avec l'accès Organisation",
+    steps: [
+      { title: "Sections", who: "Tous les membres", color: C.prep, items: ["Ajouter une fiche dans une section", "Double-clic pour renommer", "Recherche et filtres"] },
+      { title: "La fiche", who: "Tous les membres", color: C.review, items: ["Note sans limite de texte", "Liens cliquables dans la note", "Échéance"] },
+      { title: "Personnes", who: "Tous les membres", color: C.remind, items: ["Responsable de la fiche", "Taguer une personne qui a accès"], mail: "Mail aux personnes ajoutées" },
+      { title: "Fichiers et liens", who: "Tous les membres", color: C.integ, items: ["Ajouter un lien nommé", "Joindre un fichier (50 Mo max)", "Glisser-déposer sur la fiche", "Ouvrir ou télécharger"] },
+      { title: "Avancement", who: "Tous les membres", color: C.prep, items: ["Passer à l'étape suivante", "Compteur de pièces jointes sur la fiche"] },
+    ],
+    endTitle: "Terminé",
+    end: ["Fiche cochée terminée", "Toujours consultable"],
+  },
+];
+
+type Rubrique = { title: string; icon: LucideIcon; text: string; flows: Flow[] };
+
+const RUBRIQUES: Record<RubriqueKey, Rubrique> = {
+  pac: { title: "Stratégie PAC", icon: Target, text: "Suivi éditorial des contenus PAC : brief, rédaction, image, relecture, intégration.", flows: PAC_FLOWS },
+  blog: { title: "Blog", icon: Newspaper, text: "Suivi éditorial des articles de blog Particulier et Professionnel.", flows: BLOG_FLOWS },
+  planete: { title: "Parlons Planète", icon: Leaf, text: "Suivi des articles de parlonsplanete.com et blog de tous les articles publiés.", flows: PLANETE_FLOWS },
+  faq: { title: "FAQ", icon: HelpCircle, text: "Demandes de questions fréquentes Particulier et Professionnel, validées puis ajoutées en ligne.", flows: FAQ_FLOWS },
+  benchmark: { title: "Benchmark", icon: BarChart3, text: "Comparaison mensuelle des offres d'électricité et de gaz des fournisseurs.", flows: BENCHMARK_FLOWS },
+  newsletters: { title: "Calendriers newsletters", icon: CalendarDays, text: "Dates et étapes des newsletters Grands Comptes, Interne, B2C et SME.", flows: NEWSLETTER_FLOWS },
+  organisation: { title: "Organisation", icon: KanbanSquare, text: "Les tâches de l'équipe en fiches : notes, responsables, échéances, fichiers.", flows: ORGANISATION_FLOWS },
+};
+
+/** Rubriques the person can open (home page and guide), each with its entry sheet. */
+function visibleRubriques(allowed: string[] | null | undefined) {
+  return visibleRubriqueEntries(allowed).map((v) => ({ ...RUBRIQUES[v.key], ...v }));
+}
+
 function FlowChart({ flow }: { flow: Flow }) {
   return (
     <section className="space-y-4">
       <div>
-        <h3 className="text-xl font-semibold tracking-tight">Modop — {flow.title}</h3>
+        <h4 className="text-lg font-semibold tracking-tight">Modop — {flow.title}</h4>
         <p className="text-sm text-muted-foreground">{flow.intro}</p>
       </div>
       <div className="overflow-x-auto pb-4 snap-x">
@@ -99,7 +217,7 @@ function FlowChart({ flow }: { flow: Flow }) {
             </div>
           ))}
           <div className={`w-72 rounded-2xl border-2 p-5 snap-start ${C.done}`}>
-            <div className="text-lg font-semibold flex items-center gap-2"><CheckCircle2 className="size-5" />Publié</div>
+            <div className="text-lg font-semibold flex items-center gap-2"><CheckCircle2 className="size-5" />{flow.endTitle ?? "Publié"}</div>
             <ul className="mt-4 space-y-1.5 text-sm">
               {flow.end.map((i) => <li key={i} className="flex gap-2"><span className="text-foreground/40">•</span>{i}</li>)}
             </ul>
@@ -110,36 +228,68 @@ function FlowChart({ flow }: { flow: Flow }) {
   );
 }
 
-export function GuideView(_: { onOpenSheet: (sheet: string) => void }) {
+export function GuideView({
+  onOpenSheet,
+  allowed,
+}: {
+  onOpenSheet: (sheet: string) => void;
+  allowed: string[] | null | undefined;
+}) {
+  const rubriques = visibleRubriques(allowed);
+  const editorial = rubriques.some((r) => r.editorial);
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="px-6 md:px-10 py-8 space-y-12">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><BookOpen className="size-5" /></div>
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Guide de l'outil</h2>
-            <p className="text-sm text-muted-foreground mt-1">Faites glisser horizontalement pour voir toutes les étapes.</p>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><BookOpen className="size-5" /></div>
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight">Guide de l'outil</h2>
+              <p className="text-sm text-muted-foreground mt-1">Un guide par rubrique à laquelle vous avez accès. Faites glisser horizontalement pour voir toutes les étapes.</p>
+            </div>
           </div>
+          {rubriques.length > 1 && (
+            <nav aria-label="Rubriques du guide" className="flex flex-wrap gap-2">
+              {rubriques.map((r) => {
+                const Icon = r.icon;
+                return (
+                  <a key={r.key} href={`#guide-${r.key}`} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-muted">
+                    <Icon className="size-4 text-primary" />{r.title}
+                  </a>
+                );
+              })}
+            </nav>
+          )}
         </div>
-        {FLOWS.map((f) => <FlowChart key={f.title} flow={f} />)}
-        <section className="rounded-2xl border border-border bg-card p-5 text-sm space-y-1.5">
-          <div className="font-semibold text-base mb-2">Partout</div>
-          <div>• @ dans un message → un seul mail à toutes les personnes taguées</div>
-          <div>• Messages modifiables sans renvoi de mail</div>
-          <div>• Lien des mails → ouvre la carte à la bonne étape</div>
-          <div>• Geoffrey en copie de tous les mails</div>
-        </section>
+        {rubriques.length === 0 && (
+          <p className="text-sm text-muted-foreground">Aucune rubrique ne vous est encore ouverte. Demandez l'accès à Geoffrey.</p>
+        )}
+        {rubriques.map((r) => {
+          const Icon = r.icon;
+          return (
+            <section key={r.key} id={`guide-${r.key}`} className="scroll-mt-6 space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+                <h3 className="text-xl font-semibold tracking-tight flex items-center gap-2"><Icon className="size-5 text-primary" />{r.title}</h3>
+                <Button variant="outline" size="sm" onClick={() => onOpenSheet(r.entry)}>Ouvrir <ArrowRight /></Button>
+              </div>
+              {r.flows.map((f) => <FlowChart key={f.title} flow={f} />)}
+            </section>
+          );
+        })}
+        {editorial && (
+          <section className="rounded-2xl border border-border bg-card p-5 text-sm space-y-1.5">
+            <div className="font-semibold text-base mb-2">Partout dans les suivis</div>
+            <div>• « Marquer validée » sans date → la date du jour est mise automatiquement</div>
+            <div>• @ dans un message → un seul mail à toutes les personnes taguées</div>
+            <div>• Messages modifiables sans renvoi de mail</div>
+            <div>• Lien des mails → ouvre la carte à la bonne étape</div>
+            <div>• Geoffrey en copie de tous les mails</div>
+          </section>
+        )}
       </div>
     </div>
   );
 }
-
-const ENTRIES = [
-  { icon: Target, title: "Stratégie PAC", sheet: "SUIVI STRATEGIE", text: "Suivi éditorial des contenus PAC : brief, rédaction, image, relecture, intégration." },
-  { icon: Newspaper, title: "Blog", sheet: "SUIVI EDITORIAL", text: "Suivi éditorial des articles de blog Particulier et Professionnel." },
-  { icon: HelpCircle, title: "FAQ", sheet: "SUIVI FAQ", text: "Demandes de questions fréquentes Particulier et Professionnel, validées puis ajoutées en ligne." },
-  { icon: BookOpen, title: "Guide de l'outil", sheet: "__guide", text: "Les modes opératoires schématisés de chaque suivi." },
-];
 
 const TEAM = [
   { name: "Aurorae", role: "Rédaction · Caroline & Elodie", color: "bg-emerald-500" },
@@ -157,7 +307,15 @@ const PIPE = [
   { label: "Publié", icon: CheckCircle2, tone: "bg-rose-500/15 text-rose-700 dark:text-rose-300" },
 ];
 
-export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void }) {
+export function HomeView({
+  onOpenSheet,
+  allowed,
+}: {
+  onOpenSheet: (sheet: string) => void;
+  allowed: string[] | null | undefined;
+}) {
+  const rubriques = visibleRubriques(allowed);
+  const editorial = rubriques.some((r) => r.editorial);
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-6xl mx-auto px-6 md:px-10 py-10 space-y-10">
@@ -179,15 +337,19 @@ export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void
               Du sujet à la mise en ligne : on rédige, on relit, on intègre, on publie, et chacun reçoit le bon mail au bon moment.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <button onClick={() => onOpenSheet("SUIVI STRATEGIE")} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow hover:opacity-90">
-                Stratégie PAC <ArrowRight className="size-4" />
-              </button>
-              <button onClick={() => onOpenSheet("SUIVI EDITORIAL")} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted">
-                Blog <ArrowRight className="size-4" />
-              </button>
-              <button onClick={() => onOpenSheet("SUIVI FAQ")} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted">
-                FAQ <ArrowRight className="size-4" />
-              </button>
+              {rubriques.slice(0, 4).map((r, i) => (
+                <button
+                  key={r.key}
+                  onClick={() => onOpenSheet(r.entry)}
+                  className={
+                    i === 0
+                      ? "inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow hover:opacity-90"
+                      : "inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted"
+                  }
+                >
+                  {r.title} <ArrowRight className="size-4" />
+                </button>
+              ))}
             </div>
           </div>
         </section>
@@ -196,11 +358,14 @@ export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void
           <div><h3 className="text-xl font-semibold">Kit de communication</h3><p className="mt-1 text-sm text-muted-foreground">Logos, polices, couleurs et charte.</p></div>
           <Button asChild variant="outline"><Link to="/kit-communication"><FolderDown /> Ouvrir le kit</Link></Button>
         </section>
-        <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {ENTRIES.map((e) => {
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            ...rubriques.map((r) => ({ key: r.key, icon: r.icon, title: r.title, text: r.text, sheet: r.entry })),
+            { key: "guide", icon: BookOpen, title: "Guide de l'outil", text: "Le mode d'emploi de chacune de vos rubriques.", sheet: "__guide" },
+          ].map((e) => {
             const Icon = e.icon;
             return (
-              <button key={e.title} type="button" onClick={() => onOpenSheet(e.sheet)}
+              <button key={e.key} type="button" onClick={() => onOpenSheet(e.sheet)}
                 className="group text-left rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:border-primary/50">
                 <div className="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform"><Icon className="size-6" /></div>
                 <div className="mt-5 text-lg font-semibold flex items-center gap-1">{e.title}<ArrowRight className="size-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" /></div>
@@ -210,6 +375,7 @@ export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void
           })}
         </section>
 
+        {editorial && (<>
         <section className="rounded-2xl border border-border bg-card p-6 md:p-8">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Le parcours d'un contenu</h3>
           <div className="mt-6 flex flex-col md:flex-row md:items-center gap-3">
@@ -255,6 +421,7 @@ export function HomeView({ onOpenSheet }: { onOpenSheet: (sheet: string) => void
             </ul>
           </div>
         </section>
+        </>)}
       </div>
     </div>
   );
