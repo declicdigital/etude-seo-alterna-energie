@@ -119,4 +119,19 @@ describe('Separate Image and Relecture', () => {
     expect(article.steps.find((s: any) => s.key === 'image').date).toBe('2026-10-22');
     expect(article.steps.find((s: any) => s.key === 'relecture').status).toBe('pending');
   });
+  it('brings back the images left on the former validation step', () => {
+    const config = [{key:'redaction'},{key:'image'},{key:'relecture'},{key:'integration'}];
+    const img = (id: string) => ({id, type:'image', name:id + '.png', value:'data:image/png;base64,AA'});
+    const article: any = {
+      audience:'Particulier',
+      steps:[{key:'redaction',status:'done',date:'2026-10-19',attachments:[]},{key:'image',status:'skipped',date:'',attachments:[]},{key:'relecture',status:'pending',date:'',attachments:[]},{key:'integration',status:'done',date:'2026-10-26',attachments:[]}],
+      reviewSteps:{validation:{key:'validation',status:'done',date:'2026-10-23',attachments:[img('a'), img('b'), {id:'n', type:'note', value:'ok'}]}},
+      legacyReviewStep:{key:'validation',attachments:[img('b')]},
+    };
+    pipeline.sync(article, config, '');
+    pipeline.sync(article, config, '');
+    const image = article.steps.find((s: any) => s.key === 'image');
+    expect(image.attachments.map((a: any) => a.id)).toEqual(['a', 'b']);
+    expect(image.status).toBe('skipped');
+  });
 });

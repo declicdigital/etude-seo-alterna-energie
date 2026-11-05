@@ -58,6 +58,15 @@
       if(c.key === 'relecture') step.assignee = 'Service Communication';
       return step;
     });
+    // Images dropped on the former « validation » step belong to the Image step: never lose them.
+    const imageStep = article.steps.find(s => s.key === 'image');
+    if(imageStep){
+      const have = new Set(article.steps.flatMap(s => (s.attachments || []).map(a => a.id)));
+      const archived = [article.reviewSteps?.validation, article.legacyReviewStep]
+        .flatMap(s => (s && Array.isArray(s.attachments) ? s.attachments : []))
+        .filter(a => a && a.type === 'image' && !have.has(a.id) && (have.add(a.id), true));
+      if(archived.length) imageStep.attachments = [...imageStep.attachments, ...archived];
+    }
   }
   function nextNotification(article, key, space) {
     if(space === 'planete') return key === 'redaction' ? { kind:'integration', next:'integration', who:'Geoffrey (intégration)' } : null;
