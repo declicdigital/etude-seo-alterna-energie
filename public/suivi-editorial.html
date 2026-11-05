@@ -2004,6 +2004,15 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
 
   const validateBtn = e.target.closest('[data-action="validate-step"]');
   if(validateBtn){
+    /* After a validation, the next step's « Marquer validée » appears under the cursor:
+       a double click or a quick second click must not validate it too (and mail the wrong person). */
+    if(e.detail > 1 || validating || Date.now() < validateCooldownUntil) return;
+    validating = true;
+    try{ await validateStepClick(validateBtn); }
+    finally{ validating = false; validateCooldownUntil = Date.now() + 1200; }
+    return;
+  }
+  async function validateStepClick(validateBtn){
     const id = validateBtn.dataset.articleId;
     const key = validateBtn.dataset.stepKey;
     const article = getArticle(id);
@@ -2039,7 +2048,6 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     const nextStep = article.steps[idx+1];
     openPanels[id] = nextStep ? nextStep.key : null;
     renderArticles();
-    return;
   }
 
   const skipBtn = e.target.closest('[data-action="skip-step"]');
@@ -2292,6 +2300,7 @@ async function saveTodos(){
 }
 const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com'];
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
+let validating = false, validateCooldownUntil = 0;
 function todayIso(){
   const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
