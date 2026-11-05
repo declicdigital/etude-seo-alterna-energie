@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, Trash2, X } from "lucide-react";
-import { extraColumnsOf, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
+import { extraColumnsOf, extraOptionsFor, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { linkHref } from "@/lib/links";
 import { DateCell, parseDateValue } from "@/components/date-cell";
 
@@ -89,7 +89,7 @@ export function DetailPanel({
               key={idx}
               label={h || `Colonne ${idx + 1}`}
               value={row[idx]}
-              options={extras.find((e) => e.col === idx)?.options}
+              options={extraOptionsFor(extras.find((e) => e.col === idx), row)}
               onChange={(v) => onChange(idx, v)}
             />
           );

@@ -696,6 +696,8 @@ html:not(.no-cat) .col-brief{display:none!important}
 .no-cat .col-energy{display:none!important}
 /* Parlons Planète : un seul blog, sans cible, avec ses propres catégories. */
 .planete .col-cible{display:none!important}
+.col-subcat{display:none}
+.planete .col-subcat{display:table-cell}
 </style>
 </head>
 <body>
@@ -743,7 +745,7 @@ html:not(.no-cat) .col-brief{display:none!important}
     </div>
     <p class="hint todo-hint">Remplissez toutes les cases de la ligne pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
     <div class="todo-scroll"><table class="todo-table">
-      <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th class="col-brief">Catégorie</th><th>Édition</th><th>Date de rédaction</th><th class="col-brief">Date du brief</th><th>Nom de l'article (H1)</th><th class="col-cible">Cible</th><th class="col-cat">Catégorie</th><th class="col-energy">Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
+      <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th class="col-brief">Catégorie</th><th>Édition</th><th>Date de rédaction</th><th class="col-brief">Date du brief</th><th>Nom de l'article (H1)</th><th class="col-cible">Cible</th><th class="col-cat">Catégorie</th><th class="col-subcat">Sous-catégorie</th><th class="col-energy">Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
     </table></div>
     <div id="todoComments" class="todo-comments"></div>
@@ -778,7 +780,7 @@ if(SPACE){ document.title = 'Suivi éditorial (' + SPACE_LABEL + ') — Outil co
 if(PLANETE){
   document.documentElement.classList.add('planete');
   const hint = document.querySelector('.todo-hint');
-  if(hint) hint.textContent = "Remplissez toutes les cases de la ligne, catégorie comprise, pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi et Geoffrey reçoit un mail pour l'intégrer. Une fois intégré, il s'ajoute à Parlons Planète > Blog dans sa catégorie. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.";
+  if(hint) hint.textContent = "Remplissez toutes les cases de la ligne, catégorie et sous-catégorie comprises, pour activer le bouton « Enregistrer » : l'article est alors créé dans le suivi et Geoffrey reçoit un mail pour l'intégrer. Une fois intégré, il s'ajoute à Parlons Planète > Blog dans sa catégorie et sa sous-catégorie. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.";
 }
 const AUDIENCES = ['Particulier', 'Professionnel'];
 const DESTS = ['Blog', 'Éditorial'];
@@ -809,6 +811,20 @@ const PLANETE_CATEGORIES = [
   'Innovations environnementales',
   'Transports verts'
 ];
+const PLANETE_SUBCATEGORIES = {
+  'Planète': ['Biodiversité', 'Préservation & respect'],
+  'Décryptage': ['Réglementaire'],
+  'Énergies vertes': ['Éoliennes', 'Gaz', 'Hydraulique', 'Hydrogène', 'Solaire'],
+  "Économies d'énergie": ['Extérieur', 'Intérieur', 'Rénovations', 'Tips & conseils'],
+  'Engagements écologiques': ['Agir au quotidien', 'Consommer autrement', 'Innovations & initiatives', 'Planète & territoires'],
+  'Innovations environnementales': ['Individuelles', 'Industrielles'],
+  'Transports verts': ['Communs', 'Privés']
+};
+function subcategoriesFor(category){ return PLANETE_SUBCATEGORIES[category] || []; }
+function subcatSelectHtml(attrs, category, value){
+  const subs = subcategoriesFor(category);
+  return `<select ${attrs} ${category ? '' : 'disabled'}><option value="">${category ? '— Choisir —' : '— catégorie d\'abord —'}</option>${subs.map(o=>`<option ${value===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>`;
+}
 const HEADERS = {
   'apikey': SUPABASE_KEY,
   'Authorization': 'Bearer ' + SUPABASE_KEY,
@@ -1283,6 +1299,7 @@ function missingFields(article, stepKey){
     if(!(article.finalLink||'').trim()) out.push("le lien de l'article publié");
     if(STRAT && article.dest === 'Blog' && !(article.category||'').trim()) out.push('la catégorie du blog');
     if(PLANETE && !(article.category||'').trim()) out.push('la catégorie');
+    if(PLANETE && !(article.subcategory||'').trim()) out.push('la sous-catégorie');
   }
   return out;
 }
@@ -1319,6 +1336,7 @@ async function insertBlogRow(article, sheet, base){
     [4, (step && step.date) || ''],
     [5, audience === 'Professionnel' ? 'professionnels' : 'particuliers'],
     [6, article.category || ''],
+    ...(PLANETE && sheet === BLOG_SHEET ? [[7, article.subcategory || '']] : []),
     [9, normalizeUrl(article.finalLink)],
     [10, article.energy || '']
   ].filter(v => !(PLANETE && sheet === BLOG_SHEET && v[0] === 5));
@@ -1630,7 +1648,7 @@ function renderArticleCard(article){
       <div class="article-body">
         <div class="links-row">
           ${STRAT ? `<div class="link-field"><span class="link-tag">Type</span><select data-action="pick-type" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">—</option>${['Réécriture','Création'].map(o=>`<option ${article.type===o?'selected':''}>${o}</option>`).join('')}</select></div><div class="link-field"><span class="link-tag">Catégorie</span><select data-action="pick-dest" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">—</option>${DESTS.map(o=>`<option ${article.dest===o?'selected':''}>${o}</option>`).join('')}</select></div>` : ''}
-          ${PLANETE ? `<div class="link-field"><span class="link-tag">Catégorie</span><select data-action="pick-blog-cat" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">— Choisir —</option>${PLANETE_CATEGORIES.map(o=>`<option ${article.category===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></div>` : ''}
+          ${PLANETE ? `<div class="link-field"><span class="link-tag">Catégorie</span><select data-action="pick-blog-cat" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">— Choisir —</option>${PLANETE_CATEGORIES.map(o=>`<option ${article.category===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></div><div class="link-field"><span class="link-tag">Sous-catégorie</span>${subcatSelectHtml(`data-action="pick-subcat" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"`, article.category, article.subcategory)}</div>` : ''}
           ${STRAT && article.dest === 'Blog' ? `<div class="link-field"><span class="link-tag">Catégorie du blog</span><select data-action="pick-blog-cat" data-article-id="${article.id}" style="border:0;background:transparent;font:inherit"><option value="">— Choisir —</option>${categoriesFor(article.audience || 'Particulier').map(o=>`<option ${article.category===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></div>` : ''}
           ${STRAT ? renderLinkField(article.id, 'brief-link', article.briefLink || '', 'Brief', 'Coller le lien du brief') : ''}
           ${renderLinkField(article.id, 'docx-link', article.docxLink, 'Doc', 'Coller le lien du document Doc')}
@@ -2107,7 +2125,19 @@ document.getElementById('articlesContainer').addEventListener('change', async (e
   }
   if(act === 'pick-blog-cat'){
     const article = getArticle(e.target.dataset.articleId);
-    if(article){ article.category = e.target.value; await saveArticle(article); }
+    if(article){
+      article.category = e.target.value;
+      if(PLANETE){
+        if(!subcategoriesFor(article.category).includes(article.subcategory)) article.subcategory = '';
+        await saveArticle(article); renderArticles(); return;
+      }
+      await saveArticle(article);
+    }
+    return;
+  }
+  if(act === 'pick-subcat'){
+    const article = getArticle(e.target.dataset.articleId);
+    if(article){ article.subcategory = e.target.value; await saveArticle(article); }
     return;
   }
   if(act === 'pick-type'){
@@ -2264,7 +2294,7 @@ function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').tr
 function todoComplete(t){
   const fields = ['sujet','editrice','redactionDate','h1','audience','deadline','docx'];
   if(STRAT){ fields.push('brief','briefDate','type','dest'); if(t.dest === 'Blog') fields.push('categorie'); }
-  else if(PLANETE) fields.push('categorie','energie');
+  else if(PLANETE) fields.push('categorie','souscategorie','energie');
   else fields.push('categorie','energie');
   return fields.every(f => (t[f]||'').trim()) && /^\d{4}-\d{2}-\d{2}$/.test(t.redactionDate || '') && (!STRAT || /^\d{4}-\d{2}-\d{2}$/.test(t.briefDate || ''));
 }
@@ -2321,6 +2351,7 @@ function renderTodos(){
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td class="col-cible"><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td class="col-cat">${STRAT ? (t.dest === 'Blog' ? `<select data-f="categorie"><option value="">— Choisir —</option>${categoriesFor('Particulier').map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>` : '<span class="td-na">—</span>') : PLANETE ? `<select data-f="categorie"><option value="">— Choisir —</option>${PLANETE_CATEGORIES.map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>` : `<select data-f="categorie" ${t.audience ? '' : 'disabled'}>${t.audience ? '<option value="">—</option>' : '<option value="">— cible d\'abord —</option>'}${categoriesFor(t.audience).map(o=>`<option ${t.categorie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select>`}</td>
+    <td class="col-subcat">${PLANETE ? subcatSelectHtml('data-f="souscategorie"', t.categorie, t.souscategorie) : ''}</td>
     <td class="col-energy"><select data-f="energie"><option value="">—</option>${ENERGIES.map(o=>`<option ${t.energie===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><div class="td-dl">${isUrgentTodo(t) ? `<span class="todo-dot" title="${escapeAttr(urgentTitle(t))}"></span>` : ''}<input type="date" data-f="deadline" value="${escapeAttr(t.deadline||'')}"></div></td>
     <td class="col-brief"><div class="td-linkwrap"><input data-f="brief" value="${escapeAttr(t.brief||'')}" placeholder="https://…">${(t.brief||'').trim() ? `<a class="todo-open" href="${escapeAttr(normalizeUrl(t.brief.trim()))}" target="_blank" rel="noopener noreferrer" title="Ouvrir le lien">↗</a>` : ''}</div></td>
@@ -2349,6 +2380,8 @@ async function maybeCreateFromTodo(t){
   if(aud === 'Professionnel' || aud === 'Particulier') article.audience = aud;
   const cat = (t.categorie||'').trim();
   if(cat && categoriesFor(article.audience).includes(cat)) article.category = cat;
+  const sub = (t.souscategorie||'').trim();
+  if(PLANETE && sub && subcategoriesFor(article.category).includes(sub)) article.subcategory = sub;
   const en = (t.energie||'').trim();
   if(en) article.energy = en;
   syncArticleSteps(article);
@@ -2370,6 +2403,10 @@ document.getElementById('todoBody').addEventListener('change', async (e) => {
   const t = todos.find(x => x.id === tr.dataset.todoId); if(!t) return;
   t[f] = e.target.value;
   await saveTodos();
+  if(PLANETE && f === 'categorie'){
+    if(!subcategoriesFor(t.categorie).includes(t.souscategorie)){ t.souscategorie = ''; await saveTodos(); }
+    renderTodos(); return;
+  }
   if(f === 'dest'){
     if(t.dest !== 'Blog'){ t.categorie = ''; await saveTodos(); }
     renderTodos(); return;

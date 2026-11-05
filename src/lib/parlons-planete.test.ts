@@ -5,7 +5,7 @@ import { editorialLink, notificationLink } from "@/lib/editorial-links";
 import { spaceLabel, spacePrefix } from "@/lib/editorial-spaces";
 import { buildStepReminder } from "@/lib/step-reminders";
 import { sheetAllowed } from "@/lib/sections";
-import { extraColumnsOf, headersOf } from "@/lib/workbook";
+import { extraColumnsOf, extraOptionsFor, headersOf } from "@/lib/workbook";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const scope: any = {};
@@ -115,6 +115,20 @@ describe("Parlons Planète", () => {
       "Énergies vertes",
     );
     expect(headers[10]).toBe("Énergie");
+  });
+
+  it("narrows the Blog's sub-categories to the row's category", () => {
+    const sub = extraColumnsOf("PLANETE - ARTICLES").find((c) => c.col === 7);
+    const row: string[] = [];
+    row[6] = "Énergies vertes";
+    expect(extraOptionsFor(sub, row)).toEqual([
+      "Éoliennes",
+      "Gaz",
+      "Hydraulique",
+      "Hydrogène",
+      "Solaire",
+    ]);
+    expect(extraOptionsFor(sub, [])).toContain("Biodiversité");
   });
 
   it("is closed by default and opened per account", () => {

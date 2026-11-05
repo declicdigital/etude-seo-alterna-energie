@@ -31,6 +31,22 @@ export const PLANETE_CATEGORIES = [
   "Transports verts",
 ];
 
+/** Sub-categories of parlonsplanete.com, per category. */
+export const PLANETE_SUBCATEGORIES: Record<string, string[]> = {
+  Planète: ["Biodiversité", "Préservation & respect"],
+  Décryptage: ["Réglementaire"],
+  "Énergies vertes": ["Éoliennes", "Gaz", "Hydraulique", "Hydrogène", "Solaire"],
+  "Économies d'énergie": ["Extérieur", "Intérieur", "Rénovations", "Tips & conseils"],
+  "Engagements écologiques": [
+    "Agir au quotidien",
+    "Consommer autrement",
+    "Innovations & initiatives",
+    "Planète & territoires",
+  ],
+  "Innovations environnementales": ["Individuelles", "Industrielles"],
+  "Transports verts": ["Communs", "Privés"],
+};
+
 /** Sheets retired from the tool (kept in the raw data, hidden everywhere). */
 export const RETIRED_SHEETS = new Set(["BLOG - IDEE"]);
 
@@ -75,7 +91,15 @@ export function embedSrcOf(sheet: string): string | null {
  * Columns that don't exist in the Excel source but are added by the tool.
  * `col` is the index right after the last source column of the sheet.
  */
-export const EXTRA_COLUMNS: Record<string, { col: number; label: string; options: string[] }[]> = {
+export type ExtraColumn = {
+  col: number;
+  label: string;
+  options: string[];
+  /** Options narrowed by the value of another column of the same row. */
+  dependsOn?: { col: number; options: Record<string, string[]> };
+};
+
+export const EXTRA_COLUMNS: Record<string, ExtraColumn[]> = {
   "BLOG - ARTICLES": [
     {
       col: 6,
@@ -100,6 +124,12 @@ export const EXTRA_COLUMNS: Record<string, { col: number; label: string; options
   ],
   "PLANETE - ARTICLES": [
     { col: 6, label: "Catégorie", options: PLANETE_CATEGORIES },
+    {
+      col: 7,
+      label: "Sous-catégorie",
+      options: Object.values(PLANETE_SUBCATEGORIES).flat(),
+      dependsOn: { col: 6, options: PLANETE_SUBCATEGORIES },
+    },
     { col: 10, label: "Énergie", options: ["Électricité", "Gaz", "Les deux"] },
   ],
 };
@@ -131,6 +161,17 @@ export function extraColumnsOf(sheet: string) {
       ? { ...c, options: isPro ? BLOG_CATEGORIES_PRO : BLOG_CATEGORIES_PARTICULIER }
       : c,
   );
+}
+
+/** Choices of an extra column for one row (narrowed by `dependsOn` when set). */
+export function extraOptionsFor(
+  column: ExtraColumn | undefined,
+  row: readonly unknown[],
+): string[] | undefined {
+  if (!column) return undefined;
+  if (!column.dependsOn) return column.options;
+  const parent = String(row[column.dependsOn.col] ?? "").trim();
+  return column.dependsOn.options[parent] ?? column.options;
 }
 
 /** A sheet key may be "base" or "base::scope". Returns { base, scope }. */

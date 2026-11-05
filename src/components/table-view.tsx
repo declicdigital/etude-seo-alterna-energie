@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ExternalLink, Plus, Trash2 } from "lucide-react";
-import { dataRows, extraColumnsOf, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
+import { dataRows, extraColumnsOf, extraOptionsFor, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import { linkHref, linkify } from "@/lib/links";
 import { EditableText } from "@/components/editable-text";
@@ -363,11 +363,12 @@ export function TableView({
   for (const c of priorityCols) { boolCols.delete(c); statusCols.delete(c); effortCols.delete(c); }
 
   // Tool-defined choice columns (e.g. "Énergie": Électricité / Gaz / Les deux).
+  const extraCols = useMemo(() => extraColumnsOf(sheet), [sheet]);
   const optionCols = useMemo(() => {
     const map = new Map<number, string[]>();
-    for (const ec of extraColumnsOf(sheet)) map.set(ec.col, ec.options);
+    for (const ec of extraCols) map.set(ec.col, ec.options);
     return map;
-  }, [sheet]);
+  }, [extraCols]);
   for (const c of optionCols.keys()) {
     boolCols.delete(c); statusCols.delete(c); effortCols.delete(c); priorityCols.delete(c);
   }
@@ -853,7 +854,8 @@ export function TableView({
                       );
                     }
                     if (optionCols.has(c)) {
-                      const opts = optionCols.get(c)!;
+                      const opts =
+                        extraOptionsFor(extraCols.find((e) => e.col === c), row) ?? optionCols.get(c)!;
                       return (
                         <td key={c} className="px-2 py-1 align-middle">
                           <select
