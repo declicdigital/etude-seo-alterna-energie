@@ -57,6 +57,13 @@
       "when": 1793895000000,
       "tag": "0007_organisation_attachments",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793958000000,
+      "tag": "0008_editorial_files",
+      "breakpoints": true
     }
   ]
 }

@@ -1102,6 +1102,67 @@ const storage = {
 };
 
 
+/* Images des cartes : fichiers du bucket privé « editorial-files » (avant : data URL dans
+   l'article, plusieurs Mo rechargés à chaque ouverture). Affichées via des URL signées. */
+const FILES_BUCKET = 'editorial-files';
+const STORAGE_API = SUPABASE_URL + '/storage/v1';
+const signedUrls = {};
+function safeFileName(n){
+  return (n || 'image').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9._-]+/g, '-')
+    .replace(/-+/g, '-').replace(/^[-.]+|[-.]+$/g, '').slice(-80) || 'image';
+}
+function attachmentPath(articleId, att){
+  return (SPACE || 'blog') + '/' + articleId + '/' + att.id + '-' + safeFileName(att.name);
+}
+function encodePath(p){ return p.split('/').map(encodeURIComponent).join('/'); }
+async function uploadFile(path, blob){
+  const headers = Object.assign({}, authHeaders(), { 'Content-Type': blob.type || 'application/octet-stream', 'x-upsert': 'true' });
+  const res = await fetch(STORAGE_API + '/object/' + FILES_BUCKET + '/' + encodePath(path), { method: 'POST', headers, body: blob });
+  if(!res.ok) throw new Error('Envoi impossible (' + res.status + ')');
+}
+async function signPaths(paths){
+  const missing = [...new Set(paths)].filter(p => p && !signedUrls[p]);
+  if(!missing.length) return;
+  try{
+    const res = await fetch(STORAGE_API + '/object/sign/' + FILES_BUCKET, {
+      method: 'POST', headers: authHeaders(), body: JSON.stringify({ expiresIn: 60 * 60 * 24, paths: missing })
+    });
+    if(!res.ok) return;
+    for(const r of await res.json()){ if(r && r.signedURL) signedUrls[r.path] = STORAGE_API + r.signedURL; }
+  }catch(e){ console.error('Signature des images impossible', e); }
+}
+async function removeFiles(paths){
+  if(!paths.length) return;
+  try{
+    await fetch(STORAGE_API + '/object/' + FILES_BUCKET, { method: 'DELETE', headers: authHeaders(), body: JSON.stringify({ prefixes: paths }) });
+  }catch(e){}
+}
+function attachmentSrc(a){ return a.path ? (signedUrls[a.path] || '') : (a.value || ''); }
+/* Toutes les copies d'une image dans l'article : étapes et étapes archivées. */
+function imageCopies(article){
+  const archived = [...Object.values(article.reviewSteps || {}), article.legacyReviewStep];
+  return [...(article.steps || []), ...archived]
+    .flatMap(st => (st && Array.isArray(st.attachments) ? st.attachments : []))
+    .filter(a => a && a.type === 'image');
+}
+/* Déplace les images encore en data URL vers le stockage (une seule fois par image). */
+async function moveImagesToStorage(article){
+  const inline = imageCopies(article).filter(a => typeof a.value === 'string' && a.value.startsWith('data:'));
+  if(!inline.length) return false;
+  const done = {};
+  for(const a of inline){
+    if(!done[a.id]){
+      const path = attachmentPath(article.id, a);
+      const blob = await (await fetch(a.value)).blob();
+      await uploadFile(path, blob);
+      done[a.id] = path;
+    }
+    a.path = done[a.id];
+    delete a.value;
+  }
+  return true;
+}
+
 /* L'ajout d'images appartient à l'étape Image. */
 function isImageStep(key){ return key === 'image'; }
 
@@ -1219,8 +1280,7 @@ async function loadArticles(){
   try{
     const idxRes = await storage.get('articles-index', false);
     const ids = JSON.parse(idxRes.value);
-    const out = [];
-    for(const id of ids){
+    const loaded = await Promise.all(ids.map(async id => {
       try{
         const r = await storage.get('article:' + id, false);
         const a = JSON.parse(r.value);
@@ -1237,12 +1297,16 @@ async function loadArticles(){
         const before = JSON.stringify(a.steps);
         syncArticleSteps(a);
         if(before !== JSON.stringify(a.steps)) articleChanged = true;
+        try{ if(await moveImagesToStorage(a)) articleChanged = true; }
+        catch(err){ console.error('Images non déplacées pour ' + id, err); }
         if(articleChanged) await saveArticle(a);
-        out.push(a);
-      }catch(e){}
-    }
+        return a;
+      }catch(e){ return null; }
+    }));
+    const out = loaded.filter(Boolean);
     out.sort((a,b)=> (a.createdAt||'').localeCompare(b.createdAt||''));
     articles = out;
+    await signPaths(out.flatMap(a => (a.steps || []).flatMap(st => (st.attachments || []).map(x => x.path))));
   }catch(e){
     articles = [];
   }
@@ -1668,8 +1732,8 @@ function renderAttachments(articleId, step){
     if(a.type === 'image'){
       return `
         <div class="attachment-chip attachment-image">
-          <a class="attachment-thumb" href="${escapeAttr(a.value)}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image">
-            <img src="${escapeAttr(a.value)}" alt="${escapeAttr(a.name||'Image')}">
+          <a class="attachment-thumb" href="${escapeAttr(attachmentSrc(a))}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image">
+            <img src="${escapeAttr(attachmentSrc(a))}" alt="${escapeAttr(a.name||'Image')}" loading="lazy">
             <span class="attachment-badge">⤓</span>
           </a>
           <button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>
@@ -1697,8 +1761,8 @@ function renderImagesReadonly(article, excludeKey){
   if(!images.length) return '';
   return images.map(a => `
     <div class="attachment-chip attachment-image">
-      <a class="attachment-thumb" href="${escapeAttr(a.value)}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image">
-        <img src="${escapeAttr(a.value)}" alt="${escapeAttr(a.name||'Image')}">
+      <a class="attachment-thumb" href="${escapeAttr(attachmentSrc(a))}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image">
+        <img src="${escapeAttr(attachmentSrc(a))}" alt="${escapeAttr(a.name||'Image')}" loading="lazy">
         <span class="attachment-badge">⤓</span>
       </a>
     </div>`).join('');
@@ -1961,7 +2025,10 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
   if(delBtn){
     const id = delBtn.dataset.articleId;
     if(confirmingDelete === id){
+      const gone = getArticle(id);
+      const files = gone ? [...new Set(imageCopies(gone).map(a => a.path).filter(Boolean))] : [];
       articles = articles.filter(a => a.id !== id);
+      removeFiles(files);
       delete openPanels[id];
       confirmingDelete = null;
       await deleteArticleStorage(id);
@@ -2084,8 +2151,14 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     const attachId = removeAttach.dataset.attachId;
     const article = getArticle(id);
     const step = article.steps.find(s => s.key === key);
+    const removed = (step.attachments||[]).find(a => a.id === attachId);
     step.attachments = (step.attachments||[]).filter(a => a.id !== attachId);
+    // Retirer aussi les copies archivées, sinon l'image reviendrait au prochain chargement.
+    for(const st of [...Object.values(article.reviewSteps || {}), article.legacyReviewStep]){
+      if(st && Array.isArray(st.attachments)) st.attachments = st.attachments.filter(a => a.id !== attachId);
+    }
     await saveArticle(article);
+    if(removed && removed.path && !imageCopies(article).some(a => a.path === removed.path)) removeFiles([removed.path]);
     renderArticles();
     return;
   }
@@ -2190,21 +2263,19 @@ async function addImageAttachments(zone, files){
     if(!step) return;
     const images = [];
     for(const file of files){
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      images.push({ id: uid(), type: 'image', value: dataUrl, name: file.name });
+      const image = { id: uid(), type: 'image', name: file.name };
+      image.path = attachmentPath(article.id, image);
+      await uploadFile(image.path, file);
+      images.push(image);
     }
+    await signPaths(images.map(i => i.path));
     if(!step.attachments) step.attachments = [];
     step.attachments.push(...images);
     await saveArticle(article);
     renderArticles();
   }catch(err){
-    console.error('Erreur de lecture du fichier', err);
-    alert("Impossible de charger cette image.");
+    console.error('Erreur d\'envoi du fichier', err);
+    alert("Impossible d'envoyer cette image. Réessayez.");
   }finally{
     zone.classList.remove('uploading');
     zone.removeAttribute('aria-busy');
