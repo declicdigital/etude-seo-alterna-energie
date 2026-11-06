@@ -602,6 +602,16 @@ button{ font-family: inherit; cursor:pointer; }
 .attach-file-input{ position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; }
 .attach-image-label.uploading{ opacity:.65; cursor:wait; }
 @media (prefers-reduced-motion:reduce){ .attach-image-label{ transition:none; } }
+.image-slots{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; margin-bottom:12px; }
+@media (max-width:640px){ .image-slots{ grid-template-columns:1fr; } }
+.image-slots .attach-image-label{ position:relative; flex-direction:column; gap:8px; min-height:150px; margin-bottom:0; }
+.slot-size{ font-size:1.15rem; font-weight:700; letter-spacing:.02em; }
+.slot-filled{ border-style:solid; background:var(--card); }
+.slot-thumb{ display:block; width:100%; max-width:220px; aspect-ratio:2/1; border-radius:6px; overflow:hidden; background:var(--lgreen-bg); }
+.slot-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+.slot-name{ font-size:0.75rem; font-weight:500; color:var(--ink-60); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.slot-remove{ position:absolute; top:6px; right:6px; width:26px; height:26px; border-radius:50%; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; font-size:1rem; line-height:1; }
+.slot-remove:hover{ border-color:var(--ink); }
 .save-indicator{
   position: fixed; bottom: 20px; right: 24px;
   font-size: 0.75rem; font-weight: 600; color: var(--ink);
@@ -1641,13 +1651,8 @@ function renderArticleCard(article){
         </div>
         <div class="attachments-block">
           <label class="attachments-label">${step.key === 'integration' && !PLANETE && !EditorialPipeline.isRewrite(article, SPACE) ? 'Images validées (étape Image)' : 'Pièces jointes'}</label>
-          <div class="attachments-list">${renderAttachments(article.id, step)}${['relecture', 'integration'].includes(step.key) ? renderImagesReadonly(article, step.key) : ''}</div>
-          ${isImageStep(step.key) ? `
-          <label class="attach-image-label" data-article-id="${article.id}" data-step-key="${step.key}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></svg>
-            <span class="attach-image-copy">Ajouter une image<small>Glisser une image ici ou cliquer pour choisir</small></span>
-            <input type="file" accept="image/*" multiple class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" aria-label="Ajouter une image">
-          </label>` : ''}
+          ${isImageStep(step.key) ? renderImageSlots(article, step) : ''}
+          <div class="attachments-list">${renderAttachments(article.id, isImageStep(step.key) ? Object.assign({}, step, { attachments: (step.attachments || []).filter(a => !(imageFormat(a) && (step.attachments || []).find(x => imageFormat(x) === imageFormat(a)) === a)) }) : step)}${['relecture', 'integration'].includes(step.key) ? renderImagesReadonly(article, step.key) : ''}</div>
           <div class="attachments-add">
             <input type="text" class="attach-input" data-article-id="${article.id}" data-step-key="${step.key}" placeholder="Coller un lien ou écrire une note, puis Entrée">
             <button class="btn-ghost" data-action="add-text-attachment" data-article-id="${article.id}" data-step-key="${step.key}">Ajouter</button>
@@ -1695,6 +1700,46 @@ function renderArticleCard(article){
     </div>`;
 }
 
+/* Les deux formats d'image demandés pour un article. */
+const IMAGE_FORMATS = [
+  { key:'1500x700', label:'1500 × 700' },
+  { key:'950x475', label:'950 × 475' }
+];
+/* Format d'une image : choisi à l'envoi, ou reconnu dans le nom des images déjà ajoutées. */
+function imageFormat(a){
+  if(!a || a.type !== 'image') return '';
+  if(a.format) return a.format;
+  const n = a.name || '';
+  if(/1500\s*[x×*]\s*700/i.test(n)) return '1500x700';
+  if(/950\s*[x×*]\s*475/i.test(n)) return '950x475';
+  return '';
+}
+/* Les images retirées doivent aussi quitter les étapes archivées (ancienne étape Validation),
+   sinon la synchronisation les remettrait dans l'étape Image au prochain chargement. */
+function forgetArchivedAttachment(article, attachId){
+  for(const st of [...Object.values(article.reviewSteps || {}), article.legacyReviewStep]){
+    if(st && Array.isArray(st.attachments)) st.attachments = st.attachments.filter(a => a.id !== attachId);
+  }
+}
+function renderImageSlots(article, step){
+  const atts = step.attachments || [];
+  return `<div class="image-slots">${IMAGE_FORMATS.map(f => {
+    const a = atts.find(x => imageFormat(x) === f.key);
+    return `
+      <label class="attach-image-label ${a ? 'slot-filled' : ''}" data-article-id="${article.id}" data-step-key="${step.key}" data-format="${f.key}" title="${a ? 'Cliquer pour remplacer l\'image ' + f.label : 'Ajouter l\'image ' + f.label}">
+        <span class="slot-size">${f.label}</span>
+        ${a ? `
+          <a class="slot-thumb" href="${escapeAttr(imgSrc(a))}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image ${f.label}">
+            <img loading="lazy" src="${escapeAttr(imgSrc(a))}" alt="Image ${f.label}">
+          </a>
+          <span class="slot-name">${escapeHtml(a.name || '')}</span>
+          <button type="button" class="slot-remove" data-action="remove-attachment" data-article-id="${article.id}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer l'image ${f.label}" aria-label="Retirer l'image ${f.label}">×</button>`
+        : `<span class="attach-image-copy"><small>Glisser l'image ici ou cliquer pour choisir</small></span>`}
+        <input type="file" accept="image/*" class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" aria-label="Image ${f.label}">
+      </label>`;
+  }).join('')}</div>`;
+}
+
 function renderAttachments(articleId, step){
   const items = step.attachments || [];
   if(items.length === 0) return '';
@@ -1731,7 +1776,7 @@ function renderImagesReadonly(article, excludeKey){
   if(!images.length) return '';
   return images.map(a => `
     <div class="attachment-chip attachment-image">
-      <a class="attachment-thumb" href="${escapeAttr(imgSrc(a))}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image">
+      <a class="attachment-thumb" href="${escapeAttr(imgSrc(a))}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image${imageFormat(a) ? ' ' + IMAGE_FORMATS.find(f => f.key === imageFormat(a)).label : ''}">
         <img loading="lazy" src="${escapeAttr(imgSrc(a))}" alt="${escapeAttr(a.name||'Image')}">
         <span class="attachment-badge">⤓</span>
       </a>
@@ -2119,6 +2164,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     const article = getArticle(id);
     const step = article.steps.find(s => s.key === key);
     step.attachments = (step.attachments||[]).filter(a => a.id !== attachId);
+    forgetArchivedAttachment(article, attachId);
     await saveArticle(article);
     renderArticles();
     return;
@@ -2222,12 +2268,18 @@ async function addImageAttachments(zone, files){
     const article = getArticle(zone.dataset.articleId);
     const step = article?.steps.find(s => s.key === zone.dataset.stepKey);
     if(!step) return;
+    const format = zone.dataset.format || '';
     const images = [];
-    for(const file of files){
+    for(const file of (format ? files.slice(0, 1) : files)){
       const path = await uploadImage(article.id, file);
-      images.push({ id: uid(), type: 'image', path, name: file.name });
+      images.push(Object.assign({ id: uid(), type: 'image', path, name: file.name }, format ? { format } : {}));
     }
     if(!step.attachments) step.attachments = [];
+    // Une seule image par format : la nouvelle remplace l'ancienne.
+    if(format){
+      for(const old of step.attachments.filter(a => imageFormat(a) === format)) forgetArchivedAttachment(article, old.id);
+      step.attachments = step.attachments.filter(a => imageFormat(a) !== format);
+    }
     step.attachments.push(...images);
     await signImages([article]);
     await saveArticle(article);
