@@ -1,0 +1,1 @@
+CREATE POLICY "editorial images read approved" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'editorial-images' AND public.is_approved(auth.uid()));

@@ -841,6 +841,25 @@ function currentSession(){
     return s;
   }catch(e){ return null; }
 }
+const IMG_BUCKET = SUPABASE_URL + '/storage/v1/object';
+const signedImages = {};
+function imgSrc(a){ return a.path ? (signedImages[a.path] || '') : a.value; }
+async function signImages(list){
+  const paths = [...new Set((list || articles).flatMap(x => (x.steps || []).flatMap(s => s.attachments || [])).filter(a => a && a.path && !signedImages[a.path]).map(a => a.path))];
+  if(!paths.length) return;
+  try{
+    const r = await fetch(IMG_BUCKET + '/sign/editorial-images', { method:'POST', headers: Object.assign({}, authHeaders(), {'Content-Type':'application/json'}), body: JSON.stringify({ paths, expiresIn: 60*60*24 }) });
+    if(!r.ok) return;
+    for(const it of await r.json()) if(it.signedURL) signedImages[it.path] = SUPABASE_URL + '/storage/v1' + it.signedURL;
+  }catch(e){ console.error(e); }
+}
+async function uploadImage(articleId, file){
+  const path = articleId + '/' + uid() + '-' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const h = Object.assign({}, authHeaders(), { 'Content-Type': file.type || 'application/octet-stream' });
+  const r = await fetch(IMG_BUCKET + '/editorial-images/' + path, { method:'POST', headers:h, body:file });
+  if(!r.ok) throw new Error('upload');
+  return path;
+}
 function authHeaders(){
   const s = currentSession();
   return {
@@ -1683,8 +1702,8 @@ function renderAttachments(articleId, step){
     if(a.type === 'image'){
       return `
         <div class="attachment-chip attachment-image">
-          <a class="attachment-thumb" href="${escapeAttr(a.value)}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image">
-            <img src="${escapeAttr(a.value)}" alt="${escapeAttr(a.name||'Image')}">
+          <a class="attachment-thumb" href="${escapeAttr(imgSrc(a))}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image">
+            <img loading="lazy" src="${escapeAttr(imgSrc(a))}" alt="${escapeAttr(a.name||'Image')}">
             <span class="attachment-badge">⤓</span>
           </a>
           <button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>
@@ -1712,8 +1731,8 @@ function renderImagesReadonly(article, excludeKey){
   if(!images.length) return '';
   return images.map(a => `
     <div class="attachment-chip attachment-image">
-      <a class="attachment-thumb" href="${escapeAttr(a.value)}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image">
-        <img src="${escapeAttr(a.value)}" alt="${escapeAttr(a.name||'Image')}">
+      <a class="attachment-thumb" href="${escapeAttr(imgSrc(a))}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image">
+        <img loading="lazy" src="${escapeAttr(imgSrc(a))}" alt="${escapeAttr(a.name||'Image')}">
         <span class="attachment-badge">⤓</span>
       </a>
     </div>`).join('');
@@ -2205,16 +2224,12 @@ async function addImageAttachments(zone, files){
     if(!step) return;
     const images = [];
     for(const file of files){
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      images.push({ id: uid(), type: 'image', value: dataUrl, name: file.name });
+      const path = await uploadImage(article.id, file);
+      images.push({ id: uid(), type: 'image', path, name: file.name });
     }
     if(!step.attachments) step.attachments = [];
     step.attachments.push(...images);
+    await signImages([article]);
     await saveArticle(article);
     renderArticles();
   }catch(err){
@@ -2653,6 +2668,7 @@ async function init(){
   document.getElementById('articlesContainer').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
   await Promise.all([loadConfig(), loadComments(), loadApprovedUsers(), loadTodos()]);
   await loadArticles();
+  await signImages();
   renderTodos();
   renderTodoComments();
   loadNotifSeen();

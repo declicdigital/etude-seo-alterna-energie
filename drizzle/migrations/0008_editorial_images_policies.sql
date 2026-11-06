@@ -1,0 +1,2 @@
+CREATE POLICY "editorial images upload approved" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'editorial-images' AND public.is_approved(auth.uid()));
+CREATE POLICY "editorial images delete approved" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'editorial-images' AND public.is_approved(auth.uid()));

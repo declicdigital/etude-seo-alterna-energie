@@ -57,6 +57,20 @@
       "when": 1793895000000,
       "tag": "0007_organisation_attachments",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793956002528,
+      "tag": "0008_editorial_images_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793956010809,
+      "tag": "0009_editorial_images_read",
+      "breakpoints": true
     }
   ]
 }
