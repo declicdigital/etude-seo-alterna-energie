@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      _backup_editorial_kv_20261105: {
+        Row: {
+          created_at: string | null
+          key: string | null
+          updated_at: string | null
+          value: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          key?: string | null
+          updated_at?: string | null
+          value?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          key?: string | null
+          updated_at?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
       article_comments: {
         Row: {
           article_id: string
@@ -140,10 +161,31 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "org_cards_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "org_cards_column_id_fkey"
             columns: ["column_id"]
             isOneToOne: false
             referencedRelation: "org_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_cards_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_cards_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
