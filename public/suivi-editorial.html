@@ -1220,10 +1220,17 @@ async function loadArticles(){
     const idxRes = await storage.get('articles-index', false);
     const ids = JSON.parse(idxRes.value);
     const out = [];
+    // Un seul appel pour tous les articles (au lieu d'un appel par article, très lent).
+    const keys = ids.map(id => '"' + KEY('article:' + id).replace(/"/g, '\\"') + '"');
+    const bulk = await fetch(REST + '?select=key,value&key=in.(' + encodeURIComponent(keys.join(',')) + ')', { headers: authHeaders() });
+    if(!bulk.ok) throw new Error('Erreur de lecture');
+    const byKey = Object.fromEntries((await bulk.json()).map(r => [r.key, r.value]));
+    const pendingSaves = [];
     for(const id of ids){
       try{
-        const r = await storage.get('article:' + id, false);
-        const a = JSON.parse(r.value);
+        const raw = byKey[KEY('article:' + id)];
+        if(raw == null) continue;
+        const a = JSON.parse(raw);
         let articleChanged = false;
         // Retire l'étape Brief SEO des articles existants.
         if(Array.isArray(a.steps) && a.steps.some(s => s.key === 'idee' || (!STRAT && s.key === 'brief'))){
@@ -1237,10 +1244,18 @@ async function loadArticles(){
         const before = JSON.stringify(a.steps);
         syncArticleSteps(a);
         if(before !== JSON.stringify(a.steps)) articleChanged = true;
-        if(articleChanged) await saveArticle(a);
+        // Une étape Image qui contient déjà une image est validée.
+        const img = (a.steps || []).find(s => s.key === 'image');
+        if(img && img.status !== 'done' && (img.attachments || []).some(x => x && x.type === 'image')){
+          if(!/^\d{4}-\d{2}-\d{2}$/.test(img.date || '')) img.date = todayIso();
+          img.status = 'done';
+          articleChanged = true;
+        }
+        if(articleChanged) pendingSaves.push(saveArticle(a));
         out.push(a);
       }catch(e){}
     }
+    await Promise.all(pendingSaves);
     out.sort((a,b)=> (a.createdAt||'').localeCompare(b.createdAt||''));
     articles = out;
   }catch(e){
@@ -2636,9 +2651,8 @@ window.addEventListener('hashchange', openArticleFromHash);
 
 async function init(){
   document.getElementById('articlesContainer').innerHTML = '<div class="empty"><p>Chargement…</p></div>';
-  await loadConfig();
+  await Promise.all([loadConfig(), loadComments(), loadApprovedUsers(), loadTodos()]);
   await loadArticles();
-  await Promise.all([loadComments(), loadApprovedUsers(), loadTodos()]);
   renderTodos();
   renderTodoComments();
   loadNotifSeen();
