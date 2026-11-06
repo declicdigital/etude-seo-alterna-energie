@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { MAIL_SENDER } from "./mail-sender";
+import { editorialMailHtml } from "./mail-layout";
 import { spaceLabel, spacePrefix } from "./editorial-spaces";
 import { buildStepReminder, canSendStepReminder, GEOFFREY_EMAIL, reminderArticleSchema, reminderConfigSchema, stepReminderSchema } from "./step-reminders";
 
@@ -27,10 +28,25 @@ export const sendStepReminder = createServerFn({ method: "POST" })
       const lovableKey = process.env.LOVABLE_API_KEY;
       const brevoKey = process.env.BREVO_API_KEY;
       if (!lovableKey || !brevoKey) return { ok: false, error: "L’envoi des mails n’est pas configuré." };
-      const escape = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-      const details = [article.title, article.subject, reminder.deadline ? `Deadline : ${reminder.deadline}` : undefined, article.docxLink].filter((s): s is string => !!s);
-      const textContent = ["Bonjour,", "", reminder.message, "", ...details, "", `${reminder.cta} : ${reminder.url}`, "", "Notification de Digicom."].join("\r\n");
-      const htmlContent = `<html><body style="font-family:Arial,sans-serif"><h2>Digicom · ${spaceLabel(data.space)}</h2><p>Bonjour,</p><p>${escape(reminder.message)}</p>${details.map(line => `<p>${escape(line)}</p>`).join("")}<p><a href="${escape(reminder.url)}">${escape(reminder.cta)}</a></p><p>Notification de Digicom.</p></body></html>`;
+      const textContent = [
+        "Bonjour,", "", reminder.message, "",
+        `Nom de l'article (H1) : ${article.title}`,
+        article.subject ? `Sujet : ${article.subject}` : null,
+        reminder.deadline ? `Deadline : ${reminder.deadline}` : null,
+        article.docxLink ? `Lien du doc : ${article.docxLink}` : null,
+        "", `${reminder.cta} : ${reminder.url}`,
+      ].filter((l): l is string => l !== null).join("\r\n");
+      const htmlContent = editorialMailHtml({
+        heading: `Digicom · ${spaceLabel(data.space)}`,
+        introHtml: reminder.introHtml,
+        fields: [
+          ["Nom de l'article (H1)", article.title],
+          ["Sujet", article.subject],
+          ["Deadline", reminder.deadline],
+          ["Lien du doc", article.docxLink],
+        ],
+        cta: { label: reminder.cta, url: reminder.url },
+      });
       const response = await fetch("https://connector-gateway.lovable.dev/brevo/smtp/email", {
         method: "POST",
         headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": brevoKey, "Content-Type": "application/json" },

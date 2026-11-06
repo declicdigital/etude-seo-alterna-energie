@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { editorialLink } from "./editorial-links";
 import { EDITORIAL_SPACES } from "./editorial-spaces";
+import { escapeHtml } from "./mail-layout";
 import { notificationCta, notificationDeadline, notificationRecipients } from "./article-notification";
 
 export const GEOFFREY_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
@@ -60,8 +61,17 @@ export function buildStepReminder(
     : input.stepKey === "integration" ? "Rappel : cet article attend son intégration dans le site. Merci de l’intégrer, de renseigner le lien publié et de valider cette étape dans la carte."
     : input.stepKey === "brief" ? "Rappel : le brief de cet article reste à compléter. Merci de compléter les informations et de valider cette étape dans la carte."
     : `Rappel : cet article attend votre intervention à l’étape « ${label} ». Merci de compléter et de valider cette étape dans la carte.`;
+  const b = (t: string) => `<strong>${escapeHtml(t)}</strong>`;
+  const introHtml = `Bonjour,<br><br>` + (input.stepKey === "image"
+    ? `${b("Rappel")} : cet article a été rédigé. Merci de ${b("trouver une image")}, de l’${b("ajouter")} dans la carte et de valider l’étape ${b("Image")}.`
+    : review ? `${b("Rappel")} : cet article a été rédigé et son image a été ajoutée. Merci de ${b("relire l’article")} et de valider l’étape ${b("Relecture")} dans la carte.`
+    : input.stepKey === "redaction" ? `${b("Rappel")} : cet article attend sa ${b("rédaction")}. Merci de compléter le document et de valider l’étape ${b(label)} dans la carte.`
+    : input.stepKey === "expert" ? `${b("Rappel")} : cet article a été rédigé et attend votre ${b("relecture métier")}. Merci de le relire et de valider cette étape dans la carte.`
+    : input.stepKey === "integration" ? `${b("Rappel")} : cet article attend son ${b("intégration dans le site")}. Merci de l’intégrer, de renseigner le ${b("lien publié")} et de valider cette étape dans la carte.`
+    : input.stepKey === "brief" ? `${b("Rappel")} : le ${b("brief")} de cet article reste à compléter. Merci de compléter les informations et de valider cette étape dans la carte.`
+    : `${b("Rappel")} : cet article attend votre intervention à l’étape « ${b(label)} ». Merci de compléter et de valider cette étape dans la carte.`);
   return {
-    recipients, label, message, subject: `Rappel · ${label} : « ${article.title} »`,
+    recipients, label, message, introHtml, subject: `Rappel · ${label} : « ${article.title} »`,
     cta: notificationCta(kind),
     url: editorialLink(input.articleId, input.stepKey, kind === "image" ? "images" : undefined, false, input.space),
     deadline: notificationDeadline(article.deadline, kind, recipients),

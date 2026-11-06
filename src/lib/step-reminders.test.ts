@@ -56,3 +56,26 @@ it('routes Image reminders only to Geoffrey with the image destination', () => {
 it('rejects Image reminders on PAC rewrites', () => {
   expect(() => buildStepReminder({articleId:'test',stepKey:'image',space:'strategie'},{...article,type:'Réécriture'},config)).toThrow();
 });
+
+describe("mise en forme des rappels", () => {
+  it("utilise la même mise en page que les mails d'étape", async () => {
+    const { editorialMailHtml } = await import("./mail-layout");
+    const { buildStepReminder } = await import("./step-reminders");
+    const reminder = buildStepReminder(
+      { articleId: "a1", stepKey: "image" },
+      { title: "Titre <test>", steps: [{ key: "image", assignee: "Geoffrey" }] },
+      [{ key: "image", label: "Image", assignee: "Geoffrey", emails: { Geoffrey: "geoffrey.delabarre@alterna-energie.fr" } }],
+    );
+    expect(reminder.introHtml).toContain("<strong>trouver une image</strong>");
+    const html = editorialMailHtml({
+      heading: "Digicom · Blog",
+      introHtml: reminder.introHtml,
+      fields: [["Nom de l'article (H1)", "Titre <test>"], ["Sujet", undefined]],
+      cta: { label: reminder.cta, url: reminder.url },
+    });
+    expect(html).toContain("background:#047857");
+    expect(html).toContain("Titre &lt;test&gt;");
+    expect(html).not.toContain("SUJET");
+    expect(html).toContain("Notification automatique de Digicom");
+  });
+});

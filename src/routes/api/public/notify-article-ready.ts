@@ -3,6 +3,7 @@ import { z } from "zod";
 import { notificationLink } from "@/lib/editorial-links";
 import { notificationCta, notificationDeadline, notificationRecipients, SERVICE_COMMUNICATION_EMAILS } from "@/lib/article-notification";
 import { MAIL_SENDER } from "@/lib/mail-sender";
+import { editorialMailHtml } from "@/lib/mail-layout";
 import { EDITORIAL_SPACES, spaceLabel, spacePrefix } from "@/lib/editorial-spaces";
 const BodySchema = z.object({
   space: z.enum(EDITORIAL_SPACES).optional(),
@@ -28,45 +29,35 @@ const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const RELECTURE_EMAILS: readonly string[] = SERVICE_COMMUNICATION_EMAILS;
 const INTEGRATION_EMAIL = "marick.navarro.ext@soregies.fr";
 
-const esc = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
 function buildHtml(p: z.infer<typeof BodySchema>): string {
-  const cta = notificationCta(p.kind);
-  const row = (label: string, value?: string) =>
-    value
-      ? `<p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">${label}</p><p style="margin:0 0 14px;font-size:15px">${esc(value)}</p>`
-      : "";
-  return `<!doctype html><html><body style="margin:0;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;padding:32px 12px"><tr><td align="center">
-<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
-<tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · ${spaceLabel(p.space)}</td></tr>
-<tr><td style="padding:28px">
-${p.kind === "image"
-  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Geoffrey,<br><br>L'article a été rédigé${p.cible === 'Professionnel' && !p.space ? ' et relu par l’expert métier' : ''}. Merci de <strong>trouver une image</strong>, de l'<strong>ajouter</strong> dans la carte et de valider l'étape <strong>Image</strong>.</p>`
+  const introHtml = p.kind === "image"
+  ? `Bonjour Geoffrey,<br><br>L'article a été rédigé${p.cible === 'Professionnel' && !p.space ? ' et relu par l’expert métier' : ''}. Merci de <strong>trouver une image</strong>, de l'<strong>ajouter</strong> dans la carte et de valider l'étape <strong>Image</strong>.`
   : p.kind === "relecture"
-  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article a été rédigé et son image a été ajoutée. Merci de <strong>relire l'article</strong> et de valider l'étape <strong>Relecture</strong>.</p>`
+  ? `Bonjour,<br><br>L'article a été rédigé et son image a été ajoutée. Merci de <strong>relire l'article</strong> et de valider l'étape <strong>Relecture</strong>.`
   : p.kind === "integration"
    ? (p.space === "planete"
-     ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Geoffrey,<br><br>L'article ci-dessous a été <strong>rédigé</strong>. Il est prêt à être <strong>intégré dans le site</strong>.</p>`
+     ? `Bonjour Geoffrey,<br><br>L'article ci-dessous a été <strong>rédigé</strong>. Il est prêt à être <strong>intégré dans le site</strong>.`
      : p.space === "strategie" && p.type === "Réécriture"
-     ? `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>La <strong>réécriture est terminée</strong>. L'article ci-dessous est prêt à être <strong>intégré dans le site</strong>.</p>`
-     : `<p style="margin:0 0 18px;font-size:16px">Bonjour,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (visible dans la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.</p>`)
+     ? `Bonjour,<br><br>La <strong>réécriture est terminée</strong>. L'article ci-dessous est prêt à être <strong>intégré dans le site</strong>.`
+     : `Bonjour,<br><br>L'article ci-dessous est prêt : la <strong>relecture est faite</strong> et <strong>l'image est validée</strong> (visible dans la carte de l'article). Il ne vous reste plus qu'à <strong>l'intégrer dans le site</strong>.`)
   : p.kind === "published"
-  ? `<p style="margin:0 0 18px;font-size:16px">Bonjour Geoffrey,<br><br>L'article ci-dessous a été <strong>intégré dans le site</strong> : toutes les étapes sont terminées et il a été ajouté au blog.</p>`
-  : `<p style="margin:0 0 18px;font-size:16px">Un nouvel article est <strong>prêt à être rédigé</strong> : toutes les informations de la ligne « À rédiger » sont remplies et l'article a été créé dans le suivi.</p>`}
-${row("Sujet", p.sujet)}
-${row("Nom de l'article (H1)", p.h1)}
-${row("Édition", p.editrice)}
-${row("Cible", p.cible)}
-${row("Catégorie", p.categorie)}
-${row("Énergie", p.energie)}
-${row("Deadline", p.deadline)}
-${row("Lien du doc", p.docx)}
-<a href="${notificationLink(p.kind, p.articleId, p.stepKey, p.space)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">${cta}</a>
-</td></tr>
-<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Notification automatique de Digicom. Merci de ne pas répondre à ce mail.</td></tr>
-</table></td></tr></table></body></html>`;
+  ? `Bonjour Geoffrey,<br><br>L'article ci-dessous a été <strong>intégré dans le site</strong> : toutes les étapes sont terminées et il a été ajouté au blog.`
+  : `Un nouvel article est <strong>prêt à être rédigé</strong> : la ligne « À rédiger » a été enregistrée et l'article a été créé dans le suivi.`;
+  return editorialMailHtml({
+    heading: `Digicom · ${spaceLabel(p.space)}`,
+    introHtml,
+    fields: [
+      ["Sujet", p.sujet],
+      ["Nom de l'article (H1)", p.h1],
+      ["Édition", p.editrice],
+      ["Cible", p.cible],
+      ["Catégorie", p.categorie],
+      ["Énergie", p.energie],
+      ["Deadline", p.deadline],
+      ["Lien du doc", p.docx],
+    ],
+    cta: { label: notificationCta(p.kind), url: notificationLink(p.kind, p.articleId, p.stepKey, p.space) },
+  });
 }
 
 export const Route = createFileRoute("/api/public/notify-article-ready")({
