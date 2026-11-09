@@ -275,7 +275,7 @@ export function DigicomAssistant({
       setMsgs([
         {
           role: "assistant",
-          content: `Bonjour${first ? ` ${first}` : ""} 👋 Je suis l'assistant Digicom. Pose-moi ta question sur l'outil : créer un article, ajouter des images, les deadlines, les accès… Je peux aussi t'emmener directement au bon endroit.`,
+          content: `Bonjour${first ? ` ${first}` : ""} 👋 Je suis D.I.G.I.P.O.T.E, ton assistant Digicom. Pose-moi ta question sur l'outil : créer un article, ajouter des images, les deadlines, les accès… Je peux aussi t'emmener directement au bon endroit.`,
         },
       ]);
     }
@@ -333,7 +333,7 @@ export function DigicomAssistant({
       {open && (
         <section
           role="dialog"
-          aria-label="Assistant Digicom"
+          aria-label="D.I.G.I.P.O.T.E, assistant Digicom"
           className={cn(
             "dg-pop fixed z-[60] flex flex-col overflow-hidden rounded-[28px] text-slate-800 dark:text-slate-100",
             "inset-x-3 bottom-3 top-16 sm:inset-x-auto sm:bottom-6 sm:right-6 sm:top-auto sm:h-[600px] sm:max-h-[calc(100vh-3rem)] sm:w-[400px]",
@@ -353,16 +353,18 @@ export function DigicomAssistant({
           <header className="relative flex items-center gap-3 border-b border-white/50 px-4 py-3 dark:border-white/10">
             <RobotFace size={42} />
             <div className="min-w-0 flex-1">
-              <div className="text-[15px] font-semibold leading-tight">Assistant Digicom</div>
+              <div className="text-[15px] font-bold leading-tight tracking-[0.08em]">
+                D.I.G.I.P.O.T.E
+              </div>
               <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
                 <span className="size-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,.2)]" />
-                Répond à tes questions sur l'outil
+                Ton assistant Digicom
               </div>
             </div>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label="Réduire l'assistant"
+              aria-label="Réduire D.I.G.I.P.O.T.E"
               className="rounded-full p-2 text-slate-600 transition hover:bg-white/60 dark:text-slate-300 dark:hover:bg-white/10"
             >
               <Minus className="size-4" />
@@ -391,7 +393,7 @@ export function DigicomAssistant({
               ),
             )}
             {busy && (
-              <div className="flex items-end gap-2" aria-label="L'assistant écrit">
+              <div className="flex items-end gap-2" aria-label="D.I.G.I.P.O.T.E écrit">
                 <RobotFace size={30} />
                 <div className="flex gap-1 rounded-[20px] rounded-bl-md border border-white/70 bg-white/70 px-4 py-3.5 dark:border-white/10 dark:bg-white/10">
                   {[0, 1, 2].map((d) => (
@@ -467,6 +469,9 @@ export function DigicomAssistant({
                   GLASS,
                 )}
               >
+                <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-300">
+                  D.I.G.I.P.O.T.E
+                </span>
                 <span className="block whitespace-nowrap">As-tu besoin d'aide ?</span>
                 <span
                   aria-hidden
@@ -475,7 +480,7 @@ export function DigicomAssistant({
               </button>
               <button
                 type="button"
-                aria-label="Masquer la bulle de l'assistant"
+                aria-label="Masquer la bulle de D.I.G.I.P.O.T.E"
                 title="Masquer la bulle"
                 onClick={() => {
                   setHint(false);
@@ -498,8 +503,8 @@ export function DigicomAssistant({
             ref={botRef}
             type="button"
             onClick={() => setOpen(true)}
-            aria-label="Ouvrir l'assistant Digicom : as-tu besoin d'aide ?"
-            title="As-tu besoin d'aide ?"
+            aria-label="Ouvrir D.I.G.I.P.O.T.E : as-tu besoin d'aide ?"
+            title="D.I.G.I.P.O.T.E · As-tu besoin d'aide ?"
             className="dg-bot relative h-[124px] w-[94px] shrink-0 rounded-3xl outline-none transition-transform duration-200 [--dg-s:0.86] hover:scale-[1.05] focus-visible:ring-2 focus-visible:ring-emerald-500/60 sm:h-[146px] sm:w-[110px] sm:[--dg-s:1]"
           >
             <span

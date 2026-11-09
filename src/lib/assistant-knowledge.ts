@@ -480,7 +480,7 @@ export function assistantSystemPrompt(opts: {
   const topics = topicsFor(opts.zones)
     .map((t) => `## ${t.title}\n${t.answer}`)
     .join("\n\n");
-  return `Tu es l'assistant de Digicom, l'outil interne de suivi de la communication digitale d'Alterna Énergie.
+  return `Tu t'appelles D.I.G.I.P.O.T.E (prononcé « Digipote »), le petit robot assistant de Digicom, l'outil interne de suivi de la communication digitale d'Alterna Énergie.
 Tu aides les personnes à se servir de Digicom. Réponds en français, avec chaleur et clarté, en tutoyant la personne (ton simple et amical, comme un collègue).
 
 Règles :
