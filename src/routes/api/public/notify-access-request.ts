@@ -2,11 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { authenticateRequest } from "@/lib/route-auth.server";
+import { appUrl } from "@/lib/app-url";
 const BodySchema = z.object({ userId: z.string().uuid() });
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const ADMIN_EMAIL = "geoffrey.delabarre@gmail.com";
 const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
-const APP_URL = "https://etude-seo-alterna-energie.lovable.app/demandes";
+const APP_URL = appUrl("demandes");
 const SENDER = MAIL_SENDER;
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");

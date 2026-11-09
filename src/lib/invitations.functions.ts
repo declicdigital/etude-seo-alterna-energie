@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { invitationSchema, approvedInvitationProfile, canInvite } from "./invitations";
+import { appUrl } from "@/lib/app-url";
 
 export const invitePerson = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -12,7 +13,7 @@ export const invitePerson = createServerFn({ method: "POST" })
     // Cloud Auth sends its secure Invite email; never return or copy its link.
     const { data: invitation, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
       data: { full_name: data.fullName },
-      redirectTo: "https://etude-seo-alterna-energie.lovable.app/accept-invitation",
+      redirectTo: appUrl("accept-invitation"),
     });
     if (error || !invitation.user) {
       return { ok: false, error: /already|registered|exists/i.test(error?.message ?? "")

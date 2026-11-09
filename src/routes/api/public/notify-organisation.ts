@@ -4,6 +4,7 @@ import { MAIL_SENDER } from "@/lib/mail-sender";
 import { authenticateRequest } from "@/lib/route-auth.server";
 import { cardHash, excerpt, ORGANISATION_SHEET } from "@/lib/organisation";
 import { ficheLink } from '@/lib/slugs';
+import { appUrl } from "@/lib/app-url";
 
 /**
  * Prévient par mail les personnes nouvellement assignées ou taguées sur une
@@ -17,7 +18,7 @@ const BodySchema = z.object({
   tagged: z.array(z.string().uuid()).max(30).default([]),
 });
 
-const APP = "https://etude-seo-alterna-energie.lovable.app/";
+const APP = appUrl();
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 
 const esc = (s: string) =>

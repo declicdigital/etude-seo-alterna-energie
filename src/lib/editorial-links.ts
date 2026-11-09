@@ -1,7 +1,8 @@
 import { spaceSuiviSheet, SUIVI_SHEET_NAMES } from "./editorial-spaces";
 import { ficheLink, resolvePath, sheetPath } from './slugs';
+import { appUrl } from "@/lib/app-url";
 
-const APP = "https://etude-seo-alterna-energie.lovable.app/";
+const APP = appUrl();
 const SHEETS = SUIVI_SHEET_NAMES;
 
 export function editorialLink(id?: string, step?: string, focus?: string, todo = false, space?: string, title?: string): string {

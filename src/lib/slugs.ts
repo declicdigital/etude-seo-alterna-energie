@@ -1,3 +1,4 @@
+import { appUrl } from "@/lib/app-url";
 /** Stable route names are independent of editable display labels. */
 export const SHEET_PATHS: Record<string, string> = {
   __home: 'accueil', __guide: 'guide',
@@ -65,5 +66,5 @@ export function fichePath(sheet: string, kind: string, id: string, title?: strin
   return `${sheetPath(sheet)}/${kind}/${title ? `${slugify(title)}--` : ''}${encodeURIComponent(id)}`;
 }
 export function ficheLink(sheet: string, kind: string, id: string, title?: string): string {
-  return `https://etude-seo-alterna-energie.lovable.app/${fichePath(sheet, kind, id, title)}`;
+  return appUrl(fichePath(sheet, kind, id, title));
 }
