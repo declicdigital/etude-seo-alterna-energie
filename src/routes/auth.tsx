@@ -24,7 +24,8 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
+  const [sent, setSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -48,6 +49,14 @@ function AuthPage() {
     setError("");
     setLoading(true);
     try {
+      if (mode === "forgot") {
+        const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: `${window.location.origin}/reinitialiser-mot-de-passe`,
+        });
+        if (err && !/not found|no user/i.test(err.message)) throw err;
+        setSent(true);
+        return;
+      }
       if (mode === "signup") {
         const { error: err } = await supabase.auth.signUp({
           email: email.trim(),
@@ -102,105 +111,154 @@ function AuthPage() {
         <div className="mb-6 flex flex-col items-center text-center">
           <img src={logo.url} alt="Logo" className="mb-4 h-10 w-auto" />
           <h1 className="text-xl font-semibold text-emerald-900">
-            {mode === "login" ? "Connexion" : "Créer un compte"}
+            {mode === "login"
+              ? "Connexion"
+              : mode === "forgot"
+                ? "Mot de passe oublié"
+                : "Créer un compte"}
           </h1>
           <p className="mt-1 text-sm text-emerald-700/80">
             {mode === "login"
               ? "Accédez à Digicom."
-              : "Votre demande sera validée par un administrateur."}
+              : mode === "forgot"
+                ? "Recevez par mail un lien pour choisir un nouveau mot de passe."
+                : "Votre demande sera validée par un administrateur."}
           </p>
         </div>
 
-        <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-left">
-          <p className="text-xs font-semibold text-amber-900">
-            Nouveau : l'accès a changé
-          </p>
-          <p className="mt-1 text-xs leading-relaxed text-amber-800">
-            Le mot de passe unique n'existe plus. À votre première venue, cliquez sur
-            « Créer un compte » : votre demande est envoyée à l'administrateur, qui la
-            valide. Ensuite, vous vous connectez normalement avec votre email ou Google,
-            et vous restez connecté.
-          </p>
-        </div>
+        {mode !== "forgot" && (
+          <>
+            <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-left">
+              <p className="text-xs font-semibold text-amber-900">Nouveau : l'accès a changé</p>
+              <p className="mt-1 text-xs leading-relaxed text-amber-800">
+                Le mot de passe unique n'existe plus. À votre première venue, cliquez sur « Créer un
+                compte » : votre demande est envoyée à l'administrateur, qui la valide. Ensuite,
+                vous vous connectez normalement avec votre email ou Google, et vous restez connecté.
+              </p>
+            </div>
 
-        <button
-          type="button"
-          onClick={onGoogle}
-          className="mb-4 w-full rounded-lg border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-900 transition-colors hover:bg-emerald-50"
-        >
-          Continuer avec Google
-        </button>
+            <button
+              type="button"
+              onClick={onGoogle}
+              className="mb-4 w-full rounded-lg border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-900 transition-colors hover:bg-emerald-50"
+            >
+              Continuer avec Google
+            </button>
 
-        <div className="mb-4 flex items-center gap-3 text-[11px] uppercase tracking-widest text-emerald-700/60">
-          <span className="h-px flex-1 bg-emerald-100" />
-          ou
-          <span className="h-px flex-1 bg-emerald-100" />
-        </div>
+            <div className="mb-4 flex items-center gap-3 text-[11px] uppercase tracking-widest text-emerald-700/60">
+              <span className="h-px flex-1 bg-emerald-100" />
+              ou
+              <span className="h-px flex-1 bg-emerald-100" />
+            </div>
+          </>
+        )}
 
-        <form onSubmit={onSubmit} className="space-y-3">
-          {mode === "signup" && (
+        {mode === "forgot" && sent ? (
+          <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-relaxed text-emerald-900">
+            <p className="font-semibold">Vérifiez votre boîte mail</p>
+            <p>
+              Si un compte existe pour <strong>{email.trim()}</strong>, un lien pour choisir un
+              nouveau mot de passe vient d'y être envoyé. Pensez à regarder dans les indésirables.
+            </p>
+            <p className="text-xs text-emerald-800/80">
+              Vous vous connectez avec Google ? Pas besoin de mot de passe : utilisez « Continuer
+              avec Google ».
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={onSubmit} className="space-y-3">
+            {mode === "signup" && (
+              <div>
+                <label className="mb-1 block text-xs font-medium text-emerald-900" htmlFor="name">
+                  Nom et prénom
+                </label>
+                <input
+                  id="name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full rounded-lg border border-emerald-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                />
+              </div>
+            )}
             <div>
-              <label className="mb-1 block text-xs font-medium text-emerald-900" htmlFor="name">
-                Nom et prénom
+              <label className="mb-1 block text-xs font-medium text-emerald-900" htmlFor="email">
+                Email
               </label>
               <input
-                id="name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-lg border border-emerald-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
               />
             </div>
-          )}
-          <div>
-            <label className="mb-1 block text-xs font-medium text-emerald-900" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-emerald-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-emerald-900" htmlFor="password">
-              Mot de passe
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-emerald-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
-            />
-          </div>
+            {mode !== "forgot" && (
+              <div>
+                <div className="mb-1 flex items-baseline justify-between gap-2">
+                  <label className="block text-xs font-medium text-emerald-900" htmlFor="password">
+                    Mot de passe
+                  </label>
+                  {mode === "login" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode("forgot");
+                        setSent(false);
+                        setError("");
+                      }}
+                      className="text-xs text-emerald-700 underline underline-offset-2 hover:text-emerald-900"
+                    >
+                      Mot de passe oublié ?
+                    </button>
+                  )}
+                </div>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-emerald-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                />
+              </div>
+            )}
 
-          {error && <p className="text-xs text-red-600">{error}</p>}
+            {error && <p className="text-xs text-red-600">{error}</p>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Patientez…" : mode === "login" ? "Se connecter" : "Demander un accès"}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading
+                ? "Patientez…"
+                : mode === "login"
+                  ? "Se connecter"
+                  : mode === "forgot"
+                    ? "Recevoir le lien"
+                    : "Demander un accès"}
+            </button>
+          </form>
+        )}
 
         <button
           type="button"
           onClick={() => {
             setMode(mode === "login" ? "signup" : "login");
+            setSent(false);
             setError("");
           }}
           className="mt-4 w-full text-center text-xs text-emerald-700 underline underline-offset-2"
         >
-          {mode === "login" ? "Créer un compte" : "J'ai déjà un compte"}
+          {mode === "login"
+            ? "Créer un compte"
+            : mode === "forgot"
+              ? "Retour à la connexion"
+              : "J'ai déjà un compte"}
         </button>
       </div>
     </div>

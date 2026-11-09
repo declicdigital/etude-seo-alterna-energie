@@ -269,6 +269,9 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
     zone: "all",
     title: "Se connecter, créer un compte, invitation",
     keywords: [
+      "mot de passe oublié",
+      "réinitialiser",
+      "changer mon mot de passe",
       "connexion",
       "connecter",
       "mot de passe",
@@ -281,7 +284,7 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
       "oublié",
     ],
     answer:
-      "Sur la page de connexion : « Se connecter » avec ton email et ton mot de passe, ou « Continuer avec Google ». Sans compte, « Demander un accès » crée ta demande : tu restes sur « Demande en attente de validation » jusqu'à ce que Geoffrey la valide. Si tu as reçu une invitation par mail, son lien te fait choisir ton mot de passe ; s'il a expiré, demande une nouvelle invitation à Geoffrey. Il n'y a pas de bouton « mot de passe oublié » dans Digicom : en cas d'oubli, contacte Geoffrey.",
+      "Sur la page de connexion : « Se connecter » avec ton email et ton mot de passe, ou « Continuer avec Google ». Sans compte, « Demander un accès » crée ta demande : tu restes sur « Demande en attente de validation » jusqu'à ce que Geoffrey la valide. Si tu as reçu une invitation par mail, son lien te fait choisir ton mot de passe ; s'il a expiré, demande une nouvelle invitation à Geoffrey. Mot de passe oublié : sur la page de connexion, clique sur « Mot de passe oublié ? » (à droite du champ Mot de passe), entre ton email puis « Recevoir le lien » ; le mail contient un lien qui ouvre la page « Nouveau mot de passe » (8 caractères minimum, à saisir deux fois). Si tu te connectes avec Google, tu n'as pas besoin de mot de passe.",
   },
   {
     zone: "all",

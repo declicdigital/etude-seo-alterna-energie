@@ -110,7 +110,7 @@ function RootShell({ children }: { children: ReactNode }) {
         {/* Former address: the browser jumps to the same page on the new one, #anchor included. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `if(${JSON.stringify(LEGACY_HOSTS)}.indexOf(location.hostname)>-1)location.replace(${JSON.stringify(APP_ORIGIN)}+location.pathname+location.search+location.hash)`,
+            __html: `if(${JSON.stringify(LEGACY_HOSTS)}.indexOf(location.hostname)>-1)location.replace(${JSON.stringify(APP_ORIGIN)}+location.pathname+location.search+location.hash);else if(/(^|[#&])type=recovery(&|$)/.test(location.hash)&&location.pathname!=="/reinitialiser-mot-de-passe")location.replace("/reinitialiser-mot-de-passe"+location.hash)`,
           }}
         />
         <HeadContent />

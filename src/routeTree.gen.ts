@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemandesRouteImport } from './routes/demandes'
 import { Route as EnAttenteRouteImport } from './routes/en-attente'
 import { Route as KitCommunicationRouteImport } from './routes/kit-communication'
+import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitialiser-mot-de-passe'
 import { Route as ApiPublicBenchmarkMonthsRouteImport } from './routes/api/public/benchmark-months'
 import { Route as ApiPublicNotifyAccessRequestRouteImport } from './routes/api/public/notify-access-request'
 import { Route as ApiPublicNotifyArticleReadyRouteImport } from './routes/api/public/notify-article-ready'
@@ -58,6 +59,11 @@ const EnAttenteRoute = EnAttenteRouteImport.update({
 const KitCommunicationRoute = KitCommunicationRouteImport.update({
   id: '/kit-communication',
   path: '/kit-communication',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReinitialiserMotDePasseRoute = ReinitialiserMotDePasseRouteImport.update({
+  id: '/reinitialiser-mot-de-passe',
+  path: '/reinitialiser-mot-de-passe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicBenchmarkMonthsRoute =
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
   '/kit-communication': typeof KitCommunicationRoute
+  '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/api/public/benchmark-months': typeof ApiPublicBenchmarkMonthsRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
   '/kit-communication': typeof KitCommunicationRoute
+  '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/api/public/benchmark-months': typeof ApiPublicBenchmarkMonthsRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/demandes': typeof DemandesRoute
   '/en-attente': typeof EnAttenteRoute
   '/kit-communication': typeof KitCommunicationRoute
+  '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/api/public/benchmark-months': typeof ApiPublicBenchmarkMonthsRoute
   '/api/public/notify-access-request': typeof ApiPublicNotifyAccessRequestRoute
   '/api/public/notify-article-ready': typeof ApiPublicNotifyArticleReadyRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/demandes'
     | '/en-attente'
     | '/kit-communication'
+    | '/reinitialiser-mot-de-passe'
     | '/api/public/benchmark-months'
     | '/api/public/notify-access-request'
     | '/api/public/notify-article-ready'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/demandes'
     | '/en-attente'
     | '/kit-communication'
+    | '/reinitialiser-mot-de-passe'
     | '/api/public/benchmark-months'
     | '/api/public/notify-access-request'
     | '/api/public/notify-article-ready'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/demandes'
     | '/en-attente'
     | '/kit-communication'
+    | '/reinitialiser-mot-de-passe'
     | '/api/public/benchmark-months'
     | '/api/public/notify-access-request'
     | '/api/public/notify-article-ready'
@@ -221,6 +233,7 @@ export interface RootRouteChildren {
   DemandesRoute: typeof DemandesRoute
   EnAttenteRoute: typeof EnAttenteRoute
   KitCommunicationRoute: typeof KitCommunicationRoute
+  ReinitialiserMotDePasseRoute: typeof ReinitialiserMotDePasseRoute
   ApiPublicBenchmarkMonthsRoute: typeof ApiPublicBenchmarkMonthsRoute
   ApiPublicNotifyAccessRequestRoute: typeof ApiPublicNotifyAccessRequestRoute
   ApiPublicNotifyArticleReadyRoute: typeof ApiPublicNotifyArticleReadyRoute
@@ -280,6 +293,13 @@ declare module '@tanstack/react-router' {
       path: '/kit-communication'
       fullPath: '/kit-communication'
       preLoaderRoute: typeof KitCommunicationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reinitialiser-mot-de-passe': {
+      id: '/reinitialiser-mot-de-passe'
+      path: '/reinitialiser-mot-de-passe'
+      fullPath: '/reinitialiser-mot-de-passe'
+      preLoaderRoute: typeof ReinitialiserMotDePasseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/benchmark-months': {
@@ -349,6 +369,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemandesRoute: DemandesRoute,
   EnAttenteRoute: EnAttenteRoute,
   KitCommunicationRoute: KitCommunicationRoute,
+  ReinitialiserMotDePasseRoute: ReinitialiserMotDePasseRoute,
   ApiPublicBenchmarkMonthsRoute: ApiPublicBenchmarkMonthsRoute,
   ApiPublicNotifyAccessRequestRoute: ApiPublicNotifyAccessRequestRoute,
   ApiPublicNotifyArticleReadyRoute: ApiPublicNotifyArticleReadyRoute,
