@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { getAccess } from "@/lib/access";
 import { pendingEditorialDestination } from "@/lib/editorial-links";
 import logo from "@/assets/alterna-logo.png.asset.json";
@@ -92,19 +91,6 @@ function AuthPage() {
     }
   }
 
-  async function onGoogle() {
-    setError("");
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      setError("La connexion Google a échoué. Réessayez.");
-      return;
-    }
-    if (result.redirected) return;
-    await afterAuth();
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-emerald-100 px-4 py-10">
       <div className="w-full max-w-sm rounded-2xl border border-emerald-100 bg-white p-8 shadow-xl">
@@ -133,22 +119,9 @@ function AuthPage() {
               <p className="mt-1 text-xs leading-relaxed text-amber-800">
                 Le mot de passe unique n'existe plus. À votre première venue, cliquez sur « Créer un
                 compte » : votre demande est envoyée à l'administrateur, qui la valide. Ensuite,
-                vous vous connectez normalement avec votre email ou Google, et vous restez connecté.
+                vous vous connectez avec votre email et votre mot de passe, et vous restez connecté.
+                Mot de passe oublié ou jamais créé ? Cliquez sur « Mot de passe oublié ? ».
               </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={onGoogle}
-              className="mb-4 w-full rounded-lg border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-900 transition-colors hover:bg-emerald-50"
-            >
-              Continuer avec Google
-            </button>
-
-            <div className="mb-4 flex items-center gap-3 text-[11px] uppercase tracking-widest text-emerald-700/60">
-              <span className="h-px flex-1 bg-emerald-100" />
-              ou
-              <span className="h-px flex-1 bg-emerald-100" />
             </div>
           </>
         )}
@@ -159,10 +132,6 @@ function AuthPage() {
             <p>
               Si un compte existe pour <strong>{email.trim()}</strong>, un lien pour choisir un
               nouveau mot de passe vient d'y être envoyé. Pensez à regarder dans les indésirables.
-            </p>
-            <p className="text-xs text-emerald-800/80">
-              Vous vous connectez avec Google ? Pas besoin de mot de passe : utilisez « Continuer
-              avec Google ».
             </p>
           </div>
         ) : (
