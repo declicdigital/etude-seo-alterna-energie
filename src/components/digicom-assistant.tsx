@@ -32,15 +32,21 @@ const GLASS =
  */
 function GlassHead({ eyesRef }: { eyesRef?: Ref<HTMLDivElement> }) {
   return (
-    <div className="dg-glass absolute left-0 top-0 h-[62px] w-[92px] rounded-[26px]">
-      <span aria-hidden className="dg-sheen" />
-      <span aria-hidden className="dg-ear left-[-5px]" />
-      <span aria-hidden className="dg-ear right-[-5px]" />
-      <div className="dg-screen absolute inset-[8px] rounded-[18px]">
-        <div ref={eyesRef} className="dg-face absolute inset-0">
-          <span className="dg-eye left-[22px]" />
-          <span className="dg-eye right-[22px]" />
-          <span className="dg-mouth" />
+    <div className="dg-head absolute left-0 top-0 h-[62px] w-[92px]">
+      {/* épaisseur de la coque (vue légèrement de dessous), puis oreilles cylindriques */}
+      <span aria-hidden className="dg-head-depth" />
+      <span aria-hidden className="dg-ear dg-ear-l" />
+      <span aria-hidden className="dg-ear dg-ear-r" />
+      <div className="dg-glass dg-shell absolute inset-0 rounded-[26px]">
+        <span aria-hidden className="dg-sheen" />
+        <span aria-hidden className="dg-rim" />
+        <div className="dg-screen absolute inset-[8px] rounded-[18px]">
+          <div ref={eyesRef} className="dg-face absolute inset-0">
+            <span className="dg-eye left-[22px]" />
+            <span className="dg-eye right-[22px]" />
+            <span className="dg-mouth" />
+          </div>
+          <span aria-hidden className="dg-glare" />
         </div>
       </div>
     </div>
@@ -72,25 +78,29 @@ function RobotFace({ size, className }: { size: number; className?: string }) {
 function FloatingRobot({ eyesRef }: { eyesRef: Ref<HTMLDivElement> }) {
   return (
     <span className="absolute left-1/2 top-0 block h-[132px] w-[108px] origin-top [transform:translateX(-50%)_scale(var(--dg-s,1))]">
-      <span aria-hidden className="dg-aura" />
-      <span aria-hidden className="dg-spark" />
-      <span className="absolute left-[8px] top-[16px] block h-[62px] w-[92px]">
-        <GlassHead eyesRef={eyesRef} />
+      <span className="dg-rig absolute inset-0 block">
+        <span aria-hidden className="dg-aura" />
+        <span aria-hidden className="dg-beam" />
+        <span aria-hidden className="dg-spark" />
+        <span className="dg-head-pos absolute left-[8px] top-[16px] block h-[62px] w-[92px]">
+          <GlassHead eyesRef={eyesRef} />
+        </span>
+        {/* corps : anneau arrière, sphère de verre, cœur, anneau avant */}
+        <span aria-hidden className="dg-ring dg-ring-back" />
+        <span aria-hidden className="dg-glass dg-body">
+          <span className="dg-core" />
+          <span className="dg-body-shade" />
+          <span className="dg-body-spec" />
+        </span>
+        <span aria-hidden className="dg-ring dg-ring-front" />
+        {/* cravate orange */}
+        <span aria-hidden className="dg-tie">
+          <span className="dg-tie-knot" />
+          <span className="dg-tie-blade" />
+        </span>
+        <span aria-hidden className="dg-glass dg-hand dg-hand-l" />
+        <span aria-hidden className="dg-glass dg-hand dg-hand-r" />
       </span>
-      {/* corps : anneau arrière, sphère de verre, cœur, anneau avant */}
-      <span aria-hidden className="dg-ring dg-ring-back" />
-      <span aria-hidden className="dg-glass dg-body">
-        <span className="dg-sheen" />
-        <span className="dg-core" />
-      </span>
-      <span aria-hidden className="dg-ring dg-ring-front" />
-      {/* cravate orange */}
-      <span aria-hidden className="dg-tie">
-        <span className="dg-tie-knot" />
-        <span className="dg-tie-blade" />
-      </span>
-      <span aria-hidden className="dg-glass dg-hand dg-hand-l" />
-      <span aria-hidden className="dg-glass dg-hand dg-hand-r" />
     </span>
   );
 }
@@ -107,12 +117,53 @@ const ROBOT_CSS = `
   .dark .dg-glass { background: linear-gradient(140deg, rgba(255,255,255,.28), rgba(255,255,255,.06) 50%, rgba(45,212,191,.1)); border-color: rgba(255,255,255,.3); }
   .dg-sheen { position:absolute; left:12%; top:7%; width:46%; height:22%; border-radius:999px; pointer-events:none;
     background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,0)); filter: blur(.4px); }
+
+  /* ── Volume 3D : inclinaison selon le pointeur (--dg-x / --dg-y entre -1 et 1) et parallaxe ── */
+  .dg-rig { transform: perspective(420px) rotateY(calc(var(--dg-x, 0) * 16deg)) rotateX(calc(var(--dg-y, 0) * -12deg));
+    transition: transform .25s ease-out; }
+  .dg-head-pos { transform: translate(calc(var(--dg-x, 0) * 2px), calc(var(--dg-y, 0) * 1.5px)); transition: transform .25s ease-out; }
+  .dg-head { filter: drop-shadow(0 10px 10px rgba(6,40,45,.22)); }
+  .dg-shell {
+    background:
+      radial-gradient(120% 90% at 28% 12%, rgba(255,255,255,.78) 0%, rgba(255,255,255,.22) 38%, transparent 60%),
+      radial-gradient(90% 80% at 80% 105%, rgba(8,90,95,.32) 0%, transparent 60%),
+      linear-gradient(160deg, rgba(255,255,255,.42) 0%, rgba(204,251,241,.18) 55%, rgba(125,211,252,.2) 100%);
+    box-shadow: inset 0 2px 1px rgba(255,255,255,.95), inset 0 -9px 14px rgba(6,95,95,.32), inset 7px 0 10px rgba(255,255,255,.35),
+      inset -8px 0 12px rgba(8,70,90,.22), 0 1px 0 rgba(255,255,255,.6); }
+  .dg-head-depth { position:absolute; inset:0; border-radius:26px; transform: translate(calc(var(--dg-x, 0) * -2.5px), calc(4px + var(--dg-y, 0) * -2px));
+    background: linear-gradient(180deg, rgba(45,212,191,.32), rgba(8,80,90,.5)); filter: blur(.3px);
+    box-shadow: 0 2px 4px rgba(6,40,45,.35); transition: transform .25s ease-out; }
+  .dg-rim { position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+    background: linear-gradient(105deg, rgba(255,255,255,.65) 0%, transparent 14%, transparent 86%, rgba(186,230,253,.55) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; padding: 1.5px; }
+  .dg-screen { transform: translate(calc(var(--dg-x, 0) * 1.2px), calc(var(--dg-y, 0) * 1px)); transition: transform .25s ease-out;
+    border: 1.5px solid rgba(255,255,255,.4); }
+  .dg-glare { position:absolute; left:-10%; top:-40%; width:70%; height:120%; pointer-events:none; border-radius:50%;
+    background: radial-gradient(closest-side, rgba(255,255,255,.18), transparent);
+    transform: translateX(calc(var(--dg-x, 0) * 10px)); transition: transform .25s ease-out; }
+  .dg-ear { position:absolute; top:19px; width:9px; height:24px; border-radius:5px;
+    background: linear-gradient(90deg, #0e7490 0%, #22d3ee 35%, #a5f3fc 55%, #0891b2 100%);
+    box-shadow: 0 0 10px rgba(56,189,248,.65), inset 0 1px 0 rgba(255,255,255,.7); }
+  .dg-ear::after { content:""; position:absolute; top:3px; bottom:3px; width:3px; border-radius:3px; background: rgba(255,255,255,.75); }
+  .dg-ear-l { left:-7px; } .dg-ear-l::after { left:1px; }
+  .dg-ear-r { right:-7px; } .dg-ear-r::after { right:1px; }
+  .dg-beam { position:absolute; left:50%; top:74px; width:14px; height:16px; margin-left:-7px; border-radius:50%;
+    background: radial-gradient(closest-side, rgba(94,234,212,.75), transparent); filter: blur(2px); animation: dg-pulse 1.8s ease-in-out infinite; }
+  .dg-body-shade { position:absolute; inset:0; border-radius:50%; pointer-events:none;
+    background: radial-gradient(circle at 34% 28%, rgba(255,255,255,.55) 0 10%, rgba(255,255,255,.12) 28%, transparent 46%),
+      radial-gradient(circle at 70% 82%, rgba(6,78,92,.38) 0%, transparent 55%);
+    box-shadow: inset -5px -7px 12px rgba(6,78,92,.35), inset 4px 4px 8px rgba(255,255,255,.4); }
+  .dg-body-spec { position:absolute; left:9px; top:6px; width:10px; height:6px; border-radius:50%; background: rgba(255,255,255,.95);
+    filter: blur(.6px); transform: rotate(-30deg); }
+  .dg-hand { background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.95) 0 14%, rgba(204,251,241,.55) 40%, rgba(13,148,136,.45) 100%) !important;
+    box-shadow: inset -2px -3px 5px rgba(6,78,92,.4), 0 4px 6px rgba(6,40,45,.25) !important; }
   .dg-screen { background: linear-gradient(165deg, rgba(10,18,36,.84), rgba(17,72,70,.74)); overflow:hidden;
     box-shadow: inset 0 2px 6px rgba(0,0,0,.45), inset 0 -1px 0 rgba(94,234,212,.25), 0 0 0 1px rgba(255,255,255,.25); }
   .dg-screen::after { content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
     background: linear-gradient(115deg, rgba(255,255,255,.16) 0 28%, transparent 28.5%); }
   .dg-face { transition: transform .2s ease-out; }
-  .dg-eye { position:absolute; top:11px; width:9px; height:15px; border-radius:6px; background:#7ef7e4;
+  .dg-eye { position:absolute; top:11px; width:9px; height:15px; border-radius:6px;
+    background: radial-gradient(circle at 40% 30%, #ffffff 0 18%, #a7fff3 40%, #2dd4bf 100%);
     box-shadow: 0 0 6px #2dd4bf, 0 0 14px rgba(45,212,191,.75); animation: dg-blink 4.6s infinite;
     transition: height .2s, top .2s, border-radius .2s; }
   .dg-mouth { position:absolute; left:50%; bottom:8px; width:12px; height:5px; margin-left:-6px; border-radius:0 0 8px 8px;
@@ -131,10 +182,11 @@ const ROBOT_CSS = `
   .dg-core { position:absolute; left:50%; top:50%; width:20px; height:20px; margin:-10px 0 0 -10px; border-radius:50%;
     background: conic-gradient(from 0deg, #34d399, #38bdf8, #a78bfa, #34d399); filter: blur(1.5px);
     box-shadow: 0 0 14px rgba(45,212,191,.9); animation: dg-spin 3s linear infinite; }
-  .dg-ring { position:absolute; left:50%; top:100px; width:76px; height:16px; margin-left:-38px; border-radius:50%;
-    border:2px solid rgba(94,234,212,.75); filter: drop-shadow(0 0 4px rgba(45,212,191,.7)); }
-  .dg-ring-back { clip-path: inset(0 0 50% 0); opacity:.55; }
-  .dg-ring-front { clip-path: inset(50% 0 0 0); }
+  .dg-ring { position:absolute; left:50%; top:99px; width:78px; height:18px; margin-left:-39px; border-radius:50%;
+    border:3px solid rgba(94,234,212,.8); filter: drop-shadow(0 0 4px rgba(45,212,191,.7)); }
+  .dg-ring-back { clip-path: inset(0 0 50% 0); opacity:.5; border-color: rgba(20,184,166,.7); }
+  .dg-ring-front { clip-path: inset(50% 0 0 0); border-color: rgba(153,246,228,.95);
+ }
   .dg-tie { position:absolute; left:50%; top:78px; width:18px; height:38px; margin-left:-9px; z-index:2;
     filter: drop-shadow(0 2px 3px rgba(154,52,18,.35)); }
   .dg-tie-knot { position:absolute; left:3.5px; top:0; width:11px; height:9px; border-radius:3px 3px 4px 4px;
@@ -143,6 +195,10 @@ const ROBOT_CSS = `
     background: linear-gradient(160deg, #fb923c 0%, #f97316 45%, #ea580c 100%);
     clip-path: polygon(30% 0, 70% 0, 100% 72%, 50% 100%, 0 72%);
     box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+  .dg-tie::after { content:""; position:absolute; left:1px; top:8px; width:16px; height:29px; pointer-events:none;
+    clip-path: polygon(30% 0, 70% 0, 100% 72%, 50% 100%, 0 72%);
+    background: linear-gradient(90deg, rgba(255,255,255,.35) 0%, transparent 35%, transparent 52%, rgba(124,45,18,.35) 53%, rgba(124,45,18,.15) 100%); }
+  .dg-tie-knot { z-index:1; }
   .dg-tie-blade::after { content:""; position:absolute; inset:0;
     background:
       repeating-linear-gradient(0deg, rgba(124,45,18,.38) 0 2px, transparent 2px 4px, rgba(255,255,255,.28) 4px 5px, transparent 5px 8px),
@@ -170,7 +226,8 @@ const ROBOT_CSS = `
   .dg-bubble { transform-origin: 80% 100%; animation: dg-bubble .35s cubic-bezier(.2,.8,.2,1) .6s both; }
   .dg-dot { animation: dg-dot 1.1s infinite; }
   @media (prefers-reduced-motion: reduce) {
-    .dg-eye, .dg-hover, .dg-shadow, .dg-hand, .dg-spark, .dg-core, .dg-aura, .dg-pop, .dg-bubble, .dg-dot { animation: none }
+    .dg-eye, .dg-hover, .dg-shadow, .dg-hand, .dg-spark, .dg-core, .dg-aura, .dg-beam, .dg-pop, .dg-bubble, .dg-dot { animation: none }
+    .dg-rig, .dg-head-pos, .dg-head-depth, .dg-screen, .dg-glare { transition: none }
   }
 `;
 
@@ -275,6 +332,10 @@ export function DigicomAssistant({
         const len = Math.hypot(dx, dy) || 1;
         const k = Math.min(1, len / 220);
         eyes.style.transform = `translate(${((dx / len) * 5 * k).toFixed(2)}px, ${((dy / len) * 3.5 * k).toFixed(2)}px)`;
+        // Inclinaison 3D du robot vers le pointeur (plus douce de loin).
+        const far = Math.min(1, len / 600);
+        bot.style.setProperty("--dg-x", ((dx / len) * far).toFixed(3));
+        bot.style.setProperty("--dg-y", ((dy / len) * far).toFixed(3));
       });
     };
     window.addEventListener("pointermove", onMove, { passive: true });
