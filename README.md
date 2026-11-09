@@ -4,7 +4,7 @@ si je te donne ce document. es-tu capable de le comprendre et de tout me remettr
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://etude-seo-alterna-energie.lovable.app
+**Live app**: https://digicom-alterna-energie.lovable.app
 
 ## Build with Lovable
 

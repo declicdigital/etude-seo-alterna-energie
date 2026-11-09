@@ -78,10 +78,10 @@ describe("Parlons Planète", () => {
     expect(spacePrefix("planete")).toBe("planete:");
     expect(spaceLabel("planete")).toBe("Parlons Planète");
     expect(editorialLink("a1", "integration", undefined, false, "planete")).toBe(
-      "https://etude-seo-alterna-energie.lovable.app/parlons-planete/suivi-editorial/articles/a1?step=integration",
+      "https://digicom-alterna-energie.lovable.app/parlons-planete/suivi-editorial/articles/a1?step=integration",
     );
     expect(editorialLink()).toBe(
-      "https://etude-seo-alterna-energie.lovable.app/blog/suivi-editorial",
+      "https://digicom-alterna-energie.lovable.app/blog/suivi-editorial",
     );
     expect(notificationLink("integration", "a1", undefined, "planete")).toContain("parlons-planete/suivi-editorial");
   });
