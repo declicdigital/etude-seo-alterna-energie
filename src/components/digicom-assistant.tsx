@@ -275,7 +275,7 @@ export function DigicomAssistant({
       setMsgs([
         {
           role: "assistant",
-          content: `Bonjour${first ? ` ${first}` : ""} 👋 Je suis D.I.G.I.P.O.T.E, ton assistant Digicom. Pose-moi ta question sur l'outil : créer un article, ajouter des images, les deadlines, les accès… Je peux aussi t'emmener directement au bon endroit.`,
+          content: `Bonjour${first ? ` ${first}` : ""} 👋 Bip-boup ! Ici D.I.G.I.P.O.T.E, ton robot assistant Digicom. Systèmes en ligne ✅\n\nPose-moi ta question sur l'outil : créer un article, ajouter des images, les deadlines, les accès… Je peux aussi te téléporter directement au bon endroit 🤖`,
         },
       ]);
     }
@@ -314,7 +314,10 @@ export function DigicomAssistant({
     } catch {
       /* réponse de secours ci-dessous */
     }
-    if (!reply) reply = localAnswer(q, zones, first || null);
+    if (!reply)
+      reply = localAnswer(q, zones, first || null, {
+        greet: false, // le message d'accueil a déjà dit « Bonjour »
+      });
     setMsgs((m) => [...m, { role: "assistant", content: reply }]);
     setBusy(false);
   }
@@ -395,14 +398,17 @@ export function DigicomAssistant({
             {busy && (
               <div className="flex items-end gap-2" aria-label="D.I.G.I.P.O.T.E écrit">
                 <RobotFace size={30} />
-                <div className="flex gap-1 rounded-[20px] rounded-bl-md border border-white/70 bg-white/70 px-4 py-3.5 dark:border-white/10 dark:bg-white/10">
-                  {[0, 1, 2].map((d) => (
-                    <span
-                      key={d}
-                      className="dg-dot size-1.5 rounded-full bg-emerald-600"
-                      style={{ animationDelay: `${d * 0.15}s` }}
-                    />
-                  ))}
+                <div className="flex items-center gap-2 rounded-[20px] rounded-bl-md border border-white/70 bg-white/70 px-3.5 py-2.5 text-[13px] italic text-slate-600 dark:border-white/10 dark:bg-white/10 dark:text-slate-300">
+                  <span>Bip… calcul en cours</span>
+                  <span className="flex gap-1">
+                    {[0, 1, 2].map((d) => (
+                      <span
+                        key={d}
+                        className="dg-dot size-1.5 rounded-full bg-emerald-600"
+                        style={{ animationDelay: `${d * 0.15}s` }}
+                      />
+                    ))}
+                  </span>
                 </div>
               </div>
             )}

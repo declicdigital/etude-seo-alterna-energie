@@ -40,8 +40,19 @@ describe("assistant Digicom", () => {
       zones: zonesFor(["FAQ", "FAQ/Particulier"], false),
       name: "Marick",
     });
-    expect(p).toContain("commence par « Bonjour Marick »");
+    expect(p).toContain("« Bonjour Marick 👋 Bip-boup");
     expect(p).toContain("/faq/demandes");
     expect(p).not.toContain("/organisation");
+  });
+
+  it("parle comme un robot et ne redit bonjour qu'au premier message", () => {
+    const zones = zonesFor(["Blog"], false);
+    const first = localAnswer("où mettre les images ?", zones, "Fannie");
+    expect(first.startsWith("Bonjour Fannie ! ")).toBe(true);
+    expect(first).toMatch(/Bip|Bzzt/);
+    const next = localAnswer("où mettre les images ?", zones, "Fannie", { greet: false });
+    expect(next.startsWith("Bonjour")).toBe(false);
+    expect(next).toMatch(/^(Bip|Bzzt)/);
+    expect(assistantSystemPrompt({ zones, name: "Fannie" })).toContain("petit robot sympathique");
   });
 });

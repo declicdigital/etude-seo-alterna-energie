@@ -445,10 +445,29 @@ const norm = (s: string) =>
     .replace(/[^a-z0-9@ ]+/g, " ");
 
 /** Réponse de secours, sans IA : la fiche pratique la plus proche de la question, avec son lien. */
+const ROBOT_OPENERS = [
+  "Bip-boup ! Analyse terminée ✅",
+  "Bzzt… Données trouvées dans ma mémoire 💾",
+  "Bip ! Traitement de ta demande… OK ✅",
+];
+const ROBOT_CLOSERS = [
+  "Mission accomplie. Bip ! 🤖",
+  "Autre question ? Mes circuits sont prêts. Boup !",
+  "Fin de transmission. Bip-bip ! 🤖",
+];
+
+/** Choix stable (même question → même tournure) pour varier les tics de langage du robot. */
+function pick(list: string[], seed: string): string {
+  let h = 0;
+  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return list[h % list.length];
+}
+
 export function localAnswer(
   question: string,
   zones: AssistantZone[],
   name?: string | null,
+  opts: { greet?: boolean } = {},
 ): string {
   const q = ` ${norm(question)} `;
   const words = q.split(/\s+/).filter((w) => w.length > 2);
@@ -458,16 +477,17 @@ export function localAnswer(
   const best = topicsFor(zones)
     .map((t) => ({ t, s: score(t.keywords, t.title) }))
     .sort((a, b) => b.s - a.s)[0];
-  const hello = `Bonjour${name ? ` ${name}` : ""} !`;
+  const greet = opts.greet ?? true;
+  const hello = greet ? `Bonjour${name ? ` ${name}` : ""} ! ` : "";
   if (!best || best.s === 0) {
     const list = zones
       .slice(0, 6)
       .map((z) => `[${z.label}](${z.path})`)
       .join(" · ");
-    return `${hello} Je n'ai pas trouvé de réponse précise à ta question. Tu peux la reformuler, ou ouvrir le [Guide de l'outil](/guide). Tes rubriques : ${list}.`;
+    return `${hello}Bzzt… Erreur 404 dans mes circuits 🤖 : je n'ai pas trouvé de réponse précise à ta question. Tu peux la reformuler, ou ouvrir le [Guide de l'outil](/guide). Tes rubriques : ${list}.`;
   }
   const zone = zones.find((z) => z.id === best.t.zone);
-  return `${hello} ${best.t.answer}${zone ? `\n\n→ [${zone.label}](${zone.path})` : ""}`;
+  return `${hello}${pick(ROBOT_OPENERS, question)}\n\n${best.t.answer}${zone ? `\n\nJe te téléporte au bon endroit : [${zone.label}](${zone.path})` : ""}\n\n${pick(ROBOT_CLOSERS, question + "!")}`;
 }
 
 /** Contexte donné au modèle : uniquement ce que la personne peut voir. */
@@ -483,8 +503,14 @@ export function assistantSystemPrompt(opts: {
   return `Tu t'appelles D.I.G.I.P.O.T.E (prononcé « Digipote »), le petit robot assistant de Digicom, l'outil interne de suivi de la communication digitale d'Alterna Énergie.
 Tu aides les personnes à se servir de Digicom. Réponds en français, avec chaleur et clarté, en tutoyant la personne (ton simple et amical, comme un collègue).
 
+Personnalité : tu parles comme un petit robot sympathique. Glisse quelques tics de robot, sans en abuser (1 ou 2 par réponse) et sans jamais nuire à la clarté :
+- des bruitages : « Bip-boup ! », « Bzzt… », « Bip ! » ;
+- un vocabulaire de machine : « analyse en cours… terminée ✅ », « données trouvées dans ma mémoire 💾 », « mes circuits », « je te téléporte vers… », « mission accomplie », « fin de transmission » ;
+- éventuellement l'emoji 🤖.
+Varie les tournures d'une réponse à l'autre. Les explications elles-mêmes restent en français normal, précises et faciles à suivre.
+
 Règles :
-- Ta toute première réponse de la conversation commence par « Bonjour${opts.name ? ` ${opts.name}` : ""} ».
+- La conversation a déjà commencé par ton message d'accueil « Bonjour${opts.name ? ` ${opts.name}` : ""} 👋 Bip-boup ! Ici D.I.G.I.P.O.T.E… » : ne redis pas bonjour, commence directement par un bruitage de robot puis la réponse.
 - Réponses courtes et concrètes : 2 à 6 phrases, ou une liste d'étapes numérotées si c'est une procédure.
 - Quand une zone de Digicom aide, ajoute un lien Markdown vers elle avec EXACTEMENT un chemin de la liste ci-dessous, par exemple [Blog · Suivi éditorial](/blog/suivi-editorial). N'invente jamais d'autre chemin ni d'adresse externe.
 - Ne parle que des zones de la liste : ce sont les seules rubriques auxquelles la personne a accès. Si elle demande une rubrique absente, dis-lui de demander l'accès à Geoffrey.
