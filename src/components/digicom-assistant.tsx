@@ -144,13 +144,15 @@ const ROBOT_CSS = `
   .dg-tie { position:absolute; left:50%; top:78px; width:18px; height:38px; margin-left:-9px; z-index:2;
     filter: drop-shadow(0 2px 3px rgba(154,52,18,.35)); }
   .dg-tie-knot { position:absolute; left:3.5px; top:0; width:11px; height:9px; border-radius:3px 3px 4px 4px;
-    background: linear-gradient(180deg, #fdba74, #f97316); box-shadow: inset 0 1px 0 rgba(255,255,255,.6); }
+    background: repeating-linear-gradient(0deg, rgba(124,45,18,.35) 0 2px, transparent 2px 4px), repeating-linear-gradient(90deg, rgba(124,45,18,.35) 0 2px, transparent 2px 4px), linear-gradient(180deg, #fdba74, #f97316); box-shadow: inset 0 1px 0 rgba(255,255,255,.6); }
   .dg-tie-blade { position:absolute; left:1px; top:8px; width:16px; height:29px;
     background: linear-gradient(160deg, #fb923c 0%, #f97316 45%, #ea580c 100%);
     clip-path: polygon(30% 0, 70% 0, 100% 72%, 50% 100%, 0 72%);
     box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
   .dg-tie-blade::after { content:""; position:absolute; inset:0;
-    background: repeating-linear-gradient(135deg, transparent 0 5px, rgba(255,255,255,.22) 5px 7px); }
+    background:
+      repeating-linear-gradient(0deg, rgba(124,45,18,.38) 0 2px, transparent 2px 4px, rgba(255,255,255,.28) 4px 5px, transparent 5px 8px),
+      repeating-linear-gradient(90deg, rgba(124,45,18,.38) 0 2px, transparent 2px 4px, rgba(255,255,255,.28) 4px 5px, transparent 5px 8px); }
   .dg-hand { position:absolute; top:96px; width:15px; height:15px; border-radius:50%; }
   .dg-hand-l { left:4px; animation: dg-hand 3.4s ease-in-out .4s infinite; }
   .dg-hand-r { right:4px; animation: dg-wave 7s ease-in-out 1.2s infinite; }
