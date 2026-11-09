@@ -64,6 +64,23 @@ function RobotSvg({
           <stop offset="0.5" stopColor="#a78bfa" />
           <stop offset="1" stopColor="#34d399" />
         </linearGradient>
+        {/* verre liquide : remplissage translucide teinté, liseré lumineux, lumière interne */}
+        <radialGradient id={`${id}-glass`} cx="0.32" cy="0.22" r="1">
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.62" />
+          <stop offset="0.45" stopColor="#f5f7ff" stopOpacity="0.26" />
+          <stop offset="0.8" stopColor="#c7d2fe" stopOpacity="0.22" />
+          <stop offset="1" stopColor="#99f6e4" stopOpacity="0.4" />
+        </radialGradient>
+        <linearGradient id={`${id}-rim`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ffffff" stopOpacity="1" />
+          <stop offset="0.35" stopColor="#ffffff" stopOpacity="0.35" />
+          <stop offset="0.65" stopColor="#c4b5fd" stopOpacity="0.35" />
+          <stop offset="1" stopColor="#67e8f9" stopOpacity="0.9" />
+        </linearGradient>
+        <radialGradient id={`${id}-caustic`} cx="0.5" cy="1" r="0.7">
+          <stop offset="0" stopColor="#67e8f9" stopOpacity="0.45" />
+          <stop offset="1" stopColor="#67e8f9" stopOpacity="0" />
+        </radialGradient>
         <linearGradient
           id={`${id}-sweep`}
           x1="0"
@@ -182,7 +199,17 @@ function RobotSvg({
             filter={u("glow")}
           />
           {/* corps : sphère nacrée, ligne d'équateur lumineuse, socle */}
-          <circle cx="60" cy="108" r="24" fill={u("shell")} filter={u("plastic")} />
+          <circle cx="60" cy="108" r="24" fill={u("glass")} filter={u("plastic")} />
+          <circle cx="60" cy="108" r="24" fill={u("caustic")} />
+          <circle cx="60" cy="108" r="23.4" fill="none" stroke={u("rim")} strokeWidth="1.1" />
+          <path
+            d="M45 93.5a20 20 0 0 1 14-6"
+            stroke="#ffffff"
+            strokeOpacity=".95"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            fill="none"
+          />
           <path
             d="M37.5 111.5c9 4.2 36 4.2 45 0"
             fill="none"
@@ -232,7 +259,9 @@ function RobotSvg({
               width="9"
               height="18"
               rx="4.5"
-              fill={u("shell")}
+              fill={u("glass")}
+              stroke={u("rim")}
+              strokeWidth=".9"
               filter={u("plastic")}
               transform="rotate(14 24.5 109)"
             />
@@ -253,7 +282,9 @@ function RobotSvg({
               width="9"
               height="18"
               rx="4.5"
-              fill={u("shell")}
+              fill={u("glass")}
+              stroke={u("rim")}
+              strokeWidth=".9"
               filter={u("plastic")}
               transform="rotate(-14 95.5 109)"
             />
@@ -286,7 +317,26 @@ function RobotSvg({
       {/* tête : coque nacrée sans couture, bandes LED latérales */}
       <rect x="15.2" y="38" width="3" height="20" rx="1.5" fill={u("iris")} filter={u("glow")} />
       <rect x="101.8" y="38" width="3" height="20" rx="1.5" fill={u("iris")} filter={u("glow")} />
-      <rect x="18" y="20" width="84" height="56" rx="26" fill={u("shell")} filter={u("plastic")} />
+      <rect x="18" y="20" width="84" height="56" rx="26" fill={u("glass")} filter={u("plastic")} />
+      <rect x="18" y="20" width="84" height="56" rx="26" fill={u("caustic")} />
+      <rect
+        x="18.6"
+        y="20.6"
+        width="82.8"
+        height="54.8"
+        rx="25.4"
+        fill="none"
+        stroke={u("rim")}
+        strokeWidth="1.2"
+      />
+      <path
+        d="M35 25c13-3 37-3 50 0"
+        stroke="#ffffff"
+        strokeOpacity=".9"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        fill="none"
+      />
       {/* visière en verre noir, liseré irisé */}
       <rect
         x="24.5"
@@ -295,6 +345,7 @@ function RobotSvg({
         height="42"
         rx="20"
         fill={u("visor")}
+        fillOpacity=".88"
         stroke={u("iris")}
         strokeWidth="1.3"
       />
@@ -382,7 +433,14 @@ function FloatingRobot({ eyesRef }: { eyesRef: Ref<SVGGElement> }) {
   return (
     <span className="absolute left-1/2 top-0 block h-[150px] w-[120px] origin-top [transform:translateX(-50%)_scale(var(--dg-s,1))]">
       <span className="dg-rig absolute inset-0 block">
-        <RobotSvg eyesRef={eyesRef} />
+        {/* halo coloré + vraies couches de verre (flou de ce qu'il y a derrière) sous le dessin */}
+        <span aria-hidden className="dg-aura" />
+        <span
+          aria-hidden
+          className="dg-lg left-[18px] top-[20px] h-[56px] w-[84px] rounded-[26px]"
+        />
+        <span aria-hidden className="dg-lg left-[36px] top-[84px] h-[48px] w-[48px] rounded-full" />
+        <RobotSvg eyesRef={eyesRef} className="absolute inset-0" />
       </span>
     </span>
   );
@@ -390,7 +448,13 @@ function FloatingRobot({ eyesRef }: { eyesRef: Ref<SVGGElement> }) {
 
 const ROBOT_CSS = `
   .dg-rig { transform: perspective(460px) rotateY(calc(var(--dg-x, 0) * 18deg)) rotateX(calc(var(--dg-y, 0) * -12deg));
-    transition: transform .25s ease-out; filter: drop-shadow(0 12px 12px rgba(15,23,42,.22)); }
+    transition: transform .25s ease-out; }
+  .dg-lg { position:absolute; -webkit-backdrop-filter: blur(7px) saturate(1.9) brightness(1.05); backdrop-filter: blur(7px) saturate(1.9) brightness(1.05);
+    background: rgba(255,255,255,.06); box-shadow: 0 14px 22px -10px rgba(15,23,42,.35), 0 2px 6px rgba(15,23,42,.08); }
+  .dg-aura { position:absolute; left:50%; top:46%; width:110px; height:110px; margin:-55px 0 0 -55px; border-radius:50%; pointer-events:none;
+    background: radial-gradient(circle at 35% 40%, rgba(103,232,249,.45), transparent 55%), radial-gradient(circle at 70% 60%, rgba(167,139,250,.38), transparent 55%),
+      radial-gradient(circle at 50% 85%, rgba(52,211,153,.3), transparent 50%);
+    filter: blur(12px); animation: dg-pulse 3.4s ease-in-out infinite; }
   .dg-blink { transform-box: fill-box; transform-origin: center; animation: dg-blink 4.6s infinite; }
   .dg-eyes-happy { opacity: 0; transition: opacity .15s; }
   .dg-eyes-open { transition: opacity .15s; }
@@ -422,7 +486,7 @@ const ROBOT_CSS = `
   .dg-bubble { transform-origin: 80% 100%; animation: dg-bubble .35s cubic-bezier(.2,.8,.2,1) .6s both; }
   .dg-dot { animation: dg-dot 1.1s infinite; }
   @media (prefers-reduced-motion: reduce) {
-    .dg-blink, .dg-hover, .dg-shadow, .dg-arm-l, .dg-arm-r, .dg-sweep, .dg-jet, .dg-antenna, .dg-status, .dg-core-led, .dg-pop, .dg-bubble, .dg-dot { animation: none }
+    .dg-blink, .dg-hover, .dg-shadow, .dg-arm-l, .dg-arm-r, .dg-sweep, .dg-aura, .dg-jet, .dg-antenna, .dg-status, .dg-core-led, .dg-pop, .dg-bubble, .dg-dot { animation: none }
     .dg-rig { transition: none }
   }
 `;
