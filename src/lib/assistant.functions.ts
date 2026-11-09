@@ -1,7 +1,21 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assistantSystemPrompt, splitNoAnswer, zonesFor } from "./assistant-knowledge";
+import {
+  assistantSystemPrompt,
+  splitNoAnswer,
+  zonesFor,
+  type AssistantZone,
+} from "./assistant-knowledge";
+import {
+  buildStatsBlock,
+  LISTS,
+  SPACES,
+  type StatsInput,
+  type TrackedArticle,
+} from "./assistant-stats";
+import { buildEditsMap, type CellEdit } from "./workbook";
+import type { FaqRequest } from "./faq";
 
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 /** Premier modèle disponible utilisé ; les suivants servent si un identifiant est refusé. */
@@ -54,6 +68,105 @@ async function accessOf(context: Ctx) {
   return { isAdmin, approved, allowed };
 }
 
+/** Toutes les lignes d'une requête, par pages de 1000 (limite de l'API). */
+async function allRows<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; from < 50000; from += 1000) {
+    const { data, error } = await page(from, from + 999);
+    if (error || !data) break;
+    out.push(...data);
+    if (data.length < 1000) break;
+  }
+  return out;
+}
+
+/** Chiffres en temps réel des rubriques ouvertes à la personne (lus avec ses propres droits). */
+async function loadStats(context: Ctx, zones: AssistantZone[]): Promise<string | null> {
+  try {
+    const zoneIds = new Set(zones.map((z) => z.id));
+    const db = context.supabase;
+    const prefixes: Record<string, string> = { blog: "", strat: "strat:", planete: "planete:" };
+    const spaces = (Object.keys(SPACES) as (keyof typeof SPACES)[]).filter((k) =>
+      zoneIds.has(SPACES[k].id),
+    );
+    const lists = LISTS.filter((l) => zoneIds.has(l.id));
+    const wantsFaq = ["faq-demandes", "faq-part", "faq-pro"].some((z) => zoneIds.has(z));
+    const listBases = [...new Set(lists.map((l) => l.sheet.split("::")[0]))];
+
+    const [kvArticles, kvTodos, kvFaq, cells] = await Promise.all([
+      Promise.all(
+        spaces.map((k) =>
+          allRows<{ key: string; value: string }>((a, b) =>
+            db
+              .from("editorial_kv")
+              .select("key, value")
+              .like("key", `${prefixes[k]}article:%`)
+              .range(a, b),
+          ).then((rows) => [k, rows] as const),
+        ),
+      ),
+      spaces.length
+        ? db
+            .from("editorial_kv")
+            .select("key, value")
+            .in(
+              "key",
+              spaces.map((k) => `${prefixes[k]}todo-redaction`),
+            )
+            .then((r) => r.data ?? [])
+        : Promise.resolve([] as { key: string; value: string }[]),
+      wantsFaq
+        ? allRows<{ key: string; value: string }>((a, b) =>
+            db.from("editorial_kv").select("key, value").like("key", "faq:%").range(a, b),
+          )
+        : Promise.resolve([] as { key: string; value: string }[]),
+      Promise.all(
+        listBases.map((base) =>
+          allRows<CellEdit>((a, b) =>
+            db
+              .from("sheet_cells")
+              .select("sheet, row_id, col, value")
+              .like("sheet", `${base}%`)
+              .order("sheet")
+              .order("row_id")
+              .order("col")
+              .range(a, b),
+          ),
+        ),
+      ).then((parts) => parts.flat()),
+    ]);
+
+    const parse = <T>(v: string): T | null => {
+      try {
+        return JSON.parse(v) as T;
+      } catch {
+        return null;
+      }
+    };
+    const articles: StatsInput["articles"] = {};
+    for (const [k, rows] of kvArticles) {
+      // « article:… » sans préfixe = Blog ; on écarte les clés des autres espaces.
+      const own = rows.filter((r) => (k === "blog" ? /^article:/.test(r.key) : true));
+      articles[k] = own
+        .map((r) => parse<TrackedArticle>(r.value))
+        .filter((a): a is TrackedArticle => !!a);
+    }
+    const todos: StatsInput["todos"] = {};
+    for (const k of spaces) {
+      const row = kvTodos.find((r) => r.key === `${prefixes[k]}todo-redaction`);
+      todos[k] = (row && parse<StatsInput["todos"]["blog"]>(row.value)) || [];
+    }
+    const faq = kvFaq.map((r) => parse<FaqRequest>(r.value)).filter((f): f is FaqRequest => !!f);
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+    return buildStatsBlock({ today, zoneIds, edits: buildEditsMap(cells), articles, todos, faq });
+  } catch (e) {
+    console.error("assistant stats", e);
+    return null;
+  }
+}
+
 /** Garde la question pour Geoffrey (RLS : chacun n'écrit que ses propres questions). */
 async function logQuestion(
   context: Ctx,
@@ -82,7 +195,8 @@ export const askAssistant = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) return { ok: false, reason: "ai_unavailable" };
     const email = (context as { claims?: { email?: string } }).claims?.email ?? null;
-    const system = assistantSystemPrompt({ zones, name: data.name, page: data.page, email });
+    const stats = await loadStats(context, zones);
+    const system = assistantSystemPrompt({ zones, name: data.name, page: data.page, email, stats });
     const history = data.messages.slice(-12).map((m) => ({
       role: m.role,
       content: m.role === "assistant" ? splitNoAnswer(m.content).text : m.content,

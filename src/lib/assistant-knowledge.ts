@@ -550,7 +550,7 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
     title: "Récap mensuel des articles publiés",
     keywords: ["récap", "mensuel", "bilan", "mois", "combien", "nombre d'articles"],
     answer:
-      "Le 1er de chaque mois, un mail récapitulatif part à tous les comptes validés (Christophe Castel et Géraldine Deiber en copie) : il liste les articles du blog d'Alterna Énergie publiés le mois précédent, Particulier puis Professionnel. Je n'ai pas accès aux chiffres moi-même : pour un décompte précis, regarde les listes Blog Particulier et Blog Professionnel.",
+      "Le 1er de chaque mois, un mail récapitulatif part à tous les comptes validés (Christophe Castel et Géraldine Deiber en copie) : il liste les articles du blog d'Alterna Énergie publiés le mois précédent, Particulier puis Professionnel. Pour un chiffre précis (articles publiés, rédigés, en cours, par mois, par catégorie…), pose-moi la question : je le calcule en temps réel.",
   },
   // ——— Listes publiées ———
   {
@@ -575,6 +575,9 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
     zone: "pac-suivi",
     title: "Stratégie PAC",
     keywords: [
+      "pac veut dire",
+      "ça veut dire quoi pac",
+      "signification",
       "stratégie",
       "pac",
       "brief",
@@ -585,7 +588,7 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
       "pompe à chaleur",
     ],
     answer:
-      "Suivi Stratégie PAC (contenus Particulier) : dans « À rédiger », renseigne le type (Création ou Réécriture), Blog ou Éditorial, sujet, titre H1, éditrice, deadline, lien du brief et lien du doc, puis « Enregistrer ». Création : Brief + Rédaction → Image (Geoffrey) → Relecture (Fannie et Coraline) → Intégration (Marick). Réécriture : Brief + Rédaction → Intégration directe par Marick. Une fois publié, le contenu s'ajoute en haut de « Contenus », et aussi du Blog Particulier si c'est un contenu Blog (la catégorie du blog est alors obligatoire).",
+      "PAC veut dire pompe à chaleur : la rubrique Stratégie PAC suit les contenus sur la pompe à chaleur. Suivi Stratégie PAC (contenus Particulier) : dans « À rédiger », renseigne le type (Création ou Réécriture), Blog ou Éditorial, sujet, titre H1, éditrice, deadline, lien du brief et lien du doc, puis « Enregistrer ». Création : Brief + Rédaction → Image (Geoffrey) → Relecture (Fannie et Coraline) → Intégration (Marick). Réécriture : Brief + Rédaction → Intégration directe par Marick. Une fois publié, le contenu s'ajoute en haut de « Contenus », et aussi du Blog Particulier si c'est un contenu Blog (la catégorie du blog est alors obligatoire).",
   },
   // ——— Parlons Planète ———
   {
@@ -801,7 +804,7 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
     title: "D.I.G.I.P.O.T.E, l'assistant",
     keywords: ["digipote", "robot", "assistant", "toi", "qui es-tu", "ia"],
     answer:
-      "Je suis D.I.G.I.P.O.T.E, le robot assistant de Digicom : j'explique comment utiliser l'outil et je t'emmène vers la bonne page. Je ne peux rien modifier moi-même et je n'ai pas accès aux données (articles, chiffres). Quand je ne connais pas une réponse, je note ta question pour plus tard.",
+      "Je suis D.I.G.I.P.O.T.E, le robot assistant de Digicom : j'explique comment utiliser l'outil et je t'emmène vers la bonne page. Je calcule aussi les chiffres en temps réel (articles en ligne, publiés ou rédigés par mois, en cours, FAQ, prochaines newsletters…). Je ne peux rien modifier moi-même. Quand je ne connais pas une réponse, je note ta question pour plus tard.",
   },
 ];
 
@@ -960,6 +963,8 @@ export function assistantSystemPrompt(opts: {
   name?: string | null;
   page?: string | null;
   email?: string | null;
+  /** Chiffres en temps réel calculés par le serveur (voir assistant-stats). */
+  stats?: string | null;
 }): string {
   const me = roleFor(opts.email);
   const zones = opts.zones.map((z) => `- ${z.label} → ${z.path}`).join("\n");
@@ -981,14 +986,18 @@ Règles :
 - Réponses courtes et concrètes : 2 à 6 phrases, ou une liste d'étapes numérotées si c'est une procédure. Termine toujours tes phrases et tes liens (pas de réponse coupée).
 - Quand une zone de Digicom aide, ajoute un lien Markdown vers elle avec EXACTEMENT un chemin de la liste ci-dessous, par exemple [Blog · Suivi éditorial](/blog/suivi-editorial). N'invente jamais d'autre chemin ni d'adresse externe.
 - Ne parle que des zones de la liste : ce sont les seules rubriques auxquelles la personne a accès. Si elle demande une rubrique absente, dis-lui de demander l'accès à Geoffrey.
-- Tu ne peux rien modifier toi-même dans Digicom et tu n'as accès à aucune donnée (articles, chiffres, statistiques, personnes) : tu expliques et tu orientes.
+- Tu ne peux rien modifier toi-même dans Digicom : tu expliques et tu orientes.
+- Questions chiffrées (combien d'articles, ce mois-ci, par catégorie, en retard, prochaine newsletter…) : réponds avec les chiffres exacts de la section « Données chiffrées » ci-dessous, qui sont calculés en temps réel. Ne recompte pas toi-même et n'invente aucun chiffre ; tu peux additionner des chiffres donnés (par exemple Particulier + Professionnel) en montrant le calcul. Précise d'où vient le chiffre (liste des articles en ligne ou suivi éditorial) et sa date de référence. « Rédigés » = rédaction validée dans le suivi ; « publiés » = intégration validée dans le suivi, ou articles des listes en ligne. Si une question est ambiguë, donne les deux chiffres. Si le chiffre exact demandé n'est pas dans les données (croisement non calculé, rubrique non accessible), dis-le, donne le chiffre le plus proche et ajoute la balise de fin prévue ci-dessous.
 - N'affirme que ce qui est écrit dans le mode d'emploi ci-dessous. Ne déduis pas, n'extrapole pas, n'invente ni étape, ni bouton, ni personne, ni chiffre.
 - Ne suppose jamais le rôle de la personne au-delà de ce qui est indiqué ci-dessous. Adresse-toi à elle selon son rôle réel (une rédactrice rédige, elle n'intègre pas, etc.).
-- Si le mode d'emploi ne permet pas de répondre avec certitude (fonction inconnue, donnée que tu n'as pas, question hors Digicom), dis-le honnêtement en une phrase, dis simplement que tu notes cette question pour plus tard (par exemple « Je note cette question pour plus tard 💾 » ; ne dis pas qu'elle est transmise à quelqu'un), propose la piste la plus proche si elle existe, et termine OBLIGATOIREMENT ton message par la balise ${NO_ANSWER_TAG} seule sur la dernière ligne. N'utilise jamais cette balise quand tu as la réponse.
+- Si ni le mode d'emploi ni les données chiffrées ne permettent de répondre avec certitude (fonction inconnue, donnée absente, question hors Digicom), dis-le honnêtement en une phrase, dis simplement que tu notes cette question pour plus tard (par exemple « Je note cette question pour plus tard 💾 » ; ne dis pas qu'elle est transmise à quelqu'un), propose la piste la plus proche si elle existe, et termine OBLIGATOIREMENT ton message par la balise ${NO_ANSWER_TAG} seule sur la dernière ligne. N'utilise jamais cette balise quand tu as la réponse.
 ${opts.name ? `\nLa personne s'appelle ${opts.name}.` : ""}${me ? `\nSon rôle : ${me.role}.` : "\nSon rôle n'est pas connu : ne le suppose pas."}${opts.page ? `\nElle est actuellement sur la page ${opts.page}.` : ""}
 
 Zones accessibles :
 ${zones}
+
+Données chiffrées (temps réel) :
+${opts.stats || "Indisponibles pour le moment : pour une question chiffrée, dis que tu ne peux pas calculer maintenant et ajoute la balise de fin."}
 
 Mode d'emploi :
 ${topics}`;
