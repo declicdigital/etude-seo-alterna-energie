@@ -1282,6 +1282,7 @@ async function loadArticles(){
         if(img && img.status !== 'done' && (img.attachments || []).some(x => x && x.type === 'image')){
           if(!/^\d{4}-\d{2}-\d{2}$/.test(img.date || '')) img.date = todayIso();
           img.status = 'done';
+          EditorialPipeline.applyAutoDeadline(a, 'image');
           articleChanged = true;
         }
         if(articleChanged) pendingSaves.push(saveArticle(a));
@@ -1647,7 +1648,7 @@ function renderArticleCard(article){
             <label>Deadline de l'étape</label>
             ${canRemind
               ? `<input type="date" data-action="edit-step-deadline" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.deadline || '')}" aria-label="Deadline de l'étape ${escapeAttr(cfg.label)}">
-                 <span class="deadline-note">Le responsable reçoit un mail de rappel 2 jours ouvrés avant.</span>`
+                 <span class="deadline-note">Le responsable reçoit un mail de rappel le jour de la deadline.</span>`
               : `<span class="step-name">${escapeHtml(fmtDate(step.deadline))}</span>`}
           </div>` : ''}
           ${step.key === 'integration' ? `
@@ -2113,6 +2114,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     }
     if(!/^\d{4}-\d{2}-\d{2}$/.test(step.date || '')) step.date = todayIso();
     if(!EditorialPipeline.completeStep(step)) return;
+    EditorialPipeline.applyAutoDeadline(article, key);
     await saveArticle(article);
     if(key === 'integration') await pushToBlog(article);
     const mail = EditorialPipeline.nextNotification(article, key, SPACE);
@@ -2128,7 +2130,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
       try{
         const r = await fetch('/api/public/notify-article-ready', {
           method:'POST', headers:authHeaders(),
-          body: JSON.stringify({ space: SPACE || undefined, type: article.type || undefined, articleId: id, stepKey: mail.next, kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', cible: article.audience || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', docx: article.docxLink || '' })
+          body: JSON.stringify({ space: SPACE || undefined, type: article.type || undefined, articleId: id, stepKey: mail.next, kind: mail.kind, to: to.length ? to : undefined, sujet: article.subject || '', h1: article.title || '', editrice: (red && red.assignee) || '', cible: article.audience || '', categorie: article.category || '', energie: article.energy || '', deadline: article.deadline || '', stepDeadline: ((mail.next && article.steps.find(s => s.key === mail.next)) || {}).deadline || undefined, docx: article.docxLink || '' })
         });
         if(!r.ok) alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.');
       }catch(err){ alert('Étape validée, mais le mail à ' + mail.who + ' n\'a pas pu partir.'); }
@@ -2363,7 +2365,7 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
     step.date = t.value;
     await saveArticle(article);
   }
-  /* Deadline par étape : réservée à Geoffrey ; le rappel part 2 jours ouvrés avant. */
+  /* Deadline par étape : réservée à Geoffrey ; le rappel part le jour de la deadline. */
   if(action === 'edit-step-deadline' && canRemind){
     const article = getArticle(t.dataset.articleId);
     const step = article.steps.find(s => s.key === t.dataset.stepKey);

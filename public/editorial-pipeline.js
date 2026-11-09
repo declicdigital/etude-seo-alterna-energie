@@ -86,5 +86,32 @@
     step.status = 'done';
     return true;
   }
-  root.EditorialPipeline = { PLANETE_STEPS, isPro, isRewrite, normalizeConfig, configFor, sync, nextNotification, completeStep };
+  /* Ajoute n jours ouvrés (lundi–vendredi) à une date AAAA-MM-JJ. */
+  function addBusinessDays(iso, n) {
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) return '';
+    const d = new Date(iso + 'T00:00:00Z');
+    let left = n;
+    while(left > 0){
+      d.setUTCDate(d.getUTCDate() + 1);
+      const day = d.getUTCDay();
+      if(day !== 0 && day !== 6) left--;
+    }
+    return d.toISOString().slice(0, 10);
+  }
+  /* Deadlines automatiques : Relecture 3 jours ouvrés après la validation de l'Image,
+     Intégration 5 jours ouvrés après la validation de la Relecture. Une deadline déjà posée
+     (par Geoffrey) est conservée. Renvoie true si une deadline a été ajoutée. */
+  const AUTO_DEADLINES = { image: { next: 'relecture', days: 3 }, relecture: { next: 'integration', days: 5 } };
+  function applyAutoDeadline(article, validatedKey) {
+    const rule = AUTO_DEADLINES[validatedKey];
+    if(!rule || !article || !Array.isArray(article.steps)) return false;
+    const done = article.steps.find(s => s.key === validatedKey);
+    const next = article.steps.find(s => s.key === rule.next);
+    if(!done || done.status !== 'done' || !next || next.status !== 'pending' || next.deadline) return false;
+    const deadline = addBusinessDays(done.date, rule.days);
+    if(!deadline) return false;
+    next.deadline = deadline;
+    return true;
+  }
+  root.EditorialPipeline = { PLANETE_STEPS, isPro, isRewrite, normalizeConfig, configFor, sync, nextNotification, completeStep, addBusinessDays, applyAutoDeadline };
 })(globalThis);

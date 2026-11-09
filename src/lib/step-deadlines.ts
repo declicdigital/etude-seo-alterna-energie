@@ -1,6 +1,7 @@
 /**
- * Deadlines par étape (posées par Geoffrey dans la carte) : le responsable de l'étape
- * reçoit un mail 2 jours ouvrés avant la deadline. Fonctions pures, testées ; l'envoi
+ * Deadlines par étape (automatiques après Image et Relecture, ou posées par Geoffrey) :
+ * le responsable de l'étape reçoit un mail le jour de la deadline (le vendredi si elle
+ * tombe un week-end). Fonctions pures, testées ; l'envoi
  * se fait dans le job quotidien /api/public/jobs/deadline-reminders.
  */
 import { z } from "zod";
@@ -8,7 +9,7 @@ import { editorialMailHtml, escapeHtml } from "./mail-layout";
 import { spaceLabel } from "./editorial-spaces";
 import { buildStepReminder, reminderArticleSchema, reminderConfigSchema } from "./step-reminders";
 
-export const STEP_DEADLINE_NOTICE_DAYS = 2;
+export const STEP_DEADLINE_NOTICE_DAYS = 0;
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 const dayOf = (iso: string) => new Date(`${iso}T00:00:00Z`).getUTCDay();
@@ -16,9 +17,10 @@ const shift = (iso: string, days: number) =>
   new Date(Date.parse(`${iso}T00:00:00Z`) + days * 86400000).toISOString().slice(0, 10);
 export const isWeekday = (iso: string) => dayOf(iso) !== 0 && dayOf(iso) !== 6;
 
-/** Date du rappel : `n` jours ouvrés avant la deadline (lundi → jeudi précédent pour n = 2). */
+/** Date du rappel : `n` jours ouvrés avant la deadline ; le jour même pour n = 0 (vendredi si week-end). */
 export function reminderDay(deadline: string, n = STEP_DEADLINE_NOTICE_DAYS): string {
   let d = deadline;
+  while (!isWeekday(d)) d = shift(d, -1);
   let left = n;
   while (left > 0) {
     d = shift(d, -1);
@@ -49,7 +51,7 @@ export function dueStepDeadlines(
   });
 }
 
-const frDate = (iso: string) =>
+export const frDate = (iso: string) =>
   new Date(`${iso}T12:00:00Z`).toLocaleDateString("fr-FR", {
     weekday: "long",
     day: "numeric",
@@ -62,7 +64,7 @@ function whenText(deadline: string, today: string): string {
   return days <= 0 ? "aujourd'hui" : days === 1 ? "demain" : `dans ${days} jours`;
 }
 
-/** Mail « deadline dans 2 jours » pour une étape, au format des mails d'étape. */
+/** Mail « deadline aujourd'hui » pour une étape, au format des mails d'étape. */
 export function buildStepDeadlineMail(opts: {
   space: string;
   articleId: string;
@@ -128,4 +130,4 @@ export const stepDeadlineMarker = (
   articleId: string,
   stepKey: string,
   deadline: string,
-) => `reminderStep:${space || "blog"}:${articleId}:${stepKey}:${deadline}`;
+) => `reminderStepJ:${space || "blog"}:${articleId}:${stepKey}:${deadline}`;

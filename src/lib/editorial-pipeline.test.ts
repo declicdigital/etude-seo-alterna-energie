@@ -134,4 +134,24 @@ describe('Separate Image and Relecture', () => {
     expect(image.attachments.map((a: any) => a.id)).toEqual(['a', 'b']);
     expect(image.status).toBe('skipped');
   });
+  it('sets the automatic deadlines after Image and Relecture, in business days', () => {
+    expect(pipeline.addBusinessDays('2026-11-06', 3)).toBe('2026-11-11'); // vendredi + 3 → mercredi
+    expect(pipeline.addBusinessDays('2026-11-09', 5)).toBe('2026-11-16'); // lundi + 5 → lundi
+    const article: any = { steps: [
+      { key: 'redaction', status: 'done', date: '2026-11-02' },
+      { key: 'image', status: 'done', date: '2026-11-06' },
+      { key: 'relecture', status: 'pending', date: '' },
+      { key: 'integration', status: 'pending', date: '' },
+    ] };
+    expect(pipeline.applyAutoDeadline(article, 'image')).toBe(true);
+    expect(article.steps[2].deadline).toBe('2026-11-11');
+    article.steps[2].status = 'done'; article.steps[2].date = '2026-11-09';
+    expect(pipeline.applyAutoDeadline(article, 'relecture')).toBe(true);
+    expect(article.steps[3].deadline).toBe('2026-11-16');
+    // A deadline already set (by Geoffrey) is kept.
+    article.steps[3].deadline = '2026-11-20';
+    expect(pipeline.applyAutoDeadline(article, 'relecture')).toBe(false);
+    expect(article.steps[3].deadline).toBe('2026-11-20');
+    expect(pipeline.applyAutoDeadline(article, 'redaction')).toBe(false);
+  });
 });

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { notificationLink } from "@/lib/editorial-links";
 import { notificationCta, notificationDeadline, notificationRecipients, SERVICE_COMMUNICATION_EMAILS } from "@/lib/article-notification";
 import { MAIL_SENDER } from "@/lib/mail-sender";
+import { frDate } from "@/lib/step-deadlines";
 import { editorialMailHtml } from "@/lib/mail-layout";
 import { EDITORIAL_SPACES, spaceLabel, spacePrefix } from "@/lib/editorial-spaces";
 const BodySchema = z.object({
@@ -19,6 +20,8 @@ const BodySchema = z.object({
   categorie: z.string().max(120).optional(),
   energie: z.string().max(120).optional(),
   deadline: z.string().max(40).optional(),
+  /** Deadline de l'étape suivante (automatique ou posée par Geoffrey), affichée dans le mail. */
+  stepDeadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   docx: z.string().max(1000).optional(),
 });
 
@@ -43,9 +46,10 @@ function buildHtml(p: z.infer<typeof BodySchema>): string {
   : p.kind === "published"
   ? `Bonjour Geoffrey,<br><br>L'article ci-dessous a été <strong>intégré dans le site</strong> : toutes les étapes sont terminées et il a été ajouté au blog.`
   : `Un nouvel article est <strong>prêt à être rédigé</strong> : la ligne « À rédiger » a été enregistrée et l'article a été créé dans le suivi.`;
+  const due = p.stepDeadline && p.kind !== "published" ? frDate(p.stepDeadline) : "";
   return editorialMailHtml({
     heading: `Digicom · ${spaceLabel(p.space)}`,
-    introHtml,
+    introHtml: due ? `${introHtml}<br><br>Deadline : <strong>à valider au plus tard le ${due}</strong>.` : introHtml,
     fields: [
       ["Sujet", p.sujet],
       ["Nom de l'article (H1)", p.h1],
@@ -170,6 +174,12 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           .filter((l): l is string => l !== null)
           .join("\r\n");
 
+        const stepDue = payload.stepDeadline && !isPub ? frDate(payload.stepDeadline) : "";
+        // La deadline se lit juste avant les informations de l'article.
+        const textWithDeadline = stepDue
+          ? text.replace(/\r\n(?=Nom de l'article \(H1\)|Sujet :)/, `\r\nDeadline : à valider au plus tard le ${stepDue}.\r\n\r\n`)
+          : text;
+        const subjectWithDeadline = stepDue ? `${subject} · avant le ${stepDue}` : subject;
         const res = await fetch(`${GATEWAY_URL}/smtp/email`, {
           method: "POST",
           headers: {
@@ -181,8 +191,8 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
             sender: SENDER,
             to: recipients.map((email) => ({ email })),
             ...(!recipients.includes(CC_EMAIL) ? { cc: [{ email: CC_EMAIL }] } : {}),
-            subject,
-            textContent: text,
+            subject: subjectWithDeadline,
+            textContent: textWithDeadline,
             htmlContent: buildHtml(payload),
           }),
         });
