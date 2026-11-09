@@ -798,7 +798,7 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
     title: "D.I.G.I.P.O.T.E, l'assistant",
     keywords: ["digipote", "robot", "assistant", "toi", "qui es-tu", "ia"],
     answer:
-      "Je suis D.I.G.I.P.O.T.E, le robot assistant de Digicom : j'explique comment utiliser l'outil et je t'emmène vers la bonne page. Je ne peux rien modifier moi-même et je n'ai pas accès aux données (articles, chiffres). Quand je ne connais pas une réponse, ta question est transmise à Geoffrey pour qu'il complète mes connaissances.",
+      "Je suis D.I.G.I.P.O.T.E, le robot assistant de Digicom : j'explique comment utiliser l'outil et je t'emmène vers la bonne page. Je ne peux rien modifier moi-même et je n'ai pas accès aux données (articles, chiffres). Quand je ne connais pas une réponse, je note ta question pour plus tard.",
   },
 ];
 
@@ -870,7 +870,7 @@ export function localAnswerResult(
       .join(" · ");
     return {
       answered: false,
-      text: `${hello}Bzzt… Erreur 404 dans mes circuits 🤖 : je n'ai pas de réponse sûre à ta question. Je la transmets à Geoffrey pour qu'il complète mes connaissances. En attendant, tu peux la reformuler ou ouvrir le [Guide de l'outil](/guide). Tes rubriques : ${list}.`,
+      text: `${hello}Bzzt… Erreur 404 dans mes circuits 🤖 : je n'ai pas de réponse sûre à ta question. Je note cette question pour plus tard 💾 En attendant, tu peux la reformuler ou ouvrir le [Guide de l'outil](/guide). Tes rubriques : ${list}.`,
     };
   }
   const zone = zones.find((z) => z.id === best.t.zone);
@@ -981,7 +981,7 @@ Règles :
 - Tu ne peux rien modifier toi-même dans Digicom et tu n'as accès à aucune donnée (articles, chiffres, statistiques, personnes) : tu expliques et tu orientes.
 - N'affirme que ce qui est écrit dans le mode d'emploi ci-dessous. Ne déduis pas, n'extrapole pas, n'invente ni étape, ni bouton, ni personne, ni chiffre.
 - Ne suppose jamais le rôle de la personne au-delà de ce qui est indiqué ci-dessous. Adresse-toi à elle selon son rôle réel (une rédactrice rédige, elle n'intègre pas, etc.).
-- Si le mode d'emploi ne permet pas de répondre avec certitude (fonction inconnue, donnée que tu n'as pas, question hors Digicom), dis-le honnêtement en une phrase, précise que tu transmets la question à Geoffrey pour qu'il complète tes connaissances, propose la piste la plus proche si elle existe, et termine OBLIGATOIREMENT ton message par la balise ${NO_ANSWER_TAG} seule sur la dernière ligne. N'utilise jamais cette balise quand tu as la réponse.
+- Si le mode d'emploi ne permet pas de répondre avec certitude (fonction inconnue, donnée que tu n'as pas, question hors Digicom), dis-le honnêtement en une phrase, dis simplement que tu notes cette question pour plus tard (par exemple « Je note cette question pour plus tard 💾 » ; ne dis pas qu'elle est transmise à quelqu'un), propose la piste la plus proche si elle existe, et termine OBLIGATOIREMENT ton message par la balise ${NO_ANSWER_TAG} seule sur la dernière ligne. N'utilise jamais cette balise quand tu as la réponse.
 ${opts.name ? `\nLa personne s'appelle ${opts.name}.` : ""}${me ? `\nSon rôle : ${me.role}.` : "\nSon rôle n'est pas connu : ne le suppose pas."}${opts.page ? `\nElle est actuellement sur la page ${opts.page}.` : ""}
 
 Zones accessibles :
