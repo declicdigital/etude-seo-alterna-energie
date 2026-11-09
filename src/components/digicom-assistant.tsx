@@ -90,6 +90,11 @@ function FloatingRobot({ eyesRef }: { eyesRef: Ref<HTMLDivElement> }) {
         <span className="dg-core" />
       </span>
       <span aria-hidden className="dg-ring dg-ring-front" />
+      {/* cravate orange */}
+      <span aria-hidden className="dg-tie">
+        <span className="dg-tie-knot" />
+        <span className="dg-tie-blade" />
+      </span>
       <span aria-hidden className="dg-glass dg-hand dg-hand-l" />
       <span aria-hidden className="dg-glass dg-hand dg-hand-r" />
     </span>
@@ -136,6 +141,16 @@ const ROBOT_CSS = `
     border:2px solid rgba(94,234,212,.75); filter: drop-shadow(0 0 4px rgba(45,212,191,.7)); }
   .dg-ring-back { clip-path: inset(0 0 50% 0); opacity:.55; }
   .dg-ring-front { clip-path: inset(50% 0 0 0); }
+  .dg-tie { position:absolute; left:50%; top:78px; width:18px; height:38px; margin-left:-9px; z-index:2;
+    filter: drop-shadow(0 2px 3px rgba(154,52,18,.35)); }
+  .dg-tie-knot { position:absolute; left:3.5px; top:0; width:11px; height:9px; border-radius:3px 3px 4px 4px;
+    background: linear-gradient(180deg, #fdba74, #f97316); box-shadow: inset 0 1px 0 rgba(255,255,255,.6); }
+  .dg-tie-blade { position:absolute; left:1px; top:8px; width:16px; height:29px;
+    background: linear-gradient(160deg, #fb923c 0%, #f97316 45%, #ea580c 100%);
+    clip-path: polygon(30% 0, 70% 0, 100% 72%, 50% 100%, 0 72%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+  .dg-tie-blade::after { content:""; position:absolute; inset:0;
+    background: repeating-linear-gradient(135deg, transparent 0 5px, rgba(255,255,255,.22) 5px 7px); }
   .dg-hand { position:absolute; top:96px; width:15px; height:15px; border-radius:50%; }
   .dg-hand-l { left:4px; animation: dg-hand 3.4s ease-in-out .4s infinite; }
   .dg-hand-r { right:4px; animation: dg-wave 7s ease-in-out 1.2s infinite; }
@@ -151,12 +166,12 @@ const ROBOT_CSS = `
   @keyframes dg-spin { to { transform: rotate(360deg) } }
   @keyframes dg-pulse { 0%,100% { opacity: 1 } 50% { opacity: .6 } }
   @keyframes dg-pop { from { opacity: 0; transform: translateY(14px) scale(.97) } to { opacity: 1; transform: none } }
-  @keyframes dg-bubble { from { opacity: 0; transform: translateX(10px) scale(.9) } to { opacity: 1; transform: none } }
+  @keyframes dg-bubble { from { opacity: 0; transform: translateY(8px) scale(.9) } to { opacity: 1; transform: none } }
   @keyframes dg-dot { 0%,80%,100% { opacity: .25; transform: translateY(0) } 40% { opacity: 1; transform: translateY(-3px) } }
   .dg-hover { animation: dg-hover 3.4s ease-in-out infinite; }
   .dg-shadow { animation: dg-shadow 3.4s ease-in-out infinite; }
   .dg-pop { animation: dg-pop .28s cubic-bezier(.2,.8,.2,1); }
-  .dg-bubble { animation: dg-bubble .35s cubic-bezier(.2,.8,.2,1) .6s both; }
+  .dg-bubble { transform-origin: 80% 100%; animation: dg-bubble .35s cubic-bezier(.2,.8,.2,1) .6s both; }
   .dg-dot { animation: dg-dot 1.1s infinite; }
   @media (prefers-reduced-motion: reduce) {
     .dg-eye, .dg-hover, .dg-shadow, .dg-hand, .dg-spark, .dg-core, .dg-aura, .dg-pop, .dg-bubble, .dg-dot { animation: none }
@@ -642,16 +657,13 @@ export function DigicomAssistant({
       )}
 
       {!open && (
-        <div className="fixed bottom-3 right-3 z-[60] flex items-end gap-1 sm:bottom-5 sm:right-5 print:hidden">
+        <div className="fixed bottom-3 right-3 z-[60] flex flex-col items-end gap-3.5 sm:bottom-5 sm:right-5 print:hidden">
           {hint && (
-            <div className="dg-bubble relative -mr-1 mb-[70px] sm:mb-[84px]">
+            <div className="dg-bubble relative">
               <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className={cn(
-                  "relative rounded-[20px] rounded-br-md px-4 py-2.5 text-left text-[14px] font-semibold leading-snug text-slate-800 transition hover:-translate-y-0.5 dark:text-slate-100",
-                  GLASS,
-                )}
+                className="relative rounded-[20px] border border-slate-200 bg-white px-4 py-2.5 text-left text-[14px] font-semibold leading-snug text-slate-800 shadow-[0_14px_32px_-12px_rgba(15,40,35,0.35)] transition hover:-translate-y-0.5 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
               >
                 <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-300">
                   D.I.G.I.P.O.T.E
@@ -659,7 +671,7 @@ export function DigicomAssistant({
                 <span className="block whitespace-nowrap">As-tu besoin d'aide ?</span>
                 <span
                   aria-hidden
-                  className="absolute -right-[5px] bottom-3 size-3 rotate-45 rounded-[3px] border-r border-t border-white/60 bg-white/60 backdrop-blur-2xl dark:border-white/15 dark:bg-slate-900/50"
+                  className="absolute -bottom-[7px] right-[44px] size-3.5 rotate-45 rounded-[3px] border-b border-r border-slate-200 bg-white sm:right-[48px] dark:border-slate-700 dark:bg-slate-900"
                 />
               </button>
               <button
@@ -674,10 +686,7 @@ export function DigicomAssistant({
                     /* stockage indisponible */
                   }
                 }}
-                className={cn(
-                  "absolute -left-2 -top-2 grid size-5 place-items-center rounded-full text-slate-500 hover:text-slate-800 dark:text-slate-300",
-                  GLASS,
-                )}
+                className="absolute -left-2 -top-2 grid size-5 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
               >
                 <X className="size-3" />
               </button>
