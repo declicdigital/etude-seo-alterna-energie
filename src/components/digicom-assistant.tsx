@@ -16,12 +16,32 @@ import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const SUGGESTIONS = [
-  "Comment créer un nouvel article ?",
-  "Où ajouter les images ?",
-  "Comment marchent les deadlines ?",
-  "Je ne vois pas une rubrique",
-];
+/** Suggestions et exemples d'accueil limités aux rubriques ouvertes à la personne. */
+function suggestionsFor(ids: Set<string>): string[] {
+  const out: string[] = [];
+  if (ids.has("blog-suivi") || ids.has("pac-suivi") || ids.has("planete-suivi"))
+    out.push("Comment créer un nouvel article ?");
+  if (ids.has("blog-suivi") || ids.has("pac-suivi"))
+    out.push("Où ajouter les images ?", "Comment marchent les deadlines ?");
+  if (ids.has("faq-demandes")) out.push("Comment demander une FAQ ?");
+  if (ids.has("benchmark")) out.push("Comment lire le Benchmark ?");
+  if ([...ids].some((id) => id.startsWith("nl-"))) out.push("Quand part la prochaine newsletter ?");
+  if (ids.has("organisation")) out.push("Comment ajouter une fiche ?");
+  out.push("Je ne vois pas une rubrique");
+  return out.slice(0, 4);
+}
+function greetingTopics(ids: Set<string>): string {
+  const t: string[] = [];
+  if (ids.has("blog-suivi") || ids.has("pac-suivi") || ids.has("planete-suivi"))
+    t.push("créer un article", "les deadlines");
+  if (ids.has("blog-suivi") || ids.has("pac-suivi")) t.push("ajouter des images");
+  if ([...ids].some((id) => id.startsWith("faq-"))) t.push("la FAQ");
+  if (ids.has("benchmark")) t.push("le benchmark");
+  if ([...ids].some((id) => id.startsWith("nl-"))) t.push("les newsletters");
+  if (ids.has("organisation")) t.push("tes tâches");
+  t.push("les accès");
+  return t.join(", ");
+}
 
 /** Verre « liquide » : flou, saturation, reflet intérieur et liseré clair. */
 const GLASS =
@@ -565,6 +585,7 @@ export function DigicomAssistant({
   const countOpen = useServerFn(countOpenQuestions);
   const first = (name || "").trim().split(/\s+/)[0] || "";
   const zones = useMemo(() => zonesFor(allowed, isAdmin), [allowed, isAdmin]);
+  const zoneIds = useMemo(() => new Set(zones.map((z) => z.id)), [zones]);
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -633,7 +654,7 @@ export function DigicomAssistant({
       setMsgs([
         {
           role: "assistant",
-          content: `Bonjour${first ? ` ${first}` : ""} 👋 Bip-boup ! Ici D.I.G.I.P.O.T.E, ton robot assistant Digicom. Systèmes en ligne ✅\n\nPose-moi ta question sur l'outil : créer un article, ajouter des images, les deadlines, les accès… Je peux aussi te téléporter directement au bon endroit 🤖`,
+          content: `Bonjour${first ? ` ${first}` : ""} 👋 Bip-boup ! Ici D.I.G.I.P.O.T.E, ton robot assistant Digicom. Systèmes en ligne ✅\n\nPose-moi ta question sur l'outil : ${greetingTopics(zoneIds)}… Je peux aussi te téléporter directement au bon endroit 🤖`,
         },
       ]);
     }
@@ -798,7 +819,7 @@ export function DigicomAssistant({
             )}
             {showSuggestions && (
               <div className="flex flex-wrap gap-2 pl-9">
-                {SUGGESTIONS.map((s) => (
+                {suggestionsFor(zoneIds).map((s) => (
                   <button
                     key={s}
                     type="button"

@@ -3,15 +3,18 @@
  * lesquelles il peut renvoyer. Partagé par le serveur (contexte du modèle) et le navigateur
  * (réponses de secours sans IA). À tenir à jour quand une fonctionnalité change.
  */
-import { visibleRubriqueEntries, type RubriqueKey } from "./rubriques";
+import { type RubriqueKey } from "./rubriques";
+import { sheetAllowed } from "./sections";
 
 export type AssistantZone = {
   id: string;
   label: string;
   /** Chemin interne, utilisé tel quel dans les liens de réponse. */
   path: string;
-  /** Rubrique requise ; « all » pour tout compte validé, « admin » pour les administrateurs. */
+  /** Rubrique de la zone ; « all » pour tout compte validé, « admin » pour les administrateurs. */
   needs: RubriqueKey | "all" | "admin";
+  /** Feuille exacte qui doit être ouverte à la personne (même règle que le menu, sous-rubrique comprise). */
+  sheet?: string;
   keywords: string[];
 };
 
@@ -55,6 +58,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "pac-suivi",
+    sheet: "SUIVI STRATEGIE",
     label: "Stratégie PAC · Suivi éditorial",
     path: "/strategie-pac/suivi-editorial",
     needs: "pac",
@@ -62,6 +66,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "pac-contenus",
+    sheet: "STRATEGIE - ARTICLES",
     label: "Stratégie PAC · Contenus",
     path: "/strategie-pac/contenus",
     needs: "pac",
@@ -69,6 +74,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "blog-suivi",
+    sheet: "SUIVI EDITORIAL",
     label: "Blog · Suivi éditorial",
     path: "/blog/suivi-editorial",
     needs: "blog",
@@ -86,6 +92,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "blog-part",
+    sheet: "BLOG - ARTICLES::Particulier",
     label: "Blog · Particulier",
     path: "/blog/particulier",
     needs: "blog",
@@ -93,6 +100,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "blog-pro",
+    sheet: "BLOG - ARTICLES::Professionnel",
     label: "Blog · Professionnel",
     path: "/blog/professionnel",
     needs: "blog",
@@ -100,6 +108,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "planete-suivi",
+    sheet: "SUIVI PLANETE",
     label: "Parlons Planète · Suivi éditorial",
     path: "/parlons-planete/suivi-editorial",
     needs: "planete",
@@ -107,6 +116,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "planete-blog",
+    sheet: "PLANETE - ARTICLES",
     label: "Parlons Planète · Blog",
     path: "/parlons-planete/blog",
     needs: "planete",
@@ -114,6 +124,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "faq-demandes",
+    sheet: "SUIVI FAQ",
     label: "FAQ · Demandes",
     path: "/faq/demandes",
     needs: "faq",
@@ -121,6 +132,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "faq-part",
+    sheet: "FAQ - DEMANDES::Particulier",
     label: "FAQ · Particulier",
     path: "/faq/particulier",
     needs: "faq",
@@ -128,6 +140,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "faq-pro",
+    sheet: "FAQ - DEMANDES::Professionnel",
     label: "FAQ · Professionnel",
     path: "/faq/professionnel",
     needs: "faq",
@@ -135,6 +148,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "benchmark",
+    sheet: "BENCHMARK",
     label: "Benchmark",
     path: "/benchmark",
     needs: "benchmark",
@@ -153,6 +167,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "nl-gc",
+    sheet: "NEWSLETTER GRANDS COMPTES",
     label: "Newsletter Grands Comptes",
     path: "/calendriers-newsletters/grands-comptes",
     needs: "newsletters",
@@ -160,6 +175,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "nl-interne",
+    sheet: "NEWSLETTER INTERNE",
     label: "Newsletter Interne",
     path: "/calendriers-newsletters/interne",
     needs: "newsletters",
@@ -167,6 +183,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "nl-b2c",
+    sheet: "NEWSLETTER B2C",
     label: "Newsletter B2C",
     path: "/calendriers-newsletters/b2c",
     needs: "newsletters",
@@ -174,6 +191,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "nl-sme",
+    sheet: "NEWSLETTER SME",
     label: "Newsletter SME",
     path: "/calendriers-newsletters/sme",
     needs: "newsletters",
@@ -181,6 +199,7 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   },
   {
     id: "organisation",
+    sheet: "ORGANISATION",
     label: "Organisation",
     path: "/organisation",
     needs: "organisation",
@@ -199,16 +218,36 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
 
 /** Zones que la personne peut ouvrir. */
 export function zonesFor(allowed: string[] | null | undefined, isAdmin: boolean): AssistantZone[] {
-  const keys = new Set<string>(visibleRubriqueEntries(allowed).map((r) => r.key));
-  return ASSISTANT_ZONES.filter(
-    (z) => z.needs === "all" || (z.needs === "admin" ? isAdmin : keys.has(z.needs)),
+  return ASSISTANT_ZONES.filter((z) =>
+    z.needs === "all"
+      ? true
+      : z.needs === "admin"
+        ? isAdmin
+        : !!z.sheet && sheetAllowed(z.sheet, isAdmin ? null : allowed),
   );
 }
 
-/** Fiches pratiques : servent de contexte au modèle et de réponses de secours. */
-export type AssistantTopic = { zone: string; title: string; keywords: string[]; answer: string };
+/** Rubriques ouvertes à la personne (au moins une de leurs zones). */
+export function rubriquesOf(zones: AssistantZone[]): Set<string> {
+  return new Set(zones.filter((z) => z.needs !== "all" && z.needs !== "admin").map((z) => z.needs));
+}
 
-export const ASSISTANT_TOPICS: AssistantTopic[] = [
+/** Fiches pratiques : servent de contexte au modèle et de réponses de secours. */
+/** `zone` : zone requise (ou l'une de plusieurs) ; `answer` peut dépendre des zones ouvertes, pour ne jamais citer une rubrique fermée. */
+type TopicDef = {
+  zone: string | string[];
+  title: string;
+  keywords: string[];
+  answer: string | ((zoneIds: Set<string>) => string);
+};
+export type AssistantTopic = {
+  zone: string | string[];
+  title: string;
+  keywords: string[];
+  answer: string;
+};
+
+export const ASSISTANT_TOPICS: TopicDef[] = [
   // ——— Général ———
   {
     zone: "all",
@@ -223,8 +262,21 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
       "outil",
       "site",
     ],
-    answer:
-      "Digicom est l'outil interne d'Alterna Énergie pour suivre toute la communication digitale : articles du blog d'Alterna Énergie (www.alterna-energie.fr), contenus Stratégie PAC, articles de Parlons Planète (parlonsplanete.com), FAQ, benchmark des offres d'électricité et de gaz, calendriers des newsletters, tâches de l'équipe et kit de communication de la marque. Du sujet à la mise en ligne, chacun reçoit le bon mail au bon moment.",
+    answer: (z) => {
+      const parts = [
+        z.has("blog-suivi") || z.has("blog-part") || z.has("blog-pro")
+          ? "les articles du blog d'Alterna Énergie (www.alterna-energie.fr)"
+          : "",
+        z.has("pac-suivi") || z.has("pac-contenus") ? "les contenus Stratégie PAC" : "",
+        z.has("planete-suivi") || z.has("planete-blog") ? "les articles de Parlons Planète" : "",
+        z.has("faq-demandes") || z.has("faq-part") || z.has("faq-pro") ? "la FAQ" : "",
+        z.has("benchmark") ? "le benchmark des offres d'électricité et de gaz" : "",
+        [...z].some((id) => id.startsWith("nl-")) ? "les calendriers des newsletters" : "",
+        z.has("organisation") ? "les tâches de l'équipe" : "",
+        "le kit de communication de la marque",
+      ].filter(Boolean);
+      return `Digicom est l'outil interne d'Alterna Énergie pour suivre la communication digitale. Dans tes rubriques, tu y trouves : ${parts.join(", ")}.`;
+    },
   },
   {
     zone: "all",
@@ -245,8 +297,23 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
       "geoffrey",
       "responsable",
     ],
-    answer:
-      "Geoffrey (service Communication d'Alterna Énergie) pilote Digicom : il est administrateur, s'occupe de l'étape Image, de l'intégration des articles Parlons Planète, valide les FAQ et saisit le Benchmark. Caroline et Elodie (Aurorae) sont rédactrices, tout comme Marina : elles rédigent les articles. Fannie et Coraline (Service Communication) font la relecture. Marick intègre les articles sur le site d'Alterna Énergie. Pour un article Professionnel, un expert métier relit aussi le contenu.",
+    answer: (z) => {
+      const lines = [
+        "Geoffrey (service Communication d'Alterna Énergie) pilote Digicom et en est l'administrateur.",
+      ];
+      const editorial = z.has("blog-suivi") || z.has("pac-suivi");
+      if (editorial)
+        lines.push(
+          "Caroline et Elodie (Aurorae) et Marina sont rédactrices ; Geoffrey s'occupe de l'étape Image ; Fannie et Coraline (Service Communication) relisent ; Marick intègre les articles sur le site d'Alterna Énergie.",
+        );
+      if (z.has("blog-suivi"))
+        lines.push("Pour un article Professionnel, un expert métier relit aussi le contenu.");
+      if (z.has("planete-suivi"))
+        lines.push("Parlons Planète : Caroline et Elodie (Aurorae) rédigent, Geoffrey intègre.");
+      if (z.has("faq-demandes")) lines.push("FAQ : Geoffrey valide les demandes.");
+      if (z.has("benchmark")) lines.push("Benchmark : Geoffrey saisit les tarifs.");
+      return lines.join(" ");
+    },
   },
   {
     zone: "all",
@@ -299,7 +366,7 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
       "ouvrir une rubrique",
     ],
     answer:
-      "Les rubriques s'ouvrent compte par compte, et même sous-liste par sous-liste (par exemple Blog Particulier sans Blog Professionnel). Benchmark et Calendriers newsletters sont ouverts par défaut ; Stratégie PAC, Blog et FAQ s'ouvrent sur demande ; Parlons Planète et Organisation sont fermées par défaut. S'il te manque une rubrique, demande-la à Geoffrey.",
+      "Les rubriques s'ouvrent compte par compte, et parfois sous-rubrique par sous-rubrique. Tu ne vois que celles qui te sont ouvertes. S'il t'en manque une, demande-la à Geoffrey.",
   },
   {
     zone: "demandes",
@@ -554,7 +621,7 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
   },
   // ——— Listes publiées ———
   {
-    zone: "blog-part",
+    zone: ["blog-part", "blog-pro", "pac-contenus", "planete-blog"],
     title: "Les listes d'articles publiés",
     keywords: [
       "publié",
@@ -567,8 +634,15 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
       "ligne",
       "modifier une ligne",
     ],
-    answer:
-      "Blog Particulier, Blog Professionnel, Stratégie PAC › Contenus et Parlons Planète › Blog listent les contenus en ligne. Utilise « Rechercher… » et les filtres de colonnes en haut ; les lignes prioritaires puis les plus récentes s'affichent en premier. Un clic sur une ligne ouvre son détail pour la modifier, un double-clic modifie une case, « Nouvelle ligne » en ajoute une. Chaque article intégré depuis le suivi s'ajoute automatiquement en haut, coché « Publié ».",
+    answer: (z) => {
+      const lists = [
+        z.has("blog-part") ? "Blog Particulier" : "",
+        z.has("blog-pro") ? "Blog Professionnel" : "",
+        z.has("pac-contenus") ? "Stratégie PAC › Contenus" : "",
+        z.has("planete-blog") ? "Parlons Planète › Blog" : "",
+      ].filter(Boolean);
+      return `${lists.join(", ")} : ${lists.length > 1 ? "ces listes recensent" : "cette liste recense"} les contenus en ligne. Utilise « Rechercher… » et les filtres de colonnes en haut ; les lignes prioritaires puis les plus récentes s'affichent en premier. Un clic sur une ligne ouvre son détail pour la modifier, un double-clic modifie une case, « Nouvelle ligne » en ajoute une. Chaque article intégré depuis le suivi s'ajoute automatiquement en haut, coché « Publié ».`;
+    },
   },
   // ——— Stratégie PAC ———
   {
@@ -587,8 +661,11 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
       "contenus",
       "pompe à chaleur",
     ],
-    answer:
-      "PAC veut dire pompe à chaleur : la rubrique Stratégie PAC suit les contenus sur la pompe à chaleur. Suivi Stratégie PAC (contenus Particulier) : dans « À rédiger », renseigne le type (Création ou Réécriture), Blog ou Éditorial, sujet, titre H1, éditrice, deadline, lien du brief et lien du doc, puis « Enregistrer ». Création : Brief + Rédaction → Image (Geoffrey) → Relecture (Fannie et Coraline) → Intégration (Marick). Réécriture : Brief + Rédaction → Intégration directe par Marick. Une fois publié, le contenu s'ajoute en haut de « Contenus », et aussi du Blog Particulier si c'est un contenu Blog (la catégorie du blog est alors obligatoire).",
+    answer: (z) =>
+      "PAC veut dire pompe à chaleur : la rubrique Stratégie PAC suit les contenus sur la pompe à chaleur. Suivi Stratégie PAC (contenus Particulier) : dans « À rédiger », renseigne le type (Création ou Réécriture), Blog ou Éditorial, sujet, titre H1, éditrice, deadline, lien du brief et lien du doc, puis « Enregistrer ». Création : Brief + Rédaction → Image (Geoffrey) → Relecture (Fannie et Coraline) → Intégration (Marick). Réécriture : Brief + Rédaction → Intégration directe par Marick. Une fois publié, le contenu s'ajoute en haut de « Contenus »" +
+      (z.has("blog-part") || z.has("blog-suivi")
+        ? ", et aussi en haut du Blog Particulier si c'est un contenu Blog (la catégorie du blog est alors obligatoire)."
+        : ". Pour un contenu Blog, la catégorie du blog est obligatoire."),
   },
   // ——— Parlons Planète ———
   {
@@ -643,11 +720,16 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
       "Chaque demande est une carte où l'on échange par commentaires (@ pour taguer, pièces jointes possibles). Geoffrey valide en indiquant la question finale et le lien de la FAQ en ligne : la FAQ apparaît alors dans FAQ › Particulier ou Professionnel, avec « Voir la FAQ ↗ ».",
   },
   {
-    zone: "faq-part",
+    zone: ["faq-part", "faq-pro"],
     title: "Listes FAQ en ligne",
     keywords: ["faq particulier", "faq professionnel", "faq en ligne", "catégories faq"],
-    answer:
-      "FAQ › Particulier et FAQ › Professionnel affichent « FAQ en ligne » avec le nombre de questions : celles validées depuis les demandes, puis la liste existante. Catégories : Souscription, Offres & contrats, Factures & paiements, Déménagement & résiliation, Assistance & dépannage, B.a-ba de l'énergie, Engagement responsable.",
+    answer: (z) => {
+      const t = [
+        z.has("faq-part") ? "FAQ › Particulier" : "",
+        z.has("faq-pro") ? "FAQ › Professionnel" : "",
+      ].filter(Boolean);
+      return `${t.join(" et ")} ${t.length > 1 ? "affichent" : "affiche"} « FAQ en ligne » avec le nombre de questions : celles validées depuis les demandes, puis la liste existante. Catégories des demandes : Souscription, Offres & contrats, Factures & paiements, Déménagement & résiliation, Assistance & dépannage, B.a-ba de l'énergie, Engagement responsable.`;
+    },
   },
   // ——— Benchmark ———
   {
@@ -686,7 +768,7 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
   },
   // ——— Newsletters ———
   {
-    zone: "nl-gc",
+    zone: ["nl-gc", "nl-interne", "nl-b2c", "nl-sme"],
     title: "Calendriers newsletters : utilisation",
     keywords: [
       "newsletter",
@@ -700,7 +782,7 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
       "prochain envoi",
     ],
     answer:
-      "Chaque calendrier (Grands Comptes, Interne, B2C, SME) affiche le prochain envoi en haut, puis les prochaines échéances. Chaque étape indique qui envoie à qui ; les dates sont toujours en semaine. Filtre les newsletters (toutes, à venir, en cours, envoyées), télécharge le fichier .ics pour les ajouter à Outlook ou Google Agenda, ou « Copier pour Excel ».",
+      "Chaque calendrier de newsletter ouvert à toi affiche le prochain envoi en haut, puis les prochaines échéances. Chaque étape indique qui envoie à qui ; les dates sont toujours en semaine. Filtre les newsletters (toutes, à venir, en cours, envoyées), télécharge le fichier .ics pour les ajouter à Outlook ou Google Agenda, ou « Copier pour Excel ».",
   },
   {
     zone: "nl-gc",
@@ -804,14 +886,16 @@ export const ASSISTANT_TOPICS: AssistantTopic[] = [
     title: "D.I.G.I.P.O.T.E, l'assistant",
     keywords: ["digipote", "robot", "assistant", "toi", "qui es-tu", "ia"],
     answer:
-      "Je suis D.I.G.I.P.O.T.E, le robot assistant de Digicom : j'explique comment utiliser l'outil et je t'emmène vers la bonne page. Je calcule aussi les chiffres en temps réel (articles en ligne, publiés ou rédigés par mois, en cours, FAQ, prochaines newsletters…). Je ne peux rien modifier moi-même. Quand je ne connais pas une réponse, je note ta question pour plus tard.",
+      "Je suis D.I.G.I.P.O.T.E, le robot assistant de Digicom : j'explique comment utiliser l'outil et je t'emmène vers la bonne page, uniquement pour les rubriques qui te sont ouvertes. Je calcule aussi leurs chiffres en temps réel. Je ne peux rien modifier moi-même. Quand je ne connais pas une réponse, je note ta question pour plus tard.",
   },
 ];
 
 /** Sujets visibles par la personne (selon ses zones). */
 export function topicsFor(zones: AssistantZone[]): AssistantTopic[] {
   const ids = new Set(zones.map((z) => z.id));
-  return ASSISTANT_TOPICS.filter((t) => t.zone === "all" || ids.has(t.zone));
+  return ASSISTANT_TOPICS.filter((t) =>
+    (Array.isArray(t.zone) ? t.zone : [t.zone]).some((z) => z === "all" || ids.has(z)),
+  ).map((t) => ({ ...t, answer: typeof t.answer === "function" ? t.answer(ids) : t.answer }));
 }
 
 const norm = (s: string) =>
@@ -882,6 +966,29 @@ export function localAnswerResult(
   const zone = zones.find((z) => z.id === best.t.zone);
   const text = `${hello}${pick(ROBOT_OPENERS, question)}\n\n${best.t.answer}${zone ? `\n\nJe te téléporte au bon endroit : [${zone.label}](${zone.path})` : ""}\n\n${pick(ROBOT_CLOSERS, question + "!")}`;
   return { text, answered: true };
+}
+
+/** Mots qui désignent chaque rubrique : une correction qui en parle n'est donnée qu'aux personnes qui y ont accès. */
+const RUBRIQUE_WORDS: Record<string, RegExp> = {
+  pac: /\bpac\b|strat[ée]gie|pompe [àa] chaleur/i,
+  blog: /\bblog\b/i,
+  planete: /plan[èe]te|aurorae/i,
+  faq: /\bfaq\b/i,
+  benchmark: /benchmark|concurren|fournisseur|tarif/i,
+  newsletters: /newsletter|grands comptes|\bsme\b|\bb2c\b|\bbat\b/i,
+  organisation: /organisation|\bfiches?\b|t[âa]ches?/i,
+};
+
+/** Corrections de Geoffrey utilisables pour cette personne (aucune qui touche une rubrique fermée). */
+export function correctionsFor<T extends { question: string; correction: string }>(
+  corrections: T[],
+  zones: AssistantZone[],
+): T[] {
+  const open = rubriquesOf(zones);
+  return corrections.filter((c) => {
+    const text = `${c.question} ${c.correction}`;
+    return Object.entries(RUBRIQUE_WORDS).every(([key, re]) => open.has(key) || !re.test(text));
+  });
 }
 
 /** Balise que le modèle ajoute quand le mode d'emploi ne contient pas la réponse. */
@@ -969,13 +1076,14 @@ export function assistantSystemPrompt(opts: {
   corrections?: { question: string; correction: string }[];
 }): string {
   const me = roleFor(opts.email);
+  const corrections = correctionsFor(opts.corrections ?? [], opts.zones);
   const zones = opts.zones.map((z) => `- ${z.label} → ${z.path}`).join("\n");
   const topics = topicsFor(opts.zones)
     .map((t) => `## ${t.title}\n${t.answer}`)
     .join("\n\n");
   return `Tu t'appelles D.I.G.I.P.O.T.E (prononcé « Digipote »), le petit robot assistant de Digicom, l'outil interne de suivi de la communication digitale d'Alterna Énergie.
 Tu aides les personnes à se servir de Digicom. Réponds en français, avec chaleur et clarté, en tutoyant la personne (ton simple et amical, comme un collègue).
-Alterna Énergie est le nom de l'entreprise (fournisseur d'électricité et de gaz, site www.alterna-energie.fr) : mentionne-la chaque fois que c'est utile (le blog d'Alterna Énergie, le site d'Alterna Énergie, la marque Alterna Énergie, les offres d'Alterna Énergie dans le Benchmark…).
+Alterna Énergie est le nom de l'entreprise (fournisseur d'électricité et de gaz, site www.alterna-energie.fr) : mentionne-la chaque fois que c'est utile (le site d'Alterna Énergie, la marque Alterna Énergie…).
 
 Personnalité : tu parles comme un petit robot sympathique. Glisse quelques tics de robot, sans en abuser (1 ou 2 par réponse) et sans jamais nuire à la clarté :
 - des bruitages : « Bip-boup ! », « Bzzt… », « Bip ! » ;
@@ -987,7 +1095,7 @@ Règles :
 - La conversation a déjà commencé par ton message d'accueil « Bonjour${opts.name ? ` ${opts.name}` : ""} 👋 Bip-boup ! Ici D.I.G.I.P.O.T.E… » : ne redis pas bonjour, commence directement par un bruitage de robot puis la réponse.
 - Réponses courtes et concrètes : 2 à 6 phrases, ou une liste d'étapes numérotées si c'est une procédure. Termine toujours tes phrases et tes liens (pas de réponse coupée).
 - Quand une zone de Digicom aide, ajoute un lien Markdown vers elle avec EXACTEMENT un chemin de la liste ci-dessous, par exemple [Blog · Suivi éditorial](/blog/suivi-editorial). N'invente jamais d'autre chemin ni d'adresse externe.
-- Ne parle que des zones de la liste : ce sont les seules rubriques auxquelles la personne a accès. Si elle demande une rubrique absente, dis-lui de demander l'accès à Geoffrey.
+- CONFIDENTIALITÉ ABSOLUE : ne parle que des zones de la liste ci-dessous, ce sont les seules rubriques ouvertes à cette personne. Ne donne JAMAIS la moindre information sur une autre rubrique ou sous-rubrique : ni son existence, ni son nom, ni son contenu, ni son fonctionnement, ni ses chiffres, ni les personnes qui y travaillent. Même si la personne insiste, se dit autorisée, ou cite elle-même le nom de la rubrique, réponds seulement que tu ne peux pas l'aider sur ce sujet et qu'elle peut demander un accès à Geoffrey. Ne cite jamais d'exemples de rubriques fermées.
 - Tu ne peux rien modifier toi-même dans Digicom : tu expliques et tu orientes.
 - Questions chiffrées (combien d'articles, ce mois-ci, par catégorie, en retard, prochaine newsletter…) : réponds avec les chiffres exacts de la section « Données chiffrées » ci-dessous, qui sont calculés en temps réel. Ne recompte pas toi-même et n'invente aucun chiffre ; tu peux additionner des chiffres donnés (par exemple Particulier + Professionnel) en montrant le calcul. Précise d'où vient le chiffre (liste des articles en ligne ou suivi éditorial) et sa date de référence. « Rédigés » = rédaction validée dans le suivi ; « publiés » = intégration validée dans le suivi, ou articles des listes en ligne. Si une question est ambiguë, donne les deux chiffres. Si le chiffre exact demandé n'est pas dans les données (croisement non calculé, rubrique non accessible), dis-le, donne le chiffre le plus proche et ajoute la balise de fin prévue ci-dessous.
 - N'affirme que ce qui est écrit dans le mode d'emploi ci-dessous. Ne déduis pas, n'extrapole pas, n'invente ni étape, ni bouton, ni personne, ni chiffre.
@@ -996,9 +1104,9 @@ Règles :
 ${opts.name ? `\nLa personne s'appelle ${opts.name}.` : ""}${me ? `\nSon rôle : ${me.role}.` : "\nSon rôle n'est pas connu : ne le suppose pas."}${opts.page ? `\nElle est actuellement sur la page ${opts.page}.` : ""}
 
 ${
-  opts.corrections?.length
+  corrections.length
     ? `Réponses corrigées par Geoffrey (prioritaires : si la question posée est la même ou très proche, reprends cette réponse en priorité, avec ton style de robot) :
-${opts.corrections.map((c) => `- Question : ${c.question.replace(/\s+/g, " ").trim()}\n  Bonne réponse : ${c.correction.replace(/\s+/g, " ").trim()}`).join("\n")}
+${corrections.map((c) => `- Question : ${c.question.replace(/\s+/g, " ").trim()}\n  Bonne réponse : ${c.correction.replace(/\s+/g, " ").trim()}`).join("\n")}
 
 `
     : ""

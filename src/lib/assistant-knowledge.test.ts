@@ -8,6 +8,7 @@ import {
   localAnswerResult,
   splitNoAnswer,
   zonesFor,
+  correctionsFor,
 } from "./assistant-knowledge";
 import { sheetFromPath } from "./slugs";
 
@@ -105,7 +106,9 @@ describe("assistant Digicom", () => {
 
   it("chaque fiche pointe vers une zone existante", () => {
     const ids = new Set(ASSISTANT_ZONES.map((z) => z.id));
-    for (const t of ASSISTANT_TOPICS) expect(t.zone === "all" || ids.has(t.zone)).toBe(true);
+    for (const t of ASSISTANT_TOPICS)
+      for (const z of Array.isArray(t.zone) ? t.zone : [t.zone])
+        expect(z === "all" || ids.has(z)).toBe(true);
   });
 
   it("met les corrections de Geoffrey en priorité dans le contexte", () => {
@@ -117,5 +120,66 @@ describe("assistant Digicom", () => {
     expect(p).toContain("Réponses corrigées par Geoffrey");
     expect(p).toContain("Bonne réponse : Pompe à chaleur.");
     expect(assistantSystemPrompt({ zones })).not.toContain("Réponses corrigées par Geoffrey");
+  });
+
+  it("ne dit jamais rien des rubriques fermées", () => {
+    // Benchmark et newsletters sont ouverts par défaut : on les ferme explicitement ici.
+    const zones = zonesFor(
+      ["FAQ", "FAQ/Particulier", "!Benchmark", "!Calendriers newsletters"],
+      false,
+    );
+    const ids = zones.map((z) => z.id);
+    expect(ids).toContain("faq-part");
+    expect(ids).not.toContain("faq-pro");
+    const p = assistantSystemPrompt({
+      zones,
+      name: "Fannie",
+      email: "fannie.laurendin@soregies.fr",
+    });
+    for (const word of [
+      "Parlons Planète",
+      "Stratégie PAC",
+      "Benchmark",
+      "Organisation",
+      "Grands Comptes",
+      "Blog Particulier",
+      "FAQ › Professionnel",
+      "Marick",
+    ])
+      expect(p).not.toContain(word);
+    const local = localAnswer("c'est quoi digicom ?", zones);
+    expect(local).not.toMatch(/Parlons Planète|Stratégie PAC|benchmark|newsletters|tâches/);
+  });
+
+  it("une seule newsletter ouverte ne montre que celle-là", () => {
+    const zones = zonesFor(
+      [
+        "Calendriers newsletters",
+        "Calendriers newsletters/Interne",
+        "!Calendriers newsletters/Grands Comptes",
+        "!Calendriers newsletters/B2C",
+        "!Calendriers newsletters/SME",
+      ],
+      false,
+    );
+    expect(zones.map((z) => z.id).filter((id) => id.startsWith("nl-"))).toEqual(["nl-interne"]);
+  });
+
+  it("filtre les corrections qui parlent d'une rubrique fermée", () => {
+    const zones = zonesFor(["FAQ", "FAQ/Particulier"], false);
+    const kept = correctionsFor(
+      [
+        {
+          question: "ça veut dire quoi pac ?",
+          correction: "PAC veut dire pompe à chaleur : la rubrique Stratégie PAC…",
+        },
+        {
+          question: "comment demander une faq ?",
+          correction: "Dans FAQ › Demandes, remplis le formulaire.",
+        },
+      ],
+      zones,
+    );
+    expect(kept.map((c) => c.question)).toEqual(["comment demander une faq ?"]);
   });
 });
