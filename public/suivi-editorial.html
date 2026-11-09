@@ -368,6 +368,10 @@ button{ font-family: inherit; cursor:pointer; }
 }
 .step-box .assignee{ font-size: 0.73rem; color: var(--ink-60); font-weight: 500; }
 .step-box .date{ font-size: 0.73rem; color: var(--ink-60); font-weight: 500; margin-top: 2px; }
+.step-box .step-deadline{ display:inline-block; margin-top:4px; font-size:0.7rem; font-weight:700; color:#92400e; background:#fef3c7; border-radius:100px; padding:2px 8px; }
+.step-box .step-deadline.late{ color:#fff; background:#dc2626; }
+.step-box .step-deadline.soon{ color:#fff; background:#d97706; }
+.deadline-note{ font-size:0.78rem; color:var(--ink-60); }
 .step-box .reminder-btn{ display:flex; align-items:center; justify-content:center; width:30px; height:30px; padding:5px; margin-top:8px; border-radius:6px; border:1px solid var(--line); background:var(--bg); color:var(--ink); }
 .step-box .reminder-btn:hover{ background:var(--lgreen-bg); }
 .step-box .reminder-btn:disabled{ opacity:.5; cursor:wait; }
@@ -1596,6 +1600,7 @@ function renderArticleCard(article){
         <div class="label">${escapeHtml(cfg.label)}</div>
         <div class="assignee">${escapeHtml(step.assignee) || '—'}</div>
         <div class="date">${step.status === 'done' ? fmtDate(step.date) || '' : ''}</div>
+        ${step.deadline && step.status === 'pending' ? `<span class="step-deadline ${stepDeadlineClass(step.deadline)}" title="Deadline de l'étape">⏰ ${escapeHtml(fmtDate(step.deadline))}</span>` : ''}
         ${canRemind ? `<button class="btn reminder-btn" data-action="remind-step" data-article-id="${escapeAttr(article.id)}" data-step-key="${escapeAttr(step.key)}" title="Envoyer un rappel — ${escapeAttr(cfg.label)}" aria-label="Envoyer un rappel — ${escapeAttr(cfg.label)}">${REMINDER_ICON}</button>` : ''}
       </div>`;
 
@@ -1637,6 +1642,14 @@ function renderArticleCard(article){
             <label>Date</label>
             <input type="date" data-action="edit-date" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.date)}">
           </div>
+          ${(canRemind || step.deadline) ? `
+          <div class="field">
+            <label>Deadline de l'étape</label>
+            ${canRemind
+              ? `<input type="date" data-action="edit-step-deadline" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.deadline || '')}" aria-label="Deadline de l'étape ${escapeAttr(cfg.label)}">
+                 <span class="deadline-note">Le responsable reçoit un mail de rappel 2 jours ouvrés avant.</span>`
+              : `<span class="step-name">${escapeHtml(fmtDate(step.deadline))}</span>`}
+          </div>` : ''}
           ${step.key === 'integration' ? `
           <div class="field">
             <label>Lien publié</label>
@@ -2350,9 +2363,17 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
     step.date = t.value;
     await saveArticle(article);
   }
+  /* Deadline par étape : réservée à Geoffrey ; le rappel part 2 jours ouvrés avant. */
+  if(action === 'edit-step-deadline' && canRemind){
+    const article = getArticle(t.dataset.articleId);
+    const step = article.steps.find(s => s.key === t.dataset.stepKey);
+    if(t.value && !/^\d{4}-\d{2}-\d{2}$/.test(t.value)) return;
+    if(t.value) step.deadline = t.value; else delete step.deadline;
+    await saveArticle(article);
+  }
 });
 
-const REFRESH_ON_BLUR = ['edit-assignee', 'edit-brief-link', 'edit-docx-link', 'edit-final-link', 'edit-title', 'edit-date'];
+const REFRESH_ON_BLUR = ['edit-assignee', 'edit-brief-link', 'edit-docx-link', 'edit-final-link', 'edit-title', 'edit-date', 'edit-step-deadline'];
 document.getElementById('articlesContainer').addEventListener('blur', (e) => {
   const t = e.target;
   if(t && t.classList && t.classList.contains('comment-input')){
@@ -2380,6 +2401,10 @@ async function saveTodos(){
 const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com'];
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
 let validating = false, validateCooldownUntil = 0;
+function stepDeadlineClass(deadline){
+  const days = Math.round((Date.parse(deadline) - Date.parse(todayIso())) / 86400000);
+  return days < 0 ? 'late' : days <= 2 ? 'soon' : '';
+}
 function todayIso(){
   const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');

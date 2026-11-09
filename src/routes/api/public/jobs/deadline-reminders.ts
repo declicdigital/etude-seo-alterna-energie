@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { editorialLink } from "@/lib/editorial-links";
 import { ALL_SPACES, spaceLabel, spacePrefix } from "@/lib/editorial-spaces";
 import { MAIL_SENDER } from "@/lib/mail-sender";
+import { buildStepDeadlineMail, dueStepDeadlines, stepDeadlineMarker } from "@/lib/step-deadlines";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = MAIL_SENDER;
 const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
@@ -169,7 +170,65 @@ export const Route = createFileRoute("/api/public/jobs/deadline-reminders")({
         }
         }
 
-        return Response.json({ checked: todos.length, results });
+        // Deadlines par étape (posées par Geoffrey) : le responsable de l'étape est prévenu 2 jours ouvrés avant.
+        const stepResults: { article: string; step: string; status: string }[] = [];
+        let users: { email: string; full_name: string | null }[] = [];
+        try {
+          const { data: u } = await supabaseAdmin.rpc("approved_users");
+          users = (u ?? []) as typeof users;
+        } catch {
+          users = [];
+        }
+        for (const space of ALL_SPACES) {
+          const pfx = spacePrefix(space);
+          const { data: base } = await supabaseAdmin
+            .from("editorial_kv")
+            .select("key,value")
+            .in("key", [pfx + "articles-index", pfx + "pipeline-config"]);
+          const baseMap = new Map((base ?? []).map((r) => [r.key, r.value]));
+          let ids: string[] = [];
+          let config: unknown = null;
+          try {
+            const parsed: unknown = JSON.parse(baseMap.get(pfx + "articles-index") || "[]");
+            ids = Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
+            config = JSON.parse(baseMap.get(pfx + "pipeline-config") || "null");
+          } catch {
+            continue;
+          }
+          if (!ids.length || !config) continue;
+          const { data: rows } = await supabaseAdmin
+            .from("editorial_kv")
+            .select("key,value")
+            .in("key", ids.map((id) => pfx + "article:" + id));
+          for (const row of rows ?? []) {
+            const articleId = row.key.slice((pfx + "article:").length);
+            let article: { steps?: unknown } | null = null;
+            try {
+              article = JSON.parse(row.value);
+            } catch {
+              continue;
+            }
+            for (const due of dueStepDeadlines(article?.steps, today)) {
+              const marker = stepDeadlineMarker(space, articleId, due.key, due.deadline);
+              const { data: sent } = await supabaseAdmin.from("editorial_kv").select("key").eq("key", marker).maybeSingle();
+              if (sent) {
+                stepResults.push({ article: articleId, step: due.key, status: "already_sent" });
+                continue;
+              }
+              try {
+                const mail = buildStepDeadlineMail({ space, articleId, stepKey: due.key, deadline: due.deadline, today, article, config, users });
+                await sendBrevo(mail.recipients, mail.subject, mail.text, mail.html);
+                await supabaseAdmin.from("editorial_kv").upsert({ key: marker, value: new Date().toISOString() });
+                stepResults.push({ article: articleId, step: due.key, status: "sent" });
+              } catch (e) {
+                console.error("step deadline reminder failed", articleId, due.key, e);
+                stepResults.push({ article: articleId, step: due.key, status: "failed" });
+              }
+            }
+          }
+        }
+
+        return Response.json({ checked: todos.length, results, stepResults });
       },
     },
   },

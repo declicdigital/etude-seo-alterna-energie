@@ -676,6 +676,10 @@ export function GuideView({
           <section className="rounded-2xl border border-border bg-card p-5 text-sm space-y-1.5">
             <div className="font-semibold text-base mb-2">Partout dans les suivis</div>
             <div>• « Marquer validée » sans date → la date du jour est mise automatiquement</div>
+            <div>
+              • Geoffrey peut poser une deadline sur chaque étape → le responsable reçoit un mail 2
+              jours ouvrés avant
+            </div>
             <div>• @ dans un message → un seul mail à toutes les personnes taguées</div>
             <div>• Messages modifiables sans renvoi de mail</div>
             <div>• Lien des mails → ouvre la carte à la bonne étape</div>
