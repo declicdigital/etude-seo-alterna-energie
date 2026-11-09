@@ -616,6 +616,23 @@ button{ font-family: inherit; cursor:pointer; }
 .slot-name{ font-size:0.75rem; font-weight:500; color:var(--ink-60); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .slot-remove{ position:absolute; top:6px; right:6px; width:26px; height:26px; border-radius:50%; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; font-size:1rem; line-height:1; }
 .slot-remove:hover{ border-color:var(--ink); }
+.slot-note{ font-size:0.75rem; color:#92400e; background:#fef3c7; border-radius:6px; padding:4px 8px; max-width:100%; text-align:left; white-space:pre-wrap; }
+.review-images{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin:4px 0 14px; }
+.review-image{ display:flex; flex-direction:column; gap:8px; margin:0; padding:12px; border:1.5px solid var(--line); border-radius:10px; background:#fff; }
+.review-image-head{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+.review-image-size{ font-weight:700; font-size:0.95rem; }
+.review-image-dl{ font-size:0.75rem; color:var(--ink-60); text-decoration:underline; cursor:pointer; white-space:nowrap; }
+.review-image-zoom{ display:block; width:100%; padding:0; border:0; border-radius:8px; overflow:hidden; background:var(--lgreen-bg); cursor:zoom-in; }
+.review-image-zoom img{ display:block; width:100%; height:auto; max-height:320px; object-fit:contain; }
+.review-image-zoom:focus-visible{ outline:2px solid var(--blue); outline-offset:3px; }
+.review-image-name{ font-size:0.75rem; color:var(--ink-60); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.review-note{ width:100%; min-height:56px; resize:vertical; font:inherit; font-size:0.85rem; padding:8px 10px; border:1.5px solid var(--line); border-radius:8px; background:#fffdf7; color:var(--ink); }
+.review-note:focus{ outline:none; border-color:var(--ink); }
+.review-note-by{ font-size:0.7rem; color:var(--ink-60); }
+.image-lightbox{ position:fixed; inset:0; margin:0; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:24px; background:rgba(15,23,42,.86); cursor:zoom-out; }
+.image-lightbox img{ max-width:94vw; max-height:84vh; object-fit:contain; border-radius:6px; background:#fff; box-shadow:0 20px 60px rgba(0,0,0,.4); }
+.image-lightbox figcaption{ color:#fff; font-size:0.9rem; font-weight:600; text-align:center; }
+.image-lightbox button{ position:absolute; top:14px; right:16px; width:38px; height:38px; border-radius:50%; border:0; background:#fff; color:#111; font-size:1.3rem; cursor:pointer; }
 .save-indicator{
   position: fixed; bottom: 20px; right: 24px;
   font-size: 0.75rem; font-weight: 600; color: var(--ink);
@@ -1666,7 +1683,8 @@ function renderArticleCard(article){
         <div class="attachments-block">
           <label class="attachments-label">${step.key === 'integration' && !PLANETE && !EditorialPipeline.isRewrite(article, SPACE) ? 'Images validées (étape Image)' : 'Pièces jointes'}</label>
           ${isImageStep(step.key) ? renderImageSlots(article, step) : ''}
-          <div class="attachments-list">${renderAttachments(article.id, isImageStep(step.key) ? Object.assign({}, step, { attachments: (step.attachments || []).filter(a => !(imageFormat(a) && (step.attachments || []).find(x => imageFormat(x) === imageFormat(a)) === a)) }) : step)}${['relecture', 'integration'].includes(step.key) ? renderImagesReadonly(article, step.key) : ''}</div>
+          ${step.key === 'relecture' ? renderReviewImages(article) : ''}
+          <div class="attachments-list">${renderAttachments(article.id, isImageStep(step.key) ? Object.assign({}, step, { attachments: (step.attachments || []).filter(a => !(imageFormat(a) && (step.attachments || []).find(x => imageFormat(x) === imageFormat(a)) === a)) }) : step)}${step.key === 'integration' ? renderImagesReadonly(article, step.key) : ''}</div>
           <div class="attachments-add">
             <input type="text" class="attach-input" data-article-id="${article.id}" data-step-key="${step.key}" placeholder="Coller un lien ou écrire une note, puis Entrée">
             <button class="btn-ghost" data-action="add-text-attachment" data-article-id="${article.id}" data-step-key="${step.key}">Ajouter</button>
@@ -1747,6 +1765,7 @@ function renderImageSlots(article, step){
             <img loading="lazy" src="${escapeAttr(imgSrc(a))}" alt="Image ${f.label}">
           </a>
           <span class="slot-name">${escapeHtml(a.name || '')}</span>
+          ${a.note ? `<span class="slot-note">💬 Relecture${a.noteBy ? ' (' + escapeHtml(a.noteBy) + ')' : ''} : ${escapeHtml(a.note)}</span>` : ''}
           <button type="button" class="slot-remove" data-action="remove-attachment" data-article-id="${article.id}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer l'image ${f.label}" aria-label="Retirer l'image ${f.label}">×</button>`
         : `<span class="attach-image-copy"><small>Glisser l'image ici ou cliquer pour choisir</small></span>`}
         <input type="file" accept="image/*" class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" aria-label="Image ${f.label}">
@@ -1782,6 +1801,50 @@ function renderAttachments(articleId, step){
       </div>`;
   }).join('');
 }
+
+/* Relecture : les images en grand, agrandies au clic (sans téléchargement), avec un commentaire
+   par image si une modification est à faire. Le commentaire est aussi visible à l'étape Image. */
+function renderReviewImages(article){
+  const img = (article.steps || []).find(s => s.key === 'image');
+  const images = ((img && img.attachments) || []).filter(a => a.type === 'image')
+    .sort((a, b) => (IMAGE_FORMATS.findIndex(f => f.key === imageFormat(a)) + 1 || 9) - (IMAGE_FORMATS.findIndex(f => f.key === imageFormat(b)) + 1 || 9));
+  if(!images.length) return '';
+  return `<div class="review-images">${images.map(a => {
+    const fmt = IMAGE_FORMATS.find(f => f.key === imageFormat(a));
+    const label = fmt ? fmt.label : 'Image';
+    return `
+      <figure class="review-image">
+        <div class="review-image-head">
+          <span class="review-image-size">${escapeHtml(label)}</span>
+          <a class="review-image-dl" href="${escapeAttr(imgSrc(a))}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}">Télécharger</a>
+        </div>
+        <button type="button" class="review-image-zoom" data-action="zoom-image" data-src="${escapeAttr(imgSrc(a))}" data-caption="${escapeAttr(label + (a.name ? ' · ' + a.name : ''))}" aria-label="Agrandir l'image ${escapeAttr(label)}">
+          <img loading="lazy" src="${escapeAttr(imgSrc(a))}" alt="Image ${escapeAttr(label)}">
+        </button>
+        <span class="review-image-name">${escapeHtml(a.name || '')}</span>
+        <textarea class="review-note" data-action="edit-image-note" data-article-id="${escapeAttr(article.id)}" data-attach-id="${escapeAttr(a.id)}" placeholder="Une modification à faire sur cette image ? Écrivez-la ici." aria-label="Commentaire sur l'image ${escapeAttr(label)}">${escapeHtml(a.note || '')}</textarea>
+        ${a.note && a.noteBy ? `<span class="review-note-by">Commentaire de ${escapeHtml(a.noteBy)}</span>` : ''}
+      </figure>`;
+  }).join('')}</div>`;
+}
+const noteSaveTimers = {};
+function openImageLightbox(src, caption){
+  if(!src) return;
+  closeImageLightbox();
+  const box = document.createElement('figure');
+  box.className = 'image-lightbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', caption || 'Image agrandie');
+  box.innerHTML = `<button type="button" aria-label="Fermer">×</button><img src="${escapeAttr(src)}" alt="${escapeAttr(caption || 'Image')}"><figcaption>${escapeHtml(caption || '')}</figcaption>`;
+  box.addEventListener('click', closeImageLightbox);
+  document.body.appendChild(box);
+  box.querySelector('button').focus();
+}
+function closeImageLightbox(){
+  document.querySelectorAll('.image-lightbox').forEach(el => el.remove());
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeImageLightbox(); });
 
 function renderImagesReadonly(article, excludeKey){
   const images = (article.steps || [])
@@ -2002,6 +2065,12 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     return;
   }
 
+  const zoom = e.target.closest('[data-action="zoom-image"]');
+  if(zoom){
+    e.preventDefault();
+    openImageLightbox(zoom.dataset.src, zoom.dataset.caption);
+    return;
+  }
   const dl = e.target.closest('[data-action="download-attachment"]');
   if(dl){
     e.preventDefault();
@@ -2365,6 +2434,18 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
     step.date = t.value;
     await saveArticle(article);
   }
+  if(action === 'edit-image-note'){
+    const article = getArticle(t.dataset.articleId);
+    const img = article && article.steps.find(s => s.key === 'image');
+    const att = img && (img.attachments || []).find(a => a.id === t.dataset.attachId);
+    if(!att) return;
+    const note = t.value.slice(0, 2000);
+    if(note.trim()){ att.note = note; att.noteBy = currentUserName(); att.noteAt = new Date().toISOString(); }
+    else { delete att.note; delete att.noteBy; delete att.noteAt; }
+    // Enregistré après une courte pause de frappe (les articles avec images sont lourds).
+    clearTimeout(noteSaveTimers[article.id]);
+    noteSaveTimers[article.id] = setTimeout(() => saveArticle(article), 700);
+  }
   /* Deadline par étape : réservée à Geoffrey ; le rappel part le jour de la deadline. */
   if(action === 'edit-step-deadline' && canRemind){
     const article = getArticle(t.dataset.articleId);
@@ -2375,11 +2456,15 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
   }
 });
 
-const REFRESH_ON_BLUR = ['edit-assignee', 'edit-brief-link', 'edit-docx-link', 'edit-final-link', 'edit-title', 'edit-date', 'edit-step-deadline'];
+const REFRESH_ON_BLUR = ['edit-assignee', 'edit-brief-link', 'edit-docx-link', 'edit-final-link', 'edit-title', 'edit-date', 'edit-step-deadline', 'edit-image-note'];
 document.getElementById('articlesContainer').addEventListener('blur', (e) => {
   const t = e.target;
   if(t && t.classList && t.classList.contains('comment-input')){
     setTimeout(closeMentionMenu, 150);
+  }
+  if(t && t.dataset && t.dataset.action === 'edit-image-note'){
+    const a = getArticle(t.dataset.articleId);
+    if(a && noteSaveTimers[a.id]){ clearTimeout(noteSaveTimers[a.id]); delete noteSaveTimers[a.id]; saveArticle(a); }
   }
   if(t && t.dataset && REFRESH_ON_BLUR.includes(t.dataset.action)){
     renderArticles();
