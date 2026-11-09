@@ -883,6 +883,13 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
   // ——— Assistant ———
   {
     zone: "all",
+    title: "Mini-jeu Bug Buster",
+    keywords: ["jeu", "jouer", "mini-jeu", "bug buster", "pause", "s'amuser", "record", "score"],
+    answer:
+      "Bip-boup, on joue ? Dans ce chat, clique sur la manette 🎮 en haut : c'est « Bug Buster ». Déplace-moi avec ← → (ou la souris, ou le doigt) et lance des bips avec Espace (ou un clic, ou un toucher) sur les bugs avant qu'ils touchent le sol. Les ⭐ rapportent 25 points, les ☕ redonnent une vie, et tu as 3 vies. Ton record est gardé sur ton ordinateur.",
+  },
+  {
+    zone: "all",
     title: "D.I.G.I.P.O.T.E, l'assistant",
     keywords: ["digipote", "robot", "assistant", "toi", "qui es-tu", "ia"],
     answer:
