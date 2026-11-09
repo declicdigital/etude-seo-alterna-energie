@@ -1,3 +1,4 @@
+- [ ] Donner des chemins lisibles aux rubriques, sous-rubriques et fiches ; utiliser ces destinations dans les mails et conserver les anciens liens.
 - [ ] Relier et vérifier Gmail dans l'espace actuel après le nouveau déplacement du projet.
 - [ ] Relier et vérifier Brevo dans l'espace actuel après le nouveau déplacement du projet ; ne pas reprendre le diagnostic de l'ancienne connexion.
 - [x] Image (Geoffrey seul) puis Relecture (Fannie + Coraline) implémentées dans Blog et créations PAC ; expert Pro et contournement réécriture PAC conservés, historique préservé, rappels et guide adaptés ; 43 tests réussis, cases et responsables vérifiés sur les vraies cartes.

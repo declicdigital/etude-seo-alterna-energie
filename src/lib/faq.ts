@@ -1,3 +1,4 @@
+import { ficheLink } from './slugs';
 export const FAQ_CATEGORIES = [
   "Souscription",
   "Offres & contrats",
@@ -39,9 +40,8 @@ export type FaqRequest = {
   createdAt: string;
 };
 
-export function faqLink(id?: string): string {
-  const base = "https://etude-seo-alterna-energie.lovable.app/?sheet=SUIVI+FAQ";
-  return id ? `${base}#faq-${encodeURIComponent(id)}` : base;
+export function faqLink(id?: string, title?: string): string {
+  return id ? ficheLink('SUIVI FAQ', 'demandes', id, title) : 'https://etude-seo-alterna-energie.lovable.app/faq/demandes';
 }
 
 export function canValidateFaq(question: string, link: string): boolean {

@@ -73,7 +73,7 @@ export function buildStepReminder(
   return {
     recipients, label, message, introHtml, subject: `Rappel · ${label} : « ${article.title} »`,
     cta: notificationCta(kind),
-    url: editorialLink(input.articleId, input.stepKey, kind === "image" ? "images" : undefined, false, input.space),
+    url: editorialLink(input.articleId, input.stepKey, kind === "image" ? "images" : undefined, false, input.space, article.title),
     deadline: notificationDeadline(article.deadline, kind, recipients),
   };
 }

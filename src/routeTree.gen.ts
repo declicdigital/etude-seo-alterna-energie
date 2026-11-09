@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SplatRouteImport } from './routes/$'
 import { Route as AcceptInvitationRouteImport } from './routes/accept-invitation'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemandesRouteImport } from './routes/demandes'
@@ -27,6 +28,11 @@ import { Route as ApiPublicJobsMonthlyRecapRouteImport } from './routes/api/publ
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplatRoute = SplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AcceptInvitationRoute = AcceptInvitationRouteImport.update({
@@ -103,6 +109,7 @@ const ApiPublicJobsMonthlyRecapRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
   '/accept-invitation': typeof AcceptInvitationRoute
   '/auth': typeof AuthRoute
   '/demandes': typeof DemandesRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
   '/accept-invitation': typeof AcceptInvitationRoute
   '/auth': typeof AuthRoute
   '/demandes': typeof DemandesRoute
@@ -136,6 +144,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
   '/accept-invitation': typeof AcceptInvitationRoute
   '/auth': typeof AuthRoute
   '/demandes': typeof DemandesRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$'
     | '/accept-invitation'
     | '/auth'
     | '/demandes'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$'
     | '/accept-invitation'
     | '/auth'
     | '/demandes'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/$'
     | '/accept-invitation'
     | '/auth'
     | '/demandes'
@@ -203,6 +215,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SplatRoute: typeof SplatRoute
   AcceptInvitationRoute: typeof AcceptInvitationRoute
   AuthRoute: typeof AuthRoute
   DemandesRoute: typeof DemandesRoute
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/accept-invitation': {
@@ -323,6 +343,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SplatRoute: SplatRoute,
   AcceptInvitationRoute: AcceptInvitationRoute,
   AuthRoute: AuthRoute,
   DemandesRoute: DemandesRoute,

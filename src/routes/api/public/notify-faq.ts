@@ -45,7 +45,7 @@ function buildHtml(intro: string, p: z.infer<typeof BodySchema>): string {
 <p style="margin:0 0 16px;font-size:16px">${intro}</p>
 ${rows.map(([k, v]) => `<p style="margin:0 0 2px;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">${k}</p><p style="margin:0 0 12px;font-size:15px;font-weight:bold">${esc(v)}</p>`).join("")}
 ${msg}
-<a href="${faqLink(p.id)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir la demande</a>
+<a href="${faqLink(p.id, p.request.subject)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir la demande</a>
 </td></tr>
 <tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Notification automatique de Digicom. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
@@ -106,7 +106,7 @@ export const Route = createFileRoute("/api/public/notify-faq")({
           `Catégorie : ${p.request.category}`,
           p.message ? `\nCommentaire :\n${p.message}` : "",
           ``,
-          `Ouvrir la demande : ${faqLink(p.id)}`,
+          `Ouvrir la demande : ${faqLink(p.id, p.request.subject)}`,
         ].join("\r\n");
         const res = await fetch(`${GATEWAY_URL}/smtp/email`, {
           method: "POST",

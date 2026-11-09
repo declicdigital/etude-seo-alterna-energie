@@ -35,7 +35,7 @@ function buildHtml(p: { days: number; space: string; id: string; sujet: string; 
 <p style="margin:0 0 16px;font-size:16px;font-weight:bold">${esc(p.sujet)}</p>
 ${p.h1 ? `<p style="margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">Article</p><p style="margin:0 0 16px">${esc(p.h1)}</p>` : ""}
 <div style="background:#fef3c7;border-left:4px solid #d97706;padding:14px 16px;border-radius:6px;font-size:15px;line-height:1.5;margin:0 0 24px">${p.days === 0 ? `C'est <strong>aujourd'hui</strong> la deadline pour livrer l'article (<strong>${esc(p.deadline)}</strong>).` : `Il vous reste <strong>${p.days} jours</strong> pour livrer l'article (deadline : <strong>${esc(p.deadline)}</strong>).`}</div>
-<a href="${editorialLink(p.id, undefined, undefined, true, p.space)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir Digicom</a>
+<a href="${editorialLink(p.id, undefined, undefined, true, p.space, p.h1 || p.sujet)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold">Ouvrir Digicom</a>
 </td></tr>
 <tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Rappel automatique de Digicom. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
@@ -152,7 +152,7 @@ export const Route = createFileRoute("/api/public/jobs/deadline-reminders")({
             ``,
             msg.charAt(0).toUpperCase() + msg.slice(1) + ".",
             ``,
-            `Ouvrir Digicom : ${editorialLink(todo.id, undefined, undefined, true, todo.space)}`,
+            `Ouvrir Digicom : ${editorialLink(todo.id, undefined, undefined, true, todo.space, todo.h1 || todo.sujet)}`,
           ]
             .filter((l): l is string => l !== null)
             .join("\r\n");

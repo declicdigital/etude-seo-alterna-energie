@@ -56,7 +56,7 @@ function buildHtml(p: z.infer<typeof BodySchema>): string {
       ["Deadline", p.deadline],
       ["Lien du doc", p.docx],
     ],
-    cta: { label: notificationCta(p.kind), url: notificationLink(p.kind, p.articleId, p.stepKey, p.space) },
+    cta: { label: notificationCta(p.kind), url: notificationLink(p.kind, p.articleId, p.stepKey, p.space, p.h1) },
   });
 }
 
@@ -85,7 +85,7 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           return Response.json({ error: "mail_not_configured" }, { status: 500 });
         }
 
-        const appUrl = notificationLink(payload.kind, payload.articleId, payload.stepKey, payload.space);
+        const appUrl = notificationLink(payload.kind, payload.articleId, payload.stepKey, payload.space, payload.h1);
         const isImage = payload.kind === "image";
         const isRel = payload.kind === "relecture";
         const isInt = payload.kind === "integration";

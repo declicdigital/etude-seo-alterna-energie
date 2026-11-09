@@ -1966,19 +1966,16 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     if(expanded[id]) delete expanded[id]; else expanded[id] = true;
     saveExpanded();
     renderArticles();
+    window.parent.postMessage({ type:'digicom-fiche-url', id:expanded[id] ? id : null, title:getArticle(id)?.title, space:SPACE }, location.origin);
     return;
   }
 
   const copyBtn = e.target.closest('[data-action="copy-link"]');
   if(copyBtn){
     const id = copyBtn.dataset.articleId;
-    let url;
-    try {
-      const top = window.top.location;
-      url = `${top.origin}/?sheet=SUIVI%20EDITORIAL#article-${id}`;
-    } catch {
-      url = `${location.origin}${location.pathname}#article-${id}`;
-    }
+    const title = (getArticle(id)?.title || 'article').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    const rubrique = SPACE === 'strategie' ? 'strategie-pac' : SPACE === 'planete' ? 'parlons-planete' : 'blog';
+    const url = `${location.origin}/${rubrique}/suivi-editorial/articles/${title}--${encodeURIComponent(id)}`;
     try {
       await navigator.clipboard.writeText(url);
     } catch {

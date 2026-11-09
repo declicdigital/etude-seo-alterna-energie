@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
+import { sheetPath, resolvePath } from "@/lib/slugs";
 import { grantedSections, sheetAllowed } from "@/lib/sections";
 
 const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "Parlons Planète", "FAQ", "Benchmark", "Calendriers newsletters", "Organisation", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
@@ -161,7 +162,8 @@ export function SheetSidebar({
   setMetaValue: (scope: string, key: string, value: string | null) => void;
 }) {
   const search = useRouterState({ select: (r) => r.location.search }) as { sheet?: string };
-  const active = search.sheet ?? "__home";
+  const pathname = useRouterState({ select: r => r.location.pathname });
+  const active = resolvePath(pathname)?.sheet ?? search.sheet ?? "__home";
   const isKit = useRouterState({ select: (r) => r.location.pathname === "/kit-communication" });
 
   const hiddenSheets = useMemo(() => {
@@ -318,8 +320,8 @@ export function SheetSidebar({
       </div>
       <nav className="p-3 space-y-3">
         <Link
-          to="/"
-          search={{ sheet: "__home" }}
+          to="/$"
+          params={{ _splat: sheetPath("__home") }}
           className={cn(
             "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors border",
             active === "__home" && !isKit
@@ -331,8 +333,8 @@ export function SheetSidebar({
           Accueil
         </Link>
         <Link
-          to="/"
-          search={{ sheet: "__guide" }}
+          to="/$"
+          params={{ _splat: sheetPath("__guide") }}
           className={cn(
             "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors border",
             active === "__guide"
@@ -527,8 +529,8 @@ function SubGroup({
     return (
       <div className="ml-1">
         <Link
-          to="/"
-          search={{ sheet: target }}
+          to="/$"
+          params={{ _splat: sheetPath(target) }}
           className={cn(
             "w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wide transition-colors",
             isActive ? ctx.style.active : cn("text-foreground/70", ctx.style.hover),

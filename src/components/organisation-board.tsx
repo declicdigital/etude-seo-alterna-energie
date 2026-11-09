@@ -11,6 +11,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { fichePath, sheetPath } from "@/lib/slugs";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -193,13 +194,13 @@ export function OrganisationBoard({
     window.history.replaceState(
       null,
       "",
-      `${window.location.pathname}${window.location.search}${cardHash(id)}`,
+      `/${fichePath("ORGANISATION", "fiches", id, cardsRef.current.find(c => c.id === id)?.title)}`,
     );
   }
   function closeCard() {
     setOpenId(null);
     setNotice(null);
-    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    window.history.replaceState(null, "", `/${sheetPath("ORGANISATION")}`);
   }
 
   async function updateCard(id: string, patch: CardPatch): Promise<boolean> {

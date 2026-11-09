@@ -3,6 +3,7 @@ import { z } from "zod";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { authenticateRequest } from "@/lib/route-auth.server";
 import { cardHash, excerpt, ORGANISATION_SHEET } from "@/lib/organisation";
+import { ficheLink } from '@/lib/slugs';
 
 /**
  * Prévient par mail les personnes nouvellement assignées ou taguées sur une
@@ -22,8 +23,8 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-function cardLink(cardId: string): string {
-  return `${APP}?sheet=${encodeURIComponent(ORGANISATION_SHEET)}${cardHash(cardId)}`;
+function cardLink(cardId: string, title: string): string {
+  return ficheLink(ORGANISATION_SHEET, 'fiches', cardId, title);
 }
 
 function formatDue(iso: string | null): string | null {
@@ -132,7 +133,7 @@ export const Route = createFileRoute("/api/public/notify-organisation")({
         const column = (card.org_columns as { title: string } | null)?.title ?? "";
         const due = formatDue(card.due_date);
         const preview = excerpt(card.content, 400);
-        const link = cardLink(card.id);
+        const link = cardLink(card.id, card.title);
 
         let sent = 0;
         for (const person of people ?? []) {

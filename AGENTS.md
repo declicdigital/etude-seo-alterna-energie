@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 
 - Editorial attachment selection and drag-and-drop use the same upload handler in the embedded editorial page, so validation and persistence remain consistent.
-- Editorial email destinations use the shared editorial-links module and article/todo hash targets; the embedded page collapses other cards and opens the selected step and area, and sign-in preserves the destination to keep mail links targeted.
+- Canonical rubrique and fiche paths use the shared slugs module and a TanStack splat route; editorial-links translates mail paths into internal iframe targets, preserving legacy destinations and sign-in return paths so links stay targeted.
 - Article notifications apply recipient-specific field filtering before rendering either HTML or plain text, so both formats respect the same disclosure rules.
 - Embedded editorial workflows use the shared browser-safe public pipeline module to normalize split steps and audience/type transitions; archive legacy combined steps, preserve actual dates and publication history, and restore removed steps on reversible type changes.
 - Step completion uses the shared pipeline helper and explicitly supplied per-step dates, including separate todo brief/writing dates; never overwrite an entered date; only when a step (or a todo saved with just its doc link) has no date does validation stamp today's date, as requested by the user.
