@@ -1,6 +1,5 @@
 import {
   useEffect,
-  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -27,200 +26,136 @@ const SUGGESTIONS = [
 const GLASS =
   "border border-white/60 bg-white/40 shadow-[0_18px_50px_-12px_rgba(15,40,35,0.35),inset_0_1px_0_rgba(255,255,255,0.85),inset_0_-1px_0_rgba(255,255,255,0.25)] backdrop-blur-2xl backdrop-saturate-[1.8] dark:border-white/15 dark:bg-slate-900/45 dark:shadow-[0_18px_50px_-12px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.12)]";
 
-/** Coque blanche brillante, visière sombre et yeux lumineux : partagés par l'avatar et le grand robot. */
-function RobotDefs({ id }: { id: string }) {
+/**
+ * Tête de verre : coque translucide (on voit la page floutée à travers), écran fumé,
+ * yeux lumineux et petits capteurs latéraux. Dessinée à 92×62 px puis mise à l'échelle.
+ */
+function GlassHead({ eyesRef }: { eyesRef?: Ref<HTMLDivElement> }) {
   return (
-    <defs>
-      <linearGradient id={`${id}-shell`} x1="0" y1="0" x2="0.3" y2="1">
-        <stop offset="0" stopColor="#ffffff" />
-        <stop offset="0.6" stopColor="#eef2f7" />
-        <stop offset="1" stopColor="#cbd5e1" />
-      </linearGradient>
-      <linearGradient id={`${id}-visor`} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#0f172a" />
-        <stop offset="1" stopColor="#134e4a" />
-      </linearGradient>
-      <linearGradient id={`${id}-accent`} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#34d399" />
-        <stop offset="1" stopColor="#0ea5e9" />
-      </linearGradient>
-      <radialGradient id={`${id}-jet`} cx="0.5" cy="0.3" r="0.7">
-        <stop offset="0" stopColor="#a7f3d0" stopOpacity="0.95" />
-        <stop offset="0.45" stopColor="#2dd4bf" stopOpacity="0.55" />
-        <stop offset="1" stopColor="#0ea5e9" stopOpacity="0" />
-      </radialGradient>
-      <filter id={`${id}-glow`} x="-60%" y="-60%" width="220%" height="220%">
-        <feGaussianBlur stdDeviation="1.6" result="b" />
-        <feMerge>
-          <feMergeNode in="b" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
-    </defs>
+    <div className="dg-glass absolute left-0 top-0 h-[62px] w-[92px] rounded-[26px]">
+      <span aria-hidden className="dg-sheen" />
+      <span aria-hidden className="dg-ear left-[-5px]" />
+      <span aria-hidden className="dg-ear right-[-5px]" />
+      <div className="dg-screen absolute inset-[8px] rounded-[18px]">
+        <div ref={eyesRef} className="dg-face absolute inset-0">
+          <span className="dg-eye left-[22px]" />
+          <span className="dg-eye right-[22px]" />
+          <span className="dg-mouth" />
+        </div>
+      </div>
+    </div>
   );
 }
 
-/** Tête du robot (avatar du chat). */
-function RobotFace({ className }: { className?: string }) {
-  const id = useId().replace(/:/g, "");
+/** Avatar du chat : la même tête de verre en miniature (size en px). */
+function RobotFace({ size, className }: { size: number; className?: string }) {
   return (
-    <svg viewBox="0 0 48 48" aria-hidden="true" className={className}>
-      <RobotDefs id={id} />
-      <line x1="24" y1="4.5" x2="24" y2="10" stroke="#94a3b8" strokeWidth="1.6" />
-      <circle cx="24" cy="4.5" r="2.6" fill={`url(#${id}-accent)`} />
-      <rect x="2.5" y="21" width="5" height="10" rx="2.5" fill={`url(#${id}-accent)`} />
-      <rect x="40.5" y="21" width="5" height="10" rx="2.5" fill={`url(#${id}-accent)`} />
-      <rect
-        x="5.5"
-        y="10"
-        width="37"
-        height="32"
-        rx="14"
-        fill={`url(#${id}-shell)`}
-        stroke="#fff"
-      />
-      <rect x="10" y="15.5" width="28" height="20" rx="9.5" fill={`url(#${id}-visor)`} />
-      <g className="dg-blink" filter={`url(#${id}-glow)`}>
-        <rect x="16" y="20.5" width="4.4" height="6.5" rx="2.2" fill="#5eead4" />
-        <rect x="27.6" y="20.5" width="4.4" height="6.5" rx="2.2" fill="#5eead4" />
-      </g>
-      <path
-        d="M21 30.5q3 2.2 6 0"
-        stroke="#5eead4"
-        strokeWidth="1.5"
-        fill="none"
-        strokeLinecap="round"
-      />
-    </svg>
+    <span
+      aria-hidden
+      className={cn("relative inline-block shrink-0", className)}
+      style={{ width: size, height: size }}
+    >
+      <span
+        className="absolute left-1/2 top-1/2 block h-[62px] w-[92px]"
+        style={{ transform: `translate(-50%, -50%) scale(${(size / 96).toFixed(3)})` }}
+      >
+        <GlassHead />
+      </span>
+    </span>
   );
 }
 
-/** Le petit robot flottant (bouton d'ouverture) : il plane, cligne des yeux, regarde la souris et fait coucou. */
-function FloatingRobot({ eyesRef }: { eyesRef: Ref<SVGGElement> }) {
-  const id = useId().replace(/:/g, "");
+/**
+ * Le robot flottant : tête et corps de verre détachés, cœur d'énergie qui tourne,
+ * anneau orbital, mains flottantes (la droite fait coucou), regard qui suit le pointeur.
+ */
+function FloatingRobot({ eyesRef }: { eyesRef: Ref<HTMLDivElement> }) {
   return (
-    <svg viewBox="0 0 120 140" aria-hidden="true" className="h-full w-full overflow-visible">
-      <RobotDefs id={id} />
-      {/* réacteur sous le robot */}
-      <ellipse className="dg-jet" cx="60" cy="131" rx="15" ry="9" fill={`url(#${id}-jet)`} />
-      {/* antenne */}
-      <line
-        x1="60"
-        y1="13"
-        x2="60"
-        y2="28"
-        stroke="#94a3b8"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-      <circle
-        className="dg-antenna"
-        cx="60"
-        cy="11"
-        r="6"
-        fill={`url(#${id}-accent)`}
-        filter={`url(#${id}-glow)`}
-      />
-      {/* bras gauche */}
-      <g>
-        <rect
-          x="21"
-          y="93"
-          width="11"
-          height="22"
-          rx="5.5"
-          fill={`url(#${id}-shell)`}
-          stroke="#e2e8f0"
-          transform="rotate(14 27 95)"
-        />
-        <circle cx="23" cy="117" r="5.5" fill={`url(#${id}-accent)`} />
-      </g>
-      {/* bras droit qui fait coucou */}
-      <g className="dg-wave">
-        <rect
-          x="88"
-          y="93"
-          width="11"
-          height="22"
-          rx="5.5"
-          fill={`url(#${id}-shell)`}
-          stroke="#e2e8f0"
-          transform="rotate(-14 93 95)"
-        />
-        <circle cx="97" cy="117" r="5.5" fill={`url(#${id}-accent)`} />
-      </g>
-      {/* corps */}
-      <rect x="51" y="82" width="18" height="8" rx="3" fill="#cbd5e1" />
-      <rect
-        x="35"
-        y="87"
-        width="50"
-        height="38"
-        rx="19"
-        fill={`url(#${id}-shell)`}
-        stroke="#fff"
-        strokeWidth="1.5"
-      />
-      <ellipse cx="50" cy="96" rx="9" ry="4" fill="#fff" opacity=".8" />
-      <circle
-        className="dg-core"
-        cx="60"
-        cy="106"
-        r="6"
-        fill={`url(#${id}-accent)`}
-        filter={`url(#${id}-glow)`}
-      />
-      {/* oreilles */}
-      <rect x="11" y="44" width="11" height="24" rx="5.5" fill={`url(#${id}-accent)`} />
-      <rect x="98" y="44" width="11" height="24" rx="5.5" fill={`url(#${id}-accent)`} />
-      {/* tête */}
-      <rect
-        x="18"
-        y="26"
-        width="84"
-        height="60"
-        rx="28"
-        fill={`url(#${id}-shell)`}
-        stroke="#fff"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M34 34q14-6 34-3"
-        stroke="#fff"
-        strokeWidth="4"
-        strokeLinecap="round"
-        fill="none"
-        opacity=".9"
-      />
-      {/* visière */}
-      <rect x="27" y="38" width="66" height="40" rx="19" fill={`url(#${id}-visor)`} />
-      <path
-        d="M35 44q12-4 26-3"
-        stroke="#fff"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        fill="none"
-        opacity=".18"
-      />
-      <g ref={eyesRef} style={{ transition: "transform .18s ease-out" }}>
-        <g className="dg-blink" filter={`url(#${id}-glow)`}>
-          <rect x="42" y="49" width="10" height="14" rx="5" fill="#5eead4" />
-          <rect x="68" y="49" width="10" height="14" rx="5" fill="#5eead4" />
-        </g>
-        <path
-          d="M53 68q7 5.5 14 0"
-          stroke="#5eead4"
-          strokeWidth="2.6"
-          fill="none"
-          strokeLinecap="round"
-          filter={`url(#${id}-glow)`}
-        />
-        <ellipse cx="37" cy="66" rx="4.5" ry="2.4" fill="#f472b6" opacity=".55" />
-        <ellipse cx="83" cy="66" rx="4.5" ry="2.4" fill="#f472b6" opacity=".55" />
-      </g>
-    </svg>
+    <span className="absolute left-1/2 top-0 block h-[132px] w-[108px] origin-top [transform:translateX(-50%)_scale(var(--dg-s,1))]">
+      <span aria-hidden className="dg-aura" />
+      <span aria-hidden className="dg-spark" />
+      <span className="absolute left-[8px] top-[16px] block h-[62px] w-[92px]">
+        <GlassHead eyesRef={eyesRef} />
+      </span>
+      {/* corps : anneau arrière, sphère de verre, cœur, anneau avant */}
+      <span aria-hidden className="dg-ring dg-ring-back" />
+      <span aria-hidden className="dg-glass dg-body">
+        <span className="dg-sheen" />
+        <span className="dg-core" />
+      </span>
+      <span aria-hidden className="dg-ring dg-ring-front" />
+      <span aria-hidden className="dg-glass dg-hand dg-hand-l" />
+      <span aria-hidden className="dg-glass dg-hand dg-hand-r" />
+    </span>
   );
 }
+
+const ROBOT_CSS = `
+  .dg-glass {
+    background: linear-gradient(140deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.16) 46%, rgba(167,243,208,.14) 100%);
+    border: 1px solid rgba(255,255,255,.75);
+    -webkit-backdrop-filter: blur(9px) saturate(1.7);
+    backdrop-filter: blur(9px) saturate(1.7);
+    box-shadow: inset 0 1.5px 1px rgba(255,255,255,.95), inset 0 -10px 18px rgba(20,184,166,.16),
+      inset 0 0 0 1px rgba(255,255,255,.12), 0 14px 28px -12px rgba(15,40,35,.38);
+  }
+  .dark .dg-glass { background: linear-gradient(140deg, rgba(255,255,255,.28), rgba(255,255,255,.06) 50%, rgba(45,212,191,.1)); border-color: rgba(255,255,255,.3); }
+  .dg-sheen { position:absolute; left:12%; top:7%; width:46%; height:22%; border-radius:999px; pointer-events:none;
+    background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,0)); filter: blur(.4px); }
+  .dg-screen { background: linear-gradient(165deg, rgba(10,18,36,.84), rgba(17,72,70,.74)); overflow:hidden;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,.45), inset 0 -1px 0 rgba(94,234,212,.25), 0 0 0 1px rgba(255,255,255,.25); }
+  .dg-screen::after { content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+    background: linear-gradient(115deg, rgba(255,255,255,.16) 0 28%, transparent 28.5%); }
+  .dg-face { transition: transform .2s ease-out; }
+  .dg-eye { position:absolute; top:11px; width:9px; height:15px; border-radius:6px; background:#7ef7e4;
+    box-shadow: 0 0 6px #2dd4bf, 0 0 14px rgba(45,212,191,.75); animation: dg-blink 4.6s infinite;
+    transition: height .2s, top .2s, border-radius .2s; }
+  .dg-mouth { position:absolute; left:50%; bottom:8px; width:12px; height:5px; margin-left:-6px; border-radius:0 0 8px 8px;
+    border:2px solid #7ef7e4; border-top:0; box-shadow: 0 3px 8px -2px rgba(45,212,191,.8); transition: width .2s, margin .2s; }
+  .dg-bot:hover .dg-eye, .dg-bot:focus-visible .dg-eye { height:7px; top:15px; border-radius:8px 8px 2px 2px; animation:none; }
+  .dg-bot:hover .dg-mouth, .dg-bot:focus-visible .dg-mouth { width:16px; margin-left:-8px; }
+  .dg-ear { position:absolute; top:20px; width:6px; height:22px; border-radius:4px;
+    background: linear-gradient(180deg, #5eead4, #38bdf8); box-shadow: 0 0 10px rgba(56,189,248,.7); }
+  .dg-aura { position:absolute; left:50%; top:52%; width:96px; height:96px; margin:-48px 0 0 -48px; border-radius:50%;
+    background: radial-gradient(circle, rgba(45,212,191,.42), rgba(56,189,248,.22) 45%, transparent 70%); filter: blur(10px);
+    animation: dg-pulse 3.4s ease-in-out infinite; }
+  .dg-spark { position:absolute; left:50%; top:0; width:9px; height:9px; margin-left:-4.5px; border-radius:50%;
+    background: radial-gradient(circle at 35% 35%, #fff, #5eead4 45%, #0ea5e9);
+    box-shadow: 0 0 10px #2dd4bf, 0 0 20px rgba(14,165,233,.6); animation: dg-spark 2.6s ease-in-out infinite; }
+  .dg-body { position:absolute; left:50%; top:84px; width:44px; height:44px; margin-left:-22px; border-radius:50%; overflow:hidden; }
+  .dg-core { position:absolute; left:50%; top:50%; width:20px; height:20px; margin:-10px 0 0 -10px; border-radius:50%;
+    background: conic-gradient(from 0deg, #34d399, #38bdf8, #a78bfa, #34d399); filter: blur(1.5px);
+    box-shadow: 0 0 14px rgba(45,212,191,.9); animation: dg-spin 3s linear infinite; }
+  .dg-ring { position:absolute; left:50%; top:100px; width:76px; height:16px; margin-left:-38px; border-radius:50%;
+    border:2px solid rgba(94,234,212,.75); filter: drop-shadow(0 0 4px rgba(45,212,191,.7)); }
+  .dg-ring-back { clip-path: inset(0 0 50% 0); opacity:.55; }
+  .dg-ring-front { clip-path: inset(50% 0 0 0); }
+  .dg-hand { position:absolute; top:96px; width:15px; height:15px; border-radius:50%; }
+  .dg-hand-l { left:4px; animation: dg-hand 3.4s ease-in-out .4s infinite; }
+  .dg-hand-r { right:4px; animation: dg-wave 7s ease-in-out 1.2s infinite; }
+  .dg-bot:hover .dg-hand-r { animation-duration: 2.2s; animation-delay: 0s; }
+
+  @keyframes dg-hover { 0%,100% { transform: translateY(0) rotate(-1.5deg) } 50% { transform: translateY(-9px) rotate(1.5deg) } }
+  @keyframes dg-shadow { 0%,100% { transform: scaleX(1); opacity: .45 } 50% { transform: scaleX(.7); opacity: .2 } }
+  @keyframes dg-blink { 0%,93%,100% { transform: scaleY(1) } 96% { transform: scaleY(.1) } }
+  @keyframes dg-wave { 0%,62%,100% { transform: translate(0,0) } 67% { transform: translate(6px,-44px) } 71% { transform: translate(12px,-40px) }
+    75% { transform: translate(4px,-46px) } 79% { transform: translate(12px,-40px) } 83% { transform: translate(4px,-46px) } 92% { transform: translate(0,0) } }
+  @keyframes dg-hand { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
+  @keyframes dg-spark { 0%,100% { transform: translateY(0); opacity: 1 } 50% { transform: translateY(-4px); opacity: .6 } }
+  @keyframes dg-spin { to { transform: rotate(360deg) } }
+  @keyframes dg-pulse { 0%,100% { opacity: 1 } 50% { opacity: .6 } }
+  @keyframes dg-pop { from { opacity: 0; transform: translateY(14px) scale(.97) } to { opacity: 1; transform: none } }
+  @keyframes dg-bubble { from { opacity: 0; transform: translateX(10px) scale(.9) } to { opacity: 1; transform: none } }
+  @keyframes dg-dot { 0%,80%,100% { opacity: .25; transform: translateY(0) } 40% { opacity: 1; transform: translateY(-3px) } }
+  .dg-hover { animation: dg-hover 3.4s ease-in-out infinite; }
+  .dg-shadow { animation: dg-shadow 3.4s ease-in-out infinite; }
+  .dg-pop { animation: dg-pop .28s cubic-bezier(.2,.8,.2,1); }
+  .dg-bubble { animation: dg-bubble .35s cubic-bezier(.2,.8,.2,1) .6s both; }
+  .dg-dot { animation: dg-dot 1.1s infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .dg-eye, .dg-hover, .dg-shadow, .dg-hand, .dg-spark, .dg-core, .dg-aura, .dg-pop, .dg-bubble, .dg-dot { animation: none }
+  }
+`;
 
 /** Texte de réponse : gras **…**, listes et liens [libellé](/chemin) transformés en boutons de navigation. */
 function MessageText({ text, onGo }: { text: string; onGo: (path: string) => void }) {
@@ -299,7 +234,7 @@ export function DigicomAssistant({
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const botRef = useRef<HTMLButtonElement>(null);
-  const eyesRef = useRef<SVGGElement>(null);
+  const eyesRef = useRef<HTMLDivElement>(null);
 
   // Le robot suit le pointeur du regard.
   useEffect(() => {
@@ -393,28 +328,7 @@ export function DigicomAssistant({
 
   return (
     <>
-      <style>{`
-        @keyframes dg-hover { 0%,100% { transform: translateY(0) rotate(-1.5deg) } 50% { transform: translateY(-9px) rotate(1.5deg) } }
-        @keyframes dg-shadow { 0%,100% { transform: scaleX(1); opacity: .45 } 50% { transform: scaleX(.72); opacity: .22 } }
-        @keyframes dg-blink { 0%,93%,100% { transform: scaleY(1) } 96% { transform: scaleY(.1) } }
-        @keyframes dg-wave { 0%,62%,100% { transform: rotate(0) } 68% { transform: rotate(-150deg) } 73% { transform: rotate(-115deg) } 78% { transform: rotate(-150deg) } 83% { transform: rotate(-115deg) } 88% { transform: rotate(-150deg) } 94% { transform: rotate(0) } }
-        @keyframes dg-jet { 0%,100% { opacity: .9; transform: scale(1) } 50% { opacity: .55; transform: scale(.82, .7) } }
-        @keyframes dg-pulse { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
-        @keyframes dg-pop { from { opacity: 0; transform: translateY(14px) scale(.97) } to { opacity: 1; transform: none } }
-        @keyframes dg-bubble { from { opacity: 0; transform: translateX(10px) scale(.9) } to { opacity: 1; transform: none } }
-        @keyframes dg-dot { 0%,80%,100% { opacity: .25; transform: translateY(0) } 40% { opacity: 1; transform: translateY(-3px) } }
-        .dg-blink { transform-box: fill-box; transform-origin: center; animation: dg-blink 4.5s infinite; }
-        .dg-hover { animation: dg-hover 3.4s ease-in-out infinite; }
-        .dg-shadow { animation: dg-shadow 3.4s ease-in-out infinite; }
-        .dg-wave { transform-box: view-box; transform-origin: 93px 95px; animation: dg-wave 7s ease-in-out 1.2s infinite; }
-        .dg-jet { transform-box: fill-box; transform-origin: center top; animation: dg-jet .7s ease-in-out infinite; }
-        .dg-antenna, .dg-core { animation: dg-pulse 1.8s ease-in-out infinite; }
-        .dg-bot:hover .dg-wave, .dg-bot:focus-visible .dg-wave { animation-duration: 2.2s; animation-delay: 0s; }
-        .dg-pop { animation: dg-pop .28s cubic-bezier(.2,.8,.2,1); }
-        .dg-bubble { animation: dg-bubble .35s cubic-bezier(.2,.8,.2,1) .6s both; }
-        .dg-dot { animation: dg-dot 1.1s infinite; }
-        @media (prefers-reduced-motion: reduce) { .dg-blink, .dg-hover, .dg-shadow, .dg-wave, .dg-jet, .dg-antenna, .dg-core, .dg-pop, .dg-bubble, .dg-dot { animation: none } }
-      `}</style>
+      <style>{ROBOT_CSS}</style>
 
       {open && (
         <section
@@ -437,7 +351,7 @@ export function DigicomAssistant({
           />
 
           <header className="relative flex items-center gap-3 border-b border-white/50 px-4 py-3 dark:border-white/10">
-            <RobotFace className="size-10 drop-shadow-md" />
+            <RobotFace size={42} />
             <div className="min-w-0 flex-1">
               <div className="text-[15px] font-semibold leading-tight">Assistant Digicom</div>
               <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
@@ -463,7 +377,7 @@ export function DigicomAssistant({
             {msgs.map((m, i) =>
               m.role === "assistant" ? (
                 <div key={i} className="flex items-end gap-2">
-                  <RobotFace className="size-7 shrink-0" />
+                  <RobotFace size={30} />
                   <div className="max-w-[85%] rounded-[20px] rounded-bl-md border border-white/70 bg-white/70 px-3.5 py-2.5 text-[14px] leading-relaxed shadow-sm dark:border-white/10 dark:bg-white/10">
                     <MessageText text={m.content} onGo={go} />
                   </div>
@@ -478,7 +392,7 @@ export function DigicomAssistant({
             )}
             {busy && (
               <div className="flex items-end gap-2" aria-label="L'assistant écrit">
-                <RobotFace className="size-7 shrink-0" />
+                <RobotFace size={30} />
                 <div className="flex gap-1 rounded-[20px] rounded-bl-md border border-white/70 bg-white/70 px-4 py-3.5 dark:border-white/10 dark:bg-white/10">
                   {[0, 1, 2].map((d) => (
                     <span
@@ -544,7 +458,7 @@ export function DigicomAssistant({
       {!open && (
         <div className="fixed bottom-3 right-3 z-[60] flex items-end gap-1 sm:bottom-5 sm:right-5 print:hidden">
           {hint && (
-            <div className="dg-bubble relative -mr-2 mb-[52px] sm:mb-[62px]">
+            <div className="dg-bubble relative -mr-1 mb-[70px] sm:mb-[84px]">
               <button
                 type="button"
                 onClick={() => setOpen(true)}
@@ -586,13 +500,13 @@ export function DigicomAssistant({
             onClick={() => setOpen(true)}
             aria-label="Ouvrir l'assistant Digicom : as-tu besoin d'aide ?"
             title="As-tu besoin d'aide ?"
-            className="dg-bot relative h-[104px] w-[90px] shrink-0 rounded-3xl outline-none transition-transform duration-200 hover:scale-[1.06] focus-visible:ring-2 focus-visible:ring-emerald-500/60 sm:h-[124px] sm:w-[108px]"
+            className="dg-bot relative h-[124px] w-[94px] shrink-0 rounded-3xl outline-none transition-transform duration-200 [--dg-s:0.86] hover:scale-[1.05] focus-visible:ring-2 focus-visible:ring-emerald-500/60 sm:h-[146px] sm:w-[110px] sm:[--dg-s:1]"
           >
             <span
               aria-hidden
               className="dg-shadow absolute bottom-0 left-1/2 -ml-[22px] h-2.5 w-11 rounded-[50%] bg-slate-900/30 blur-[3px] dark:bg-black/60"
             />
-            <span className="dg-hover absolute inset-x-0 bottom-3 top-0 block drop-shadow-[0_10px_14px_rgba(15,40,35,0.28)]">
+            <span className="dg-hover absolute inset-0 block">
               <FloatingRobot eyesRef={eyesRef} />
             </span>
           </button>
