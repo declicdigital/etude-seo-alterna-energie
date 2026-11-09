@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { APP_ORIGIN, LEGACY_HOSTS } from "@/lib/app-url";
 
 function NotFoundComponent() {
   return (
@@ -106,6 +107,12 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        {/* Former address: the browser jumps to the same page on the new one, #anchor included. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if(${JSON.stringify(LEGACY_HOSTS)}.indexOf(location.hostname)>-1)location.replace(${JSON.stringify(APP_ORIGIN)}+location.pathname+location.search+location.hash)`,
+          }}
+        />
         <HeadContent />
       </head>
       <body>

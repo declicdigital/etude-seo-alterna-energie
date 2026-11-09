@@ -36,3 +36,20 @@ describe("rubriques visibles (accueil et guide)", () => {
     expect(nl?.entry).toBe("NEWSLETTER INTERNE");
   });
 });
+
+describe("ancienne adresse", () => {
+  it("renvoie chaque page vers la même page sur la nouvelle adresse", async () => {
+    const { legacyRedirect } = await import("@/lib/app-url");
+    expect(
+      legacyRedirect(
+        "https://etude-seo-alterna-energie.lovable.app/blog/suivi-editorial/articles/x--id?step=relecture",
+      ),
+    ).toBe(
+      "https://digicom-alterna-energie.lovable.app/blog/suivi-editorial/articles/x--id?step=relecture",
+    );
+    expect(legacyRedirect("https://etude-seo-alterna-energie.lovable.app/")).toBe(
+      "https://digicom-alterna-energie.lovable.app/",
+    );
+    expect(legacyRedirect("https://digicom-alterna-energie.lovable.app/blog")).toBeNull();
+  });
+});
