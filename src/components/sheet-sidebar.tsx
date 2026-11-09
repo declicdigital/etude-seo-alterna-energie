@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Archive, ArchiveRestore, BookOpen, FolderDown, Home, ChevronDown, ChevronRight, GripVertical, Minus, Plus, Trash2, RotateCcw } from "lucide-react";
+import { Archive, ArchiveRestore, BookOpen, Bot, FolderDown, Home, ChevronDown, ChevronRight, GripVertical, Minus, Plus, Trash2, RotateCcw } from "lucide-react";
 import { SHEET_META, sheetNames } from "@/lib/workbook";
 import { cn } from "@/lib/utils";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
@@ -156,8 +156,11 @@ export function SheetSidebar({
   meta,
   setMetaValue,
   allowed = null,
+  showDigipote = false,
 }: {
   allowed?: string[] | null;
+  /** Geoffrey uniquement : historique des questions posées à D.I.G.I.P.O.T.E. */
+  showDigipote?: boolean;
   meta: MetaMap;
   setMetaValue: (scope: string, key: string, value: string | null) => void;
 }) {
@@ -348,6 +351,20 @@ export function SheetSidebar({
         <Link to="/kit-communication" className={cn("flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors border", isKit ? "bg-primary/10 text-primary border-primary/40" : "border-transparent text-foreground/80 hover:bg-primary/5 hover:text-primary")}>
           <FolderDown className="size-4" /> Kit de communication
         </Link>
+        {showDigipote && (
+          <Link
+            to="/$"
+            params={{ _splat: sheetPath("__digipote") }}
+            className={cn(
+              "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors border",
+              active === "__digipote"
+                ? "bg-primary/10 text-primary border-primary/40"
+                : "border-transparent text-foreground/80 hover:bg-primary/5 hover:text-primary",
+            )}
+          >
+            <Bot className="size-4" /> Digipote
+          </Link>
+        )}
         {order.filter((g) => groups[g]?.length).map((g) => {
           const style = GROUP_STYLES[g] ?? FALLBACK_STYLE;
           return (

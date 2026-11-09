@@ -32,6 +32,7 @@ import { Link } from "@tanstack/react-router";
 import type { Access } from "@/lib/access";
 import { sheetPath, fichePath } from "@/lib/slugs";
 import { DigicomAssistant } from "@/components/digicom-assistant";
+import { DigipoteView } from "@/components/digipote-view";
 
 const NEWSLETTER_BY_SHEET: Record<string, NewsletterCalendar> = {
   [NEWSLETTER_INTERNE]: INTERNE,
@@ -42,9 +43,12 @@ const NEWSLETTER_BY_SHEET: Record<string, NewsletterCalendar> = {
 export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetParam?: string; access: Access; targetHash?: string }) {
   const navigate = useNavigate();
   const valid = sheetParam && sheetNames.includes(baseSheetOf(sheetParam)) && sheetAllowed(sheetParam, access.allowedSections);
-  const isHome = !valid && sheetParam !== "__guide";
-  const isGuide = sheetParam === "__guide" || isHome;
-  const sheet = sheetParam === "__guide" ? "__guide" : isHome ? "__home" : (sheetParam ?? "__home");
+  // « Digipote » : historique des questions posées au robot, réservé à Geoffrey.
+  const canSeeDigipote = canSendStepReminder(access.isAdmin, access.email);
+  const isDigipote = sheetParam === "__digipote" && canSeeDigipote;
+  const isHome = !valid && sheetParam !== "__guide" && !isDigipote;
+  const isGuide = sheetParam === "__guide" || isHome || isDigipote;
+  const sheet = isDigipote ? "__digipote" : sheetParam === "__guide" ? "__guide" : isHome ? "__home" : (sheetParam ?? "__home");
   const [selected, setSelected] = useState<number | null>(null);
   const { edits, setCell, deleteRow, loading } = useEdits();
   const { meta: metaOverrides, setMetaValue } = useMeta();
@@ -79,13 +83,13 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
 
   const sheetInfo = SHEET_META[baseSheetOf(sheet)];
   const gc = isGuide ? groupColorForSheet("Structure RES") : groupColorForSheet(sheet);
-  const groupName = isGuide ? "Guide" : (sheetInfo?.group ?? "Feuille");
+  const groupName = isDigipote ? "Digipote" : isGuide ? "Guide" : (sheetInfo?.group ?? "Feuille");
   const groupLabel = metaGet(metaOverrides, "group", groupName, groupName);
   const baseSheet = baseSheetOf(sheet);
   const scope = sheet.includes("::") ? sheet.split("::")[1] : null;
   const baseLabel = metaGet(metaOverrides, "sheet", baseSheet, sheetInfo?.label ?? baseSheet);
   const scopeLabel = scope ? scope.replace("/", " › ") : "";
-  const sheetLabel = isHome ? "Accueil" : isGuide
+  const sheetLabel = isDigipote ? "Digipote" : isHome ? "Accueil" : isGuide
     ? "Guide de l'outil"
     : scope
       ? `${baseLabel} — ${scopeLabel}`
@@ -180,7 +184,7 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  const sidebar = <SheetSidebar allowed={access.allowedSections} meta={metaOverrides} setMetaValue={setMetaValue} />;
+  const sidebar = <SheetSidebar allowed={access.allowedSections} meta={metaOverrides} setMetaValue={setMetaValue} showDigipote={canSeeDigipote} />;
 
   const detailPanel = selected != null && !isGuide ? (
     <DetailPanel
@@ -273,6 +277,8 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
             <p className="text-lg font-semibold">Vous n'avez pas les accès pour le moment.</p>
             <p className="text-sm text-muted-foreground">Seule la section Blog est disponible.</p>
           </div>
+        ) : isDigipote ? (
+          <DigipoteView onNavigate={(path) => void navigate({ href: path })} />
         ) : isHome ? (
           <HomeView allowed={access.allowedSections} onOpenSheet={(s) => navigate({ to: "/$", params: { _splat: sheetPath(s) } })} />
         ) : isGuide ? (
@@ -385,6 +391,7 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
         isAdmin={access.isAdmin}
         page={sheetLabel}
         onNavigate={(path) => void navigate({ href: path })}
+        canSeeDigipote={canSeeDigipote}
       />
     </div>
   );

@@ -70,6 +70,9 @@ export type Database = {
       }
       assistant_questions: {
         Row: {
+          correction: string | null
+          corrected_at: string | null
+          unanswered: boolean
           created_at: string
           id: string
           page: string | null
@@ -81,6 +84,9 @@ export type Database = {
           user_name: string | null
         }
         Insert: {
+          correction?: string | null
+          corrected_at?: string | null
+          unanswered?: boolean
           created_at?: string
           id?: string
           page?: string | null
@@ -92,6 +98,9 @@ export type Database = {
           user_name?: string | null
         }
         Update: {
+          correction?: string | null
+          corrected_at?: string | null
+          unanswered?: boolean
           created_at?: string
           id?: string
           page?: string | null
@@ -351,6 +360,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assistant_corrections: {
+        Args: never
+        Returns: {
+          correction: string
+          question: string
+        }[]
+      }
       admin_access_activity: {
         Args: never
         Returns: {

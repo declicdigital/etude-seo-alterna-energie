@@ -16,6 +16,7 @@ import {
 } from "./assistant-stats";
 import { buildEditsMap, type CellEdit } from "./workbook";
 import type { FaqRequest } from "./faq";
+import { GEOFFREY_EMAIL } from "./step-reminders";
 
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 /** Premier modèle disponible utilisé ; les suivants servent si un identifiant est refusé. */
@@ -34,7 +35,8 @@ export type AssistantReply =
   | { ok: true; reply: string; unanswered: boolean }
   | { ok: false; reason: "ai_unavailable" | "forbidden" };
 
-export type UnansweredQuestion = {
+/** Un échange enregistré dans « Digipote ». */
+export type AssistantExchange = {
   id: string;
   created_at: string;
   user_name: string | null;
@@ -42,6 +44,10 @@ export type UnansweredQuestion = {
   reply: string | null;
   page: string | null;
   source: string;
+  unanswered: boolean;
+  correction: string | null;
+  corrected_at: string | null;
+  resolved_at: string | null;
 };
 
 type Ctx = {
@@ -55,7 +61,7 @@ async function accessOf(context: Ctx) {
   const [{ data: profile }, { data: roles }] = await Promise.all([
     context.supabase
       .from("profiles")
-      .select("status, allowed_sections")
+      .select("status, allowed_sections, full_name, email")
       .eq("id", context.userId)
       .maybeSingle(),
     context.supabase.from("user_roles").select("role").eq("user_id", context.userId),
@@ -65,7 +71,25 @@ async function accessOf(context: Ctx) {
   const allowed = isAdmin
     ? null
     : ((profile?.allowed_sections as string[] | null | undefined) ?? null);
-  return { isAdmin, approved, allowed };
+  const email = (
+    (context as { claims?: { email?: string } }).claims?.email ??
+    profile?.email ??
+    ""
+  ).toLowerCase();
+  // « Digipote » (historique des questions) : Geoffrey uniquement.
+  const isGeoffrey = isAdmin && email === GEOFFREY_EMAIL;
+  const fullName = (profile?.full_name ?? "").trim() || email || null;
+  return { isAdmin, approved, allowed, email, isGeoffrey, fullName };
+}
+
+/** Réponses corrigées par Geoffrey : elles priment sur le mode d'emploi. */
+async function loadCorrections(context: Ctx): Promise<{ question: string; correction: string }[]> {
+  const { data, error } = await context.supabase.rpc("assistant_corrections");
+  if (error) {
+    console.error("assistant_corrections", error.message);
+    return [];
+  }
+  return (data ?? []) as { question: string; correction: string }[];
 }
 
 /** Toutes les lignes d'une requête, par pages de 1000 (limite de l'API). */
@@ -167,10 +191,17 @@ async function loadStats(context: Ctx, zones: AssistantZone[]): Promise<string |
   }
 }
 
-/** Garde la question pour Geoffrey (RLS : chacun n'écrit que ses propres questions). */
-async function logQuestion(
+/** Enregistre l'échange dans « Digipote » (RLS : chacun n'écrit que ses propres échanges). */
+async function logExchange(
   context: Ctx,
-  row: { question: string; reply?: string; page?: string; name?: string; source: "ia" | "local" },
+  row: {
+    question: string;
+    reply?: string;
+    page?: string;
+    name: string | null;
+    source: "ia" | "local";
+    unanswered: boolean;
+  },
 ) {
   const { error } = await context.supabase.from("assistant_questions").insert({
     user_id: context.userId,
@@ -179,6 +210,7 @@ async function logQuestion(
     reply: row.reply ? row.reply.slice(0, 4000) : null,
     page: row.page?.slice(0, 200) || null,
     source: row.source,
+    unanswered: row.unanswered,
   });
   if (error) console.error("assistant_questions insert", error.message);
 }
@@ -194,9 +226,18 @@ export const askAssistant = createServerFn({ method: "POST" })
 
     const key = process.env.LOVABLE_API_KEY;
     if (!key) return { ok: false, reason: "ai_unavailable" };
-    const email = (context as { claims?: { email?: string } }).claims?.email ?? null;
-    const stats = await loadStats(context, zones);
-    const system = assistantSystemPrompt({ zones, name: data.name, page: data.page, email, stats });
+    const [stats, corrections] = await Promise.all([
+      loadStats(context, zones),
+      loadCorrections(context),
+    ]);
+    const system = assistantSystemPrompt({
+      zones,
+      name: data.name,
+      page: data.page,
+      email: access.email,
+      stats,
+      corrections,
+    });
     const history = data.messages.slice(-12).map((m) => ({
       role: m.role,
       content: m.role === "assistant" ? splitNoAnswer(m.content).text : m.content,
@@ -219,17 +260,16 @@ export const askAssistant = createServerFn({ method: "POST" })
         const raw = json.choices?.[0]?.message?.content?.trim();
         if (!raw) continue;
         const { text, unanswered } = splitNoAnswer(raw);
-        if (unanswered) {
-          const question = [...data.messages].reverse().find((m) => m.role === "user")?.content;
-          if (question)
-            await logQuestion(context, {
-              question,
-              reply: text,
-              page: data.page,
-              name: data.name,
-              source: "ia",
-            });
-        }
+        const question = [...data.messages].reverse().find((m) => m.role === "user")?.content;
+        if (question)
+          await logExchange(context, {
+            question,
+            reply: text,
+            page: data.page,
+            name: access.fullName,
+            source: "ia",
+            unanswered,
+          });
         return { ok: true, reply: text.slice(0, 8000), unanswered };
       } catch (e) {
         console.error("assistant gateway error", e);
@@ -239,8 +279,8 @@ export const askAssistant = createServerFn({ method: "POST" })
     return { ok: false, reason: "ai_unavailable" };
   });
 
-/** Question restée sans réponse avec le mode d'emploi intégré (IA indisponible). */
-export const logUnansweredQuestion = createServerFn({ method: "POST" })
+/** Échange répondu avec le mode d'emploi intégré (IA indisponible). */
+export const logAssistantExchange = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
@@ -248,48 +288,87 @@ export const logUnansweredQuestion = createServerFn({ method: "POST" })
         question: z.string().min(1).max(2000),
         reply: z.string().max(4000).optional(),
         page: z.string().max(200).optional(),
-        name: z.string().max(80).optional(),
+        unanswered: z.boolean(),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
     const access = await accessOf(context);
     if (!access.approved) return { ok: false };
-    await logQuestion(context, { ...data, source: "local" });
+    await logExchange(context, { ...data, name: access.fullName, source: "local" });
     return { ok: true };
   });
 
-/** Liste des questions sans réponse (administrateur : Geoffrey). */
-export const listUnansweredQuestions = createServerFn({ method: "GET" })
+/** Historique « Digipote » (Geoffrey uniquement). */
+export const listAssistantExchanges = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{ ok: boolean; items: UnansweredQuestion[] }> => {
+  .handler(async ({ context }): Promise<{ ok: boolean; items: AssistantExchange[] }> => {
     const access = await accessOf(context);
-    if (!access.isAdmin) return { ok: false, items: [] };
-    const { data, error } = await context.supabase
-      .from("assistant_questions")
-      .select("id, created_at, user_name, question, reply, page, source")
-      .is("resolved_at", null)
-      .order("created_at", { ascending: false })
-      .limit(500);
-    if (error) {
-      console.error("assistant_questions list", error.message);
-      return { ok: false, items: [] };
-    }
-    return { ok: true, items: (data ?? []) as UnansweredQuestion[] };
+    if (!access.isGeoffrey) return { ok: false, items: [] };
+    const items = await allRows<AssistantExchange>((a, b) =>
+      context.supabase
+        .from("assistant_questions")
+        .select(
+          "id, created_at, user_name, question, reply, page, source, unanswered, correction, corrected_at, resolved_at",
+        )
+        .order("created_at", { ascending: false })
+        .range(a, b),
+    );
+    return { ok: true, items };
   });
 
-/** Marque des questions comme traitées (elles sortent de la liste). */
-export const resolveUnansweredQuestions = createServerFn({ method: "POST" })
+/** Nombre de questions sans réponse pas encore traitées (pastille du robot). */
+export const countOpenQuestions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<number> => {
+    const access = await accessOf(context);
+    if (!access.isGeoffrey) return 0;
+    const { count } = await context.supabase
+      .from("assistant_questions")
+      .select("id", { count: "exact", head: true })
+      .eq("unanswered", true)
+      .is("resolved_at", null)
+      .is("correction", null);
+    return count ?? 0;
+  });
+
+/** Corrige (ou retire la correction de) la réponse du robot à une question. */
+export const correctAssistantAnswer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ ids: z.array(z.string().uuid()).min(1).max(500) }).parse(input),
+    z.object({ id: z.string().uuid(), correction: z.string().max(4000).nullable() }).parse(input),
   )
   .handler(async ({ data, context }) => {
     const access = await accessOf(context);
-    if (!access.isAdmin) return { ok: false };
+    if (!access.isGeoffrey) return { ok: false };
+    const correction = data.correction?.trim() || null;
+    const now = new Date().toISOString();
     const { error } = await context.supabase
       .from("assistant_questions")
-      .update({ resolved_at: new Date().toISOString() })
+      .update(
+        correction
+          ? { correction, corrected_at: now, resolved_at: now }
+          : { correction: null, corrected_at: null },
+      )
+      .eq("id", data.id);
+    if (error) console.error("assistant_questions correct", error.message);
+    return { ok: !error };
+  });
+
+/** Marque des questions sans réponse comme traitées (ou les rouvre). */
+export const resolveAssistantQuestions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({ ids: z.array(z.string().uuid()).min(1).max(1000), resolved: z.boolean() })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const access = await accessOf(context);
+    if (!access.isGeoffrey) return { ok: false };
+    const { error } = await context.supabase
+      .from("assistant_questions")
+      .update({ resolved_at: data.resolved ? new Date().toISOString() : null })
       .in("id", data.ids);
     if (error) console.error("assistant_questions resolve", error.message);
     return { ok: !error };

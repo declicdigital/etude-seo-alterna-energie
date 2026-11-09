@@ -107,4 +107,15 @@ describe("assistant Digicom", () => {
     const ids = new Set(ASSISTANT_ZONES.map((z) => z.id));
     for (const t of ASSISTANT_TOPICS) expect(t.zone === "all" || ids.has(t.zone)).toBe(true);
   });
+
+  it("met les corrections de Geoffrey en priorité dans le contexte", () => {
+    const zones = zonesFor(null, true);
+    const p = assistantSystemPrompt({
+      zones,
+      corrections: [{ question: "ça veut dire quoi pac ?", correction: "Pompe à chaleur." }],
+    });
+    expect(p).toContain("Réponses corrigées par Geoffrey");
+    expect(p).toContain("Bonne réponse : Pompe à chaleur.");
+    expect(assistantSystemPrompt({ zones })).not.toContain("Réponses corrigées par Geoffrey");
+  });
 });

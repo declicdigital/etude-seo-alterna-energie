@@ -1,7 +1,7 @@
 import { appUrl } from "@/lib/app-url";
 /** Stable route names are independent of editable display labels. */
 export const SHEET_PATHS: Record<string, string> = {
-  __home: 'accueil', __guide: 'guide',
+  __home: 'accueil', __guide: 'guide', __digipote: 'digipote',
   'SUIVI EDITORIAL': 'blog/suivi-editorial',
   'BLOG - ARTICLES': 'blog/articles',
   'SUIVI STRATEGIE': 'strategie-pac/suivi-editorial',

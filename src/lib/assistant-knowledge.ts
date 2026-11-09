@@ -965,6 +965,8 @@ export function assistantSystemPrompt(opts: {
   email?: string | null;
   /** Chiffres en temps réel calculés par le serveur (voir assistant-stats). */
   stats?: string | null;
+  /** Réponses corrigées par Geoffrey dans « Digipote » : elles priment sur tout le reste. */
+  corrections?: { question: string; correction: string }[];
 }): string {
   const me = roleFor(opts.email);
   const zones = opts.zones.map((z) => `- ${z.label} → ${z.path}`).join("\n");
@@ -993,7 +995,14 @@ Règles :
 - Si ni le mode d'emploi ni les données chiffrées ne permettent de répondre avec certitude (fonction inconnue, donnée absente, question hors Digicom), dis-le honnêtement en une phrase, dis simplement que tu notes cette question pour plus tard (par exemple « Je note cette question pour plus tard 💾 » ; ne dis pas qu'elle est transmise à quelqu'un), propose la piste la plus proche si elle existe, et termine OBLIGATOIREMENT ton message par la balise ${NO_ANSWER_TAG} seule sur la dernière ligne. N'utilise jamais cette balise quand tu as la réponse.
 ${opts.name ? `\nLa personne s'appelle ${opts.name}.` : ""}${me ? `\nSon rôle : ${me.role}.` : "\nSon rôle n'est pas connu : ne le suppose pas."}${opts.page ? `\nElle est actuellement sur la page ${opts.page}.` : ""}
 
-Zones accessibles :
+${
+  opts.corrections?.length
+    ? `Réponses corrigées par Geoffrey (prioritaires : si la question posée est la même ou très proche, reprends cette réponse en priorité, avec ton style de robot) :
+${opts.corrections.map((c) => `- Question : ${c.question.replace(/\s+/g, " ").trim()}\n  Bonne réponse : ${c.correction.replace(/\s+/g, " ").trim()}`).join("\n")}
+
+`
+    : ""
+}Zones accessibles :
 ${zones}
 
 Données chiffrées (temps réel) :
