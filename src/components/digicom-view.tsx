@@ -31,6 +31,7 @@ import { downloadBackup } from "@/lib/backup";
 import { Link } from "@tanstack/react-router";
 import type { Access } from "@/lib/access";
 import { sheetPath, fichePath } from "@/lib/slugs";
+import { DigicomAssistant } from "@/components/digicom-assistant";
 
 const NEWSLETTER_BY_SHEET: Record<string, NewsletterCalendar> = {
   [NEWSLETTER_INTERNE]: INTERNE,
@@ -50,6 +51,13 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
   const isMobile = useIsMobile();
   const [navOpen, setNavOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [userName, setUserName] = useState<string | null>(null);
+  useEffect(() => {
+    void supabase.auth.getSession().then(({ data }) => {
+      const meta = data.session?.user.user_metadata as { full_name?: string; name?: string } | undefined;
+      setUserName(meta?.full_name || meta?.name || null);
+    });
+  }, []);
   useEffect(() => {
     if (!access.isAdmin) return;
     const load = async () => {
@@ -371,6 +379,13 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
           {detailPanel}
         </SheetContent>
       </Sheet>
+      <DigicomAssistant
+        name={userName}
+        allowed={access.allowedSections}
+        isAdmin={access.isAdmin}
+        page={sheetLabel}
+        onNavigate={(path) => void navigate({ href: path })}
+      />
     </div>
   );
 }
