@@ -68,6 +68,42 @@ export type Database = {
         }
         Relationships: []
       }
+      assistant_questions: {
+        Row: {
+          created_at: string
+          id: string
+          page: string | null
+          question: string
+          reply: string | null
+          resolved_at: string | null
+          source: string
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page?: string | null
+          question: string
+          reply?: string | null
+          resolved_at?: string | null
+          source?: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page?: string | null
+          question?: string
+          reply?: string | null
+          resolved_at?: string | null
+          source?: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       benchmark_months: {
         Row: {
           data: Json

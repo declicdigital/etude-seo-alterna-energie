@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  ASSISTANT_TOPICS,
   ASSISTANT_ZONES,
   assistantSystemPrompt,
+  formatUnansweredForCopy,
   localAnswer,
+  localAnswerResult,
+  splitNoAnswer,
   zonesFor,
 } from "./assistant-knowledge";
 import { sheetFromPath } from "./slugs";
@@ -54,5 +58,53 @@ describe("assistant Digicom", () => {
     expect(next.startsWith("Bonjour")).toBe(false);
     expect(next).toMatch(/^(Bip|Bzzt)/);
     expect(assistantSystemPrompt({ zones, name: "Fannie" })).toContain("petit robot sympathique");
+  });
+
+  it("repère et retire la balise « sans réponse » du modèle", () => {
+    expect(splitNoAnswer("Bzzt… je ne sais pas.\n[[SANS_REPONSE]]")).toEqual({
+      text: "Bzzt… je ne sais pas.",
+      unanswered: true,
+    });
+    expect(splitNoAnswer("Bip ! Voilà.").unanswered).toBe(false);
+  });
+
+  it("signale les questions sans réponse locale", () => {
+    const zones = zonesFor(["Blog"], false);
+    expect(localAnswerResult("xyzzy quantique", zones).answered).toBe(false);
+    expect(localAnswerResult("comment ajouter les images 1500 ?", zones).answered).toBe(true);
+  });
+
+  it("prépare un texte à copier-coller pour Geoffrey", () => {
+    const text = formatUnansweredForCopy([
+      {
+        created_at: "2026-11-09T14:00:00Z",
+        user_name: "Fannie",
+        question: "Combien d'articles ?",
+        reply: null,
+        page: "Suivi éditorial",
+      },
+    ]);
+    expect(text).toContain("Questions sans réponse de D.I.G.I.P.O.T.E (1)");
+    expect(text).toContain("1. Combien d'articles ?");
+    expect(text).toContain("Fannie · page Suivi éditorial");
+    expect(text).toContain("Réponse à intégrer :");
+  });
+
+  it("donne au modèle le vrai rôle de la personne et le nom d'Alterna Énergie", () => {
+    const zones = zonesFor(["Parlons Planète", "Parlons Planète/Blog"], false);
+    const p = assistantSystemPrompt({
+      zones,
+      name: "Caroline",
+      email: "Caroline@aurorae-editorial.com",
+    });
+    expect(p).toContain("Son rôle : rédactrice (Aurorae)");
+    expect(p).toContain("Alterna Énergie");
+    expect(p).toContain("[[SANS_REPONSE]]");
+    expect(assistantSystemPrompt({ zones, email: "inconnu@x.fr" })).toContain("ne le suppose pas");
+  });
+
+  it("chaque fiche pointe vers une zone existante", () => {
+    const ids = new Set(ASSISTANT_ZONES.map((z) => z.id));
+    for (const t of ASSISTANT_TOPICS) expect(t.zone === "all" || ids.has(t.zone)).toBe(true);
   });
 });

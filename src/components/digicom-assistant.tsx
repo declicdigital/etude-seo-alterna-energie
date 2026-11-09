@@ -8,9 +8,15 @@ import {
   type Ref,
 } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, ArrowUp, Minus, X } from "lucide-react";
-import { askAssistant } from "@/lib/assistant.functions";
-import { localAnswer, zonesFor } from "@/lib/assistant-knowledge";
+import { ArrowLeft, ArrowRight, ArrowUp, Check, Copy, Inbox, Minus, X } from "lucide-react";
+import {
+  askAssistant,
+  listUnansweredQuestions,
+  logUnansweredQuestion,
+  resolveUnansweredQuestions,
+  type UnansweredQuestion,
+} from "@/lib/assistant.functions";
+import { formatUnansweredForCopy, localAnswerResult, zonesFor } from "@/lib/assistant-knowledge";
 import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -190,7 +196,7 @@ function MessageText({ text, onGo }: { text: string; onGo: (path: string) => voi
   };
   const lines = text.split("\n");
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-3">
       {lines.map((line, n) => {
         const t = line.trim();
         if (!t) return null;
@@ -210,6 +216,87 @@ function MessageText({ text, onGo }: { text: string; onGo: (path: string) => voi
   );
 }
 
+/** Geoffrey : questions restées sans réponse, à copier-coller pour enrichir le robot. */
+function InboxPanel({
+  items,
+  copied,
+  onCopy,
+  onResolve,
+}: {
+  items: UnansweredQuestion[] | null;
+  copied: boolean;
+  onCopy: () => void;
+  onResolve: (ids: string[]) => void;
+}) {
+  const fmt = (iso: string) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime())
+      ? ""
+      : d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  };
+  return (
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="space-y-2 border-b border-white/50 px-4 py-3 dark:border-white/10">
+        <div className="text-[14px] font-semibold">Questions sans réponse</div>
+        <p className="text-[12.5px] leading-[1.6] text-slate-600 dark:text-slate-300">
+          Les questions auxquelles D.I.G.I.P.O.T.E n'a pas su répondre. Copie-les, complète les
+          réponses, et renvoie le texte pour qu'elles soient ajoutées à ses connaissances.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={onCopy}
+            disabled={!items?.length}
+            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 px-3.5 py-1.5 text-[13px] font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-40"
+          >
+            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+            {copied ? "Copié !" : "Tout copier"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (items?.length && window.confirm("Marquer toutes les questions comme traitées ?"))
+                onResolve(items.map((q) => q.id));
+            }}
+            disabled={!items?.length}
+            className="rounded-full border border-white/70 bg-white/50 px-3.5 py-1.5 text-[13px] font-medium text-slate-700 transition hover:bg-white/80 disabled:opacity-40 dark:border-white/15 dark:bg-white/10 dark:text-slate-200"
+          >
+            Tout marquer traité
+          </button>
+        </div>
+      </div>
+      <div className="flex-1 space-y-2.5 overflow-y-auto px-4 py-3">
+        {items === null && <p className="text-[13px] text-slate-500">Chargement…</p>}
+        {items?.length === 0 && (
+          <p className="text-[13px] leading-[1.7] text-slate-600 dark:text-slate-300">
+            Bip ! Aucune question en attente : j'ai su répondre à tout 🤖
+          </p>
+        )}
+        {items?.map((q) => (
+          <div
+            key={q.id}
+            className="rounded-2xl border border-white/70 bg-white/70 px-3.5 py-3 text-[13.5px] leading-[1.65] shadow-sm dark:border-white/10 dark:bg-white/10"
+          >
+            <div className="font-medium">{q.question}</div>
+            <div className="mt-1 flex items-center justify-between gap-2 text-[11.5px] text-slate-500 dark:text-slate-400">
+              <span className="min-w-0 truncate">
+                {[fmt(q.created_at), q.user_name, q.page].filter(Boolean).join(" · ")}
+              </span>
+              <button
+                type="button"
+                onClick={() => onResolve([q.id])}
+                className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-400/10"
+              >
+                <Check className="size-3" /> Traitée
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function DigicomAssistant({
   name,
   allowed,
@@ -224,6 +311,9 @@ export function DigicomAssistant({
   onNavigate: (path: string) => void;
 }) {
   const ask = useServerFn(askAssistant);
+  const logQuestion = useServerFn(logUnansweredQuestion);
+  const listQuestions = useServerFn(listUnansweredQuestions);
+  const resolveQuestions = useServerFn(resolveUnansweredQuestions);
   const first = (name || "").trim().split(/\s+/)[0] || "";
   const zones = useMemo(() => zonesFor(allowed, isAdmin), [allowed, isAdmin]);
   const [open, setOpen] = useState(false);
@@ -231,6 +321,9 @@ export function DigicomAssistant({
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [hint, setHint] = useState(true);
+  const [view, setView] = useState<"chat" | "inbox">("chat");
+  const [inbox, setInbox] = useState<UnansweredQuestion[] | null>(null);
+  const [copied, setCopied] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const botRef = useRef<HTMLButtonElement>(null);
@@ -260,6 +353,47 @@ export function DigicomAssistant({
       window.removeEventListener("pointermove", onMove);
     };
   }, [open]);
+
+  // Geoffrey (administrateur) : questions restées sans réponse.
+  async function loadInbox() {
+    if (!isAdmin) return;
+    try {
+      const res = await listQuestions();
+      if (res.ok) setInbox(res.items);
+    } catch {
+      /* liste indisponible */
+    }
+  }
+  useEffect(() => {
+    if (isAdmin) void loadInbox();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, open]);
+
+  async function resolve(ids: string[]) {
+    if (!ids.length) return;
+    setInbox((list) => (list ?? []).filter((q) => !ids.includes(q.id)));
+    try {
+      await resolveQuestions({ data: { ids } });
+    } catch {
+      void loadInbox();
+    }
+  }
+
+  async function copyInbox() {
+    const text = formatUnansweredForCopy(inbox ?? []);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const area = document.createElement("textarea");
+      area.value = text;
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  }
 
   useEffect(() => {
     try {
@@ -302,6 +436,7 @@ export function DigicomAssistant({
     setInput("");
     setBusy(true);
     let reply = "";
+    let unanswered = false;
     try {
       const res = await ask({
         data: {
@@ -310,16 +445,32 @@ export function DigicomAssistant({
           name: first || undefined,
         },
       });
-      if (res.ok) reply = res.reply;
+      if (res.ok) {
+        reply = res.reply;
+        unanswered = res.unanswered;
+      }
     } catch {
       /* réponse de secours ci-dessous */
     }
-    if (!reply)
-      reply = localAnswer(q, zones, first || null, {
-        greet: false, // le message d'accueil a déjà dit « Bonjour »
-      });
+    if (!reply) {
+      // le message d'accueil a déjà dit « Bonjour »
+      const local = localAnswerResult(q, zones, first || null, { greet: false });
+      reply = local.text;
+      if (!local.answered) {
+        unanswered = true;
+        void logQuestion({
+          data: {
+            question: q.slice(0, 2000),
+            reply: reply.slice(0, 4000),
+            page,
+            name: first || undefined,
+          },
+        }).catch(() => undefined);
+      }
+    }
     setMsgs((m) => [...m, { role: "assistant", content: reply }]);
     setBusy(false);
+    if (unanswered && isAdmin) void loadInbox();
   }
 
   function go(path: string) {
@@ -364,6 +515,22 @@ export function DigicomAssistant({
                 Ton assistant Digicom
               </div>
             </div>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setView(view === "inbox" ? "chat" : "inbox")}
+                aria-label={view === "inbox" ? "Revenir à la discussion" : "Questions sans réponse"}
+                title={view === "inbox" ? "Revenir à la discussion" : "Questions sans réponse"}
+                className="relative rounded-full p-2 text-slate-600 transition hover:bg-white/60 dark:text-slate-300 dark:hover:bg-white/10"
+              >
+                {view === "inbox" ? <ArrowLeft className="size-4" /> : <Inbox className="size-4" />}
+                {view === "chat" && !!inbox?.length && (
+                  <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                    {inbox.length > 99 ? "99+" : inbox.length}
+                  </span>
+                )}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -374,92 +541,103 @@ export function DigicomAssistant({
             </button>
           </header>
 
-          <div
-            ref={listRef}
-            className="relative flex-1 space-y-3 overflow-y-auto px-4 py-4"
-            aria-live="polite"
-          >
-            {msgs.map((m, i) =>
-              m.role === "assistant" ? (
-                <div key={i} className="flex items-end gap-2">
-                  <RobotFace size={30} />
-                  <div className="max-w-[85%] rounded-[20px] rounded-bl-md border border-white/70 bg-white/70 px-3.5 py-2.5 text-[14px] leading-relaxed shadow-sm dark:border-white/10 dark:bg-white/10">
-                    <MessageText text={m.content} onGo={go} />
+          {view === "inbox" ? (
+            <InboxPanel
+              items={inbox}
+              copied={copied}
+              onCopy={() => void copyInbox()}
+              onResolve={(ids) => void resolve(ids)}
+            />
+          ) : (
+            <>
+              <div
+                ref={listRef}
+                className="relative flex-1 space-y-3 overflow-y-auto px-4 py-4"
+                aria-live="polite"
+              >
+                {msgs.map((m, i) =>
+                  m.role === "assistant" ? (
+                    <div key={i} className="flex items-end gap-2">
+                      <RobotFace size={30} />
+                      <div className="max-w-[85%] rounded-[20px] rounded-bl-md border border-white/70 bg-white/70 px-4 py-3 text-[14px] leading-[1.7] shadow-sm dark:border-white/10 dark:bg-white/10">
+                        <MessageText text={m.content} onGo={go} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div key={i} className="flex justify-end">
+                      <div className="max-w-[85%] whitespace-pre-wrap rounded-[20px] rounded-br-md bg-gradient-to-br from-emerald-500 to-teal-600 px-4 py-3 text-[14px] leading-[1.7] text-white shadow-[0_6px_18px_-6px_rgba(5,150,105,.6)]">
+                        {m.content}
+                      </div>
+                    </div>
+                  ),
+                )}
+                {busy && (
+                  <div className="flex items-end gap-2" aria-label="D.I.G.I.P.O.T.E écrit">
+                    <RobotFace size={30} />
+                    <div className="flex items-center gap-2 rounded-[20px] rounded-bl-md border border-white/70 bg-white/70 px-3.5 py-2.5 text-[13px] italic text-slate-600 dark:border-white/10 dark:bg-white/10 dark:text-slate-300">
+                      <span>Bip… calcul en cours</span>
+                      <span className="flex gap-1">
+                        {[0, 1, 2].map((d) => (
+                          <span
+                            key={d}
+                            className="dg-dot size-1.5 rounded-full bg-emerald-600"
+                            style={{ animationDelay: `${d * 0.15}s` }}
+                          />
+                        ))}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div key={i} className="flex justify-end">
-                  <div className="max-w-[85%] whitespace-pre-wrap rounded-[20px] rounded-br-md bg-gradient-to-br from-emerald-500 to-teal-600 px-3.5 py-2.5 text-[14px] leading-relaxed text-white shadow-[0_6px_18px_-6px_rgba(5,150,105,.6)]">
-                    {m.content}
-                  </div>
-                </div>
-              ),
-            )}
-            {busy && (
-              <div className="flex items-end gap-2" aria-label="D.I.G.I.P.O.T.E écrit">
-                <RobotFace size={30} />
-                <div className="flex items-center gap-2 rounded-[20px] rounded-bl-md border border-white/70 bg-white/70 px-3.5 py-2.5 text-[13px] italic text-slate-600 dark:border-white/10 dark:bg-white/10 dark:text-slate-300">
-                  <span>Bip… calcul en cours</span>
-                  <span className="flex gap-1">
-                    {[0, 1, 2].map((d) => (
-                      <span
-                        key={d}
-                        className="dg-dot size-1.5 rounded-full bg-emerald-600"
-                        style={{ animationDelay: `${d * 0.15}s` }}
-                      />
+                )}
+                {showSuggestions && (
+                  <div className="flex flex-wrap gap-2 pl-9">
+                    {SUGGESTIONS.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => void send(s)}
+                        className="rounded-full border border-white/70 bg-white/50 px-3 py-1.5 text-[13px] font-medium text-slate-700 shadow-sm backdrop-blur transition hover:bg-white/80 dark:border-white/15 dark:bg-white/10 dark:text-slate-200"
+                      >
+                        {s}
+                      </button>
                     ))}
-                  </span>
-                </div>
+                  </div>
+                )}
               </div>
-            )}
-            {showSuggestions && (
-              <div className="flex flex-wrap gap-2 pl-9">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => void send(s)}
-                    className="rounded-full border border-white/70 bg-white/50 px-3 py-1.5 text-[13px] font-medium text-slate-700 shadow-sm backdrop-blur transition hover:bg-white/80 dark:border-white/15 dark:bg-white/10 dark:text-slate-200"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
 
-          <form
-            className="relative flex items-end gap-2 border-t border-white/50 p-3 dark:border-white/10"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void send(input);
-            }}
-          >
-            <textarea
-              ref={inputRef}
-              rows={1}
-              value={input}
-              maxLength={2000}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+              <form
+                className="relative flex items-end gap-2 border-t border-white/50 p-3 dark:border-white/10"
+                onSubmit={(e) => {
                   e.preventDefault();
                   void send(input);
-                }
-              }}
-              placeholder="Écris ta question…"
-              aria-label="Ta question"
-              className="max-h-32 min-h-[44px] flex-1 resize-none rounded-2xl border border-white/70 bg-white/60 px-3.5 py-2.5 text-[14px] text-slate-800 shadow-inner outline-none placeholder:text-slate-500 focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/15 dark:bg-white/10 dark:text-slate-100 dark:placeholder:text-slate-400"
-            />
-            <button
-              type="submit"
-              disabled={!input.trim() || busy}
-              aria-label="Envoyer"
-              className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-[0_8px_20px_-8px_rgba(5,150,105,.8)] transition hover:brightness-110 disabled:opacity-40"
-            >
-              <ArrowUp className="size-5" />
-            </button>
-          </form>
+                }}
+              >
+                <textarea
+                  ref={inputRef}
+                  rows={1}
+                  value={input}
+                  maxLength={2000}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      void send(input);
+                    }
+                  }}
+                  placeholder="Écris ta question…"
+                  aria-label="Ta question"
+                  className="max-h-32 min-h-[44px] flex-1 resize-none rounded-2xl border border-white/70 bg-white/60 px-3.5 py-2.5 text-[14px] text-slate-800 shadow-inner outline-none placeholder:text-slate-500 focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/15 dark:bg-white/10 dark:text-slate-100 dark:placeholder:text-slate-400"
+                />
+                <button
+                  type="submit"
+                  disabled={!input.trim() || busy}
+                  aria-label="Envoyer"
+                  className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-[0_8px_20px_-8px_rgba(5,150,105,.8)] transition hover:brightness-110 disabled:opacity-40"
+                >
+                  <ArrowUp className="size-5" />
+                </button>
+              </form>
+            </>
+          )}
         </section>
       )}
 
@@ -520,6 +698,14 @@ export function DigicomAssistant({
             <span className="dg-hover absolute inset-0 block">
               <FloatingRobot eyesRef={eyesRef} />
             </span>
+            {isAdmin && !!inbox?.length && (
+              <span
+                title={`${inbox.length} question${inbox.length > 1 ? "s" : ""} sans réponse`}
+                className="absolute right-0 top-2 grid h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white shadow-md ring-2 ring-white"
+              >
+                {inbox.length > 99 ? "99+" : inbox.length}
+              </span>
+            )}
           </button>
         </div>
       )}
