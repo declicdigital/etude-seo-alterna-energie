@@ -53,12 +53,31 @@ function RobotSvg({
     >
       <defs>
         {/* plastique blanc : volume par dégradé + reflet spéculaire calculé */}
-        <radialGradient id={`${id}-shell`} cx="0.36" cy="0.3" r="0.85">
+        <radialGradient id={`${id}-shell`} cx="0.36" cy="0.28" r="0.9">
           <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.55" stopColor="#eef2f6" />
-          <stop offset="0.85" stopColor="#cfd8e1" />
-          <stop offset="1" stopColor="#aab6c2" />
+          <stop offset="0.5" stopColor="#f4f6fb" />
+          <stop offset="0.82" stopColor="#dfe5f0" />
+          <stop offset="1" stopColor="#c7d0e2" />
         </radialGradient>
+        <linearGradient id={`${id}-iris`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#22d3ee" />
+          <stop offset="0.5" stopColor="#a78bfa" />
+          <stop offset="1" stopColor="#34d399" />
+        </linearGradient>
+        <linearGradient
+          id={`${id}-sweep`}
+          x1="0"
+          y1="0"
+          x2="1"
+          y2="0"
+          gradientUnits="objectBoundingBox"
+        >
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="0.45" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.14" />
+          <stop offset="0.55" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+        </linearGradient>
         <filter id={`${id}-plastic`} x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur in="SourceAlpha" stdDeviation="3.2" result="blur" />
           <feSpecularLighting
@@ -83,9 +102,9 @@ function RobotSvg({
           />
         </filter>
         <linearGradient id={`${id}-visor`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#1f2937" />
-          <stop offset="0.45" stopColor="#0b1220" />
-          <stop offset="1" stopColor="#050a14" />
+          <stop offset="0" stopColor="#1e2433" />
+          <stop offset="0.5" stopColor="#080c16" />
+          <stop offset="1" stopColor="#03050b" />
         </linearGradient>
         <linearGradient id={`${id}-visorEdge`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#94a3b8" />
@@ -104,9 +123,9 @@ function RobotSvg({
           <stop offset="1" stopColor="#334155" />
         </radialGradient>
         <radialGradient id={`${id}-led`} cx="0.4" cy="0.3" r="0.8">
-          <stop offset="0" stopColor="#ecfeff" />
-          <stop offset="0.35" stopColor="#67e8f9" />
-          <stop offset="1" stopColor="#0891b2" />
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset="0.4" stopColor="#a5f3fc" />
+          <stop offset="1" stopColor="#22d3ee" />
         </radialGradient>
         <pattern id={`${id}-scan`} width="2" height="2" patternUnits="userSpaceOnUse">
           <rect width="2" height="1" fill="rgba(0,0,0,.28)" />
@@ -142,160 +161,175 @@ function RobotSvg({
       {!head && (
         <>
           {/* réacteur de lévitation */}
-          <ellipse className="dg-jet" cx="60" cy="139" rx="13" ry="8" fill={u("jet")} />
-          {/* bras gauche */}
-          <g className="dg-arm-l">
-            <rect
-              x="25"
-              y="96"
-              width="9"
-              height="21"
-              rx="4.5"
-              fill={u("shell")}
-              filter={u("plastic")}
-              transform="rotate(20 30 98)"
-            />
-            <circle cx="30" cy="98" r="4.2" fill={u("joint")} />
-            <circle cx="22.5" cy="118" r="5.6" fill={u("shell")} filter={u("plastic")} />
-            <path d="M19 120.5a4 4 0 0 0 7 0" stroke="#94a3b8" strokeWidth=".8" fill="none" />
-          </g>
-          {/* bras droit (fait coucou) */}
-          <g className="dg-arm-r">
-            <rect
-              x="86"
-              y="96"
-              width="9"
-              height="21"
-              rx="4.5"
-              fill={u("shell")}
-              filter={u("plastic")}
-              transform="rotate(-20 90 98)"
-            />
-            <circle cx="90" cy="98" r="4.2" fill={u("joint")} />
-            <circle cx="97.5" cy="118" r="5.6" fill={u("shell")} filter={u("plastic")} />
-            <path d="M94 120.5a4 4 0 0 0 7 0" stroke="#94a3b8" strokeWidth=".8" fill="none" />
-          </g>
-          {/* cou en métal brossé */}
-          <rect x="52" y="74" width="16" height="10" rx="3" fill={u("metal")} />
-          <path d="M52 77.5h16M52 80.5h16" stroke="rgba(15,23,42,.25)" strokeWidth=".6" />
-          {/* corps */}
-          <ellipse cx="60" cy="107" rx="27" ry="25" fill={u("shell")} filter={u("plastic")} />
+          <ellipse className="dg-jet" cx="60" cy="139" rx="12" ry="7" fill={u("jet")} />
+          {/* anneau orbital (moitié arrière) */}
           <path
-            d="M37 102c7 5 39 5 46 0"
-            stroke="rgba(15,23,42,.12)"
-            strokeWidth=".9"
+            d="M23 112a37 8.5 0 0 1 74 0"
             fill="none"
+            stroke={u("iris")}
+            strokeWidth="1.6"
+            opacity=".45"
           />
-          <ellipse cx="60" cy="130" rx="12" ry="3.4" fill="#475569" />
-          <ellipse cx="60" cy="129.4" rx="9" ry="2.2" fill="#0f172a" />
+          {/* lévitation entre tête et corps */}
           <ellipse
             className="dg-core-led"
             cx="60"
-            cy="129.4"
-            rx="6"
-            ry="1.2"
+            cy="81.5"
+            rx="11"
+            ry="2.4"
             fill="#67e8f9"
+            opacity=".7"
             filter={u("glow")}
           />
-          <circle
-            className="dg-status"
-            cx="77"
-            cy="102"
-            r="1.7"
-            fill="#2dd4bf"
+          {/* corps : sphère nacrée, ligne d'équateur lumineuse, socle */}
+          <circle cx="60" cy="108" r="24" fill={u("shell")} filter={u("plastic")} />
+          <path
+            d="M37.5 111.5c9 4.2 36 4.2 45 0"
+            fill="none"
+            stroke={u("iris")}
+            strokeWidth="1.1"
+            filter={u("glow")}
+          />
+          <ellipse cx="60" cy="131.2" rx="8.5" ry="2.3" fill="#1f2937" />
+          <ellipse
+            className="dg-core-led"
+            cx="60"
+            cy="131"
+            rx="5.5"
+            ry="1.1"
+            fill="#a5f3fc"
+            filter={u("glow")}
+          />
+          {/* anneau orbital (moitié avant) */}
+          <path
+            d="M97 112a37 8.5 0 0 1-74 0"
+            fill="none"
+            stroke={u("iris")}
+            strokeWidth="1.9"
             filter={u("glow")}
           />
           {/* cravate à carreaux */}
           <g>
-            <path d="M56.5 84h7l-1 5.5h-5z" fill={u("plaid")} stroke="#c2410c" strokeWidth=".5" />
             <path
-              d="M57.4 89.5h5.2l3.4 14-6 6.5-6-6.5z"
+              d="M56.6 85.5h6.8l-1 5h-4.8z"
               fill={u("plaid")}
               stroke="#c2410c"
-              strokeWidth=".5"
+              strokeWidth=".45"
             />
-            <path d="M57.4 89.5h5.2l3.4 14-6 6.5-6-6.5z" fill={u("tieShade")} />
+            <path
+              d="M57.5 90.5h5l3.2 13-5.7 6-5.7-6z"
+              fill={u("plaid")}
+              stroke="#c2410c"
+              strokeWidth=".45"
+            />
+            <path d="M57.5 90.5h5l3.2 13-5.7 6-5.7-6z" fill={u("tieShade")} />
+          </g>
+          {/* mains flottantes (la droite fait coucou) */}
+          <g className="dg-arm-l">
+            <rect
+              x="20"
+              y="100"
+              width="9"
+              height="18"
+              rx="4.5"
+              fill={u("shell")}
+              filter={u("plastic")}
+              transform="rotate(14 24.5 109)"
+            />
+            <rect
+              x="22.6"
+              y="104"
+              width="1.4"
+              height="9"
+              rx=".7"
+              fill={u("iris")}
+              transform="rotate(14 24.5 109)"
+            />
+          </g>
+          <g className="dg-arm-r">
+            <rect
+              x="91"
+              y="100"
+              width="9"
+              height="18"
+              rx="4.5"
+              fill={u("shell")}
+              filter={u("plastic")}
+              transform="rotate(-14 95.5 109)"
+            />
+            <rect
+              x="96"
+              y="104"
+              width="1.4"
+              height="9"
+              rx=".7"
+              fill={u("iris")}
+              transform="rotate(-14 95.5 109)"
+            />
           </g>
         </>
       )}
 
-      {/* antenne */}
-      <rect x="58.6" y="9" width="2.8" height="11" rx="1.4" fill={u("metal")} />
-      <circle className="dg-antenna" cx="60" cy="8" r="3.6" fill={u("led")} filter={u("glow")} />
-
-      {/* oreilles métal + anneau lumineux */}
-      <circle cx="16" cy="47" r="8.5" fill={u("joint")} />
-      <circle cx="16" cy="47" r="5.4" fill="#0f172a" />
-      <circle
-        cx="16"
-        cy="47"
-        r="3.6"
+      {/* orbe lumineux et halo au-dessus de la tête */}
+      <ellipse
+        cx="60"
+        cy="13.5"
+        rx="7"
+        ry="1.7"
         fill="none"
-        stroke="#22d3ee"
-        strokeWidth="1.3"
-        filter={u("glow")}
+        stroke={u("iris")}
+        strokeWidth=".9"
+        opacity=".8"
       />
-      <circle cx="104" cy="47" r="8.5" fill={u("joint")} />
-      <circle cx="104" cy="47" r="5.4" fill="#0f172a" />
-      <circle
-        cx="104"
-        cy="47"
-        r="3.6"
-        fill="none"
-        stroke="#22d3ee"
-        strokeWidth="1.3"
-        filter={u("glow")}
-      />
+      <circle className="dg-antenna" cx="60" cy="8.5" r="3.2" fill={u("led")} filter={u("glow")} />
 
-      {/* tête */}
-      <rect x="18" y="18" width="84" height="58" rx="24" fill={u("shell")} filter={u("plastic")} />
+      {/* tête : coque nacrée sans couture, bandes LED latérales */}
+      <rect x="15.2" y="38" width="3" height="20" rx="1.5" fill={u("iris")} filter={u("glow")} />
+      <rect x="101.8" y="38" width="3" height="20" rx="1.5" fill={u("iris")} filter={u("glow")} />
+      <rect x="18" y="20" width="84" height="56" rx="26" fill={u("shell")} filter={u("plastic")} />
+      {/* visière en verre noir, liseré irisé */}
       <rect
-        x="21.5"
-        y="21.5"
-        width="77"
-        height="51"
-        rx="21"
-        fill="none"
-        stroke="rgba(15,23,42,.08)"
-        strokeWidth=".8"
+        x="24.5"
+        y="27"
+        width="71"
+        height="42"
+        rx="20"
+        fill={u("visor")}
+        stroke={u("iris")}
+        strokeWidth="1.3"
       />
-      {/* visière en verre noir */}
-      <rect x="26" y="28" width="68" height="40" rx="17" fill={u("visorEdge")} />
-      <rect x="27.3" y="29.3" width="65.4" height="37.4" rx="15.8" fill={u("visor")} />
-      <circle cx="60" cy="32.6" r="1.5" fill="#1e293b" stroke="#475569" strokeWidth=".5" />
-      <circle cx="59.6" cy="32.2" r=".45" fill="#e2e8f0" />
       <g ref={eyesRef} style={{ transition: "transform .2s ease-out" }}>
         <g className="dg-eyes-open" filter={u("glow")}>
           <rect
             className="dg-blink"
-            x="41"
-            y="40"
-            width="11"
-            height="15"
-            rx="5.5"
+            x="38"
+            y="44"
+            width="15"
+            height="6.5"
+            rx="3.25"
             fill={u("led")}
           />
           <rect
             className="dg-blink"
-            x="68"
-            y="40"
-            width="11"
-            height="15"
-            rx="5.5"
+            x="67"
+            y="44"
+            width="15"
+            height="6.5"
+            rx="3.25"
             fill={u("led")}
           />
         </g>
         <g className="dg-eyes-happy" filter={u("glow")}>
           <path
-            d="M41 50q5.5-8 11 0"
-            stroke="#67e8f9"
+            d="M39 50q6.5-7 13 0"
+            stroke="#a5f3fc"
             strokeWidth="3"
             fill="none"
             strokeLinecap="round"
           />
           <path
-            d="M68 50q5.5-8 11 0"
-            stroke="#67e8f9"
+            d="M68 50q6.5-7 13 0"
+            stroke="#a5f3fc"
             strokeWidth="3"
             fill="none"
             strokeLinecap="round"
@@ -303,29 +337,29 @@ function RobotSvg({
         </g>
         <path
           className="dg-smile"
-          d="M54 60q6 4.5 12 0"
-          stroke="#67e8f9"
-          strokeWidth="2.2"
+          d="M55 59.5q5 3 10 0"
+          stroke="#a5f3fc"
+          strokeWidth="1.8"
           fill="none"
           strokeLinecap="round"
           filter={u("glow")}
         />
       </g>
-      <rect x="27.3" y="29.3" width="65.4" height="37.4" rx="15.8" fill={u("scan")} opacity=".5" />
-      {/* reflet sur le verre */}
+      {/* reflets du verre */}
       <path
-        d="M32 33c8-3.5 22-4 33-3.2l-15 30c-8 .5-14-1-17.5-4.5C30 48 29.5 38 32 33z"
+        d="M30 34c9-4.2 25-4.6 37-3.6L50 63c-9 .4-16-1.4-19.4-5C28 50 27.4 39.5 30 34z"
         fill="#ffffff"
-        opacity=".1"
+        opacity=".08"
       />
       <path
-        d="M34 34.5c5-2 12-2.6 18-2.5"
+        d="M33 33.4c6-2.4 14-3 21-2.9"
         stroke="#ffffff"
-        strokeOpacity=".35"
-        strokeWidth="1.4"
+        strokeOpacity=".4"
+        strokeWidth="1.3"
         strokeLinecap="round"
         fill="none"
       />
+      <rect className="dg-sweep" x="24.5" y="27" width="71" height="42" rx="20" fill={u("sweep")} />
     </svg>
   );
 }
@@ -364,16 +398,19 @@ const ROBOT_CSS = `
   .dg-bot:hover .dg-eyes-open, .dg-bot:focus-visible .dg-eyes-open { opacity: 0; }
   .dg-antenna, .dg-status, .dg-core-led { animation: dg-pulse 1.8s ease-in-out infinite; }
   .dg-jet { transform-box: fill-box; transform-origin: center top; animation: dg-jet .7s ease-in-out infinite; }
-  .dg-arm-l { transform-box: view-box; transform-origin: 30px 98px; animation: dg-arm 3.4s ease-in-out .4s infinite; }
-  .dg-arm-r { transform-box: view-box; transform-origin: 90px 98px; animation: dg-wave 7s ease-in-out 1.2s infinite; }
+  .dg-arm-l { animation: dg-handfloat 3.4s ease-in-out .4s infinite; }
+  .dg-arm-r { transform-box: view-box; transform-origin: 95px 109px; animation: dg-wave 7s ease-in-out 1.2s infinite; }
+  .dg-sweep { animation: dg-sweep 5s ease-in-out 1s infinite; }
   .dg-bot:hover .dg-arm-r { animation-duration: 2.2s; animation-delay: 0s; }
 
   @keyframes dg-hover { 0%,100% { transform: translateY(0) rotate(-1.5deg) } 50% { transform: translateY(-9px) rotate(1.5deg) } }
   @keyframes dg-shadow { 0%,100% { transform: scaleX(1); opacity: .45 } 50% { transform: scaleX(.7); opacity: .2 } }
   @keyframes dg-blink { 0%,93%,100% { transform: scaleY(1) } 96% { transform: scaleY(.1) } }
-  @keyframes dg-wave { 0%,62%,100% { transform: rotate(0) } 67% { transform: rotate(-145deg) } 71% { transform: rotate(-120deg) }
-    75% { transform: rotate(-145deg) } 79% { transform: rotate(-120deg) } 83% { transform: rotate(-145deg) } 92% { transform: rotate(0) } }
-  @keyframes dg-arm { 0%,100% { transform: rotate(0) } 50% { transform: rotate(6deg) } }
+  @keyframes dg-wave { 0%,62%,100% { transform: translate(0,0) rotate(0) } 67% { transform: translate(4px,-32px) rotate(-20deg) }
+    71% { transform: translate(5px,-32px) rotate(8deg) } 75% { transform: translate(4px,-33px) rotate(-20deg) } 79% { transform: translate(5px,-32px) rotate(8deg) }
+    83% { transform: translate(4px,-33px) rotate(-20deg) } 92% { transform: translate(0,0) rotate(0) } }
+  @keyframes dg-handfloat { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+  @keyframes dg-sweep { 0%,70% { transform: translateX(-60px); opacity: 0 } 75% { opacity: 1 } 100% { transform: translateX(60px); opacity: 0 } }
   @keyframes dg-jet { 0%,100% { opacity: .95; transform: scale(1) } 50% { opacity: .6; transform: scale(.85, .7) } }
   @keyframes dg-pulse { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
   @keyframes dg-pop { from { opacity: 0; transform: translateY(14px) scale(.97) } to { opacity: 1; transform: none } }
@@ -385,7 +422,7 @@ const ROBOT_CSS = `
   .dg-bubble { transform-origin: 80% 100%; animation: dg-bubble .35s cubic-bezier(.2,.8,.2,1) .6s both; }
   .dg-dot { animation: dg-dot 1.1s infinite; }
   @media (prefers-reduced-motion: reduce) {
-    .dg-blink, .dg-hover, .dg-shadow, .dg-arm-l, .dg-arm-r, .dg-jet, .dg-antenna, .dg-status, .dg-core-led, .dg-pop, .dg-bubble, .dg-dot { animation: none }
+    .dg-blink, .dg-hover, .dg-shadow, .dg-arm-l, .dg-arm-r, .dg-sweep, .dg-jet, .dg-antenna, .dg-status, .dg-core-led, .dg-pop, .dg-bubble, .dg-dot { animation: none }
     .dg-rig { transition: none }
   }
 `;
