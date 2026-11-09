@@ -101,7 +101,7 @@ const PAC_FLOWS: Flow[] = [
         title: "4 · Relecture",
         who: "Service Communication · Fannie & Coraline",
         color: C.review,
-        items: ["Relire l'article", "Valider l'étape"],
+        items: ["Relire l'article", "Deadline : 3 jours ouvrés après l'Image", "Valider l'étape"],
         mail: "Mail → Marick",
       },
       {
@@ -111,6 +111,7 @@ const PAC_FLOWS: Flow[] = [
         items: [
           "Télécharger l'image",
           "Intégrer sur le site",
+          "Deadline : 5 jours ouvrés après la Relecture",
           "Lien publié obligatoire",
           "Valider",
         ],
@@ -200,7 +201,7 @@ const BLOG_FLOWS: Flow[] = [
         title: "3 · Relecture",
         who: "Service Communication · Fannie & Coraline",
         color: C.review,
-        items: ["Relire l'article", "Valider l'étape"],
+        items: ["Relire l'article", "Deadline : 3 jours ouvrés après l'Image", "Valider l'étape"],
         mail: "Mail → Marick",
       },
       {
@@ -210,6 +211,7 @@ const BLOG_FLOWS: Flow[] = [
         items: [
           "Télécharger l'image",
           "Intégrer sur le site",
+          "Deadline : 5 jours ouvrés après la Relecture",
           "Lien publié obligatoire",
           "Valider",
         ],
@@ -251,7 +253,7 @@ const BLOG_FLOWS: Flow[] = [
         title: "4 · Relecture",
         who: "Service Communication · Fannie & Coraline",
         color: C.review,
-        items: ["Relire l'article", "Valider l'étape"],
+        items: ["Relire l'article", "Deadline : 3 jours ouvrés après l'Image", "Valider l'étape"],
         mail: "Mail → Marick",
       },
       {
@@ -677,8 +679,9 @@ export function GuideView({
             <div className="font-semibold text-base mb-2">Partout dans les suivis</div>
             <div>• « Marquer validée » sans date → la date du jour est mise automatiquement</div>
             <div>
-              • Geoffrey peut poser une deadline sur chaque étape → le responsable reçoit un mail 2
-              jours ouvrés avant
+              • Deadlines automatiques : Relecture 3 jours ouvrés après l'Image, Intégration 5 jours
+              ouvrés après la Relecture (Geoffrey peut les changer) → deadline écrite dans le mail
+              d'étape et rappel au responsable le jour J
             </div>
             <div>• @ dans un message → un seul mail à toutes les personnes taguées</div>
             <div>• Messages modifiables sans renvoi de mail</div>
