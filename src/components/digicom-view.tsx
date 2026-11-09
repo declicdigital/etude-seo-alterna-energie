@@ -126,6 +126,8 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
         const id = event.data.id;
         if (id !== null && (typeof id !== 'string' || id.length > 200)) return;
         const path = id ? fichePath(sheet, 'articles', id, typeof event.data.title === 'string' ? event.data.title : undefined) : sheetPath(sheet);
+        // The address follows the open card, but this must not reload the tracker (see frameSrc).
+        selfPath.current = `/${path}`;
         window.history.replaceState(window.history.state, '', `/${path}`);
         return;
       }
@@ -147,6 +149,22 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
   }, [canRemind, sendReminder, sheet]);
   const [legacyHash, setPageHash] = useState("");
   const pageHash = targetHash || legacyHash;
+  // The iframe keeps the address it was opened with: changing its src reloads the whole tracker
+  // (lost scroll, open cards, typing). Later targets are passed as a hash change instead.
+  const selfPath = useRef<string | null>(null);
+  const frameStart = useRef<{ src: string | null; hash: string }>({ src: null, hash: "" });
+  if (frameStart.current.src !== embedSrc) frameStart.current = { src: embedSrc, hash: pageHash };
+  const frameSrc = embedSrc ? embedSrc + frameStart.current.hash : undefined;
+  useEffect(() => {
+    if (!pageHash || pageHash === frameStart.current.hash) return;
+    if (selfPath.current === window.location.pathname) return; // the tracker itself updated the address
+    try {
+      const w = editorialFrame.current?.contentWindow;
+      if (w && w.location.hash !== pageHash) w.location.hash = pageHash;
+    } catch {
+      /* frame not ready */
+    }
+  }, [pageHash]);
   useEffect(() => {
     const onHash = () => setPageHash(window.location.hash);
     onHash();
@@ -278,7 +296,7 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
           <iframe
             ref={editorialFrame}
             onLoad={sendReminderAccess}
-            src={embedSrc + pageHash}
+            src={frameSrc}
             title={sheetLabel}
             className="flex-1 w-full border-0 min-h-0"
           />
