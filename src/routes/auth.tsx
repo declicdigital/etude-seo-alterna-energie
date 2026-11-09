@@ -30,6 +30,20 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  /** Compte existant sans mot de passe (ancienne connexion Google) ou mot de passe inconnu. */
+  const [needsPassword, setNeedsPassword] = useState(false);
+
+  /** Envoie le lien pour créer ou changer le mot de passe de l'adresse saisie. */
+  async function sendPasswordLink() {
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reinitialiser-mot-de-passe`,
+    });
+    if (err && !/not found|no user/i.test(err.message)) throw err;
+    setMode("forgot");
+    setNeedsPassword(false);
+    setError("");
+    setSent(true);
+  }
 
   useEffect(() => {
     getAccess().then((a) => {
@@ -46,18 +60,15 @@ function AuthPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setNeedsPassword(false);
     setLoading(true);
     try {
       if (mode === "forgot") {
-        const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-          redirectTo: `${window.location.origin}/reinitialiser-mot-de-passe`,
-        });
-        if (err && !/not found|no user/i.test(err.message)) throw err;
-        setSent(true);
+        await sendPasswordLink();
         return;
       }
       if (mode === "signup") {
-        const { error: err } = await supabase.auth.signUp({
+        const { data: signed, error: err } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
@@ -66,6 +77,12 @@ function AuthPage() {
           },
         });
         if (err) throw err;
+        // Adresse déjà connue (par exemple un ancien compte Google) : pas de nouveau compte.
+        if (signed.user && (signed.user.identities ?? []).length === 0) {
+          setNeedsPassword(true);
+          setError("Un compte existe déjà avec cet email.");
+          return;
+        }
         navigate({ to: "/en-attente" });
         return;
       }
@@ -77,6 +94,7 @@ function AuthPage() {
       await afterAuth();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
+      if (/invalid login|already registered|already exists/i.test(msg)) setNeedsPassword(true);
       setError(
         /invalid login/i.test(msg)
           ? "Email ou mot de passe incorrect."
@@ -107,7 +125,7 @@ function AuthPage() {
             {mode === "login"
               ? "Accédez à Digicom."
               : mode === "forgot"
-                ? "Recevez par mail un lien pour choisir un nouveau mot de passe."
+                ? "Recevez par mail un lien pour créer ou changer votre mot de passe."
                 : "Votre demande sera validée par un administrateur."}
           </p>
         </div>
@@ -120,7 +138,11 @@ function AuthPage() {
                 Le mot de passe unique n'existe plus. À votre première venue, cliquez sur « Créer un
                 compte » : votre demande est envoyée à l'administrateur, qui la valide. Ensuite,
                 vous vous connectez avec votre email et votre mot de passe, et vous restez connecté.
-                Mot de passe oublié ou jamais créé ? Cliquez sur « Mot de passe oublié ? ».
+              </p>
+              <p className="mt-2 text-xs leading-relaxed text-amber-800">
+                <strong>Vous vous connectiez avec Google ?</strong> Votre compte est conservé :
+                entrez la même adresse mail et cliquez sur « Mot de passe oublié ? » pour créer
+                votre mot de passe.
               </p>
             </div>
           </>
@@ -197,6 +219,32 @@ function AuthPage() {
             )}
 
             {error && <p className="text-xs text-red-600">{error}</p>}
+            {needsPassword && mode !== "forgot" && email.trim() && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs leading-relaxed text-emerald-900">
+                <p>
+                  Vous vous connectiez avec Google, ou vous n'avez pas encore de mot de passe ?
+                  Votre compte existe toujours avec cette adresse : recevez un lien pour créer votre
+                  mot de passe.
+                </p>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      await sendPasswordLink();
+                    } catch {
+                      setError("Une erreur est survenue. Réessayez dans un instant.");
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="mt-2 w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:opacity-60"
+                >
+                  Créer mon mot de passe
+                </button>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -218,6 +266,7 @@ function AuthPage() {
           type="button"
           onClick={() => {
             setMode(mode === "login" ? "signup" : "login");
+            setNeedsPassword(false);
             setSent(false);
             setError("");
           }}
