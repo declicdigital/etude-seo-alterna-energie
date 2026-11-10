@@ -703,7 +703,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "réécrire faq",
     ],
     answer:
-      "FAQ › Demandes, bloc « Nouvelle demande FAQ » : choisis Création ou Réécriture, écris le sujet, puis le contenu « À créer » ou « Contenu déjà fourni » (avec la question et la réponse exactes), la cible (Particulier ou Professionnel) et la catégorie (ou « + Nouvelle catégorie »). Ajoute si besoin un commentaire avec @ et des pièces jointes, puis « Sauvegarder » : Geoffrey est prévenu par mail. Toutes les cases doivent être remplies.",
+      "FAQ › Demandes, bloc « Nouvelle demande FAQ » : choisis Création ou Réécriture, écris le sujet, puis le contenu « À créer » ou « Contenu déjà fourni » (avec la question et la réponse exactes), la cible (Particulier ou Professionnel), Zendesk ou Site Web (où la FAQ sera publiée) et la catégorie (ou « + Nouvelle catégorie »). Ajoute si besoin un commentaire avec @ et des pièces jointes, puis « Sauvegarder » : Geoffrey est prévenu par mail. Toutes les cases doivent être remplies.",
   },
   {
     zone: "faq-demandes",

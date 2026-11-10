@@ -13,6 +13,7 @@ const BodySchema = z.object({
     content: z.string().max(60),
     category: z.string().max(120),
     target: z.string().max(40),
+    channel: z.string().max(40).optional().default(""),
   }),
   message: z.string().max(4000).default(""),
   mentions: z.array(z.string().email()).max(20).optional(),
@@ -32,6 +33,7 @@ function buildHtml(intro: string, p: z.infer<typeof BodySchema>): string {
     ["Type", p.request.type],
     ["Contenu", p.request.content],
     ["Cible", p.request.target],
+    ...(p.request.channel ? ([["Zendesk ou Site Web", p.request.channel]] as [string, string][]) : []),
     ["Catégorie", p.request.category],
   ];
   const msg = p.message
@@ -103,6 +105,7 @@ export const Route = createFileRoute("/api/public/notify-faq")({
           `Type : ${p.request.type}`,
           `Contenu : ${p.request.content}`,
           `Cible : ${p.request.target}`,
+          ...(p.request.channel ? [`Zendesk ou Site Web : ${p.request.channel}`] : []),
           `Catégorie : ${p.request.category}`,
           p.message ? `\nCommentaire :\n${p.message}` : "",
           ``,

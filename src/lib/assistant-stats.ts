@@ -343,7 +343,7 @@ function faqBlock(requests: FaqRequest[], zoneIds: Set<string>, today: string): 
   if (zoneIds.has("faq-demandes")) {
     const validated = requests.filter((r) => r.validatedAt);
     lines.push(
-      `- FAQ · Demandes : ${pl(requests.length, "demande")}, ${pl(validated.length, "validée")}, ${requests.length - validated.length} en attente · par cible : ${line(tally(requests.map((r) => r.target)))} · par type : ${line(tally(requests.map((r) => r.type)))} · par catégorie : ${line(tally(requests.map((r) => r.category)))} · demandes créées ce mois-ci : ${requests.filter((r) => (r.createdAt ?? "").startsWith(thisMonth)).length} · validées ce mois-ci : ${validated.filter((r) => (r.validatedAt ?? "").startsWith(thisMonth)).length}`,
+      `- FAQ · Demandes : ${pl(requests.length, "demande")}, ${pl(validated.length, "validée")}, ${requests.length - validated.length} en attente · par cible : ${line(tally(requests.map((r) => r.target)))} · Zendesk ou Site Web : ${line(tally(requests.map((r) => r.channel || "non précisé")))} · par type : ${line(tally(requests.map((r) => r.type)))} · par catégorie : ${line(tally(requests.map((r) => r.category)))} · demandes créées ce mois-ci : ${requests.filter((r) => (r.createdAt ?? "").startsWith(thisMonth)).length} · validées ce mois-ci : ${validated.filter((r) => (r.validatedAt ?? "").startsWith(thisMonth)).length}`,
     );
   }
   for (const [zone, target] of [

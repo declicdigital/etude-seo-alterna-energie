@@ -10,6 +10,9 @@ export const FAQ_CATEGORIES = [
   "Engagement responsable",
 ];
 
+/** Où la FAQ sera publiée : dans l'aide Zendesk ou sur le site web. */
+export const FAQ_CHANNELS = ["Zendesk", "Site Web"];
+
 export type FaqAttachment = { name: string; type: string; dataUrl: string };
 
 export type FaqComment = {
@@ -35,6 +38,8 @@ export type FaqRequest = {
   validatedAt?: string;
   validatedBy?: string;
   target: string;
+  /** Zendesk ou Site Web (absent sur les demandes créées avant ce choix). */
+  channel?: string;
   category: string;
   newCategory: boolean;
   comments: FaqComment[];

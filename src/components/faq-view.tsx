@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import type { Access } from "@/lib/access";
-import { canValidateFaq, validatedFaqForTarget, FAQ_CATEGORIES, type FaqAttachment, type FaqComment, type FaqRequest } from "@/lib/faq";
+import { canValidateFaq, validatedFaqForTarget, FAQ_CATEGORIES, FAQ_CHANNELS, type FaqAttachment, type FaqComment, type FaqRequest } from "@/lib/faq";
 import existingFaq from "@/data/faq-existing.json";
 
 type User = { id: string; full_name: string | null; email: string };
@@ -217,6 +217,7 @@ function summary(r: FaqRequest) {
     content: r.content,
     category: r.category,
     target: r.target,
+    channel: r.channel ?? "",
   };
 }
 
@@ -260,6 +261,7 @@ function NewRequestForm({
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [target, setTarget] = useState("");
+  const [channel, setChannel] = useState("");
   const [category, setCategory] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [comment, setComment] = useState("");
@@ -268,7 +270,7 @@ function NewRequestForm({
 
   const finalCategory = category === NEW_CAT ? newCategory.trim() : category;
   const contentReady = content !== "Contenu déjà fourni" || (question.trim() && answer.trim());
-  const ready = !!(type && subject.trim() && content && contentReady && target && finalCategory);
+  const ready = !!(type && subject.trim() && content && contentReady && target && channel && finalCategory);
 
   const submit = async () => {
     if (!ready || saving) return;
@@ -287,6 +289,7 @@ function NewRequestForm({
       question: content === "Contenu déjà fourni" && question.trim() ? question.trim() : undefined,
       answer: content === "Contenu déjà fourni" && answer.trim() ? answer.trim() : undefined,
       target,
+      channel,
       category: finalCategory,
       newCategory: category === NEW_CAT,
       comments,
@@ -294,7 +297,7 @@ function NewRequestForm({
     };
     try {
       await onSaved(r);
-      setType(""); setSubject(""); setContent(""); setQuestion(""); setAnswer(""); setTarget(""); setCategory(""); setNewCategory(""); setComment(""); setFiles([]);
+      setType(""); setSubject(""); setContent(""); setQuestion(""); setAnswer(""); setTarget(""); setChannel(""); setCategory(""); setNewCategory(""); setComment(""); setFiles([]);
     } catch (e) {
       alert("Échec de l'enregistrement : " + (e as Error).message);
     }
@@ -350,6 +353,10 @@ function NewRequestForm({
         <div>
           <span className={label}>Cible</span>
           <Choice value={target} options={["Particulier", "Professionnel"]} onChange={setTarget} />
+        </div>
+        <div>
+          <span className={label}>Zendesk ou Site Web</span>
+          <Choice value={channel} options={FAQ_CHANNELS} onChange={setChannel} />
         </div>
         <div className="md:col-span-2">
           <span className={label}>Catégorie</span>
@@ -612,6 +619,9 @@ function RequestCard({
             </span>
             <span className="rounded-full bg-muted px-2 py-0.5">{r.type}</span>
             <span className="rounded-full bg-muted px-2 py-0.5">{r.content}</span>
+            {r.channel && (
+              <span className="rounded-full bg-indigo-500/15 text-indigo-800 px-2 py-0.5">{r.channel}</span>
+            )}
             <span className="rounded-full bg-teal-500/15 text-teal-800 px-2 py-0.5">
               {r.category}{r.newCategory ? " (nouvelle)" : ""}
             </span>
