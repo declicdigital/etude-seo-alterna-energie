@@ -512,9 +512,9 @@ const PLANNING_FLOWS: Flow[] = [
         who: "Tout le monde",
         color: C.prep,
         items: [
-          "Vue claire (par défaut), frise détaillée ou par canal",
+          "Mois par mois (par défaut), frise détaillée ou par canal",
           "Année, trimestre ou mois",
-          "Sections repliables",
+          "Onglets Acquisition, Fidélisation, Réglementaire",
         ],
       },
       {
@@ -522,9 +522,9 @@ const PLANNING_FLOWS: Flow[] = [
         who: "Tout le monde",
         color: C.review,
         items: [
-          "Une ligne par campagne : acquisition, fidélisation, réglementaire",
+          "Une carte par campagne, avec aperçu des visuels",
           "Clic sur une campagne : panneau avec ses actions, images et KPI",
-          "Temps forts : périodes et jalons",
+          "Temps forts du mois : périodes et jalons",
         ],
       },
       {

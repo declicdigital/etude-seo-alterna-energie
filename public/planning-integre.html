@@ -922,6 +922,83 @@ body { font-size: 13px; -webkit-font-smoothing: antialiased; }
 .svd-act-title { font-size: 13px; font-weight: 600; color: var(--text); }
 .svd-act-sub { font-size: 11.5px; color: var(--text3); margin-top: 1px; }
 .svd-none { font-size: 12.5px; color: var(--text3); }
+
+/* ═════════ MOIS PAR MOIS ═════════ */
+#simple-root { background: var(--bg); display: flex; flex-direction: column; }
+.bd { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.bd-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 20px 6px; }
+.bd-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.bd-tab { height: 32px; padding: 0 12px; border-radius: 99px; border: 1px solid var(--border); background: var(--surface); color: var(--text2);
+  font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.bd-tab span { font-size: 11px; color: var(--text3); background: var(--bg2); border-radius: 99px; padding: 1px 7px; }
+.bd-tab:hover { border-color: var(--border2); }
+.bd-tab.active { background: var(--text); color: var(--surface); border-color: var(--text); }
+.bd-tab.active span { background: rgba(255,255,255,.18); color: inherit; }
+.bd-hint { font-size: 12px; color: var(--text3); margin-left: auto; }
+.bd-cols { flex: 1; min-height: 0; display: flex; gap: 14px; overflow-x: auto; overflow-y: hidden; padding: 10px 20px 20px; scroll-snap-type: x proximity; }
+.bd-col { flex: 0 0 300px; width: 300px; min-width: 0; display: flex; flex-direction: column; min-height: 0; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 18px; scroll-snap-align: start; }
+.bd.fit .bd-col { flex: 1 1 0; width: auto; min-width: 260px; }
+.bd-list > *, .bd-acts, .bd-act, .bd-body { min-width: 0; }
+.bd-card { max-width: 100%; }
+.bd-col.now { border-color: var(--today); box-shadow: 0 0 0 3px rgba(225,29,72,.12); }
+.bd-col.pulse { animation: today-pulse 1.2s ease-out 2; }
+.bd-col-head { padding: 14px 16px 10px; display: flex; align-items: center; gap: 8px; }
+.bd-col-title { font-size: 16px; font-weight: 700; letter-spacing: -.01em; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.bd-col-sub { font-size: 11.5px; color: var(--text3); margin-top: 1px; }
+.bd-now { font-size: 10px; font-weight: 700; color: #fff; background: var(--today); border-radius: 99px; padding: 2px 8px; letter-spacing: .02em; }
+.bd-moments { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 12px 10px; }
+.bd-period, .bd-ms { font-size: 11px; font-weight: 600; border-radius: 99px; padding: 3px 9px; cursor: pointer; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.bd-ms { background: var(--surface); border: 1px solid var(--border); color: var(--text2); }
+.bd-ms b { color: var(--text); }
+.bd-list { flex: 1; overflow-y: auto; padding: 2px 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.bd-sep, .bd-empty { flex-shrink: 0; }
+.bd-sep { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text3); margin: 6px 4px -2px; }
+.bd-empty { font-size: 12.5px; color: var(--text3); text-align: center; padding: 26px 8px; border: 1.5px dashed var(--border); border-radius: 14px; }
+.bd-card { flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15,23,42,.05); transition: box-shadow .15s, transform .15s, border-color .15s; }
+.bd-card:hover { box-shadow: 0 14px 30px -16px rgba(15,23,42,.45); transform: translateY(-2px); border-color: var(--border2); }
+.bd-card.selected { border-color: var(--cc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--cc) 25%, transparent); }
+.bd-imgs { display: grid; gap: 2px; height: 120px; background: var(--bg2); }
+.bd-imgs.n1 { grid-template-columns: 1fr; }
+.bd-imgs.n2 { grid-template-columns: 1fr 1fr; }
+.bd-imgs.n3 { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; }
+.bd-imgs.n3 img:first-child { grid-row: span 2; }
+.bd-imgs img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 0; }
+.bd-band { height: 54px; display: flex; align-items: flex-end; padding: 8px 12px; font-size: 22px; }
+.bd-body { padding: 12px 14px 14px; }
+.bd-type { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.bd-title { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3; margin-top: 4px;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.bd-dates { font-size: 12px; color: var(--text3); margin-top: 5px; }
+.bd-kpi { margin-top: 10px; }
+.bd-kpi-row { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text2); }
+.bd-kpi-bar { height: 6px; border-radius: 99px; background: var(--bg2); overflow: hidden; margin-top: 4px; }
+.bd-kpi-bar > div { height: 100%; border-radius: 99px; }
+.bd-chans { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.bd-chans span { font-size: 10.5px; font-weight: 600; color: var(--text2); background: var(--bg2); border-radius: 99px; padding: 2px 8px; }
+.bd-acts { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--border); padding-top: 10px; }
+.bd-act { display: flex; align-items: center; gap: 8px; padding: 4px; margin: 0 -4px; border-radius: 10px; }
+.bd-act:hover { background: var(--bg2); }
+.bd-act-date { flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+.bd-act-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.bd-act-title { font-size: 12.5px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bd-act-ch { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bd-act-img { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border); }
+.bd-more { font-size: 11.5px; color: var(--text3); padding: 2px 4px 0 40px; }
+.bd-cont { border-left: 4px solid var(--cc); border-radius: 14px; }
+.bd-cont-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px 0; }
+.bd-cont .bd-acts { margin: 6px 12px 10px; padding-top: 6px; }
+.bd-cont-title { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bd-cont-tag { font-size: 10px; font-weight: 700; color: var(--text3); background: var(--bg2); border-radius: 99px; padding: 1px 7px; flex-shrink: 0; }
+.bd-cont-sub { font-size: 11.5px; color: var(--text3); padding: 3px 12px 10px 30px; }
+.bd-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+/* export PDF : les mois passent à la ligne, 4 par rangée */
+.exporting .bd-cols { flex-wrap: wrap; overflow: visible; }
+.exporting .bd-col { flex: 0 0 calc(25% - 11px); }
+.exporting .bd-list { overflow: visible; }
+.exporting .bd-hint { display: none; }
+@media (max-width: 760px) { .bd-col { flex-basis: 86vw; } .bd-hint { display: none; } }
 /* menu « + Ajouter » */
 .add-menu { position: relative; }
 .add-menu-list { position: absolute; top: 38px; right: 0; z-index: 500; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
@@ -974,7 +1051,7 @@ body.view-simple #density-tabs { display: none; }
         <button class="btn" id="btn-new-year" title="Créer une nouvelle année" style="display:none">+ Année</button>
       </div>
       <div class="tb-group tb-seg" id="view-tabs">
-        <button class="btn active" data-view="simple">✨ Vue claire</button>
+        <button class="btn active" data-view="simple">🗓 Mois par mois</button>
         <button class="btn" data-view="timeline">📅 Frise détaillée</button>
         <button class="btn" data-view="canal">🗂 Par canal</button>
       </div>
@@ -3671,6 +3748,7 @@ async function exportPDF() {
     STATE.activeScale = 'year';
     document.documentElement.dataset.theme = 'light';
     root.style.cssText = prev.style + `;width:${EXPORT_W}px;max-width:none;height:auto;overflow:visible;flex:none`;
+    root.classList.add('exporting');
     render();
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     root.querySelectorAll('.today-flag').forEach(f => f.style.display = 'none');
@@ -3711,6 +3789,7 @@ async function exportPDF() {
     STATE.activeScale = prev.scale;
     document.documentElement.dataset.theme = prev.theme;
     root.setAttribute('style', prev.style);
+    root.classList.remove('exporting');
     render();
   }
 }
@@ -4112,9 +4191,11 @@ function scrollToToday() {
   }
   if(STATE.activeView === 'simple') {
     requestAnimationFrame(() => {
-      const t = document.querySelector('.sv-today');
-      if(!t) { toast("Aujourd'hui n'est pas sur cette période"); return; }
-      t.classList.remove('pulse'); void t.offsetWidth; t.classList.add('pulse');
+      const col = document.querySelector('.bd-col.now');
+      const cols = document.querySelector('.bd-cols');
+      if(!col || !cols) { toast("Aujourd'hui n'est pas sur cette période"); return; }
+      cols.scrollTo({ left: Math.max(0, col.offsetLeft - 24), behavior: 'smooth' });
+      col.classList.remove('pulse'); void col.offsetWidth; col.classList.add('pulse');
     });
     return;
   }
@@ -4196,142 +4277,155 @@ function svCampaigns(type) {
   return list.sort((a, b) => (parseDate(a.startDate) - parseDate(b.startDate)) || (a.title || '').localeCompare(b.title || ''));
 }
 
+/** Tableau mois par mois : une colonne par mois (semaines en vue Mois), des cartes de campagne
+ *  avec aperçu des visuels et des actions de la période. */
+function svBuckets() {
+  const y = STATE.currentYear;
+  const { start, end } = svRange();
+  const out = [];
+  if(STATE.activeScale === 'month') {
+    // semaines (lundi → dimanche) qui touchent le mois
+    let d0 = new Date(start); d0.setDate(d0.getDate() - ((d0.getDay() + 6) % 7));
+    while(d0 <= end) {
+      const s = d0 < start ? new Date(start) : new Date(d0);
+      const e0 = addDays(d0, 6); const e = e0 > end ? new Date(end) : e0;
+      out.push({ start: s, end: e, title: `Semaine ${isoWeek(d0)}`, sub: `${s.getDate()} → ${e.getDate()} ${e.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '')}` });
+      d0 = addDays(d0, 7);
+    }
+  } else {
+    for(let m = start.getMonth(); m <= end.getMonth(); m++) {
+      const s = new Date(y, m, 1), e = new Date(y, m + 1, 0);
+      const t = s.toLocaleDateString('fr-FR', { month: 'long' });
+      out.push({ start: s, end: e, title: t.charAt(0).toUpperCase() + t.slice(1), sub: String(y) });
+    }
+  }
+  return out;
+}
+function svTypeFilter() { try { return localStorage.getItem('planning_sv_type') || 'all'; } catch(e) { return 'all'; } }
+function svSetTypeFilter(t) { try { localStorage.setItem('planning_sv_type', t); } catch(e) {} renderSimple(); }
+
 function renderSimple() {
   const root = document.getElementById('simple-root');
   if(!root) return;
   const d = data();
-  const { start, end } = svRange();
-  const span = (end - start) / 864e5 + 1;
-  const pos = (date) => Math.min(100, Math.max(0, ((date - start) / 864e5) / span * 100));
-  const inRange = (s, e) => e >= start && s <= end;
   const editor = !!STATE.isAdmin;
   const today = new Date(); today.setHours(0,0,0,0);
-  const scrollTop = root.scrollTop;
+  const typeF = svTypeFilter();
+  const buckets = svBuckets();
+  const { start, end } = svRange();
+  const prevScroll = root.querySelector('.bd-cols') ? root.querySelector('.bd-cols').scrollLeft : null;
 
-  // Repères de temps (mois, semaines ou jours selon l'échelle)
-  const ticks = [];
-  if(STATE.activeScale === 'month') {
-    for(let dd = new Date(start); dd <= end; dd = addDays(dd, 1)) {
-      const we = dd.getDay() === 0 || dd.getDay() === 6;
-      ticks.push({ at: pos(dd), w: 100 / span, label: String(dd.getDate()), weekend: we, now: +dd === +today });
-    }
-  } else if(STATE.activeScale === 'q') {
-    for(let m = start.getMonth(); m <= end.getMonth(); m++) {
-      const ms = new Date(start.getFullYear(), m, 1), me = new Date(start.getFullYear(), m + 1, 0);
-      ticks.push({ at: pos(ms), w: pos(addDays(me, 1)) - pos(ms) || (100 - pos(ms)), label: ms.toLocaleDateString('fr-FR', { month: 'long' }), now: today >= ms && today <= me });
-    }
-  } else {
-    for(let m = 0; m < 12; m++) {
-      const ms = new Date(start.getFullYear(), m, 1), me = new Date(start.getFullYear(), m + 1, 0);
-      ticks.push({ at: pos(ms), w: (m === 11 ? 100 : pos(addDays(me, 1))) - pos(ms), label: ms.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', ''), now: today >= ms && today <= me });
-    }
-  }
-  const tickHtml = ticks.map(t => `<div class="sv-tick${t.now ? ' now' : ''}" style="left:${t.at}%;width:${t.w}%;${t.weekend ? 'background:var(--bg2);' : ''}${STATE.activeScale === 'month' ? 'font-size:11px;' : ''}">${esc(t.label)}</div>`).join('');
-  const gridHtml = ticks.filter((t, i) => STATE.activeScale !== 'month' || i % 7 === 0).map(t => `<div class="sv-gridline" style="left:${t.at}%"></div>`).join('');
-  const todayHtml = (today >= start && today <= end) ? `<div class="sv-today" style="left:calc(var(--lw) + (100% - var(--lw)) * ${pos(today) / 100})"></div>` : '';
+  const typeOf = (t) => SV_TYPES.find(x => x.type === t) || SV_TYPES[0];
+  const all = SV_TYPES.filter(t => t.type !== 'reglementaire' || STATE.displayOpts.showRegulatory)
+    .flatMap(t => svCampaigns(t.type));
+  const counts = { all: 0 };
+  SV_TYPES.forEach(t => counts[t.type] = 0);
+  const inSpan = all.filter(c => parseDate(c.startDate) <= end && parseDate(c.endDate || c.startDate) >= start);
+  inSpan.forEach(c => { counts.all++; counts[c.type] = (counts[c.type] || 0) + 1; });
+  const camps = typeF === 'all' ? inSpan : inSpan.filter(c => c.type === typeF);
+  const chName = (id) => ((d.channels || []).find(x => x.id === id) || {}).name || '';
+  const actsOf = (c, s, e) => (d.actions || []).filter(a => a.campaignId === c.id
+      && (!STATE.filters.channels.length || STATE.filters.channels.includes(a.channelId))
+      && (() => { const ad = parseDate(a.startDate || a.date); return ad && ad >= s && ad <= e; })())
+    .sort((a, b) => parseDate(a.startDate || a.date) - parseDate(b.startDate || b.date));
 
-  const periodLabel = STATE.activeScale === 'q' ? `T${STATE.selectedQuarter || 1} ${STATE.currentYear}`
-    : STATE.activeScale === 'month' ? start.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : String(STATE.currentYear);
-
-  let html = `<div class="sv">
-    <div class="sv-grid">${gridHtml}</div>
-    ${todayHtml}
-    <div class="sv-row sv-head"><div class="sv-left">${esc(periodLabel)}</div><div class="sv-right">${tickHtml}</div></div>
-    <div class="sv-hint">
-      <span>👆 <b>Clique sur une campagne</b> pour voir ses actions${editor ? ' et la modifier' : ''}.</span>
-      <span><i class="sv-legend-bar"></i>durée de la campagne</span>
-      <span><i class="sv-legend-dot"></i>une action (survole pour le détail)</span>
+  const actLine = (a, color) => {
+    const ad = parseDate(a.startDate || a.date);
+    const img = getActionImages(a)[0];
+    const ch = chName(a.channelId);
+    return `<div class="bd-act" data-aid="${escAttr(a.id)}" title="${escAttr(`${a.title || 'Action'} · ${fmtDate(a.startDate || a.date)}${ch ? ' · ' + ch : ''}`)}">
+      <span class="bd-act-date" style="color:${color};background:${hexToRgba(color, .12)}">${ad.getDate()}</span>
+      <span class="bd-act-main"><span class="bd-act-title">${esc(a.title || 'Action')}</span>${ch ? `<span class="bd-act-ch">${esc(ch)}</span>` : ''}</span>
+      ${img ? `<img class="bd-act-img" src="${safeImgSrc(img)}" alt="" loading="lazy">` : ''}
     </div>`;
+  };
 
-  // ── Temps forts : périodes + jalons
-  if(STATE.displayOpts.showSeason) {
-    const periods = (d.periods || []).filter(p => p.start && inRange(parseDate(p.start), parseDate(p.end || p.start)))
-      .sort((a, b) => parseDate(a.start) - parseDate(b.start));
-    const lanes = [];
-    periods.forEach(p => {
-      const s0 = parseDate(p.start), e0 = parseDate(p.end || p.start);
-      let lane = lanes.findIndex(last => last < s0);
-      if(lane < 0) { lanes.push(e0); lane = lanes.length - 1; } else lanes[lane] = e0;
-      p.__lane = lane;
-    });
-    const milestones = (d.milestones || []).filter(m => m.date && inRange(parseDate(m.date), parseDate(m.date)));
-    const collapsed = svCollapsed().has('season');
-    const nb = periods.length + milestones.length;
-    html += `<div class="sv-section${collapsed ? ' collapsed' : ''}">
-      <div class="sv-row sv-sec-head" onclick="svToggleSection('season')">
-        <div class="sv-left"><div class="sv-sec-title"><span class="sv-chev">▾</span>✨ Temps forts <span class="sv-count">${nb}</span></div></div>
-        <div class="sv-right" style="padding-right:16px;gap:6px;justify-content:flex-end">${editor ? `<button class="sv-add" onclick="event.stopPropagation();openPeriodModal(null)">＋ Période</button><button class="sv-add" style="margin-left:0" onclick="event.stopPropagation();openMilestoneModal(null)">＋ Jalon</button>` : ''}</div>
-      </div><div class="sv-body">`;
-    const laneCount = Math.max(1, lanes.length);
-    for(let l = 0; l < laneCount; l++) {
-      const items = periods.filter(p => p.__lane === l).map(p => {
-        const s0 = parseDate(p.start), e0 = parseDate(p.end || p.start);
-        const left = pos(s0), right = pos(addDays(e0, 1));
-        const c = p.color || '#64748b';
-        return `<div class="sv-period" data-pid="${escAttr(p.id)}" title="${escAttr(`${p.title} · ${fmtDate(p.start)} → ${fmtDate(p.end || p.start)}`)}" style="left:${left}%;width:max(${right - left}%,6px);background:${hexToRgba(c, .22)};box-shadow:inset 3px 0 0 ${c}">${esc(p.title || '')}</div>`;
-      }).join('');
-      html += `<div class="sv-row sv-lane"><div class="sv-left" style="font-size:11.5px;color:var(--text3)">${l === 0 ? 'Périodes' : ''}</div><div class="sv-right">${items}</div></div>`;
-    }
-    const msHtml = milestones.map(m => `<div class="sv-ms" data-mid="${escAttr(m.id)}" title="${escAttr(`${m.title} · ${fmtDate(m.date)}`)}" style="left:${pos(parseDate(m.date)) + (100 / span) / 2}%">${esc(m.icon || '📌')}</div>`).join('');
-    html += `<div class="sv-row" style="height:36px;border-bottom:1px solid var(--border)"><div class="sv-left" style="font-size:11.5px;color:var(--text3)">Jalons</div><div class="sv-right">${msHtml}</div></div>`;
-    html += `</div></div>`;
-  }
-
-  // ── Une section par stratégie
-  const collapsedSet = svCollapsed();
-  SV_TYPES.forEach(t => {
-    if(t.type === 'reglementaire' && !STATE.displayOpts.showRegulatory) return;
-    const camps = svCampaigns(t.type).filter(c => inRange(parseDate(c.startDate), parseDate(c.endDate || c.startDate)));
-    const collapsed = collapsedSet.has(t.type);
-    html += `<div class="sv-section${collapsed ? ' collapsed' : ''}">
-      <div class="sv-row sv-sec-head" onclick="svToggleSection('${t.type}')">
-        <div class="sv-left"><div class="sv-sec-title"><span class="sv-chev">▾</span>${t.icon} ${t.label} <span class="sv-count">${camps.length}</span></div></div>
-        <div class="sv-right" style="padding-right:16px;justify-content:flex-end">${editor ? `<button class="sv-add" onclick="event.stopPropagation();openCampaignModal(null,'${t.type}')">＋ Campagne</button>` : ''}</div>
-      </div><div class="sv-body">`;
-    if(!camps.length) html += `<div class="sv-empty">${searchText() ? 'Aucune campagne ne correspond à la recherche.' : 'Aucune campagne sur cette période.'}</div>`;
-    camps.forEach(c => {
-      const s0 = parseDate(c.startDate), e0 = parseDate(c.endDate || c.startDate);
-      const left = pos(s0), right = pos(addDays(e0, 1));
-      const color = c.color || t.color;
-      const acts = (d.actions || []).filter(a => a.campaignId === c.id && (!STATE.filters.channels.length || STATE.filters.channels.includes(a.channelId)));
-      const prog = STATE.displayOpts.showKpi ? getProgress(c) : null;
-      const kpi = prog === null ? '' : `<span class="sv-kpi ${prog >= 100 ? 'ok' : 'ko'}" title="${escAttr((c.kpi && c.kpi.type) || 'KPI')}">${prog >= 100 ? '★ ' : ''}${prog} %</span>`;
-      const dots = acts.map(a => {
-        const ad = parseDate(a.startDate || a.date);
-        if(!ad || ad < start || ad > end) return '';
-        const ch = (d.channels || []).find(x => x.id === a.channelId);
-        return `<span class="sv-act" style="left:${pos(ad) + (100 / span) / 2}%;--ac:${color}" title="${escAttr(`${a.title || 'Action'} · ${fmtDate(a.startDate || a.date)}${ch ? ' · ' + ch.name : ''}`)}"></span>`;
-      }).join('');
-      html += `<div class="sv-row sv-camp${SV_SELECTED === c.id ? ' selected' : ''}" data-cid="${escAttr(c.id)}">
-        <div class="sv-left">
-          <span class="sv-dot" style="background:${color}"></span>
-          <div class="sv-name">
-            <div class="sv-title" title="${escAttr(c.title || '')}">${campaignAtteinte(c) ? '★ ' : ''}${esc(c.title || 'Campagne')}</div>
-            <div class="sv-sub">${fmtDate(c.startDate)}${c.endDate && c.endDate !== c.startDate ? ' → ' + fmtDate(c.endDate) : ''}${acts.length ? ` · ${acts.length} action${acts.length > 1 ? 's' : ''}` : ''}</div>
-          </div>
-          ${kpi}
-        </div>
-        <div class="sv-right">
-          <div class="sv-bar${s0 < start ? ' cut-l' : ''}${e0 > end ? ' cut-r' : ''}" style="left:${left}%;width:max(${right - left}%,8px);background:linear-gradient(90deg, ${color}, ${hexToRgba(color, .75)})"></div>
-          ${dots}
-        </div>
+  const card = (c, b, continuing) => {
+    const t = typeOf(c.type);
+    const color = c.color || t.color;
+    const acts = actsOf(c, b.start, b.end);
+    const allActs = (d.actions || []).filter(a => a.campaignId === c.id);
+    const prog = STATE.displayOpts.showKpi ? getProgress(c) : null;
+    const dates = `${fmtDate(c.startDate)}${c.endDate && c.endDate !== c.startDate ? ' → ' + fmtDate(c.endDate) : ''}`;
+    const shown = acts.slice(0, continuing ? 3 : 4);
+    const more = acts.length - shown.length;
+    if(continuing) {
+      return `<div class="bd-card bd-cont" data-cid="${escAttr(c.id)}" style="--cc:${color}">
+        <div class="bd-cont-head"><span class="bd-dot" style="background:${color}"></span><span class="bd-cont-title">${esc(c.title || 'Campagne')}</span><span class="bd-cont-tag">en cours</span></div>
+        ${shown.length ? `<div class="bd-acts">${shown.map(a => actLine(a, color)).join('')}${more > 0 ? `<div class="bd-more">+ ${more} autre${more > 1 ? 's' : ''}</div>` : ''}</div>` : `<div class="bd-cont-sub">jusqu'au ${fmtDate(c.endDate || c.startDate)}</div>`}
       </div>`;
-    });
-    html += `</div></div>`;
-  });
-  html += `</div>`;
-  root.innerHTML = html;
-  root.scrollTop = scrollTop;
+    }
+    const imgs = [];
+    (acts.length ? acts : allActs).forEach(a => getActionImages(a).forEach(u => { if(imgs.length < 3) imgs.push(u); }));
+    const chans = [...new Set(allActs.map(a => chName(a.channelId)).filter(Boolean))];
+    return `<div class="bd-card" data-cid="${escAttr(c.id)}" style="--cc:${color}">
+      ${imgs.length ? `<div class="bd-imgs n${imgs.length}">${imgs.map(u => `<img src="${safeImgSrc(u)}" alt="" loading="lazy">`).join('')}</div>` : `<div class="bd-band" style="background:linear-gradient(120deg, ${color}, ${hexToRgba(color, .55)})"><span>${t.icon}</span></div>`}
+      <div class="bd-body">
+        <div class="bd-type" style="color:${t.color}">${t.icon} ${t.label}${c.campaignType ? ' · ' + esc(c.campaignType) : ''}</div>
+        <div class="bd-title">${campaignAtteinte(c) ? '★ ' : ''}${esc(c.title || 'Campagne')}</div>
+        <div class="bd-dates">📅 ${dates} · ${allActs.length} action${allActs.length > 1 ? 's' : ''}</div>
+        ${prog !== null ? `<div class="bd-kpi"><div class="bd-kpi-row"><span>${esc((c.kpi && c.kpi.type) || 'Objectif')}</span><b style="color:${prog >= 100 ? '#047857' : '#be123c'}">${prog} %</b></div><div class="bd-kpi-bar"><div style="width:${Math.min(100, prog)}%;background:${prog >= 100 ? '#10b981' : color}"></div></div></div>` : ''}
+        ${chans.length ? `<div class="bd-chans">${chans.slice(0, 4).map(n => `<span>${esc(n)}</span>`).join('')}${chans.length > 4 ? `<span>+${chans.length - 4}</span>` : ''}</div>` : ''}
+        ${shown.length ? `<div class="bd-acts">${shown.map(a => actLine(a, color)).join('')}${more > 0 ? `<div class="bd-more">+ ${more} autre${more > 1 ? 's' : ''} ce mois-ci</div>` : ''}</div>` : ''}
+      </div>
+    </div>`;
+  };
 
-  root.querySelectorAll('.sv-camp').forEach(row => row.addEventListener('click', () => svOpenDrawer(row.dataset.cid)));
-  root.querySelectorAll('.sv-period').forEach(el => el.addEventListener('click', () => {
+  const tabs = [['all', 'Toutes', '🗂']].concat(SV_TYPES.filter(t => t.type !== 'reglementaire' || STATE.displayOpts.showRegulatory).map(t => [t.type, t.label, t.icon]));
+  let html = `<div class="bd${STATE.activeScale === 'year' ? '' : ' fit'}">
+    <div class="bd-top">
+      <div class="bd-tabs">${tabs.map(([k, l, i]) => `<button class="bd-tab${typeF === k ? ' active' : ''}" data-tf="${k}">${i} ${l} <span>${counts[k] || 0}</span></button>`).join('')}</div>
+      <div class="bd-hint">Clique sur une carte pour tout voir${editor ? ' et la modifier' : ''}.</div>
+    </div>
+    <div class="bd-cols">`;
+  buckets.forEach((b, i) => {
+    const isNow = today >= b.start && today <= b.end;
+    const startsHere = camps.filter(c => { const s0 = parseDate(c.startDate); return (s0 >= b.start && s0 <= b.end) || (i === 0 && s0 < b.start && parseDate(c.endDate || c.startDate) >= b.start); });
+    const going = camps.filter(c => !startsHere.includes(c) && parseDate(c.startDate) < b.start && parseDate(c.endDate || c.startDate) >= b.start);
+    const periods = STATE.displayOpts.showSeason ? (d.periods || []).filter(p => p.start && parseDate(p.start) <= b.end && parseDate(p.end || p.start) >= b.start) : [];
+    const ms = STATE.displayOpts.showSeason ? (d.milestones || []).filter(m => m.date && parseDate(m.date) >= b.start && parseDate(m.date) <= b.end) : [];
+    html += `<section class="bd-col${isNow ? ' now' : ''}" data-col="${i}">
+      <header class="bd-col-head">
+        <div><div class="bd-col-title">${esc(b.title)}${isNow ? ' <span class="bd-now">Maintenant</span>' : ''}</div><div class="bd-col-sub">${esc(b.sub)} · ${startsHere.length + going.length} campagne${startsHere.length + going.length > 1 ? 's' : ''}</div></div>
+      </header>
+      ${periods.length || ms.length ? `<div class="bd-moments">
+        ${periods.map(p => `<span class="bd-period" data-pid="${escAttr(p.id)}" style="background:${hexToRgba(p.color || '#64748b', .16)};color:var(--text);box-shadow:inset 3px 0 0 ${p.color || '#64748b'}" title="${escAttr(`${p.title} · ${fmtDate(p.start)} → ${fmtDate(p.end || p.start)}`)}">${esc(p.title || '')}</span>`).join('')}
+        ${ms.map(m => `<span class="bd-ms" data-mid="${escAttr(m.id)}" title="${escAttr(m.title || '')}">${esc(m.icon || '📌')} <b>${parseDate(m.date).getDate()}</b> ${esc(m.title || '')}</span>`).join('')}
+      </div>` : ''}
+      <div class="bd-list">
+        ${startsHere.map(c => card(c, b, false)).join('')}
+        ${going.length ? `<div class="bd-sep">En cours</div>${going.map(c => card(c, b, true)).join('')}` : ''}
+        ${!startsHere.length && !going.length ? `<div class="bd-empty">${searchText() ? 'Rien ne correspond à la recherche.' : 'Rien de prévu.'}</div>` : ''}
+      </div>
+    </section>`;
+  });
+  html += `</div></div>`;
+  root.innerHTML = html;
+
+  const cols = root.querySelector('.bd-cols');
+  if(prevScroll !== null) cols.scrollLeft = prevScroll;
+  else {
+    const now = root.querySelector('.bd-col.now');
+    if(now && STATE.activeScale === 'year') cols.scrollLeft = Math.max(0, now.offsetLeft - 24);
+  }
+  root.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => svSetTypeFilter(b.dataset.tf));
+  root.querySelectorAll('.bd-card').forEach(el => el.addEventListener('click', (ev) => {
+    const act = ev.target.closest('.bd-act');
+    if(act) {
+      const a = (data().actions || []).find(x => x.id === act.dataset.aid);
+      if(a) { openActionDetailModal(a); return; }
+    }
+    svOpenDrawer(el.dataset.cid);
+  }));
+  root.querySelectorAll('.bd-period').forEach(el => el.addEventListener('click', () => {
     const p = (data().periods || []).find(x => x.id === el.dataset.pid);
     if(p) openPeriodModal(p, !STATE.isAdmin);
   }));
-  root.querySelectorAll('.sv-ms').forEach(el => el.addEventListener('click', () => {
+  root.querySelectorAll('.bd-ms').forEach(el => el.addEventListener('click', () => {
     const m = (data().milestones || []).find(x => x.id === el.dataset.mid);
     if(m) openMilestoneModal(m, !STATE.isAdmin);
   }));
+  root.querySelectorAll('.bd-card').forEach(el => el.classList.toggle('selected', el.dataset.cid === SV_SELECTED));
   if(SV_SELECTED) svRenderDrawer();
 }
 
@@ -4339,14 +4433,14 @@ function svOpenDrawer(id) {
   SV_SELECTED = id;
   document.getElementById('sv-drawer').classList.add('open');
   document.getElementById('sv-drawer').setAttribute('aria-hidden', 'false');
-  document.querySelectorAll('.sv-camp').forEach(r => r.classList.toggle('selected', r.dataset.cid === id));
+  document.querySelectorAll('.bd-card').forEach(r => r.classList.toggle('selected', r.dataset.cid === id));
   svRenderDrawer();
 }
 function svCloseDrawer() {
   SV_SELECTED = null;
   document.getElementById('sv-drawer').classList.remove('open');
   document.getElementById('sv-drawer').setAttribute('aria-hidden', 'true');
-  document.querySelectorAll('.sv-camp.selected').forEach(r => r.classList.remove('selected'));
+  document.querySelectorAll('.bd-card.selected').forEach(r => r.classList.remove('selected'));
 }
 function svRenderDrawer() {
   const d = data();
@@ -4449,6 +4543,7 @@ function svInstallAddMenu() {
 function render() {
   renderColorLegend();
   document.body.classList.toggle('view-simple', STATE.activeView === 'simple');
+  document.body.classList.toggle('scale-year', STATE.activeScale === 'year');
   if(STATE.activeView === 'simple') {
     GRID = buildGrid(STATE.currentYear, STATE.activeScale);
     renderSimple();
