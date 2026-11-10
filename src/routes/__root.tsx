@@ -88,14 +88,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Digicom" },
       { name: "twitter:description", content: "L'outil de suivi de la communication digitale." },
-      { property: "og:image", content: `${APP_ORIGIN}/og-digicom.jpg` },
+      { property: "og:image", content: `${APP_ORIGIN}/og-digicom-v2.jpg` },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       {
         property: "og:image:alt",
         content: "Digicom | Alterna Énergie, avec D.I.G.I.P.O.T.E, l'assistant robot",
       },
-      { name: "twitter:image", content: `${APP_ORIGIN}/og-digicom.jpg` },
+      { name: "twitter:image", content: `${APP_ORIGIN}/og-digicom-v2.jpg` },
     ],
     links: [
       {
