@@ -144,7 +144,8 @@ describe("assistant Digicom", () => {
       "Grands Comptes",
       "Blog Particulier",
       "FAQ › Professionnel",
-      "Marick",
+      // Marick valide aussi les FAQ : seul son rôle sur le blog doit rester caché.
+      "intègre les articles",
     ])
       expect(p).not.toContain(word);
     const local = localAnswer("c'est quoi digicom ?", zones);

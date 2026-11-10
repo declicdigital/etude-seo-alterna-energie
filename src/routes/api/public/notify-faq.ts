@@ -34,7 +34,7 @@ function buildHtml(intro: string, p: z.infer<typeof BodySchema>): string {
     ["Contenu", p.request.content],
     ["Cible", p.request.target],
     ...(p.request.channel ? ([["Zendesk ou Site Web", p.request.channel]] as [string, string][]) : []),
-    ["Catégorie", p.request.category],
+    ...(p.request.category ? ([["Catégorie", p.request.category]] as [string, string][]) : []),
   ];
   const msg = p.message
     ? `<div style="background:#f0fdf4;border-left:4px solid #047857;padding:14px 16px;border-radius:6px;font-size:15px;line-height:1.5;margin:0 0 24px">${esc(p.message).replace(/\n/g, "<br>")}</div>`
@@ -106,7 +106,7 @@ export const Route = createFileRoute("/api/public/notify-faq")({
           `Contenu : ${p.request.content}`,
           `Cible : ${p.request.target}`,
           ...(p.request.channel ? [`Zendesk ou Site Web : ${p.request.channel}`] : []),
-          `Catégorie : ${p.request.category}`,
+          ...(p.request.category ? [`Catégorie : ${p.request.category}`] : []),
           p.message ? `\nCommentaire :\n${p.message}` : "",
           ``,
           `Ouvrir la demande : ${faqLink(p.id, p.request.subject)}`,

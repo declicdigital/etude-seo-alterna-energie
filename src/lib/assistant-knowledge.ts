@@ -310,7 +310,8 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
         lines.push("Pour un article Professionnel, un expert métier relit aussi le contenu.");
       if (z.has("planete-suivi"))
         lines.push("Parlons Planète : Caroline et Elodie (Aurorae) rédigent, Geoffrey intègre.");
-      if (z.has("faq-demandes")) lines.push("FAQ : Geoffrey valide les demandes.");
+      if (z.has("faq-demandes"))
+        lines.push("FAQ : Geoffrey, Matthieu et Marick valident les demandes.");
       if (z.has("benchmark")) lines.push("Benchmark : Geoffrey saisit les tarifs.");
       return lines.join(" ");
     },
@@ -703,7 +704,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "réécrire faq",
     ],
     answer:
-      "FAQ › Demandes, bloc « Nouvelle demande FAQ » : choisis Création ou Réécriture, écris le sujet, puis le contenu « À créer » ou « Contenu déjà fourni » (avec la question et la réponse exactes), la cible (Particulier ou Professionnel), Zendesk ou Site Web (où la FAQ sera publiée) et la catégorie (ou « + Nouvelle catégorie »). Ajoute si besoin un commentaire avec @ et des pièces jointes, puis « Sauvegarder » : Geoffrey est prévenu par mail. Toutes les cases doivent être remplies.",
+      "FAQ › Demandes, bloc « Nouvelle demande FAQ » : choisis Création ou Réécriture, écris le sujet, puis le contenu « À créer » ou « Contenu déjà fourni » (avec la question et la réponse exactes), la cible (Particulier ou Professionnel), Zendesk ou Site Web (où la FAQ sera publiée) puis, pour Zendesk uniquement, la catégorie (ou « + Nouvelle catégorie ») : une FAQ Site Web n'a pas de catégorie. Ajoute si besoin un commentaire avec @ et des pièces jointes, puis « Sauvegarder » : Geoffrey est prévenu par mail. Toutes les cases doivent être remplies.",
   },
   {
     zone: "faq-demandes",
@@ -717,7 +718,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "supprimer demande",
     ],
     answer:
-      "Chaque demande est une carte où l'on échange par commentaires (@ pour taguer, pièces jointes possibles). Geoffrey valide en indiquant la question finale et le lien de la FAQ en ligne : la FAQ apparaît alors dans FAQ › Particulier ou Professionnel, avec « Voir la FAQ ↗ ».",
+      "Chaque demande est une carte où l'on échange par commentaires (@ pour taguer, pièces jointes possibles). Geoffrey, Matthieu ou Marick valident en indiquant la question finale et le lien de la FAQ en ligne (« Enregistrer le lien » le garde sans valider, et le lien se met à jour après validation) : la FAQ apparaît alors dans FAQ › Particulier ou Professionnel, avec « Voir la FAQ ↗ ».",
   },
   {
     zone: ["faq-part", "faq-pro"],
@@ -1057,7 +1058,15 @@ export const TEAM_ROLES: Record<string, { name: string; role: string }> = {
   },
   "marick.navarro.ext@soregies.fr": {
     name: "Marick",
-    role: "intégration des articles sur le site d'Alterna Énergie",
+    role: "intégration des articles sur le site d'Alterna Énergie et validation des demandes FAQ",
+  },
+  "marick.navarro@soregies.fr": {
+    name: "Marick",
+    role: "intégration des articles sur le site d'Alterna Énergie et validation des demandes FAQ",
+  },
+  "matthieu.roux@alterna-energie.fr": {
+    name: "Matthieu",
+    role: "service Communication d'Alterna Énergie (newsletters, validation des demandes FAQ)",
   },
 };
 

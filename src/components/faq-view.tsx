@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import type { Access } from "@/lib/access";
-import { canValidateFaq, validatedFaqForTarget, FAQ_CATEGORIES, FAQ_CHANNELS, type FaqAttachment, type FaqComment, type FaqRequest } from "@/lib/faq";
+import { canValidateFaq, canValidateFaqRequests, faqNeedsCategory, validatedFaqForTarget, FAQ_CATEGORIES, FAQ_CHANNELS, type FaqAttachment, type FaqComment, type FaqRequest } from "@/lib/faq";
 import existingFaq from "@/data/faq-existing.json";
 
 type User = { id: string; full_name: string | null; email: string };
@@ -101,7 +101,7 @@ export function FaqView({ access, scope, hash }: { access: Access; scope: string
         <p className="mt-1 text-sm text-muted-foreground">
           {target
             ? `Questions FAQ — ${target.toLowerCase()}.`
-            : "Remplissez une demande, puis sauvegardez : Geoffrey est prévenu par mail."}
+            : "Remplissez une demande, puis sauvegardez : Geoffrey est prévenu par mail. Geoffrey, Matthieu et Marick la valident."}
         </p>
       </header>
 
@@ -135,7 +135,7 @@ export function FaqView({ access, scope, hash }: { access: Access; scope: string
               users={users}
               myName={myName}
               myEmail={access.email ?? ""}
-              canValidate={access.isAdmin}
+              canValidate={canValidateFaqRequests(access.isAdmin, access.email)}
               userId={access.userId}
               onUpdate={update}
               onDelete={async () => {
@@ -268,9 +268,10 @@ function NewRequestForm({
   const [files, setFiles] = useState<FaqAttachment[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const finalCategory = category === NEW_CAT ? newCategory.trim() : category;
+  const needsCategory = faqNeedsCategory(channel);
+  const finalCategory = needsCategory ? (category === NEW_CAT ? newCategory.trim() : category) : "";
   const contentReady = content !== "Contenu déjà fourni" || (question.trim() && answer.trim());
-  const ready = !!(type && subject.trim() && content && contentReady && target && channel && finalCategory);
+  const ready = !!(type && subject.trim() && content && contentReady && target && channel && (!needsCategory || finalCategory));
 
   const submit = async () => {
     if (!ready || saving) return;
@@ -291,7 +292,7 @@ function NewRequestForm({
       target,
       channel,
       category: finalCategory,
-      newCategory: category === NEW_CAT,
+      newCategory: needsCategory && category === NEW_CAT,
       comments,
       createdAt: now,
     };
@@ -358,6 +359,7 @@ function NewRequestForm({
           <span className={label}>Zendesk ou Site Web</span>
           <Choice value={channel} options={FAQ_CHANNELS} onChange={setChannel} />
         </div>
+        {needsCategory && (
         <div className="md:col-span-2">
           <span className={label}>Catégorie</span>
           <div className="flex flex-wrap gap-2">
@@ -395,6 +397,7 @@ function NewRequestForm({
             />
           )}
         </div>
+        )}
         <div className="md:col-span-2">
           <span className={label}>Commentaire</span>
           <CommentInput value={comment} onChange={setComment} files={files} onFiles={setFiles} users={users} />
@@ -570,6 +573,24 @@ function RequestCard({
   const [link, setLink] = useState(r.link ?? "");
   const [validating, setValidating] = useState(false);
   const [validationError, setValidationError] = useState("");
+  const [linkSaved, setLinkSaved] = useState(false);
+  const saveLink = async () => {
+    if (!canValidate || validating) return;
+    const clean = link.trim();
+    if (clean && !/^https?:\/\/\S+$/i.test(clean)) {
+      setValidationError("Le lien doit commencer par https://");
+      return;
+    }
+    setValidating(true);
+    setValidationError("");
+    try {
+      await onUpdate({ ...r, question: r.validatedAt ? r.question : finalQuestion.trim() || r.question, link: clean || undefined });
+      setLinkSaved(true);
+      window.setTimeout(() => setLinkSaved(false), 2500);
+    } catch {
+      setValidationError("Le lien n'a pas pu être enregistré. Réessayez.");
+    } finally { setValidating(false); }
+  };
   const validate = async () => {
     if (!canValidate || !userId || validating || !canValidateFaq(finalQuestion, link)) return;
     setValidating(true);
@@ -622,9 +643,11 @@ function RequestCard({
             {r.channel && (
               <span className="rounded-full bg-indigo-500/15 text-indigo-800 px-2 py-0.5">{r.channel}</span>
             )}
-            <span className="rounded-full bg-teal-500/15 text-teal-800 px-2 py-0.5">
-              {r.category}{r.newCategory ? " (nouvelle)" : ""}
-            </span>
+            {r.category && (
+              <span className="rounded-full bg-teal-500/15 text-teal-800 px-2 py-0.5">
+                {r.category}{r.newCategory ? " (nouvelle)" : ""}
+              </span>
+            )}
           </div>
           <h4 className="font-semibold leading-snug">{r.subject}</h4>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -652,7 +675,22 @@ function RequestCard({
               <label className={label} htmlFor={`link-${r.id}`}>Lien de la FAQ</label>
               <input id={`link-${r.id}`} type="url" className={field} placeholder="https://…" value={link} onChange={(e) => setLink(e.target.value)} />
               {validationError && <p role="alert" className="text-sm text-destructive">{validationError}</p>}
-              <div className="flex justify-end"><Button onClick={validate} disabled={validating || !canValidateFaq(finalQuestion, link)}><Check />{validating ? "Validation…" : "Valider"}</Button></div>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {linkSaved && <span className="text-xs text-emerald-700">Lien enregistré ✓</span>}
+                <Button variant="outline" onClick={saveLink} disabled={validating || link.trim() === (r.link ?? "")}>Enregistrer le lien</Button>
+                <Button onClick={validate} disabled={validating || !canValidateFaq(finalQuestion, link)}><Check />{validating ? "Validation…" : "Valider"}</Button>
+              </div>
+            </div>
+          )}
+          {canValidate && r.validatedAt && (
+            <div className="border-b border-border pb-4 space-y-2">
+              <label className={label} htmlFor={`link-${r.id}`}>Lien de la FAQ</label>
+              <div className="flex flex-wrap gap-2">
+                <input id={`link-${r.id}`} type="url" className={cn(field, "flex-1 min-w-[220px]")} placeholder="https://…" value={link} onChange={(e) => setLink(e.target.value)} />
+                <Button variant="outline" onClick={saveLink} disabled={validating || !canValidateFaq(r.question ?? "x", link) || link.trim() === (r.link ?? "")}>Mettre à jour le lien</Button>
+              </div>
+              {linkSaved && <p className="text-xs text-emerald-700">Lien enregistré ✓</p>}
+              {validationError && <p role="alert" className="text-sm text-destructive">{validationError}</p>}
             </div>
           )}
           {r.validatedAt && r.link && <Button asChild variant="link" size="sm"><a href={r.link} target="_blank" rel="noreferrer">Voir la FAQ ↗</a></Button>}
