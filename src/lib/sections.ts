@@ -33,7 +33,7 @@ export const SECTION_TREE: SectionGroup[] = [
  * reste celle des accès enregistrés (`allowed_sections`) et des fonctions SQL
  * (`can_view_planning`) : ne jamais la renommer, seulement le nom affiché.
  */
-export const GROUP_DISPLAY_NAMES: Record<string, string> = { "Planning intégré": "Radar" };
+export const GROUP_DISPLAY_NAMES: Record<string, string> = { "Planning intégré": "Le Radar" };
 export const groupDisplayName = (group: string) => GROUP_DISPLAY_NAMES[group] ?? group;
 
 export const ALL_SECTION_KEYS = SECTION_TREE.flatMap((t) => [

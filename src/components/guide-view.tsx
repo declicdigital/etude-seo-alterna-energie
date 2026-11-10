@@ -504,8 +504,8 @@ const ORGANISATION_FLOWS: Flow[] = [
 
 const PLANNING_FLOWS: Flow[] = [
   {
-    title: "Radar",
-    intro: "Le planning commercial partagé · visible seulement avec l'accès Radar",
+    title: "Le Radar",
+    intro: "Campagnes, actions par canal, jalons et périodes · visible seulement avec l'accès Le Radar",
     steps: [
       {
         title: "Vues",
@@ -518,7 +518,7 @@ const PLANNING_FLOWS: Flow[] = [
         ],
       },
       {
-        title: "Lire le planning",
+        title: "Lire Le Radar",
         who: "Tout le monde",
         color: C.review,
         items: [
@@ -601,9 +601,9 @@ const RUBRIQUES: Record<RubriqueKey, Rubrique> = {
     flows: ORGANISATION_FLOWS,
   },
   planning: {
-    title: "Radar",
+    title: "Le Radar",
     icon: CalendarRange,
-    text: "Le planning commercial d'Alterna Énergie : campagnes, actions par canal, jalons et périodes.",
+    text: "Les campagnes d'Alterna Énergie : actions par canal, jalons et périodes.",
     flows: PLANNING_FLOWS,
   },
 };

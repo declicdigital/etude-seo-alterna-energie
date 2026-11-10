@@ -7,7 +7,7 @@ describe("tab titles", () => {
     expect(titleCaseWords("Stratégie PAC")).toBe("Stratégie PAC");
   });
   it("uses the real rubrique names", () => {
-    expect(pageLabelFromPath("radar")).toBe("Radar");
+    expect(pageLabelFromPath("radar")).toBe("Le Radar");
     expect(pageLabelFromPath("strategie-pac/suivi-editorial")).toBe("Stratégie PAC · Suivi Éditorial");
     expect(pageLabelFromPath("strategie-pac/contenus")).toBe("Stratégie PAC · Contenus");
     expect(pageLabelFromPath("blog/particulier")).toBe("Blog · Particulier");

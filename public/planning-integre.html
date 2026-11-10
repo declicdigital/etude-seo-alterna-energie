@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Radar · Digicom</title>
+<title>Le Radar · Digicom</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="/vendor/supabase-2.118.0.js"></script>
@@ -633,7 +633,7 @@ h1,h2,h3,.logo,.modal-title,.kpi-value { font-family: var(--font-head); }
 
 /* ════════════════════════════════════════════════════════════════
    DIGICOM — même univers que l'outil : surfaces blanches, gris ardoise,
-   coins arrondis, accent cyan de la rubrique « Radar ».
+   coins arrondis, accent cyan de la rubrique « Le Radar ».
    ════════════════════════════════════════════════════════════════ */
 :root {
   --bg: #f8fafc; --bg2: #f1f5f9; --bg3: #e2e8f0;
@@ -1054,8 +1054,7 @@ body.view-simple #density-tabs { display: none; }
   <div id="topbar">
     <div class="tb-row tb-row-1">
       <div class="logo">
-        <div class="logo-chip">Radar</div>
-        <div class="logo-title">Planning commercial <span>Alterna Énergie</span></div>
+        <div class="logo-title">Le Radar</div>
         <div class="logo-meta" id="logo-meta"></div>
       </div>
       <div class="tb-spacer"></div>
@@ -3803,7 +3802,7 @@ async function exportPDF() {
       pdf.setTextColor(14, 116, 144); pdf.setFontSize(9);
       pdf.text('PLANNING INTÉGRÉ · DIGICOM', margin, margin + 3);
       pdf.setTextColor(15, 23, 42); pdf.setFontSize(16);
-      pdf.text(`Planning commercial Alterna Énergie — ${STATE.currentYear}${isCanal ? ' (par canal)' : ''}`, margin, margin + 10);
+      pdf.text(`Le Radar — ${STATE.currentYear}${isCanal ? ' (par canal)' : ''}`, margin, margin + 10);
       pdf.setTextColor(100, 116, 139); pdf.setFontSize(9);
       pdf.text(`Exporté le ${when}${pages > 1 ? ` · page ${i + 1}/${pages}` : ''}`, pageW - margin, margin + 10, { align: 'right' });
       const part = document.createElement('canvas');
@@ -4762,7 +4761,7 @@ const CLOUD = (function() {
   }
 
   function scheduleSave() {
-    if (!loaded) { showStatus('⚠ Planning non chargé : rechargez la page', true); return; }
+    if (!loaded) { showStatus('⚠ Le Radar n’a pas pu se charger : rechargez la page', true); return; }
     dirty = true;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(flush, 150);
@@ -5067,7 +5066,7 @@ async function openHistoryModal() {
     __cloudInjectUI();
     __cloudRewireAdminBtn();
     CLOUD.subscribeRealtime();
-    CLOUD.showStatus(CLOUD.loaded ? '✓ Connecté · sync temps réel' : '⚠ Planning non chargé : rechargez la page', !CLOUD.loaded);
+    CLOUD.showStatus(CLOUD.loaded ? '✓ Connecté · sync temps réel' : '⚠ Le Radar n’a pas pu se charger : rechargez la page', !CLOUD.loaded);
     requestAnimationFrame(() => render());
   });
 

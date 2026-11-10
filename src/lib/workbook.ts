@@ -415,7 +415,7 @@ export const SHEET_META: Record<
     group: "Calendriers newsletters",
   },
   ORGANISATION: { headerRow: 0, firstDataRow: 0, label: "Tableau", group: "Organisation" },
-  "PLANNING INTEGRE": { headerRow: 0, firstDataRow: 0, label: "Planning", group: "Planning intégré" },
+  "PLANNING INTEGRE": { headerRow: 0, firstDataRow: 0, label: "Le Radar", group: "Planning intégré" },
   "Articles cocon éléctricité": {
     headerRow: 0,
     firstDataRow: 1,
