@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { buildEditsMap, type CellEdit, type EditsMap } from "@/lib/workbook";
 
+const PAGE = 1000;
+
 export function useEdits() {
   const [edits, setEdits] = useState<EditsMap>({});
   const [loading, setLoading] = useState(true);
@@ -9,9 +11,31 @@ export function useEdits() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data } = await supabase.from("sheet_cells" as never).select("*");
+      // L'API renvoie au plus 1000 lignes par requête : on charge tout, page par page, dans un
+      // ordre stable (sans ça, les cases au-delà des 1000 premières — souvent les derniers
+      // contenus ajoutés — n'apparaissaient dans aucune liste).
+      const all: CellEdit[] = [];
+      let complete = true;
+      for (let from = 0; from < 200000; from += PAGE) {
+        const { data, error } = await supabase
+          .from("sheet_cells" as never)
+          .select("sheet, row_id, col, value")
+          .order("sheet" as never)
+          .order("row_id" as never)
+          .order("col" as never)
+          .range(from, from + PAGE - 1);
+        if (!alive) return;
+        if (error) {
+          console.error("sheet_cells", error.message);
+          complete = false;
+          break;
+        }
+        const rows = (data ?? []) as unknown as CellEdit[];
+        all.push(...rows);
+        if (rows.length < PAGE) break;
+      }
       if (!alive) return;
-      if (data) setEdits(buildEditsMap(data as unknown as CellEdit[]));
+      if (all.length || complete) setEdits(buildEditsMap(all));
       setLoading(false);
     })();
     const channel = supabase
