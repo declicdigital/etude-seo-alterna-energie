@@ -706,7 +706,7 @@ body { font-size: 13px; -webkit-font-smoothing: antialiased; }
 .tb-search {
   display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px;
   border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text3);
-  width: 190px;
+  width: 170px;
 }
 .tb-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .tb-search input { border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: 12.5px; width: 100%; }
@@ -826,6 +826,116 @@ body { font-size: 13px; -webkit-font-smoothing: antialiased; }
 .today-pulse { animation: today-pulse 1.2s ease-out 2; }
 @keyframes today-pulse { 0% { box-shadow: 0 0 0 0 rgba(225,29,72,.55); } 100% { box-shadow: 0 0 0 14px rgba(225,29,72,0); } }
 .search-empty { padding: 10px 20px; font-size: 12px; color: var(--text3); background: var(--surface2); border-bottom: 1px solid var(--border); }
+
+/* ═════════ VUE CLAIRE ═════════ */
+#view-simple { overflow: hidden; }
+#simple-root { flex: 1; overflow: auto; background: var(--surface); --lw: 300px; position: relative; }
+.sv { position: relative; min-width: 760px; padding-bottom: 40px; }
+.sv-row { display: grid; grid-template-columns: var(--lw) 1fr; align-items: stretch; }
+.sv-left { padding: 0 16px 0 20px; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sv-right { position: relative; min-height: 100%; }
+.sv-head { position: sticky; top: 0; z-index: 30; background: var(--surface); border-bottom: 1px solid var(--border); height: 44px; }
+.sv-head .sv-left { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); }
+.sv-tick { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: var(--text2); text-transform: capitalize; border-left: 1px solid var(--border); }
+.sv-tick small { font-size: 10px; color: var(--text3); font-weight: 500; margin-left: 3px; }
+.sv-tick.now { color: var(--today); }
+.sv-grid { position: absolute; top: 0; bottom: 0; left: var(--lw); right: 0; pointer-events: none; z-index: 0; }
+.sv-gridline { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--border); opacity: .55; }
+.sv-today { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px solid var(--today); z-index: 35; pointer-events: none; }
+.sv-today::before { content: "Aujourd'hui"; position: absolute; top: 12px; left: 0; transform: translateX(-50%);
+  background: var(--today); color: #fff; font-size: 10px; font-weight: 700; border-radius: 99px; padding: 2px 8px; white-space: nowrap;
+  box-shadow: 0 4px 10px -4px rgba(225,29,72,.8); }
+.sv-today.pulse::before { animation: today-pulse 1.2s ease-out 2; }
+/* sections */
+.sv-section { position: relative; z-index: 1; }
+.sv-sec-head { height: 46px; border-bottom: 1px solid var(--border); background: var(--surface2); cursor: pointer; position: sticky; top: 44px; z-index: 20; }
+.sv-sec-head:hover { background: var(--bg2); }
+.sv-sec-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; color: var(--text); white-space: nowrap; }
+.sv-chev { display: inline-block; width: 14px; color: var(--text3); transition: transform .15s; }
+.sv-section.collapsed .sv-chev { transform: rotate(-90deg); }
+.sv-section.collapsed .sv-body { display: none; }
+.sv-count { font-size: 11px; font-weight: 700; color: var(--text3); background: var(--surface); border: 1px solid var(--border); border-radius: 99px; padding: 1px 8px; }
+.sv-add { margin-left: auto; height: 26px; padding: 0 10px; border-radius: 8px; border: 1px dashed var(--border2); background: transparent;
+  color: var(--text3); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.sv-add:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); border-style: solid; }
+.sv-sec-head .sv-right { display: flex; align-items: center; }
+/* lignes de campagne */
+.sv-camp { height: 52px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+.sv-camp:hover { background: var(--surface2); }
+.sv-camp.selected { background: var(--accent-soft); }
+.sv-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 3px var(--surface); }
+.sv-name { min-width: 0; flex: 1; }
+.sv-title { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sv-sub { font-size: 11.5px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.sv-kpi { flex-shrink: 0; font-size: 11px; font-weight: 700; border-radius: 99px; padding: 2px 8px; }
+.sv-kpi.ok { background: #ecfdf5; color: #047857; }
+.sv-kpi.ko { background: #fff1f2; color: #be123c; }
+[data-theme="dark"] .sv-kpi.ok { background: rgba(16,185,129,.15); color: #6ee7b7; }
+[data-theme="dark"] .sv-kpi.ko { background: rgba(244,63,94,.15); color: #fda4af; }
+.sv-bar { position: absolute; top: 50%; height: 14px; margin-top: -7px; border-radius: 99px; z-index: 2;
+  box-shadow: inset 0 0 0 1px rgba(15,23,42,.06); }
+.sv-bar.cut-l { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.sv-bar.cut-r { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.sv-act { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; z-index: 3;
+  background: var(--surface); border: 2.5px solid var(--ac, var(--accent)); box-shadow: 0 1px 3px rgba(15,23,42,.25); }
+.sv-camp:hover .sv-act { transform: scale(1.15); }
+.sv-empty { height: 44px; display: flex; align-items: center; padding-left: 20px; font-size: 12px; color: var(--text3); font-style: italic; border-bottom: 1px solid var(--border); }
+/* temps forts */
+.sv-lane { height: 26px; }
+.sv-period { position: absolute; top: 4px; height: 18px; border-radius: 99px; padding: 0 9px; display: flex; align-items: center;
+  font-size: 10.5px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; cursor: pointer; z-index: 2; }
+.sv-period:hover { filter: brightness(.97); box-shadow: 0 2px 6px -2px rgba(15,23,42,.3); }
+.sv-ms { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%; z-index: 3;
+  background: var(--surface); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer;
+  box-shadow: 0 2px 6px -2px rgba(15,23,42,.25); }
+.sv-ms:hover { transform: translate(-50%, -50%) scale(1.12); }
+.sv-hint { padding: 9px 20px; font-size: 12px; color: var(--text3); border-bottom: 1px solid var(--border); background: var(--surface); display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.sv-hint b { color: var(--text2); font-weight: 600; }
+.sv-legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--accent); background: var(--surface); vertical-align: -1px; margin-right: 4px; }
+.sv-legend-bar { display: inline-block; width: 22px; height: 8px; border-radius: 99px; background: var(--accent); vertical-align: 0; margin-right: 4px; opacity: .8; }
+/* panneau de détail */
+#sv-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); z-index: 400; pointer-events: none; }
+#sv-drawer .svd-inner { position: absolute; inset: 0; background: var(--surface); border-left: 1px solid var(--border);
+  box-shadow: -24px 0 60px -30px rgba(15,23,42,.5); transform: translateX(105%); transition: transform .22s ease; overflow-y: auto; pointer-events: auto; }
+#sv-drawer.open .svd-inner { transform: none; visibility: visible; transition: transform .22s ease, visibility 0s; }
+#sv-drawer:not(.open) .svd-inner { visibility: hidden; transition: transform .22s ease, visibility 0s .22s; }
+.svd-top { height: 6px; }
+.svd-head { padding: 18px 22px 14px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 2; }
+.svd-close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 10px; border: 0; background: transparent; color: var(--text3); font-size: 18px; cursor: pointer; }
+.svd-close:hover { background: var(--bg2); color: var(--text); }
+.svd-type { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.svd-title { font-size: 19px; font-weight: 700; letter-spacing: -.01em; margin: 4px 36px 6px 0; color: var(--text); line-height: 1.25; }
+.svd-dates { font-size: 12.5px; color: var(--text3); }
+.svd-actions-bar { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.svd-sec { padding: 16px 22px; border-bottom: 1px solid var(--border); }
+.svd-sec h4 { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+.svd-kpi-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text); }
+.svd-progress { height: 8px; border-radius: 99px; background: var(--bg2); overflow: hidden; margin-top: 8px; }
+.svd-progress > div { height: 100%; border-radius: 99px; }
+.svd-ch { font-size: 11px; font-weight: 700; color: var(--text2); margin: 12px 0 6px; display: flex; align-items: center; gap: 6px; }
+.svd-ch:first-child { margin-top: 0; }
+.svd-act { display: flex; gap: 10px; align-items: center; padding: 9px 10px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 6px; cursor: pointer; background: var(--surface); }
+.svd-act:hover { border-color: var(--accent); background: var(--surface2); }
+.svd-act img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; }
+.svd-act-date { flex-shrink: 0; width: 52px; text-align: center; font-size: 11px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 5px 0; line-height: 1.15; }
+.svd-act-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.svd-act-sub { font-size: 11.5px; color: var(--text3); margin-top: 1px; }
+.svd-none { font-size: 12.5px; color: var(--text3); }
+/* menu « + Ajouter » */
+.add-menu { position: relative; }
+.add-menu-list { position: absolute; top: 38px; right: 0; z-index: 500; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: var(--shadow-md); padding: 6px; width: 230px; display: none; }
+.add-menu.open .add-menu-list { display: block; }
+.add-menu-list button { display: flex; width: 100%; gap: 10px; align-items: center; text-align: left; border: 0; background: transparent; font: inherit; font-size: 13px;
+  color: var(--text); padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+.add-menu-list button:hover { background: var(--bg2); }
+.add-menu-list button small { display: block; font-size: 11px; color: var(--text3); }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.primary:hover { background: var(--accent2); color: #fff; }
+body.view-simple #density-tabs { display: none; }
+@media (max-width: 760px) { #simple-root { --lw: 170px; } .sv-kpi { display: none; } }
+
 @media (max-width: 760px) {
   .tb-row { padding-left: 12px; padding-right: 12px; }
   .logo-title span { display: none; }
@@ -852,7 +962,7 @@ body { font-size: 13px; -webkit-font-smoothing: antialiased; }
         <button class="btn" id="btn-filters">🔍 Filtres</button>
         <button class="btn" id="btn-display">⚙ Affichage</button>
         <button class="btn" id="btn-export-pdf">🖨 PDF</button>
-        <button class="btn" id="btn-history" style="display:none">🕓 Historique</button>
+        <button class="btn" id="btn-history" style="display:none" title="Historique des modifications">🕓</button>
         <button class="btn-icon" id="btn-theme" title="Mode clair/sombre">🌙</button>
         <button class="btn" id="btn-admin" style="display:none">Admin</button>
         <button class="btn danger" id="btn-quit-admin" style="display:none">✕ Quitter Admin</button>
@@ -864,7 +974,8 @@ body { font-size: 13px; -webkit-font-smoothing: antialiased; }
         <button class="btn" id="btn-new-year" title="Créer une nouvelle année" style="display:none">+ Année</button>
       </div>
       <div class="tb-group tb-seg" id="view-tabs">
-        <button class="btn active" data-view="timeline">📅 Timeline</button>
+        <button class="btn active" data-view="simple">✨ Vue claire</button>
+        <button class="btn" data-view="timeline">📅 Frise détaillée</button>
         <button class="btn" data-view="canal">🗂 Par canal</button>
       </div>
       <div class="tb-group tb-seg" id="scale-tabs">
@@ -896,7 +1007,12 @@ body { font-size: 13px; -webkit-font-smoothing: antialiased; }
   <!-- MAIN -->
   <div id="main">
     <!-- TIMELINE VIEW -->
-    <div class="view-panel active" id="view-timeline">
+    <!-- VUE CLAIRE : une ligne fine par campagne, regroupées par stratégie -->
+    <div class="view-panel active" id="view-simple">
+      <div id="simple-root"></div>
+    </div>
+
+    <div class="view-panel" id="view-timeline">
       <div id="timeline-scroll-root">
         <!-- Header rows (sticky top) + data rows all in one scrollable div -->
         <!-- Rendered entirely by JS into #timeline-scroll-root -->
@@ -908,6 +1024,11 @@ body { font-size: 13px; -webkit-font-smoothing: antialiased; }
       <div id="canal-scroll-root"></div>
     </div>
   </div>
+</div>
+
+<!-- PANNEAU DE DÉTAIL D'UNE CAMPAGNE (vue claire) -->
+<div id="sv-drawer" aria-hidden="true">
+  <div class="svd-inner" id="sv-drawer-body"></div>
 </div>
 
 <!-- DISPLAY PANEL -->
@@ -1013,7 +1134,7 @@ function getDefaultData(year) {
 let STATE = {
   currentYear: 2026,
   years: {},
-  activeView: 'timeline',
+  activeView: 'simple',
   activeScale: 'year',
   selectedQuarter: 1,
   selectedMonth: new Date().getMonth(),
@@ -3536,7 +3657,8 @@ function renderAdminPanel() {
 async function exportPDF() {
   const { jsPDF } = window.jspdf;
   const isCanal = STATE.activeView === 'canal';
-  const root = document.getElementById(isCanal ? 'canal-scroll-root' : 'timeline-scroll-root');
+  const isSimple = STATE.activeView === 'simple';
+  const root = document.getElementById(isSimple ? 'simple-root' : isCanal ? 'canal-scroll-root' : 'timeline-scroll-root');
   if(!root) return;
   toast('Génération du PDF en cours…');
   // Export propre : toute l'année d'un coup, sur une largeur fixe, sans barres de défilement,
@@ -3828,6 +3950,8 @@ window.openActionModal = openActionModal;
 document.querySelectorAll('[data-view]').forEach(btn => {
   btn.addEventListener('click', () => {
     STATE.activeView = btn.dataset.view;
+    try { localStorage.setItem('planning_view', btn.dataset.view); } catch(e) {}
+    if(btn.dataset.view !== 'simple' && typeof svCloseDrawer === 'function') svCloseDrawer();
     document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     document.querySelectorAll('.view-panel').forEach(p=>p.classList.remove('active'));
@@ -3986,6 +4110,14 @@ function scrollToToday() {
     if(STATE.activeScale === 'month') STATE.selectedMonth = today.getMonth();
     if(STATE.activeScale !== 'year') { renderSubSelector(); render(); }
   }
+  if(STATE.activeView === 'simple') {
+    requestAnimationFrame(() => {
+      const t = document.querySelector('.sv-today');
+      if(!t) { toast("Aujourd'hui n'est pas sur cette période"); return; }
+      t.classList.remove('pulse'); void t.offsetWidth; t.classList.add('pulse');
+    });
+    return;
+  }
   requestAnimationFrame(() => {
     const root = document.getElementById(STATE.activeView === 'canal' ? 'canal-scroll-root' : 'timeline-scroll-root');
     const grid = GRID;
@@ -4013,9 +4145,314 @@ function renderTimeline() {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// VUE CLAIRE — une ligne fine par campagne, regroupées par stratégie ;
+// un clic ouvre le panneau de détail (actions, KPI, boutons Modifier).
+// ═══════════════════════════════════════════════════════════════
+const SV_TYPES = [
+  { type: 'acquisition',   label: 'Acquisition',   icon: '🎯', color: '#0e7490' },
+  { type: 'fidelisation',  label: 'Fidélisation',  icon: '💎', color: '#6d28d9' },
+  { type: 'reglementaire', label: 'Réglementaire', icon: '⚠️', color: '#b45309' },
+];
+const SV_COLLAPSE_KEY = 'planning_sv_collapsed';
+function svCollapsed() {
+  try { return new Set(JSON.parse(localStorage.getItem(SV_COLLAPSE_KEY) || '[]')); } catch(e) { return new Set(); }
+}
+function svToggleSection(type) {
+  const c = svCollapsed();
+  c.has(type) ? c.delete(type) : c.add(type);
+  try { localStorage.setItem(SV_COLLAPSE_KEY, JSON.stringify([...c])); } catch(e) {}
+  renderSimple();
+}
+let SV_SELECTED = null;
+
+function svRange() {
+  const y = STATE.currentYear;
+  if(STATE.activeScale === 'q') {
+    const q = (STATE.selectedQuarter || 1) - 1;
+    return { start: new Date(y, q * 3, 1), end: new Date(y, q * 3 + 3, 0) };
+  }
+  if(STATE.activeScale === 'month') {
+    const m = STATE.selectedMonth != null ? STATE.selectedMonth : 0;
+    return { start: new Date(y, m, 1), end: new Date(y, m + 1, 0) };
+  }
+  return { start: new Date(y, 0, 1), end: new Date(y, 11, 31) };
+}
+
+/** Campagnes d'un type après filtres, options d'affichage et recherche. */
+function svCampaigns(type) {
+  const d = data();
+  let list = (d.campaigns || []).filter(c => c.type === type && c.startDate);
+  const f = STATE.filters;
+  if(f.campaigns.length) list = list.filter(c => f.campaigns.includes(c.id));
+  if(f.types.length) list = list.filter(c => f.types.includes(c.type));
+  if(f.colors && f.colors.length) list = list.filter(c => f.colors.some(col => col.toLowerCase() === (c.color || '').toLowerCase()));
+  if(f.kpiStatus === 'achieved') list = list.filter(campaignAtteinte);
+  if(f.kpiStatus === 'unachieved') list = list.filter(c => !campaignAtteinte(c));
+  if(!STATE.displayOpts.showAchieved) list = list.filter(c => !campaignAtteinte(c));
+  if(!STATE.displayOpts.showUnachieved) list = list.filter(c => campaignAtteinte(c));
+  if(f.channels.length) list = list.filter(c => (d.actions || []).some(a => a.campaignId === c.id && f.channels.includes(a.channelId)));
+  list = list.filter(c => matchesSearch(c, d));
+  return list.sort((a, b) => (parseDate(a.startDate) - parseDate(b.startDate)) || (a.title || '').localeCompare(b.title || ''));
+}
+
+function renderSimple() {
+  const root = document.getElementById('simple-root');
+  if(!root) return;
+  const d = data();
+  const { start, end } = svRange();
+  const span = (end - start) / 864e5 + 1;
+  const pos = (date) => Math.min(100, Math.max(0, ((date - start) / 864e5) / span * 100));
+  const inRange = (s, e) => e >= start && s <= end;
+  const editor = !!STATE.isAdmin;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const scrollTop = root.scrollTop;
+
+  // Repères de temps (mois, semaines ou jours selon l'échelle)
+  const ticks = [];
+  if(STATE.activeScale === 'month') {
+    for(let dd = new Date(start); dd <= end; dd = addDays(dd, 1)) {
+      const we = dd.getDay() === 0 || dd.getDay() === 6;
+      ticks.push({ at: pos(dd), w: 100 / span, label: String(dd.getDate()), weekend: we, now: +dd === +today });
+    }
+  } else if(STATE.activeScale === 'q') {
+    for(let m = start.getMonth(); m <= end.getMonth(); m++) {
+      const ms = new Date(start.getFullYear(), m, 1), me = new Date(start.getFullYear(), m + 1, 0);
+      ticks.push({ at: pos(ms), w: pos(addDays(me, 1)) - pos(ms) || (100 - pos(ms)), label: ms.toLocaleDateString('fr-FR', { month: 'long' }), now: today >= ms && today <= me });
+    }
+  } else {
+    for(let m = 0; m < 12; m++) {
+      const ms = new Date(start.getFullYear(), m, 1), me = new Date(start.getFullYear(), m + 1, 0);
+      ticks.push({ at: pos(ms), w: (m === 11 ? 100 : pos(addDays(me, 1))) - pos(ms), label: ms.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', ''), now: today >= ms && today <= me });
+    }
+  }
+  const tickHtml = ticks.map(t => `<div class="sv-tick${t.now ? ' now' : ''}" style="left:${t.at}%;width:${t.w}%;${t.weekend ? 'background:var(--bg2);' : ''}${STATE.activeScale === 'month' ? 'font-size:11px;' : ''}">${esc(t.label)}</div>`).join('');
+  const gridHtml = ticks.filter((t, i) => STATE.activeScale !== 'month' || i % 7 === 0).map(t => `<div class="sv-gridline" style="left:${t.at}%"></div>`).join('');
+  const todayHtml = (today >= start && today <= end) ? `<div class="sv-today" style="left:calc(var(--lw) + (100% - var(--lw)) * ${pos(today) / 100})"></div>` : '';
+
+  const periodLabel = STATE.activeScale === 'q' ? `T${STATE.selectedQuarter || 1} ${STATE.currentYear}`
+    : STATE.activeScale === 'month' ? start.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : String(STATE.currentYear);
+
+  let html = `<div class="sv">
+    <div class="sv-grid">${gridHtml}</div>
+    ${todayHtml}
+    <div class="sv-row sv-head"><div class="sv-left">${esc(periodLabel)}</div><div class="sv-right">${tickHtml}</div></div>
+    <div class="sv-hint">
+      <span>👆 <b>Clique sur une campagne</b> pour voir ses actions${editor ? ' et la modifier' : ''}.</span>
+      <span><i class="sv-legend-bar"></i>durée de la campagne</span>
+      <span><i class="sv-legend-dot"></i>une action (survole pour le détail)</span>
+    </div>`;
+
+  // ── Temps forts : périodes + jalons
+  if(STATE.displayOpts.showSeason) {
+    const periods = (d.periods || []).filter(p => p.start && inRange(parseDate(p.start), parseDate(p.end || p.start)))
+      .sort((a, b) => parseDate(a.start) - parseDate(b.start));
+    const lanes = [];
+    periods.forEach(p => {
+      const s0 = parseDate(p.start), e0 = parseDate(p.end || p.start);
+      let lane = lanes.findIndex(last => last < s0);
+      if(lane < 0) { lanes.push(e0); lane = lanes.length - 1; } else lanes[lane] = e0;
+      p.__lane = lane;
+    });
+    const milestones = (d.milestones || []).filter(m => m.date && inRange(parseDate(m.date), parseDate(m.date)));
+    const collapsed = svCollapsed().has('season');
+    const nb = periods.length + milestones.length;
+    html += `<div class="sv-section${collapsed ? ' collapsed' : ''}">
+      <div class="sv-row sv-sec-head" onclick="svToggleSection('season')">
+        <div class="sv-left"><div class="sv-sec-title"><span class="sv-chev">▾</span>✨ Temps forts <span class="sv-count">${nb}</span></div></div>
+        <div class="sv-right" style="padding-right:16px;gap:6px;justify-content:flex-end">${editor ? `<button class="sv-add" onclick="event.stopPropagation();openPeriodModal(null)">＋ Période</button><button class="sv-add" style="margin-left:0" onclick="event.stopPropagation();openMilestoneModal(null)">＋ Jalon</button>` : ''}</div>
+      </div><div class="sv-body">`;
+    const laneCount = Math.max(1, lanes.length);
+    for(let l = 0; l < laneCount; l++) {
+      const items = periods.filter(p => p.__lane === l).map(p => {
+        const s0 = parseDate(p.start), e0 = parseDate(p.end || p.start);
+        const left = pos(s0), right = pos(addDays(e0, 1));
+        const c = p.color || '#64748b';
+        return `<div class="sv-period" data-pid="${escAttr(p.id)}" title="${escAttr(`${p.title} · ${fmtDate(p.start)} → ${fmtDate(p.end || p.start)}`)}" style="left:${left}%;width:max(${right - left}%,6px);background:${hexToRgba(c, .22)};box-shadow:inset 3px 0 0 ${c}">${esc(p.title || '')}</div>`;
+      }).join('');
+      html += `<div class="sv-row sv-lane"><div class="sv-left" style="font-size:11.5px;color:var(--text3)">${l === 0 ? 'Périodes' : ''}</div><div class="sv-right">${items}</div></div>`;
+    }
+    const msHtml = milestones.map(m => `<div class="sv-ms" data-mid="${escAttr(m.id)}" title="${escAttr(`${m.title} · ${fmtDate(m.date)}`)}" style="left:${pos(parseDate(m.date)) + (100 / span) / 2}%">${esc(m.icon || '📌')}</div>`).join('');
+    html += `<div class="sv-row" style="height:36px;border-bottom:1px solid var(--border)"><div class="sv-left" style="font-size:11.5px;color:var(--text3)">Jalons</div><div class="sv-right">${msHtml}</div></div>`;
+    html += `</div></div>`;
+  }
+
+  // ── Une section par stratégie
+  const collapsedSet = svCollapsed();
+  SV_TYPES.forEach(t => {
+    if(t.type === 'reglementaire' && !STATE.displayOpts.showRegulatory) return;
+    const camps = svCampaigns(t.type).filter(c => inRange(parseDate(c.startDate), parseDate(c.endDate || c.startDate)));
+    const collapsed = collapsedSet.has(t.type);
+    html += `<div class="sv-section${collapsed ? ' collapsed' : ''}">
+      <div class="sv-row sv-sec-head" onclick="svToggleSection('${t.type}')">
+        <div class="sv-left"><div class="sv-sec-title"><span class="sv-chev">▾</span>${t.icon} ${t.label} <span class="sv-count">${camps.length}</span></div></div>
+        <div class="sv-right" style="padding-right:16px;justify-content:flex-end">${editor ? `<button class="sv-add" onclick="event.stopPropagation();openCampaignModal(null,'${t.type}')">＋ Campagne</button>` : ''}</div>
+      </div><div class="sv-body">`;
+    if(!camps.length) html += `<div class="sv-empty">${searchText() ? 'Aucune campagne ne correspond à la recherche.' : 'Aucune campagne sur cette période.'}</div>`;
+    camps.forEach(c => {
+      const s0 = parseDate(c.startDate), e0 = parseDate(c.endDate || c.startDate);
+      const left = pos(s0), right = pos(addDays(e0, 1));
+      const color = c.color || t.color;
+      const acts = (d.actions || []).filter(a => a.campaignId === c.id && (!STATE.filters.channels.length || STATE.filters.channels.includes(a.channelId)));
+      const prog = STATE.displayOpts.showKpi ? getProgress(c) : null;
+      const kpi = prog === null ? '' : `<span class="sv-kpi ${prog >= 100 ? 'ok' : 'ko'}" title="${escAttr((c.kpi && c.kpi.type) || 'KPI')}">${prog >= 100 ? '★ ' : ''}${prog} %</span>`;
+      const dots = acts.map(a => {
+        const ad = parseDate(a.startDate || a.date);
+        if(!ad || ad < start || ad > end) return '';
+        const ch = (d.channels || []).find(x => x.id === a.channelId);
+        return `<span class="sv-act" style="left:${pos(ad) + (100 / span) / 2}%;--ac:${color}" title="${escAttr(`${a.title || 'Action'} · ${fmtDate(a.startDate || a.date)}${ch ? ' · ' + ch.name : ''}`)}"></span>`;
+      }).join('');
+      html += `<div class="sv-row sv-camp${SV_SELECTED === c.id ? ' selected' : ''}" data-cid="${escAttr(c.id)}">
+        <div class="sv-left">
+          <span class="sv-dot" style="background:${color}"></span>
+          <div class="sv-name">
+            <div class="sv-title" title="${escAttr(c.title || '')}">${campaignAtteinte(c) ? '★ ' : ''}${esc(c.title || 'Campagne')}</div>
+            <div class="sv-sub">${fmtDate(c.startDate)}${c.endDate && c.endDate !== c.startDate ? ' → ' + fmtDate(c.endDate) : ''}${acts.length ? ` · ${acts.length} action${acts.length > 1 ? 's' : ''}` : ''}</div>
+          </div>
+          ${kpi}
+        </div>
+        <div class="sv-right">
+          <div class="sv-bar${s0 < start ? ' cut-l' : ''}${e0 > end ? ' cut-r' : ''}" style="left:${left}%;width:max(${right - left}%,8px);background:linear-gradient(90deg, ${color}, ${hexToRgba(color, .75)})"></div>
+          ${dots}
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  html += `</div>`;
+  root.innerHTML = html;
+  root.scrollTop = scrollTop;
+
+  root.querySelectorAll('.sv-camp').forEach(row => row.addEventListener('click', () => svOpenDrawer(row.dataset.cid)));
+  root.querySelectorAll('.sv-period').forEach(el => el.addEventListener('click', () => {
+    const p = (data().periods || []).find(x => x.id === el.dataset.pid);
+    if(p) openPeriodModal(p, !STATE.isAdmin);
+  }));
+  root.querySelectorAll('.sv-ms').forEach(el => el.addEventListener('click', () => {
+    const m = (data().milestones || []).find(x => x.id === el.dataset.mid);
+    if(m) openMilestoneModal(m, !STATE.isAdmin);
+  }));
+  if(SV_SELECTED) svRenderDrawer();
+}
+
+function svOpenDrawer(id) {
+  SV_SELECTED = id;
+  document.getElementById('sv-drawer').classList.add('open');
+  document.getElementById('sv-drawer').setAttribute('aria-hidden', 'false');
+  document.querySelectorAll('.sv-camp').forEach(r => r.classList.toggle('selected', r.dataset.cid === id));
+  svRenderDrawer();
+}
+function svCloseDrawer() {
+  SV_SELECTED = null;
+  document.getElementById('sv-drawer').classList.remove('open');
+  document.getElementById('sv-drawer').setAttribute('aria-hidden', 'true');
+  document.querySelectorAll('.sv-camp.selected').forEach(r => r.classList.remove('selected'));
+}
+function svRenderDrawer() {
+  const d = data();
+  const c = (d.campaigns || []).find(x => x.id === SV_SELECTED);
+  const body = document.getElementById('sv-drawer-body');
+  if(!c) { svCloseDrawer(); return; }
+  const t = SV_TYPES.find(x => x.type === c.type) || SV_TYPES[0];
+  const color = c.color || t.color;
+  const editor = !!STATE.isAdmin;
+  const prog = getProgress(c);
+  const acts = (d.actions || []).filter(a => a.campaignId === c.id)
+    .sort((a, b) => (parseDate(a.startDate || a.date) || 0) - (parseDate(b.startDate || b.date) || 0));
+  const byCh = {};
+  acts.forEach(a => {
+    const ch = ((d.channels || []).find(x => x.id === a.channelId) || {}).name || 'Sans canal';
+    (byCh[ch] = byCh[ch] || []).push(a);
+  });
+  const dateBox = (a) => {
+    const dd = parseDate(a.startDate || a.date);
+    if(!dd) return `<div class="svd-act-date">—</div>`;
+    return `<div class="svd-act-date">${dd.getDate()}<br>${dd.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '')}</div>`;
+  };
+  let actHtml = '';
+  if(!acts.length) actHtml = `<div class="svd-none">Aucune action pour l'instant.${editor ? ' Ajoute la première avec « ＋ Ajouter une action ».' : ''}</div>`;
+  Object.entries(byCh).forEach(([ch, list]) => {
+    actHtml += `<div class="svd-ch"><span class="sv-dot" style="width:8px;height:8px;background:${color};box-shadow:none"></span>${esc(ch)} <span class="sv-count">${list.length}</span></div>`;
+    list.forEach(a => {
+      const imgs = getActionImages(a);
+      const kp = (a.kpis || []).filter(k => k.type && k.objectif);
+      const end = a.endDate && a.endDate !== (a.startDate || a.date) ? ` → ${fmtDate(a.endDate)}` : '';
+      actHtml += `<div class="svd-act" data-aid="${escAttr(a.id)}">
+        ${dateBox(a)}
+        <div style="flex:1;min-width:0">
+          <div class="svd-act-title">${esc(a.title || 'Action')}</div>
+          <div class="svd-act-sub">${end ? 'Jusqu’au ' + fmtDate(a.endDate) : fmtDate(a.startDate || a.date)}${kp.length ? ' · ' + kp.map(k => `${esc(k.type)} ${k.realise || 0}/${k.objectif}`).join(' · ') : ''}${imgs.length > 1 ? ` · ${imgs.length} images` : ''}</div>
+        </div>
+        ${imgs.length ? `<img src="${safeImgSrc(imgs[0])}" alt="" loading="lazy">` : ''}
+      </div>`;
+    });
+  });
+  body.innerHTML = `
+    <div class="svd-top" style="background:${color}"></div>
+    <div class="svd-head">
+      <button class="svd-close" title="Fermer (Échap)" onclick="svCloseDrawer()">✕</button>
+      <div class="svd-type" style="color:${t.color}">${t.icon} ${t.label}${c.campaignType ? ' · ' + esc(c.campaignType) : ''}</div>
+      <div class="svd-title">${campaignAtteinte(c) ? '★ ' : ''}${esc(c.title || 'Campagne')}</div>
+      <div class="svd-dates">📅 ${fmtDate(c.startDate)}${c.endDate && c.endDate !== c.startDate ? ' → ' + fmtDate(c.endDate) : ''} · ${acts.length} action${acts.length > 1 ? 's' : ''}</div>
+      ${editor ? `<div class="svd-actions-bar">
+        <button class="btn primary" id="svd-add-action">＋ Ajouter une action</button>
+        <button class="btn" id="svd-edit">✏️ Modifier la campagne</button>
+      </div>` : ''}
+    </div>
+    ${prog !== null ? `<div class="svd-sec"><h4>Objectif</h4>
+      <div class="svd-kpi-row"><span>${esc((c.kpi && c.kpi.type) || 'KPI')}</span><span style="color:${prog >= 100 ? '#047857' : '#be123c'}">${c.kpi.realise || 0} / ${c.kpi.objectif} · ${prog} %</span></div>
+      <div class="svd-progress"><div style="width:${Math.min(100, prog)}%;background:${prog >= 100 ? '#10b981' : color}"></div></div>
+    </div>` : ''}
+    <div class="svd-sec"><h4>Actions</h4>${actHtml}</div>`;
+  body.querySelectorAll('.svd-act').forEach(el => el.addEventListener('click', () => {
+    const a = (data().actions || []).find(x => x.id === el.dataset.aid);
+    if(a) openActionDetailModal(a);
+  }));
+  const add = document.getElementById('svd-add-action');
+  if(add) add.onclick = () => openActionModal(null, c.id, null);
+  const edit = document.getElementById('svd-edit');
+  if(edit) edit.onclick = () => openCampaignModal(c);
+}
+document.addEventListener('keydown', (ev) => {
+  if(ev.key === 'Escape' && SV_SELECTED && !document.querySelector('.modal-overlay, .lightbox-overlay')) svCloseDrawer();
+});
+
+/** Bouton « ＋ Ajouter » (mode modification) : tout ce qu'on peut créer, au même endroit. */
+function svInstallAddMenu() {
+  if(!STATE.isAdmin || document.getElementById('add-menu')) return;
+  const anchor = document.getElementById('btn-filters');
+  if(!anchor) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'add-menu'; wrap.id = 'add-menu';
+  wrap.innerHTML = `<button class="btn primary" type="button">＋ Ajouter</button>
+    <div class="add-menu-list" role="menu">
+      <button data-add="acquisition">🎯 Campagne d'acquisition<small>Nouvelle carte stratégique</small></button>
+      <button data-add="fidelisation">💎 Campagne de fidélisation<small>Nouvelle carte stratégique</small></button>
+      <button data-add="reglementaire">⚠️ Sujet réglementaire<small>Nouvelle carte stratégique</small></button>
+      <button data-add="action">📣 Action<small>À rattacher à une campagne et un canal</small></button>
+      <button data-add="period">🟦 Période<small>Saisonnalité, temps fort</small></button>
+      <button data-add="milestone">📌 Jalon<small>Une date clé</small></button>
+    </div>`;
+  anchor.parentNode.insertBefore(wrap, anchor);
+  wrap.querySelector('.btn').onclick = (e) => { e.stopPropagation(); wrap.classList.toggle('open'); };
+  document.addEventListener('click', () => wrap.classList.remove('open'));
+  wrap.querySelectorAll('[data-add]').forEach(b => b.onclick = (e) => {
+    e.stopPropagation(); wrap.classList.remove('open');
+    const k = b.dataset.add;
+    if(k === 'action') openActionModal(null, SV_SELECTED || null, null);
+    else if(k === 'period') openPeriodModal(null);
+    else if(k === 'milestone') openMilestoneModal(null);
+    else openCampaignModal(null, k);
+  });
+}
+
 function render() {
   renderColorLegend();
-  if(STATE.activeView === 'timeline') {
+  document.body.classList.toggle('view-simple', STATE.activeView === 'simple');
+  if(STATE.activeView === 'simple') {
+    GRID = buildGrid(STATE.currentYear, STATE.activeScale);
+    renderSimple();
+  } else if(STATE.activeView === 'timeline') {
     renderTimeline();
   } else {
     GRID = buildGrid(STATE.currentYear, STATE.activeScale);
@@ -4386,13 +4823,15 @@ function __cloudRewireAdminBtn() {
   if (old) {
     const nu = old.cloneNode(true);
     nu.style.display = '';
-    nu.textContent = '🛠 Configuration';
+    nu.textContent = '🛠 Réglages';
+    nu.title = 'Canaux, types, couleurs, pictogrammes…';
     nu.classList.remove('active');
     old.parentNode.replaceChild(nu, old);
     nu.addEventListener('click', () => { toggleAdminPanel(); });
   }
   const qbtn = document.getElementById('btn-quit-admin');
   if (qbtn) qbtn.style.display = 'none';
+  svInstallAddMenu();
   // Show the "+ Année" button only for admins (hidden by default in HTML).
   const nyBtn = document.getElementById('btn-new-year');
   if (nyBtn) nyBtn.style.display = '';
@@ -4467,6 +4906,12 @@ async function openHistoryModal() {
   await CLOUD.loadState();
   requestAnimationFrame(() => {
     init();
+    // Vue préférée de la personne (la vue claire par défaut).
+    try {
+      const v = localStorage.getItem('planning_view');
+      const b = v && v !== 'simple' && document.querySelector(`[data-view="${v}"]`);
+      if(b) b.click();
+    } catch(e) {}
     __cloudInjectUI();
     __cloudRewireAdminBtn();
     CLOUD.subscribeRealtime();

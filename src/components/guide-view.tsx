@@ -511,16 +511,20 @@ const PLANNING_FLOWS: Flow[] = [
         title: "Vues",
         who: "Tout le monde",
         color: C.prep,
-        items: ["Timeline ou Par canal", "Année, trimestre ou mois", "Vue compacte ou détaillée"],
+        items: [
+          "Vue claire (par défaut), frise détaillée ou par canal",
+          "Année, trimestre ou mois",
+          "Sections repliables",
+        ],
       },
       {
         title: "Lire le planning",
         who: "Tout le monde",
         color: C.review,
         items: [
-          "Cartes stratégiques : acquisition, fidélisation, réglementaire",
-          "Actions par canal, avec images",
-          "Jalons et périodes (saisonnalité)",
+          "Une ligne par campagne : acquisition, fidélisation, réglementaire",
+          "Clic sur une campagne : panneau avec ses actions, images et KPI",
+          "Temps forts : périodes et jalons",
         ],
       },
       {
@@ -539,8 +543,9 @@ const PLANNING_FLOWS: Flow[] = [
         who: "Personnes en mode modification",
         color: C.remind,
         items: [
-          "Ajouter ou modifier campagnes, actions, jalons, périodes",
-          "🛠 Configuration : canaux, types, couleurs, pictogrammes",
+          "« ＋ Ajouter » : campagne, action, période ou jalon",
+          "Panneau de la campagne : Modifier, Ajouter une action",
+          "🛠 Réglages : canaux, types, couleurs, pictogrammes",
           "+ Année et 🕓 Historique des modifications",
         ],
       },

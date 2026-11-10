@@ -889,7 +889,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "kpi",
     ],
     answer:
-      "Planning intégré, c'est le planning commercial partagé d'Alterna Énergie. En haut : l'année, la vue « Timeline » ou « Par canal », l'échelle Année / Trimestre / Mois, et l'affichage Compacte ou Détaillée. On y voit les cartes stratégiques (Acquisition, Fidélisation, Réglementaire) avec leurs KPI, les actions par canal (avec leurs images), les jalons et les périodes (saisonnalité). La case « Rechercher… » en haut n'affiche que les campagnes et actions dont le titre contient le mot tapé (Échap pour effacer) ; « ◎ Aujourd'hui » montre la date du jour (repère rouge) et, en vue Trimestre ou Mois, ouvre la période en cours. « 🔍 Filtres » trie par campagne, type, canal, couleur ou KPI ; « ⚙ Affichage » choisit ce qui est montré et la densité ; 🌙 passe en mode sombre (rien que pour toi) ; « 🖨 PDF » exporte toute l'année en A3 paysage, sur plusieurs pages si besoin.",
+      "Planning intégré, c'est le planning commercial partagé d'Alterna Énergie. Il s'ouvre sur la « ✨ Vue claire » : en haut les temps forts (périodes et jalons), puis une section par stratégie (Acquisition, Fidélisation, Réglementaire) avec une ligne fine par campagne ; la barre montre sa durée et chaque petit rond une action (survole-le pour son titre, sa date et son canal). Clique sur une campagne : un panneau s'ouvre à droite avec ses dates, son objectif (KPI) et toutes ses actions par canal, avec leurs images ; clique sur une action pour son détail. Une flèche ▾ replie une section. En haut : l'année, l'échelle Année / Trimestre / Mois, « ◎ Aujourd'hui » (repère rouge), la recherche par titre (Échap pour effacer), « 🔍 Filtres », « ⚙ Affichage », 🌙 (mode sombre, rien que pour toi) et « 🖨 PDF » (toute l'année en A3 paysage). Les vues « 📅 Frise détaillée » et « 🗂 Par canal » restent disponibles ; Digicom se souvient de ta vue préférée.",
   },
   {
     zone: "planning",
@@ -907,7 +907,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "lecture seule",
     ],
     answer:
-      "Le planning s'enregistre tout seul et se met à jour en direct pour tout le monde. Seules les personnes en mode « ✎ Modification » (affiché en haut à droite) peuvent ajouter ou modifier campagnes, actions, jalons et périodes ; les autres sont en « 👁 Lecture seule ». En mode modification, « 🛠 Configuration » règle les canaux, types de KPI, types de campagne, couleurs, légende et pictogrammes, « + Année » crée une nouvelle année et « 🕓 Historique » montre le journal des modifications. Pour passer en mode modification, demande à Geoffrey.",
+      "Le planning s'enregistre tout seul et se met à jour en direct pour tout le monde. Seules les personnes en mode « ✎ Modification » (affiché en haut à droite) peuvent le modifier ; les autres sont en « 👁 Lecture seule ». En mode modification : le bouton « ＋ Ajouter » crée une campagne (acquisition, fidélisation ou réglementaire), une action, une période ou un jalon ; chaque section a aussi son « ＋ Campagne » (et « ＋ Période » / « ＋ Jalon » pour les temps forts). Pour modifier une campagne, clique dessus puis « ✏️ Modifier la campagne » dans le panneau, ou « ＋ Ajouter une action » pour lui ajouter une action ; une période ou un jalon se modifie en cliquant dessus. « 🛠 Réglages » règle les canaux, types de KPI, types de campagne, couleurs, légende et pictogrammes, « + Année » crée une nouvelle année et 🕓 montre l'historique des modifications. Pour passer en mode modification, demande à Geoffrey.",
   },
   // ——— Kit ———
   {
