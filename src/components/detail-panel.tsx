@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ExternalLink, Trash2, X } from "lucide-react";
+import { Check, ExternalLink, Trash2, X } from "lucide-react";
 import { extraColumnsOf, extraOptionsFor, getRow, headersOf, SHEET_META, type EditsMap } from "@/lib/workbook";
 import { linkHref } from "@/lib/links";
 import { DateCell, parseDateValue } from "@/components/date-cell";
@@ -37,11 +37,18 @@ export function DetailPanel({
       }
     }
   }
-  if (!title) title = String(row.find((v) => v != null && String(v).trim() !== "") ?? "Ligne " + rowId);
+  // Titre : première valeur parlante (pas une case cochée « x » / « oui » comme Publié).
+  if (!title)
+    title = String(
+      row.find((v) => {
+        const t = v == null ? "" : String(v).trim();
+        return t !== "" && !/^(x|✓|✔|oui|non|true|false|vrai|faux)$/i.test(t);
+      }) ?? "Ligne " + rowId,
+    );
 
   return (
-    <aside className="w-full md:w-[440px] shrink-0 md:border-l border-border bg-card h-full md:h-screen md:sticky md:top-0 overflow-y-auto">
-      <div className="p-5 border-b border-border sticky top-0 bg-card z-10">
+    <aside className="flex min-h-0 w-full flex-1 flex-col bg-card md:w-[440px] md:border-l border-border">
+      <div className="shrink-0 p-5 border-b border-border bg-card">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             {level >= 0 && (
@@ -77,7 +84,7 @@ export function DetailPanel({
           </div>
         </div>
       </div>
-      <div className="p-5 space-y-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 space-y-4">
         {headers.map((h, idx) => {
           // Skip tree columns after the level column - they represent hierarchy not fields
           if (treeCols && idx < treeCols && idx !== level) return null;
@@ -94,6 +101,17 @@ export function DetailPanel({
             />
           );
         })}
+      </div>
+      {/* Toujours visible : chaque champ s'enregistre dès qu'on le quitte ; « Terminé » le confirme. */}
+      <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border bg-card px-5 py-3">
+        <span className="text-xs text-muted-foreground">Enregistré automatiquement</span>
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          <Check className="size-4" /> Terminé
+        </button>
       </div>
     </aside>
   );

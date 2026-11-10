@@ -375,7 +375,7 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
             )}
           </div>
           {/* Desktop detail panel */}
-          <div className="hidden md:block">{detailPanel}</div>
+          <div className="hidden min-h-0 md:flex md:flex-col">{detailPanel}</div>
         </div>
         </>
         )}
@@ -388,9 +388,9 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
       >
         <SheetContent
           side="bottom"
-          className="p-0 h-[92vh] rounded-t-2xl border-t"
+          className="p-0 h-[92vh] rounded-t-2xl border-t flex flex-col"
         >
-          <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-muted-foreground/30" />
+          <div className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-muted-foreground/30" />
           {detailPanel}
         </SheetContent>
       </Sheet>
