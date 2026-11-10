@@ -308,13 +308,21 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
             onRenameSheet={(v) => setMetaValue("sheet", sheet, v)}
           />
         ) : embedSrc ? (
-          <iframe
-            ref={editorialFrame}
-            onLoad={sendReminderAccess}
-            src={frameSrc}
-            title={sheetLabel}
-            className="flex-1 w-full border-0 min-h-0"
-          />
+          <>
+            {/* Le planning a des boutons en haut à droite (bascule de vue, panneaux) : on le
+                décale sous les boutons Demandes / Sauvegarde / Déconnexion pour qu'ils ne les
+                recouvrent pas. */}
+            {sheetInfo?.group === "Planning intégré" && (
+              <div className="hidden md:block h-12 shrink-0 border-b border-border bg-card" />
+            )}
+            <iframe
+              ref={editorialFrame}
+              onLoad={sendReminderAccess}
+              src={frameSrc}
+              title={sheetLabel}
+              className="flex-1 w-full border-0 min-h-0"
+            />
+          </>
         ) : (
         <>
         <header className={cn("hidden md:block px-8 py-6 border-b", gc.header)}>

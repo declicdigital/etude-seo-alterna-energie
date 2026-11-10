@@ -999,6 +999,11 @@ body { font-size: 13px; -webkit-font-smoothing: antialiased; }
 .exporting .bd-list { overflow: visible; }
 .exporting .bd-hint { display: none; }
 @media (max-width: 760px) { .bd-col { flex-basis: 86vw; } .bd-hint { display: none; } }
+/* Icônes de la barre d'outils (traits, lisibles partout) */
+.ico { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+#topbar .btn-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; color: var(--text); }
+#topbar .btn-icon.active { color: #fff; }
+.ls-btn { display: inline-flex; align-items: center; gap: 7px; }
 /* Bascule Mois par mois / Frise (en haut à droite) */
 .layout-switch { display: inline-flex; padding: 4px; gap: 4px; border-radius: 14px; background: var(--text); box-shadow: 0 8px 20px -12px rgba(15,23,42,.7); }
 .ls-btn { height: 34px; padding: 0 14px; border: 0; border-radius: 10px; background: transparent; color: rgba(255,255,255,.72);
@@ -1053,8 +1058,8 @@ body.view-simple #density-tabs { display: none; }
       </label>
       <!-- Bascule entre les deux présentations du planning -->
       <div class="layout-switch" role="tablist" aria-label="Présentation du planning">
-        <button class="ls-btn active" data-layout="simple" role="tab">🗓 Mois par mois</button>
-        <button class="ls-btn" data-layout="frise" role="tab">📅 Frise</button>
+        <button class="ls-btn active" data-layout="simple" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h2M14 14h2M8 18h2"/></svg><span>Mois par mois</span></button>
+        <button class="ls-btn" data-layout="frise" role="tab"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h10M7 12h14M5 18h9"/></svg><span>Frise</span></button>
       </div>
     </div>
     <div class="tb-row tb-row-2">
@@ -1082,10 +1087,10 @@ body.view-simple #density-tabs { display: none; }
       </div>
       <div class="tb-group">
         <button class="btn" id="btn-filters">🔍 Filtres</button>
-        <button class="btn-icon" id="btn-display" title="Affichage">⚙</button>
-        <button class="btn-icon" id="btn-export-pdf" title="Exporter en PDF">🖨</button>
-        <button class="btn-icon" id="btn-history" style="display:none" title="Historique des modifications">🕓</button>
-        <button class="btn-icon" id="btn-theme" title="Mode clair/sombre">🌙</button>
+        <button class="btn-icon" id="btn-display" title="Affichage"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+        <button class="btn-icon" id="btn-export-pdf" title="Exporter en PDF"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button>
+        <button class="btn-icon" id="btn-history" style="display:none" title="Historique des modifications"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button>
+        <button class="btn-icon" id="btn-theme" title="Mode clair/sombre"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
         <button class="btn" id="btn-admin" style="display:none">Admin</button>
         <button class="btn danger" id="btn-quit-admin" style="display:none">✕ Quitter Admin</button>
       </div>
@@ -4047,6 +4052,8 @@ window.openActionModal = openActionModal;
 // ═══════════════════════════════════════════════════════════════
 // VIEW SWITCHING
 // ═══════════════════════════════════════════════════════════════
+const THEME_ICON_SUN = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const THEME_ICON_MOON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
 // Bascule « Mois par mois » / « Frise » (la frise reprend la dernière vue choisie : par campagne ou par canal).
 function syncLayoutSwitch() {
   const layout = STATE.activeView === 'simple' ? 'simple' : 'frise';
@@ -4153,7 +4160,7 @@ document.getElementById('btn-theme').addEventListener('click', () => {
   // Le mode sombre est un choix personnel : il n'est pas enregistré pour tout le monde.
   STATE.theme = STATE.theme==='light'?'dark':'light';
   document.documentElement.dataset.theme = STATE.theme;
-  document.getElementById('btn-theme').textContent = STATE.theme==='dark'?'☀️':'🌙';
+  document.getElementById('btn-theme').innerHTML = STATE.theme==='dark' ? THEME_ICON_SUN : THEME_ICON_MOON;
   try { localStorage.setItem('planning_theme', STATE.theme); } catch(e){}
 });
 document.getElementById('btn-today').addEventListener('click', scrollToToday);
@@ -4610,7 +4617,7 @@ function init() {
   
   // Theme
   document.documentElement.dataset.theme = STATE.theme;
-  document.getElementById('btn-theme').textContent = STATE.theme==='dark'?'☀️':'🌙';
+  document.getElementById('btn-theme').innerHTML = STATE.theme==='dark' ? THEME_ICON_SUN : THEME_ICON_MOON;
   
   // Density
   document.body.dataset.density = STATE.density;
