@@ -1436,6 +1436,41 @@ async function pushToBlog(article){
   }
 }
 
+/* Article déjà publié : un lien publié ou un titre modifié ensuite dans le suivi est recopié
+   dans les lignes déjà créées (Contenus / Blog), sinon la liste gardait l'ancienne valeur. */
+const listSyncTimers = {};
+function listRowsOf(article){
+  const rows = [];
+  if(article.blogRowId != null){
+    const sheet = article.blogSheet || (SPACE ? BLOG_SHEET : BLOG_SHEET + '::' + (article.audience === 'Professionnel' ? 'Professionnel' : 'Particulier'));
+    rows.push({ sheet, row: article.blogRowId });
+  }
+  if(STRAT && article.mainBlogRowId != null) rows.push({ sheet: 'BLOG - ARTICLES::Particulier', row: article.mainBlogRowId });
+  return rows;
+}
+function syncListRows(article, field){
+  if(!listRowsOf(article).length) return;
+  const key = article.id + ':' + field;
+  clearTimeout(listSyncTimers[key]);
+  listSyncTimers[key] = setTimeout(async () => {
+    const col = field === 'title' ? 1 : 9;
+    const raw = field === 'title' ? (article.title || '').trim() : normalizeUrl(article.finalLink);
+    if(field === 'title' && !raw) return;
+    const now = new Date().toISOString();
+    const body = listRowsOf(article).map(r => ({ sheet: r.sheet, row_id: r.row, col, value: raw || null, updated_at: now }));
+    try{
+      const res = await fetch(CELLS_REST + '?on_conflict=sheet,row_id,col', {
+        method: 'POST',
+        headers: Object.assign({}, authHeaders(), { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+        body: JSON.stringify(body)
+      });
+      if(!res.ok) throw new Error('sync');
+    }catch(e){
+      alert("Le lien n'a pas pu être mis à jour dans la liste. Réessaie dans un instant.");
+    }
+  }, 700);
+}
+
 function normalizeUrl(v){
   if(!v) return '';
   v = v.trim();
@@ -2407,6 +2442,7 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
     const article = getArticle(t.dataset.articleId);
     article.title = t.value;
     await saveArticle(article);
+    syncListRows(article, 'title');
   }
   if(action === 'edit-brief-link'){
     const article = getArticle(t.dataset.articleId);
@@ -2422,6 +2458,7 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
     const article = getArticle(t.dataset.articleId);
     article.finalLink = t.value;
     await saveArticle(article);
+    syncListRows(article, 'link');
   }
   if(action === 'edit-assignee'){
     const article = getArticle(t.dataset.articleId);
