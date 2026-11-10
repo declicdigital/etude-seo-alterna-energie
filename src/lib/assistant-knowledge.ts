@@ -349,7 +349,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "mobile",
     ],
     answer:
-      "Le menu de gauche regroupe les rubriques auxquelles tu as accès. L'Accueil reprend tes rubriques, le Guide de l'outil donne le mode d'emploi illustré de chacune, et le Kit de communication rassemble les ressources de la marque Alterna Énergie. Sur téléphone, le menu s'ouvre avec le bouton ☰ en haut. « Déconnexion » est en haut à droite.",
+      "Le menu de gauche regroupe les rubriques auxquelles tu as accès. L'Accueil montre « Ce qui t'attend » (les articles dont l'étape en cours t'est attribuée et tes sujets à rédiger, avec leur deadline ; un clic ouvre la carte), les échéances de l'équipe des deux prochaines semaines, les derniers contenus publiés avec leur lien en ligne, Le Radar du mois si tu y as accès, puis tes rubriques ; le Guide de l'outil donne le mode d'emploi illustré de chacune, et le Kit de communication rassemble les ressources de la marque Alterna Énergie. Sur téléphone, le menu s'ouvre avec le bouton ☰ en haut. « Déconnexion » est en haut à droite.",
   },
   {
     zone: "all",

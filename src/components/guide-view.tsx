@@ -5,12 +5,6 @@ import {
   ArrowRight,
   Mail,
   CheckCircle2,
-  PenLine,
-  Image as ImageIcon,
-  Globe,
-  Users,
-  Bell,
-  AtSign,
   HelpCircle,
   Leaf,
   BarChart3,
@@ -22,6 +16,7 @@ import {
 import logo from "@/assets/alterna-logo.png.asset.json";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
 import { Link } from "@tanstack/react-router";
+import { HomeDashboard } from "@/components/home-dashboard";
 import { Button } from "@/components/ui/button";
 import { FolderDown } from "lucide-react";
 import { visibleRubriqueEntries, type RubriqueKey } from "@/lib/rubriques";
@@ -505,7 +500,8 @@ const ORGANISATION_FLOWS: Flow[] = [
 const PLANNING_FLOWS: Flow[] = [
   {
     title: "Le Radar",
-    intro: "Campagnes, actions par canal, jalons et périodes · visible seulement avec l'accès Le Radar",
+    intro:
+      "Campagnes, actions par canal, jalons et périodes · visible seulement avec l'accès Le Radar",
     steps: [
       {
         title: "Vues",
@@ -754,34 +750,6 @@ export function GuideView({
   );
 }
 
-const TEAM = [
-  { name: "Aurorae", role: "Rédaction · Caroline & Elodie", color: "bg-emerald-500" },
-  { name: "Marina", role: "Rédaction", color: "bg-violet-500" },
-  { name: "Service Communication", role: "Relecture · Fannie & Coraline", color: "bg-amber-500" },
-  { name: "Marick", role: "Intégration site", color: "bg-sky-500" },
-  { name: "Geoffrey", role: "Pilotage · Image", color: "bg-rose-500" },
-];
-
-const PIPE = [
-  {
-    label: "À rédiger",
-    icon: PenLine,
-    tone: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
-  },
-  {
-    label: "Image",
-    icon: ImageIcon,
-    tone: "bg-violet-500/15 text-violet-700 dark:text-violet-300",
-  },
-  {
-    label: "Relecture",
-    icon: BookOpen,
-    tone: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-  },
-  { label: "Intégration", icon: Globe, tone: "bg-sky-500/15 text-sky-700 dark:text-sky-300" },
-  { label: "Publié", icon: CheckCircle2, tone: "bg-rose-500/15 text-rose-700 dark:text-rose-300" },
-];
-
 export function HomeView({
   onOpenSheet,
   allowed,
@@ -838,6 +806,8 @@ export function HomeView({
           </div>
         </section>
 
+        <HomeDashboard />
+
         <section className="flex flex-wrap items-center justify-between gap-4 border-y border-border py-6">
           <div>
             <h3 className="text-xl font-semibold">Kit de communication</h3>
@@ -888,87 +858,6 @@ export function HomeView({
             );
           })}
         </section>
-
-        {editorial && (
-          <>
-            <section className="rounded-2xl border border-border bg-card p-6 md:p-8">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Le parcours d'un contenu
-              </h3>
-              <div className="mt-6 flex flex-col md:flex-row md:items-center gap-3">
-                {PIPE.map((p, i) => {
-                  const Icon = p.icon;
-                  return (
-                    <div key={p.label} className="flex md:flex-1 items-center gap-3">
-                      <div className="flex-1 flex flex-col items-center text-center gap-2">
-                        <div
-                          className={`size-16 rounded-2xl flex items-center justify-center ${p.tone}`}
-                        >
-                          <Icon className="size-7" />
-                        </div>
-                        <div className="text-sm font-semibold">{p.label}</div>
-                      </div>
-                      {i < PIPE.length - 1 && (
-                        <ArrowRight className="hidden md:block size-5 text-muted-foreground shrink-0" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            <section className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-border bg-card p-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Users className="size-4" />
-                  L'équipe
-                </h3>
-                <ul className="mt-4 space-y-3">
-                  {TEAM.map((t) => (
-                    <li key={t.name} className="flex items-center gap-3">
-                      <div
-                        className={`size-9 rounded-full ${t.color} text-primary-foreground flex items-center justify-center text-sm font-bold`}
-                      >
-                        {t.name[0]}
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold">{t.name}</div>
-                        <div className="text-xs text-muted-foreground">{t.role}</div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Bell className="size-4" />
-                  Automatique
-                </h3>
-                <ul className="mt-4 space-y-3 text-sm">
-                  {[
-                    [Mail, "Un mail à chaque étape validée, avec lien direct vers la carte"],
-                    [Bell, "Rappel à l'édition le lundi avant la deadline"],
-                    [AtSign, "@ dans un message : les personnes taguées sont prévenues"],
-                    [
-                      ImageIcon,
-                      "Images ajoutées par glisser-déposer, téléchargeables à l'intégration",
-                    ],
-                  ].map(([I, t]) => {
-                    const Ic = I as typeof Mail;
-                    return (
-                      <li key={t as string} className="flex gap-3">
-                        <span className="size-8 shrink-0 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                          <Ic className="size-4" />
-                        </span>
-                        <span className="pt-1.5">{t as string}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </section>
-          </>
-        )}
       </div>
     </div>
   );
