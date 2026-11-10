@@ -78,6 +78,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      // Outil interne : jamais indexé par les moteurs de recherche, accessible seulement par lien.
+      { name: "robots", content: "noindex, nofollow, noarchive" },
       { title: "Digicom" },
       { name: "description", content: "L'outil de suivi de la communication digitale." },
       { property: "og:title", content: "Digicom" },

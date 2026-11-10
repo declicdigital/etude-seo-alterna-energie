@@ -45,6 +45,24 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+/** Outil interne : aucune page ni réponse ne doit être indexée par les moteurs de recherche. */
+const ROBOTS = "noindex, nofollow, noarchive";
+function noIndex(response: Response): Response {
+  try {
+    response.headers.set("X-Robots-Tag", ROBOTS);
+    return response;
+  } catch {
+    // En-têtes figés (réponse immuable) : on recopie la réponse.
+    const headers = new Headers(response.headers);
+    headers.set("X-Robots-Tag", ROBOTS);
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     // Former address: send every page to the same page on the new address (the browser keeps the #anchor).
@@ -54,18 +72,22 @@ export default {
       const keepsMethod = request.method !== "GET" && request.method !== "HEAD";
       return new Response(null, {
         status: keepsMethod ? 308 : 301,
-        headers: { Location: moved, "Cache-Control": "public, max-age=3600" },
+        headers: {
+          Location: moved,
+          "Cache-Control": "public, max-age=3600",
+          "X-Robots-Tag": ROBOTS,
+        },
       });
     }
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return noIndex(await normalizeCatastrophicSsrResponse(response));
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {
         status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
+        headers: { "content-type": "text/html; charset=utf-8", "X-Robots-Tag": ROBOTS },
       });
     }
   },
