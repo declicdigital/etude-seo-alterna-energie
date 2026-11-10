@@ -878,6 +878,8 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "planning",
       "planning intégré",
       "timeline",
+      "frise",
+      "mois par mois",
       "par canal",
       "trimestre",
       "campagne",
@@ -889,7 +891,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "kpi",
     ],
     answer:
-      "Planning intégré, c'est le planning commercial partagé d'Alterna Énergie. Il s'ouvre sur « 🗓 Mois par mois » : une colonne par mois (le mois en cours est encadré en rouge « Maintenant »), avec en haut ses temps forts (périodes et jalons), puis les campagnes qui démarrent ce mois-là en grandes cartes (aperçu des visuels, type, dates, objectif KPI, canaux et actions du mois) et, sous « En cours », celles qui continuent avec leurs actions du mois. Les onglets Toutes / Acquisition / Fidélisation / Réglementaire trient les cartes. Clique sur une carte : un panneau s'ouvre à droite avec toutes ses actions par canal et leurs images ; clique sur une action pour son détail. En vue Trimestre, les 3 mois tiennent à l'écran ; en vue Mois, une colonne par semaine. En haut : l'année, « ◎ Aujourd'hui », la recherche par titre (Échap pour effacer), « 🔍 Filtres », « ⚙ Affichage », 🌙 (mode sombre, rien que pour toi) et « 🖨 PDF » (A3 paysage). Les vues « 📅 Frise détaillée » et « 🗂 Par canal » restent disponibles ; Digicom se souvient de ta vue préférée.",
+      "Planning intégré, c'est le planning commercial partagé d'Alterna Énergie. Il s'ouvre sur « 🗓 Mois par mois » : une colonne par mois (le mois en cours est encadré en rouge « Maintenant »), avec en haut ses temps forts (périodes et jalons), puis les campagnes qui démarrent ce mois-là en grandes cartes (aperçu des visuels, type, dates, objectif KPI, canaux et actions du mois) et, sous « En cours », celles qui continuent avec leurs actions du mois. Les onglets Toutes / Acquisition / Fidélisation / Réglementaire trient les cartes. Clique sur une carte : un panneau s'ouvre à droite avec toutes ses actions par canal et leurs images ; clique sur une action pour son détail. En vue Trimestre, les 3 mois tiennent à l'écran ; en vue Mois, une colonne par semaine. En haut : l'année, « ◎ Aujourd'hui », la recherche par titre (Échap pour effacer), « 🔍 Filtres », « ⚙ Affichage », 🌙 (mode sombre, rien que pour toi) et « 🖨 PDF » (A3 paysage). En haut à droite, le bouton « 🗓 Mois par mois / 📅 Frise » bascule entre ce tableau et la frise d'avant (barres sur la ligne du temps), où tu choisis « Par campagne » ou « Par canal » et « Compacte » / « Détaillée » ; Digicom se souvient de ta présentation préférée.",
   },
   {
     zone: "planning",

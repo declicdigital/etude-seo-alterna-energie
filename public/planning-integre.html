@@ -999,9 +999,20 @@ body { font-size: 13px; -webkit-font-smoothing: antialiased; }
 .exporting .bd-list { overflow: visible; }
 .exporting .bd-hint { display: none; }
 @media (max-width: 760px) { .bd-col { flex-basis: 86vw; } .bd-hint { display: none; } }
+/* Bascule Mois par mois / Frise (en haut à droite) */
+.layout-switch { display: inline-flex; padding: 4px; gap: 4px; border-radius: 14px; background: var(--text); box-shadow: 0 8px 20px -12px rgba(15,23,42,.7); }
+.ls-btn { height: 34px; padding: 0 14px; border: 0; border-radius: 10px; background: transparent; color: rgba(255,255,255,.72);
+  font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.ls-btn:hover { color: #fff; background: rgba(255,255,255,.08); }
+.ls-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(15,23,42,.3); }
+[data-theme="dark"] .layout-switch { background: var(--bg3); }
+[data-theme="dark"] .ls-btn.active { background: var(--accent); color: #0b1220; }
+body.view-simple .frise-only { display: none !important; }
+.logo-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 3px; }
+.logo-meta #cloud-status { margin: 0 !important; }
 /* menu « + Ajouter » */
 .add-menu { position: relative; }
-.add-menu-list { position: absolute; top: 38px; right: 0; z-index: 500; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+.add-menu-list { position: absolute; top: 38px; left: 0; z-index: 500; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
   box-shadow: var(--shadow-md); padding: 6px; width: 230px; display: none; }
 .add-menu.open .add-menu-list { display: block; }
 .add-menu-list button { display: flex; width: 100%; gap: 10px; align-items: center; text-align: left; border: 0; background: transparent; font: inherit; font-size: 13px;
@@ -1017,6 +1028,10 @@ body.view-simple #density-tabs { display: none; }
   .tb-row { padding-left: 12px; padding-right: 12px; }
   .logo-title span { display: none; }
   .tb-search { min-width: 0; flex: 1; }
+  .tb-row-1 .logo { flex-basis: 100%; }
+  .tb-row-1 .tb-spacer { display: none; }
+  .tb-group { flex-wrap: wrap; }
+  .ls-btn { padding: 0 11px; }
   :root { --label-w: 140px; }
 }
 </style>
@@ -1029,20 +1044,17 @@ body.view-simple #density-tabs { display: none; }
       <div class="logo">
         <div class="logo-chip">Planning intégré</div>
         <div class="logo-title">Planning commercial <span>Alterna Énergie</span></div>
+        <div class="logo-meta" id="logo-meta"></div>
       </div>
       <div class="tb-spacer"></div>
       <label class="tb-search" title="Rechercher une campagne ou une action">
         <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2-4.35-4.35"/></svg>
         <input id="tb-search" type="search" placeholder="Rechercher…" autocomplete="off">
       </label>
-      <div class="tb-group">
-        <button class="btn" id="btn-filters">🔍 Filtres</button>
-        <button class="btn" id="btn-display">⚙ Affichage</button>
-        <button class="btn" id="btn-export-pdf">🖨 PDF</button>
-        <button class="btn" id="btn-history" style="display:none" title="Historique des modifications">🕓</button>
-        <button class="btn-icon" id="btn-theme" title="Mode clair/sombre">🌙</button>
-        <button class="btn" id="btn-admin" style="display:none">Admin</button>
-        <button class="btn danger" id="btn-quit-admin" style="display:none">✕ Quitter Admin</button>
+      <!-- Bascule entre les deux présentations du planning -->
+      <div class="layout-switch" role="tablist" aria-label="Présentation du planning">
+        <button class="ls-btn active" data-layout="simple" role="tab">🗓 Mois par mois</button>
+        <button class="ls-btn" data-layout="frise" role="tab">📅 Frise</button>
       </div>
     </div>
     <div class="tb-row tb-row-2">
@@ -1050,10 +1062,10 @@ body.view-simple #density-tabs { display: none; }
         <select id="year-sel" title="Année"></select>
         <button class="btn" id="btn-new-year" title="Créer une nouvelle année" style="display:none">+ Année</button>
       </div>
-      <div class="tb-group tb-seg" id="view-tabs">
-        <button class="btn active" data-view="simple">🗓 Mois par mois</button>
-        <button class="btn" data-view="timeline">📅 Frise détaillée</button>
-        <button class="btn" data-view="canal">🗂 Par canal</button>
+      <div class="tb-group tb-seg frise-only" id="view-tabs">
+        <button class="btn" data-view="simple" style="display:none">Mois par mois</button>
+        <button class="btn" data-view="timeline">Par campagne</button>
+        <button class="btn" data-view="canal">Par canal</button>
       </div>
       <div class="tb-group tb-seg" id="scale-tabs">
         <button class="btn active" data-scale="year">Année</button>
@@ -1064,9 +1076,18 @@ body.view-simple #density-tabs { display: none; }
       <div class="tb-group tb-seg" id="sub-selector" style="display:none"></div>
       <button class="btn" id="btn-today" title="Aller à aujourd'hui">◎ Aujourd'hui</button>
       <div class="tb-spacer"></div>
-      <div class="tb-group tb-seg" id="density-tabs">
+      <div class="tb-group tb-seg frise-only" id="density-tabs">
         <button class="btn" id="btn-compact-view">Compacte</button>
         <button class="btn" id="btn-detail-view">Détaillée</button>
+      </div>
+      <div class="tb-group">
+        <button class="btn" id="btn-filters">🔍 Filtres</button>
+        <button class="btn-icon" id="btn-display" title="Affichage">⚙</button>
+        <button class="btn-icon" id="btn-export-pdf" title="Exporter en PDF">🖨</button>
+        <button class="btn-icon" id="btn-history" style="display:none" title="Historique des modifications">🕓</button>
+        <button class="btn-icon" id="btn-theme" title="Mode clair/sombre">🌙</button>
+        <button class="btn" id="btn-admin" style="display:none">Admin</button>
+        <button class="btn danger" id="btn-quit-admin" style="display:none">✕ Quitter Admin</button>
       </div>
     </div>
   </div>
@@ -4026,9 +4047,30 @@ window.openActionModal = openActionModal;
 // ═══════════════════════════════════════════════════════════════
 // VIEW SWITCHING
 // ═══════════════════════════════════════════════════════════════
+// Bascule « Mois par mois » / « Frise » (la frise reprend la dernière vue choisie : par campagne ou par canal).
+function syncLayoutSwitch() {
+  const layout = STATE.activeView === 'simple' ? 'simple' : 'frise';
+  document.querySelectorAll('[data-layout]').forEach(b => {
+    const on = b.dataset.layout === layout;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+}
+document.querySelectorAll('[data-layout]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    let target = 'simple';
+    if(btn.dataset.layout === 'frise') {
+      try { target = localStorage.getItem('planning_frise_view') === 'canal' ? 'canal' : 'timeline'; } catch(e) { target = 'timeline'; }
+    }
+    const b = document.querySelector(`[data-view="${target}"]`);
+    if(b) b.click();
+  });
+});
+
 document.querySelectorAll('[data-view]').forEach(btn => {
   btn.addEventListener('click', () => {
     STATE.activeView = btn.dataset.view;
+    if(btn.dataset.view !== 'simple') { try { localStorage.setItem('planning_frise_view', btn.dataset.view); } catch(e) {} }
     try { localStorage.setItem('planning_view', btn.dataset.view); } catch(e) {}
     if(btn.dataset.view !== 'simple' && typeof svCloseDrawer === 'function') svCloseDrawer();
     document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'));
@@ -4543,6 +4585,7 @@ function svInstallAddMenu() {
 function render() {
   renderColorLegend();
   document.body.classList.toggle('view-simple', STATE.activeView === 'simple');
+  syncLayoutSwitch();
   document.body.classList.toggle('scale-year', STATE.activeScale === 'year');
   if(STATE.activeView === 'simple') {
     GRID = buildGrid(STATE.currentYear, STATE.activeScale);
@@ -4801,7 +4844,7 @@ const CLOUD = (function() {
       el = document.createElement('span');
       el.id = 'cloud-status';
       el.style.cssText = 'margin-left:8px;font-size:11px;opacity:.8;color:#fff';
-      const bar = document.querySelector('#topbar .logo') || document.getElementById('topbar');
+      const bar = document.getElementById('logo-meta') || document.getElementById('topbar');
       if (bar) bar.appendChild(el);
     }
     el.style.color = err ? '#e11d48' : 'var(--text3)';
@@ -4899,7 +4942,7 @@ window.save = function() {
 // Inject cloud UI into the topbar (logout + user manager for admins)
 function __cloudInjectUI() {
   // Dans Digicom : les comptes et la déconnexion se gèrent depuis l'outil, on affiche juste le mode.
-  const parent = document.querySelector('#topbar .tb-row-2');
+  const parent = document.getElementById('logo-meta');
   if (!parent) return;
   const emailTag = document.createElement('span');
   emailTag.className = 'mode-chip ' + (CLOUD.isAdmin ? 'edit' : 'read');

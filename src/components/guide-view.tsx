@@ -512,7 +512,7 @@ const PLANNING_FLOWS: Flow[] = [
         who: "Tout le monde",
         color: C.prep,
         items: [
-          "Mois par mois (par défaut), frise détaillée ou par canal",
+          "Bascule en haut à droite : Mois par mois (par défaut) ou Frise (par campagne / par canal)",
           "Année, trimestre ou mois",
           "Onglets Acquisition, Fidélisation, Réglementaire",
         ],
