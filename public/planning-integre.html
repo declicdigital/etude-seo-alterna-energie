@@ -983,6 +983,7 @@ body { font-size: 13px; -webkit-font-smoothing: antialiased; }
 .bd-act-date { flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
 .bd-act-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .bd-act-title { font-size: 12.5px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sv-title:has(a.pl-link), .bd-cont-title:has(a.pl-link), .bd-act-title:has(a.pl-link) { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .bd-act-ch { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bd-act-img { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border); }
 .bd-more { font-size: 11.5px; color: var(--text3); padding: 2px 4px 0 40px; }
@@ -999,6 +1000,12 @@ body { font-size: 13px; -webkit-font-smoothing: antialiased; }
 .exporting .bd-list { overflow: visible; }
 .exporting .bd-hint { display: none; }
 @media (max-width: 760px) { .bd-col { flex-basis: 86vw; } .bd-hint { display: none; } }
+/* Liens courts cliquables */
+a.pl-link { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; padding: 1px 8px 1px 6px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: .92em; line-height: 1.5; text-decoration: none;
+  vertical-align: baseline; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+a.pl-link:hover { text-decoration: underline; filter: brightness(.92); }
+a.pl-link svg { width: 1em; height: 1em; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
 /* Icônes de la barre d'outils (traits, lisibles partout) */
 .ico { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 #topbar .btn-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; color: var(--text); }
@@ -5064,6 +5071,91 @@ async function openHistoryModal() {
     requestAnimationFrame(() => render());
   });
 
+})();
+
+// ── Liens : toute adresse web écrite dans le planning (titres, descriptions, actions…) est
+// affichée en lien court et cliquable (« site.fr › page »), qui s'ouvre dans un nouvel onglet.
+(function linkifyPlanning(){
+  const URL_RE = /\b(?:https?:\/\/|www\.)[^\s<>"'«»]+/gi;
+  const SKIP = new Set(['A','SCRIPT','STYLE','TEXTAREA','INPUT','SELECT','OPTION','BUTTON','svg']);
+  const LINK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>';
+  function shortLabel(raw) {
+    try {
+      const u = new URL(/^https?:/i.test(raw) ? raw : 'https://' + raw);
+      let host = u.hostname.replace(/^www\./, '');
+      const parts = host.split('.');
+      if (parts.length > 3) host = parts.slice(-3).join('.');
+      const segs = u.pathname.split('/').filter(Boolean);
+      let last = '';
+      try { last = segs.length ? decodeURIComponent(segs[segs.length - 1]).normalize('NFC') : ''; } catch (e) { last = segs[segs.length - 1] || ''; }
+      const extM = last.match(/\.([a-z0-9]{2,4})$/i);
+      const ext = extM ? extM[1].toLowerCase() : '';
+      while (/\.[a-z0-9]{2,4}$/i.test(last)) last = last.replace(/\.[a-z0-9]{2,4}$/i, '');
+      last = last.replace(/^[0-9a-f]{12,}[_-]*/i, '');               // identifiant technique en tête
+      if (/^[0-9a-z_-]{20,}$/i.test(last) && /\d/.test(last) && !/[-_ ]/.test(last)) last = '';
+      last = last.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+      if (last.length > 34) last = last.slice(0, 32).trim() + '…';
+      const isFile = /^(pdf|docx?|xlsx?|pptx?|csv|png|jpe?g|gif|webp|svg|zip|mp4)$/.test(ext);
+      if (isFile) return (last || host) + ' · ' + ext.toUpperCase();
+      return last ? host + ' › ' + last : host;
+    } catch (e) { return raw.length > 40 ? raw.slice(0, 38) + '…' : raw; }
+  }
+  function linkifyText(node) {
+    const text = node.nodeValue;
+    URL_RE.lastIndex = 0;
+    if (!URL_RE.test(text)) return;
+    URL_RE.lastIndex = 0;
+    const frag = document.createDocumentFragment();
+    let last = 0, m;
+    while ((m = URL_RE.exec(text))) {
+      let url = m[0];
+      const trail = url.match(/[.,;:!?)\]]+$/);
+      if (trail) url = url.slice(0, -trail[0].length);
+      if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      const a = document.createElement('a');
+      a.className = 'pl-link';
+      a.href = /^https?:/i.test(url) ? url : 'https://' + url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.title = a.href;
+      a.innerHTML = LINK_ICON;
+      a.appendChild(document.createTextNode(shortLabel(url)));
+      frag.appendChild(a);
+      last = m.index + url.length;
+    }
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    node.parentNode.replaceChild(frag, node);
+  }
+  function walk(root) {
+    if (!root) return;
+    if (root.nodeType === 3) { const p = root.parentElement; if (p && !p.closest('a,textarea,input,select,option,script,style,[contenteditable="true"]')) linkifyText(root); return; }
+    if (root.nodeType !== 1 || SKIP.has(root.tagName) || root.isContentEditable) return;
+    const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(n) {
+        if (!/https?:\/\/|www\./i.test(n.nodeValue)) return NodeFilter.FILTER_REJECT;
+        const p = n.parentElement;
+        return p && !p.closest('a,textarea,input,select,option,script,style,[contenteditable="true"]') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    const nodes = []; while (tw.nextNode()) nodes.push(tw.currentNode);
+    nodes.forEach(linkifyText);
+  }
+  let pending = new Set(), scheduled = false;
+  const flush = () => { scheduled = false; const list = [...pending]; pending.clear(); list.forEach(n => { if (n.isConnected) walk(n); }); };
+  new MutationObserver(muts => {
+    for (const mu of muts) {
+      if (mu.type === 'characterData') pending.add(mu.target);
+      else mu.addedNodes.forEach(n => pending.add(n));
+    }
+    if (pending.size && !scheduled) { scheduled = true; Promise.resolve().then(flush); }
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  walk(document.body);
+  // Un clic sur un lien ouvre le lien sans ouvrir la carte / la barre qui le contient.
+  ['click', 'mousedown', 'pointerdown', 'touchstart', 'dragstart'].forEach(type => {
+    document.addEventListener(type, e => {
+      if (e.target instanceof Element && e.target.closest('a.pl-link')) e.stopPropagation();
+    }, true);
+  });
 })();
 </script>
 </body>
