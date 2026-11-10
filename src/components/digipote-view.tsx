@@ -118,16 +118,18 @@ export function DigipoteView({ onNavigate }: { onNavigate: (path: string) => voi
     setItems((all) => (all ?? []).map((x) => (x.id === id ? { ...x, ...change } : x)));
   }
 
-  async function saveCorrection(id: string, text: string | null) {
+  async function saveCorrection(id: string, text: string | null, isPublic = false) {
     const now = new Date().toISOString();
     const prev = items?.find((x) => x.id === id);
     patch(
       id,
       text
-        ? { correction: text, corrected_at: now, resolved_at: now }
-        : { correction: null, corrected_at: null },
+        ? { correction: text, correction_public: isPublic, corrected_at: now, resolved_at: now }
+        : { correction: null, correction_public: false, corrected_at: null },
     );
-    const res = await correct({ data: { id, correction: text } }).catch(() => ({ ok: false }));
+    const res = await correct({ data: { id, correction: text, isPublic } }).catch(() => ({
+      ok: false,
+    }));
     if (!res.ok && prev) patch(id, prev);
     return res.ok;
   }
@@ -233,7 +235,7 @@ export function DigipoteView({ onNavigate }: { onNavigate: (path: string) => voi
               key={q.id}
               q={q}
               onNavigate={onNavigate}
-              onSave={(text) => saveCorrection(q.id, text)}
+              onSave={(text, isPublic) => saveCorrection(q.id, text, isPublic)}
               onResolve={(r) => void setResolved(q.id, r)}
             />
           ))}
@@ -258,18 +260,19 @@ function ExchangeCard({
 }: {
   q: AssistantExchange;
   onNavigate: (path: string) => void;
-  onSave: (text: string | null) => Promise<boolean>;
+  onSave: (text: string | null, isPublic?: boolean) => Promise<boolean>;
   onResolve: (resolved: boolean) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(q.correction ?? "");
+  const [draftPublic, setDraftPublic] = useState(q.correction_public === true);
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const open = isOpen(q);
 
   async function save(text: string | null) {
     setSaving(true);
-    const ok = await onSave(text);
+    const ok = await onSave(text, text ? draftPublic : false);
     setSaving(false);
     if (ok) setEditing(false);
   }
@@ -359,6 +362,22 @@ function ExchangeCard({
                 placeholder="Écris la réponse que le robot doit donner à cette question."
                 className="w-full rounded-xl border border-emerald-300 bg-background px-3 py-2 text-sm leading-[1.6] outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-emerald-500/40"
               />
+              <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 size-4 accent-emerald-600"
+                  checked={draftPublic}
+                  onChange={(e) => setDraftPublic(e.target.checked)}
+                />
+                <span>
+                  <span className="font-medium">Réponse générale, pour tout le monde</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Une définition ou une question sur l'entreprise. Sans cette case, la réponse
+                    n'est donnée qu'aux personnes qui ont accès aux rubriques qu'elle cite. Ne
+                    coche pas si la réponse parle du contenu d'une rubrique.
+                  </span>
+                </span>
+              </label>
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
@@ -372,6 +391,7 @@ function ExchangeCard({
                   variant="ghost"
                   onClick={() => {
                     setDraft(q.correction ?? "");
+                    setDraftPublic(q.correction_public === true);
                     setEditing(false);
                   }}
                 >
@@ -383,6 +403,8 @@ function ExchangeCard({
             <div className="mt-3 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm leading-[1.7] dark:border-emerald-500/30 dark:bg-emerald-500/10">
               <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
                 Ta correction{q.corrected_at ? ` · ${when(q.corrected_at)}` : ""}
+                {" · "}
+                {q.correction_public ? "pour tout le monde" : "selon les accès"}
               </div>
               <p className="whitespace-pre-wrap">{q.correction}</p>
               <div className="mt-2 flex flex-wrap gap-2">

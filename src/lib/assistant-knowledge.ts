@@ -1073,13 +1073,18 @@ const RUBRIQUE_WORDS: Record<string, RegExp> = {
   planning: /planning|radar/i,
 };
 
-/** Corrections de Geoffrey utilisables pour cette personne (aucune qui touche une rubrique fermée). */
-export function correctionsFor<T extends { question: string; correction: string }>(
+/**
+ * Corrections de Geoffrey utilisables pour cette personne : les réponses générales
+ * (`isPublic` : définitions, questions sur l'entreprise) vont à tout le monde ; les autres
+ * seulement si elles ne touchent aucune rubrique fermée pour elle.
+ */
+export function correctionsFor<T extends { question: string; correction: string; isPublic?: boolean }>(
   corrections: T[],
   zones: AssistantZone[],
 ): T[] {
   const open = rubriquesOf(zones);
   return corrections.filter((c) => {
+    if (c.isPublic) return true;
     const text = `${c.question} ${c.correction}`;
     return Object.entries(RUBRIQUE_WORDS).every(([key, re]) => open.has(key) || !re.test(text));
   });
@@ -1175,7 +1180,7 @@ export function assistantSystemPrompt(opts: {
   /** Chiffres en temps réel calculés par le serveur (voir assistant-stats). */
   stats?: string | null;
   /** Réponses corrigées par Geoffrey dans « Digipote » : elles priment sur tout le reste. */
-  corrections?: { question: string; correction: string }[];
+  corrections?: { question: string; correction: string; isPublic?: boolean }[];
 }): string {
   const me = roleFor(opts.email);
   const corrections = correctionsFor(opts.corrections ?? [], opts.zones);

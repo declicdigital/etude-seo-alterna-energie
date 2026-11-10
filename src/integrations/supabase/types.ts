@@ -72,6 +72,7 @@ export type Database = {
         Row: {
           corrected_at: string | null
           correction: string | null
+          correction_public: boolean
           created_at: string
           id: string
           page: string | null
@@ -86,6 +87,7 @@ export type Database = {
         Insert: {
           corrected_at?: string | null
           correction?: string | null
+          correction_public?: boolean
           created_at?: string
           id?: string
           page?: string | null
@@ -100,6 +102,7 @@ export type Database = {
         Update: {
           corrected_at?: string | null
           correction?: string | null
+          correction_public?: boolean
           created_at?: string
           id?: string
           page?: string | null
@@ -426,6 +429,7 @@ export type Database = {
         Args: never
         Returns: {
           correction: string
+          is_public: boolean
           question: string
         }[]
       }

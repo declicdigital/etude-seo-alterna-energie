@@ -183,4 +183,16 @@ describe("assistant Digicom", () => {
     );
     expect(kept.map((c) => c.question)).toEqual(["comment demander une faq ?"]);
   });
+
+  it("donne les réponses générales à tout le monde, même si elles citent une rubrique", () => {
+    const zones = zonesFor(["FAQ", "FAQ/Particulier"], false);
+    const kept = correctionsFor(
+      [
+        { question: "c'est quoi une PAC ?", correction: "Une pompe à chaleur.", isPublic: true },
+        { question: "où sont les contenus PAC ?", correction: "Dans Stratégie PAC › Contenus." },
+      ],
+      zones,
+    );
+    expect(kept.map((c) => c.question)).toEqual(["c'est quoi une PAC ?"]);
+  });
 });

@@ -46,6 +46,8 @@ export type AssistantExchange = {
   source: string;
   unanswered: boolean;
   correction: string | null;
+  /** Réponse générale (définition, question sur l'entreprise) : donnée à tout le monde. */
+  correction_public: boolean;
   corrected_at: string | null;
   resolved_at: string | null;
 };
@@ -83,13 +85,19 @@ async function accessOf(context: Ctx) {
 }
 
 /** Réponses corrigées par Geoffrey : elles priment sur le mode d'emploi. */
-async function loadCorrections(context: Ctx): Promise<{ question: string; correction: string }[]> {
+async function loadCorrections(
+  context: Ctx,
+): Promise<{ question: string; correction: string; isPublic: boolean }[]> {
   const { data, error } = await context.supabase.rpc("assistant_corrections");
   if (error) {
     console.error("assistant_corrections", error.message);
     return [];
   }
-  return (data ?? []) as { question: string; correction: string }[];
+  return (data ?? []).map((c) => ({
+    question: c.question,
+    correction: c.correction,
+    isPublic: c.is_public === true,
+  }));
 }
 
 /** Toutes les lignes d'une requête, par pages de 1000 (limite de l'API). */
@@ -309,7 +317,7 @@ export const listAssistantExchanges = createServerFn({ method: "GET" })
       context.supabase
         .from("assistant_questions")
         .select(
-          "id, created_at, user_name, question, reply, page, source, unanswered, correction, corrected_at, resolved_at",
+          "id, created_at, user_name, question, reply, page, source, unanswered, correction, correction_public, corrected_at, resolved_at",
         )
         .order("created_at", { ascending: false })
         .range(a, b),
@@ -336,7 +344,13 @@ export const countOpenQuestions = createServerFn({ method: "GET" })
 export const correctAssistantAnswer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ id: z.string().uuid(), correction: z.string().max(4000).nullable() }).parse(input),
+    z
+      .object({
+        id: z.string().uuid(),
+        correction: z.string().max(4000).nullable(),
+        isPublic: z.boolean().optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const access = await accessOf(context);
@@ -347,8 +361,8 @@ export const correctAssistantAnswer = createServerFn({ method: "POST" })
       .from("assistant_questions")
       .update(
         correction
-          ? { correction, corrected_at: now, resolved_at: now }
-          : { correction: null, corrected_at: null },
+          ? { correction, correction_public: data.isPublic === true, corrected_at: now, resolved_at: now }
+          : { correction: null, correction_public: false, corrected_at: null },
       )
       .eq("id", data.id);
     if (error) console.error("assistant_questions correct", error.message);

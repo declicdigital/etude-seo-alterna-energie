@@ -113,6 +113,13 @@
       "when": 1794360000000,
       "tag": "0015_planning_integre",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794446400000,
+      "tag": "0016_digipote_public_corrections",
+      "breakpoints": true
     }
   ]
 }
