@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Heart, Play, RotateCcw, Trophy, X } from "lucide-react";
+import { ArrowLeft, Heart, Maximize2, Minimize2, Play, RotateCcw, Trophy, X } from "lucide-react";
 import { RobotFace, RobotSvg, ROBOT_SKINS, type RobotSkin } from "@/components/digipote-robot";
 import { getGameLeaderboard, submitGameScore } from "@/lib/game.functions";
 import {
   BOARD_SIZE,
+  difficultyAt,
   GAME_AVATARS,
   GAME_MAPS,
   liveRank,
@@ -151,7 +152,12 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const robotRef = useRef<HTMLDivElement>(null);
-  const [phase, setPhase] = useState<"setup" | "play" | "over">("setup");
+  const [phase, setPhase] = useState<"consent" | "setup" | "play" | "over">("consent");
+  const [consent, setConsent] = useState(false);
+  const [big, setBig] = useState(false);
+  const [stage, setStage] = useState(1);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const inGame = phase !== "consent";
   const [avatar, setAvatar] = useState<RobotSkin>("digi");
   const [map, setMap] = useState<GameMapId>("bureau");
   const [score, setScore] = useState(0);
@@ -182,6 +188,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     elapsed: 0,
     lastShot: 0,
     nextBoss: 40,
+    stage: 1,
     score: 0,
     lives: MAX_LIVES,
     hits: 0,
@@ -278,7 +285,8 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     const ro = new ResizeObserver(resize);
     ro.observe(box);
     return () => ro.disconnect();
-  }, []);
+    // Le terrain n'existe qu'après l'écran de consentement.
+  }, [inGame]);
 
   const fire = useCallback((minGap: number) => {
     const s = state.current;
@@ -304,6 +312,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       elapsed: 0,
       lastShot: -1,
       nextBoss: 40,
+      stage: 1,
       score: 0,
       lives: MAX_LIVES,
       hits: 0,
@@ -317,6 +326,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     setScore(0);
     setLives(MAX_LIVES);
     setCombo(1);
+    setStage(1);
     setSaved("idle");
     setPhase("play");
     say("Bip-boup ! C'est parti 🤖", "happy");
@@ -433,7 +443,10 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     };
     const spawn = () => {
       const s = state.current;
-      const level = 1 + Math.min(1.3, s.elapsed / 70);
+      // Vitesse qui monte au fil de la partie ; sur un terrain plus haut (plein écran), la chute
+      // est plus rapide pour garder le même temps avant le sol.
+      const level = difficultyAt(s.elapsed).speed;
+      const fall = Math.min(1.7, Math.max(0.85, s.h / 520));
       const roll = Math.random();
       let kind: Kind = "bug";
       if (roll < m.starRate) kind = "star";
@@ -445,7 +458,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       s.things.push({
         x: r + Math.random() * (s.w - 2 * r),
         y: -r,
-        vy: bonus ? 95 : (50 + Math.random() * 40) * level * m.speed * (tough ? 0.8 : 1),
+        vy: (bonus ? 95 : (50 + Math.random() * 40) * level * m.speed * (tough ? 0.8 : 1)) * fall,
         vx: bonus ? 0 : (Math.random() - 0.5) * 30 * level,
         kind,
         emoji:
@@ -471,7 +484,11 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       s.things.push({
         x: s.w / 2,
         y: -30,
-        vy: 20 * m.speed,
+        vy:
+          20 *
+          m.speed *
+          Math.sqrt(difficultyAt(s.elapsed).speed) *
+          Math.min(1.7, Math.max(0.85, s.h / 520)),
         vx: (Math.random() < 0.5 ? -1 : 1) * 70,
         kind: "boss",
         emoji: m.boss,
@@ -535,8 +552,14 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       // Apparitions.
       s.spawnIn -= dt;
       if (s.spawnIn <= 0) {
-        s.spawnIn = Math.max(0.5, 1.15 - s.elapsed / 110) * m.spawn * (0.7 + Math.random() * 0.6);
+        s.spawnIn = difficultyAt(s.elapsed).spawnGap * m.spawn * (0.7 + Math.random() * 0.6);
         spawn();
+      }
+      const nextStage = difficultyAt(s.elapsed).stage;
+      if (nextStage !== s.stage) {
+        s.stage = nextStage;
+        setStage(nextStage);
+        say(`Ça accélère ! ⚡ Niveau ${nextStage}`, "happy");
       }
       if (s.elapsed >= s.nextBoss && !s.things.some((t) => t.kind === "boss")) {
         s.nextBoss = s.elapsed + 45;
@@ -752,6 +775,38 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     };
   }, [phase, fire, onClose]);
 
+  // Plein écran : vrai plein écran du navigateur quand il est disponible, sinon la fenêtre du
+  // jeu occupe tout l'onglet.
+  const toggleBig = useCallback(async () => {
+    const el = rootRef.current;
+    if (!big) {
+      setBig(true);
+      try {
+        if (el?.requestFullscreen && !document.fullscreenElement) await el.requestFullscreen();
+      } catch {
+        /* plein écran refusé : l'agrandissement dans l'onglet suffit */
+      }
+    } else {
+      setBig(false);
+      try {
+        if (document.fullscreenElement) await document.exitFullscreen();
+      } catch {
+        /* déjà sorti */
+      }
+    }
+  }, [big]);
+
+  useEffect(() => {
+    const sync = () => {
+      if (!document.fullscreenElement) setBig(false);
+    };
+    document.addEventListener("fullscreenchange", sync);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    };
+  }, []);
+
   const pointerX = (e: React.PointerEvent) => {
     const r = boxRef.current?.getBoundingClientRect();
     return r ? e.clientX - r.left : 0;
@@ -777,283 +832,390 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/55 p-2 backdrop-blur-sm sm:p-4"
+      ref={rootRef}
+      className={cn(
+        "fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/55 backdrop-blur-sm",
+        big ? "p-0" : "p-2 sm:p-4",
+      )}
       role="dialog"
       aria-modal="true"
       aria-label="Mini-jeu D.I.G.I.P.O.T.E"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <style>{GAME_CSS}</style>
-      <div className="flex max-h-[96vh] w-full max-w-[1080px] flex-col overflow-hidden rounded-[28px] border border-white/60 bg-white/90 shadow-[0_30px_80px_-20px_rgba(15,23,42,.6)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80">
-        <header className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
-          <div className="text-[15px] font-bold tracking-wide text-slate-800 dark:text-slate-100">
-            Bug Buster{" "}
-            <span className="font-medium text-slate-500">
-              · {phase === "setup" ? "avec D.I.G.I.P.O.T.E" : `${def.emoji} ${def.name}`}
-            </span>
-          </div>
-          <div className="ml-auto flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-            {phase !== "setup" && (
-              <>
-                <span className="flex items-center gap-0.5" aria-label={`${lives} vies`}>
-                  {Array.from({ length: MAX_LIVES }, (_, i) => (
-                    <Heart
-                      key={i}
-                      className={cn(
-                        "size-4",
-                        i < lives ? "fill-rose-500 text-rose-500" : "text-slate-300",
-                      )}
-                    />
-                  ))}
-                </span>
-                <span className="tabular-nums">{score} pts</span>
-                {combo > 1 && (
-                  <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">
-                    ×{combo}
-                  </span>
-                )}
-                {phase === "play" && dayRank !== null && (
-                  <span className="hidden items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 sm:flex dark:bg-amber-400/15 dark:text-amber-200">
-                    <Trophy className="size-3.5" />
-                    {dayRank > BOARD_SIZE ? "hors top 10" : `${rankLabel(dayRank)} du jour`}
-                  </span>
-                )}
-              </>
-            )}
-            <span className="hidden tabular-nums text-slate-500 md:inline">Ton record {best}</span>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fermer le jeu"
-            className="rounded-full p-1.5 text-slate-500 hover:bg-white/60 dark:hover:bg-white/10"
-          >
-            <X className="size-4" />
-          </button>
-        </header>
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
-          <div
-            ref={boxRef}
-            className={cn(
-              "relative h-[min(64vh,540px)] shrink-0 touch-none select-none overflow-hidden bg-gradient-to-b lg:h-[min(76vh,560px)] lg:flex-1",
-              def.card,
-            )}
-            onPointerMove={(e) => {
-              if (phase === "play") state.current.targetX = pointerX(e);
-            }}
-            onPointerDown={(e) => {
-              if (phase !== "play") return;
-              state.current.targetX = pointerX(e);
-              fire(0.12);
-            }}
-          >
-            <MapBackdrop map={map} />
-            {fx.freeze && (
-              <div aria-hidden className="pointer-events-none absolute inset-0 bg-sky-200/25" />
-            )}
-            <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-
-            {phase === "play" && (fx.turbo || fx.shield || fx.freeze) && (
-              <div className="pointer-events-none absolute left-3 top-3 flex gap-1.5">
-                {fx.turbo && <FxChip>⚡ Turbo</FxChip>}
-                {fx.shield && <FxChip>🛡️ Bouclier</FxChip>}
-                {fx.freeze && <FxChip>❄️ Gel</FxChip>}
-              </div>
-            )}
-
-            <div
-              ref={robotRef}
-              className={cn(
-                "absolute left-0 top-0",
-                mood === "happy" && "dg-happy",
-                mood === "ouch" && "dg-ouch",
-                phase === "setup" && "invisible",
-              )}
-              style={{ width: ROBOT_W, height: ROBOT_H }}
-            >
-              {talk && phase === "play" && (
-                <span className="absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-800 shadow-md dark:bg-slate-800 dark:text-slate-100">
-                  {talk}
-                </span>
-              )}
-              {fx.shield && phase === "play" && (
-                <span
-                  aria-hidden
-                  className="dg-shield absolute -inset-3 rounded-full border-2"
-                  style={{ borderColor: skin.glow, boxShadow: `0 0 18px ${skin.glow}` }}
-                />
-              )}
-              <RobotSvg
-                skin={avatar}
-                className={cn(fx.turbo && "drop-shadow-[0_0_10px_rgba(250,204,21,.9)]")}
-              />
+      {phase === "consent" ? (
+        <ConsentCard
+          checked={consent}
+          setChecked={setConsent}
+          onCancel={onClose}
+          onAccept={() => setPhase("setup")}
+          skin={avatar}
+        />
+      ) : (
+        <div
+          className={cn(
+            "flex w-full flex-col overflow-hidden border-white/60 bg-white/90 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80",
+            big
+              ? "h-[100dvh] max-w-none rounded-none border-0"
+              : "max-h-[96vh] max-w-[1080px] rounded-[28px] border shadow-[0_30px_80px_-20px_rgba(15,23,42,.6)]",
+          )}
+        >
+          <header className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
+            <div className="text-[15px] font-bold tracking-wide text-slate-800 dark:text-slate-100">
+              Bug Buster{" "}
+              <span className="font-medium text-slate-500">
+                · {phase === "setup" ? "avec D.I.G.I.P.O.T.E" : `${def.emoji} ${def.name}`}
+              </span>
             </div>
-
-            {phase === "setup" && (
-              <div className="absolute inset-0 overflow-y-auto p-3 sm:p-5">
-                <div className="mx-auto w-full max-w-[560px] rounded-3xl border border-white/70 bg-white/85 p-4 shadow-xl backdrop-blur-xl sm:p-5 dark:border-white/10 dark:bg-slate-900/85">
-                  <div className="text-center text-lg font-bold text-slate-800 dark:text-slate-100">
-                    Bip-boup ! Des bugs envahissent Digicom 🐛
-                  </div>
-                  <p className="mt-1 text-center text-sm text-slate-600 dark:text-slate-300">
-                    {name ? `${name}, choisis` : "Choisis"} ton robot et ta carte. Le robot tire
-                    tout seul : déplace-le sous les bugs.
-                  </p>
-
-                  <h3 className="mt-4 text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Ton robot
-                  </h3>
-                  <div className="mt-2 grid grid-cols-4 gap-2">
-                    {GAME_AVATARS.map((id) => (
-                      <button
-                        key={id}
-                        type="button"
-                        aria-pressed={avatar === id}
-                        onClick={() => setAvatar(id)}
+            <div className="ml-auto flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+              {phase !== "setup" && (
+                <>
+                  <span className="flex items-center gap-0.5" aria-label={`${lives} vies`}>
+                    {Array.from({ length: MAX_LIVES }, (_, i) => (
+                      <Heart
+                        key={i}
                         className={cn(
-                          "flex flex-col items-center rounded-2xl border px-1 pb-2 pt-1 transition",
-                          avatar === id
-                            ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/40 dark:bg-emerald-500/10"
-                            : "border-slate-200 bg-white/70 hover:border-slate-300 dark:border-white/10 dark:bg-white/5",
+                          "size-4",
+                          i < lives ? "fill-rose-500 text-rose-500" : "text-slate-300",
                         )}
-                      >
-                        <span className="block h-[74px] w-[60px]">
-                          <RobotSvg skin={id} />
-                        </span>
-                        <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                          {ROBOT_SKINS[id].name}
-                        </span>
-                        <span className="hidden text-center text-[10.5px] leading-tight text-slate-500 sm:block">
-                          {ROBOT_SKINS[id].tagline}
-                        </span>
-                      </button>
+                      />
                     ))}
-                  </div>
+                  </span>
+                  <span className="tabular-nums">{score} pts</span>
+                  {phase === "play" && (
+                    <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs text-sky-800 dark:bg-sky-400/15 dark:text-sky-200">
+                      Niv. {stage}
+                    </span>
+                  )}
+                  {combo > 1 && (
+                    <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs text-white">
+                      ×{combo}
+                    </span>
+                  )}
+                  {phase === "play" && dayRank !== null && (
+                    <span className="hidden items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 sm:flex dark:bg-amber-400/15 dark:text-amber-200">
+                      <Trophy className="size-3.5" />
+                      {dayRank > BOARD_SIZE ? "hors top 10" : `${rankLabel(dayRank)} du jour`}
+                    </span>
+                  )}
+                </>
+              )}
+              <span className="hidden tabular-nums text-slate-500 md:inline">
+                Ton record {best}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => void toggleBig()}
+              aria-label={big ? "Réduire le jeu" : "Mettre le jeu en grand"}
+              title={big ? "Réduire" : "Plein écran"}
+              className="rounded-full p-1.5 text-slate-500 hover:bg-white/60 dark:hover:bg-white/10"
+            >
+              {big ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Fermer le jeu"
+              className="rounded-full p-1.5 text-slate-500 hover:bg-white/60 dark:hover:bg-white/10"
+            >
+              <X className="size-4" />
+            </button>
+          </header>
 
-                  <h3 className="mt-4 text-xs font-bold uppercase tracking-wider text-slate-500">
-                    La carte
-                  </h3>
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    {GAME_MAPS.map((id) => {
-                      const d = MAPS[id];
-                      const dark = id === "nuit";
-                      return (
+          <div
+            className={cn(
+              "flex min-h-0 flex-1 flex-col lg:flex-row lg:overflow-hidden",
+              big ? "overflow-hidden" : "overflow-y-auto",
+            )}
+          >
+            <div
+              ref={boxRef}
+              className={cn(
+                "relative touch-none select-none overflow-hidden bg-gradient-to-b lg:flex-1",
+                big ? "min-h-0 flex-1" : "h-[min(64vh,540px)] shrink-0 lg:h-[min(76vh,560px)]",
+                def.card,
+              )}
+              onPointerMove={(e) => {
+                if (phase === "play") state.current.targetX = pointerX(e);
+              }}
+              onPointerDown={(e) => {
+                if (phase !== "play") return;
+                state.current.targetX = pointerX(e);
+                fire(0.12);
+              }}
+            >
+              <MapBackdrop map={map} />
+              {fx.freeze && (
+                <div aria-hidden className="pointer-events-none absolute inset-0 bg-sky-200/25" />
+              )}
+              <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+
+              {phase === "play" && (fx.turbo || fx.shield || fx.freeze) && (
+                <div className="pointer-events-none absolute left-3 top-3 flex gap-1.5">
+                  {fx.turbo && <FxChip>⚡ Turbo</FxChip>}
+                  {fx.shield && <FxChip>🛡️ Bouclier</FxChip>}
+                  {fx.freeze && <FxChip>❄️ Gel</FxChip>}
+                </div>
+              )}
+
+              <div
+                ref={robotRef}
+                className={cn(
+                  "absolute left-0 top-0",
+                  mood === "happy" && "dg-happy",
+                  mood === "ouch" && "dg-ouch",
+                  phase === "setup" && "invisible",
+                )}
+                style={{ width: ROBOT_W, height: ROBOT_H }}
+              >
+                {talk && phase === "play" && (
+                  <span className="absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-800 shadow-md dark:bg-slate-800 dark:text-slate-100">
+                    {talk}
+                  </span>
+                )}
+                {fx.shield && phase === "play" && (
+                  <span
+                    aria-hidden
+                    className="dg-shield absolute -inset-3 rounded-full border-2"
+                    style={{ borderColor: skin.glow, boxShadow: `0 0 18px ${skin.glow}` }}
+                  />
+                )}
+                <RobotSvg
+                  skin={avatar}
+                  className={cn(fx.turbo && "drop-shadow-[0_0_10px_rgba(250,204,21,.9)]")}
+                />
+              </div>
+
+              {phase === "setup" && (
+                <div className="absolute inset-0 overflow-y-auto p-3 sm:p-5">
+                  <div className="mx-auto w-full max-w-[560px] rounded-3xl border border-white/70 bg-white/85 p-4 shadow-xl backdrop-blur-xl sm:p-5 dark:border-white/10 dark:bg-slate-900/85">
+                    <div className="text-center text-lg font-bold text-slate-800 dark:text-slate-100">
+                      Bip-boup ! Des bugs envahissent Digicom 🐛
+                    </div>
+                    <p className="mt-1 text-center text-sm text-slate-600 dark:text-slate-300">
+                      {name ? `${name}, choisis` : "Choisis"} ton robot et ta carte. Le robot tire
+                      tout seul : déplace-le sous les bugs.
+                    </p>
+
+                    <h3 className="mt-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Ton robot
+                    </h3>
+                    <div className="mt-2 grid grid-cols-4 gap-2">
+                      {GAME_AVATARS.map((id) => (
                         <button
                           key={id}
                           type="button"
-                          aria-pressed={map === id}
-                          onClick={() => setMap(id)}
+                          aria-pressed={avatar === id}
+                          onClick={() => setAvatar(id)}
                           className={cn(
-                            "rounded-2xl border bg-gradient-to-br p-2.5 text-left transition",
-                            d.card,
-                            map === id
-                              ? "border-emerald-500 ring-2 ring-emerald-500/50"
-                              : "border-slate-200 hover:border-slate-300 dark:border-white/10",
+                            "flex flex-col items-center rounded-2xl border px-1 pb-2 pt-1 transition",
+                            avatar === id
+                              ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/40 dark:bg-emerald-500/10"
+                              : "border-slate-200 bg-white/70 hover:border-slate-300 dark:border-white/10 dark:bg-white/5",
                           )}
                         >
-                          <span className="flex items-center gap-1.5">
-                            <span className="text-lg">{d.emoji}</span>
-                            <span
-                              className={cn(
-                                "text-sm font-bold",
-                                dark ? "text-white" : "text-slate-800",
-                              )}
-                            >
-                              {d.name}
-                            </span>
-                            <span
-                              className={cn(
-                                "ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold",
-                                d.level === "Facile" && "bg-emerald-600 text-white",
-                                d.level === "Normal" && "bg-amber-500 text-white",
-                                d.level === "Expert" && "bg-rose-500 text-white",
-                              )}
-                            >
-                              {d.level}
-                            </span>
+                          <span className="block h-[74px] w-[60px]">
+                            <RobotSvg skin={id} />
                           </span>
-                          <span
-                            className={cn(
-                              "mt-1 block text-[11.5px] leading-snug",
-                              dark ? "text-indigo-100" : "text-slate-600",
-                            )}
-                          >
-                            {d.desc}
+                          <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                            {ROBOT_SKINS[id].name}
+                          </span>
+                          <span className="hidden text-center text-[10.5px] leading-tight text-slate-500 sm:block">
+                            {ROBOT_SKINS[id].tagline}
                           </span>
                         </button>
-                      );
-                    })}
-                  </div>
+                      ))}
+                    </div>
 
-                  <div className="mt-3 rounded-2xl bg-slate-100/80 p-2.5 text-[11.5px] leading-relaxed text-slate-600 dark:bg-white/5 dark:text-slate-300">
-                    ⭐ points · ☕ +1 vie · ⚡ triple bip · 🛡️ bouclier · ❄️ gel · 🔋 méga-bip qui
-                    nettoie l'écran. Enchaîne sans te faire toucher pour un combo jusqu'à ×4, et
-                    gare aux méga-bugs ! ← → ou souris / doigt pour bouger.
-                  </div>
+                    <h3 className="mt-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+                      La carte
+                    </h3>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {GAME_MAPS.map((id) => {
+                        const d = MAPS[id];
+                        const dark = id === "nuit";
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            aria-pressed={map === id}
+                            onClick={() => setMap(id)}
+                            className={cn(
+                              "rounded-2xl border bg-gradient-to-br p-2.5 text-left transition",
+                              d.card,
+                              map === id
+                                ? "border-emerald-500 ring-2 ring-emerald-500/50"
+                                : "border-slate-200 hover:border-slate-300 dark:border-white/10",
+                            )}
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <span className="text-lg">{d.emoji}</span>
+                              <span
+                                className={cn(
+                                  "text-sm font-bold",
+                                  dark ? "text-white" : "text-slate-800",
+                                )}
+                              >
+                                {d.name}
+                              </span>
+                              <span
+                                className={cn(
+                                  "ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                                  d.level === "Facile" && "bg-emerald-600 text-white",
+                                  d.level === "Normal" && "bg-amber-500 text-white",
+                                  d.level === "Expert" && "bg-rose-500 text-white",
+                                )}
+                              >
+                                {d.level}
+                              </span>
+                            </span>
+                            <span
+                              className={cn(
+                                "mt-1 block text-[11.5px] leading-snug",
+                                dark ? "text-indigo-100" : "text-slate-600",
+                              )}
+                            >
+                              {d.desc}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
 
-                  <div className="mt-4 flex justify-center">
-                    <PlayButton onClick={start} icon={<Play className="size-4" />}>
-                      Jouer avec {skin.name}
-                    </PlayButton>
+                    <div className="mt-3 rounded-2xl bg-slate-100/80 p-2.5 text-[11.5px] leading-relaxed text-slate-600 dark:bg-white/5 dark:text-slate-300">
+                      ⭐ points · ☕ +1 vie · ⚡ triple bip · 🛡️ bouclier · ❄️ gel · 🔋 méga-bip qui
+                      nettoie l'écran. Enchaîne sans te faire toucher pour un combo jusqu'à ×4, et
+                      gare aux méga-bugs ! ← → ou souris / doigt pour bouger.
+                    </div>
+
+                    <div className="mt-4 flex justify-center">
+                      <PlayButton onClick={start} icon={<Play className="size-4" />}>
+                        Jouer avec {skin.name}
+                      </PlayButton>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {phase === "over" && (
-              <div className="absolute inset-0 flex items-center justify-center overflow-y-auto p-4">
-                <div className="w-full max-w-sm rounded-3xl border border-white/70 bg-white/85 p-5 text-center shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
-                  <RobotFace size={56} skin={avatar} className="mx-auto" />
-                  <div className="mt-1 text-lg font-bold text-slate-800 dark:text-slate-100">
-                    Bzzt… batterie à plat 🪫
-                  </div>
-                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                    Score : <strong>{score}</strong> pts
-                    {score > 0 && score >= best ? " · nouveau record perso ! 🏆" : ""}
-                  </p>
-                  {score > 0 && (
-                    <p className="mt-2 text-xs text-slate-500">
-                      {saved === "saving" && "Enregistrement au classement…"}
-                      {saved === "error" && "Le score n'a pas pu être enregistré au classement."}
-                      {saved === "saved" &&
-                        finalRanks &&
-                        finalRanks
-                          .map(({ p, rank }) =>
-                            rank
-                              ? `${rankLabel(rank)} ${p === "day" ? "du jour" : p === "week" ? "de la semaine" : "du mois"}`
-                              : null,
-                          )
-                          .filter(Boolean)
-                          .join(" · ")}
+              {phase === "over" && (
+                <div className="absolute inset-0 flex items-center justify-center overflow-y-auto p-4">
+                  <div className="w-full max-w-sm rounded-3xl border border-white/70 bg-white/85 p-5 text-center shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
+                    <RobotFace size={56} skin={avatar} className="mx-auto" />
+                    <div className="mt-1 text-lg font-bold text-slate-800 dark:text-slate-100">
+                      Bzzt… batterie à plat 🪫
+                    </div>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                      Score : <strong>{score}</strong> pts
+                      {score > 0 && score >= best ? " · nouveau record perso ! 🏆" : ""}
                     </p>
-                  )}
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    <PlayButton onClick={start} icon={<RotateCcw className="size-4" />}>
-                      Rejouer
-                    </PlayButton>
-                    <button
-                      type="button"
-                      onClick={() => setPhase("setup")}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
-                    >
-                      <ArrowLeft className="size-4" />
-                      Robot ou carte
-                    </button>
+                    {score > 0 && (
+                      <p className="mt-2 text-xs text-slate-500">
+                        {saved === "saving" && "Enregistrement au classement…"}
+                        {saved === "error" && "Le score n'a pas pu être enregistré au classement."}
+                        {saved === "saved" &&
+                          finalRanks &&
+                          finalRanks
+                            .map(({ p, rank }) =>
+                              rank
+                                ? `${rankLabel(rank)} ${p === "day" ? "du jour" : p === "week" ? "de la semaine" : "du mois"}`
+                                : null,
+                            )
+                            .filter(Boolean)
+                            .join(" · ")}
+                      </p>
+                    )}
+                    <div className="mt-4 flex flex-wrap justify-center gap-2">
+                      <PlayButton onClick={start} icon={<RotateCcw className="size-4" />}>
+                        Rejouer
+                      </PlayButton>
+                      <button
+                        type="button"
+                        onClick={() => setPhase("setup")}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
+                      >
+                        <ArrowLeft className="size-4" />
+                        Robot ou carte
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          <Leaderboard
-            boards={boards}
-            period={period}
-            setPeriod={setPeriod}
-            filter={filter}
-            setFilter={setFilter}
-          />
+            <Leaderboard
+              big={big}
+              boards={boards}
+              period={period}
+              setPeriod={setPeriod}
+              filter={filter}
+              setFilter={setFilter}
+            />
+          </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+/** Écran de consentement affiché à chaque ouverture du jeu, avant de pouvoir jouer. */
+function ConsentCard({
+  checked,
+  setChecked,
+  onCancel,
+  onAccept,
+  skin,
+}: {
+  checked: boolean;
+  setChecked: (v: boolean) => void;
+  onCancel: () => void;
+  onAccept: () => void;
+  skin: RobotSkin;
+}) {
+  return (
+    <div className="dg-pop w-full max-w-[640px] rounded-[32px] border border-white/70 bg-white/95 p-6 text-center shadow-[0_40px_100px_-20px_rgba(15,23,42,.7)] backdrop-blur-2xl sm:p-10 dark:border-white/10 dark:bg-slate-900/95">
+      <span className="mx-auto block h-[110px] w-[88px] sm:h-[140px] sm:w-[112px]">
+        <RobotSvg skin={skin} />
+      </span>
+      <div className="mt-3 text-xs font-bold uppercase tracking-[.2em] text-amber-600">
+        ⚠️ Attention, pause détectée
+      </div>
+      <h2 className="mt-2 text-2xl font-extrabold leading-tight text-slate-900 sm:text-[32px] dark:text-white">
+        Es-tu sûr(e) de vouloir arrêter de travailler pour jouer à Bug Buster ?
+      </h2>
+      <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">
+        Bip-boup… Les articles, les relectures et les newsletters t'attendent sagement. Une petite
+        partie, d'accord, mais avec modération !
+      </p>
+      <label className="mx-auto mt-6 flex max-w-md cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left text-[15px] leading-snug text-slate-800 transition hover:border-emerald-400 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:has-[:checked]:bg-emerald-500/10">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => setChecked(e.target.checked)}
+          className="mt-0.5 size-5 shrink-0 accent-emerald-600"
+        />
+        <span>
+          <strong>Je consens</strong> à faire une courte pause bien méritée et je promets de
+          reprendre le travail juste après.
+        </span>
+      </label>
+      <div className="mt-6 flex flex-col-reverse justify-center gap-2 sm:flex-row">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
+        >
+          Non, je retourne travailler
+        </button>
+        <button
+          type="button"
+          disabled={!checked}
+          onClick={onAccept}
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_-8px_rgba(5,150,105,.8)] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:hover:brightness-100"
+        >
+          <Play className="size-4" />
+          Valider et lancer le jeu
+        </button>
       </div>
     </div>
   );
@@ -1090,12 +1252,14 @@ function FxChip({ children }: { children: React.ReactNode }) {
 
 /** Classements partagés : meilleur score de chaque joueur, mis à jour en continu. */
 function Leaderboard({
+  big,
   boards,
   period,
   setPeriod,
   filter,
   setFilter,
 }: {
+  big: boolean;
   boards: Boards | null;
   period: Period;
   setPeriod: (p: Period) => void;
@@ -1110,7 +1274,12 @@ function Leaderboard({
         ? "Aucun score cette semaine pour l'instant."
         : "Aucun score ce mois-ci pour l'instant.";
   return (
-    <aside className="flex shrink-0 flex-col border-t border-slate-200/70 p-3 lg:w-[300px] lg:overflow-y-auto lg:border-l lg:border-t-0 dark:border-white/10">
+    <aside
+      className={cn(
+        "shrink-0 flex-col border-t border-slate-200/70 p-3 lg:w-[300px] lg:overflow-y-auto lg:border-l lg:border-t-0 dark:border-white/10",
+        big ? "hidden lg:flex" : "flex",
+      )}
+    >
       <div className="flex items-center gap-2">
         <Trophy className="size-4 text-amber-500" />
         <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Classements</h3>

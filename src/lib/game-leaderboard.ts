@@ -148,3 +148,17 @@ export function liveRank(board: BoardEntry[], score: number): number {
 export function plausibleScore(score: number, durationS: number): boolean {
   return Number.isInteger(score) && score >= 0 && score <= 3000 + Math.max(0, durationS) * 400;
 }
+
+/**
+ * Difficulté de « Bug Buster » selon le temps de jeu (secondes) : les bugs tombent un peu plus
+ * vite et plus souvent au fil de la partie, progressivement (×1,5 vers 1 min, ×2 vers 2 min,
+ * plafond ×2,8 vers 3 min 20), et un nouveau palier est annoncé toutes les 30 s.
+ */
+export function difficultyAt(elapsed: number): { speed: number; spawnGap: number; stage: number } {
+  const t = Math.max(0, elapsed);
+  return {
+    speed: Math.min(2.8, 1 + t / 110),
+    spawnGap: Math.max(0.36, 1.15 / (1 + t / 140)),
+    stage: 1 + Math.floor(t / 30),
+  };
+}

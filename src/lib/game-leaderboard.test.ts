@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildBoards,
+  difficultyAt,
   earliestStart,
   liveRank,
   periodStarts,
@@ -79,4 +80,20 @@ it("plausibleScore", () => {
   expect(plausibleScore(1200, 60)).toBe(true);
   expect(plausibleScore(999999, 10)).toBe(false);
   expect(plausibleScore(-5, 10)).toBe(false);
+});
+
+describe("difficultyAt", () => {
+  it("accélère progressivement puis plafonne", () => {
+    const d = [0, 30, 60, 120, 180, 400].map((t) => difficultyAt(t));
+    for (let i = 1; i < d.length; i++) {
+      expect(d[i].speed).toBeGreaterThan(d[i - 1].speed - 1e-9);
+      expect(d[i].spawnGap).toBeLessThanOrEqual(d[i - 1].spawnGap);
+    }
+    expect(d[0]).toEqual({ speed: 1, spawnGap: 1.15, stage: 1 });
+    expect(d[2].speed).toBeCloseTo(1.55, 2);
+    expect(d[3].speed).toBeCloseTo(2.09, 2);
+    expect(d[5].speed).toBe(2.8);
+    expect(d[5].spawnGap).toBe(0.36);
+    expect(d[2].stage).toBe(3);
+  });
 });
