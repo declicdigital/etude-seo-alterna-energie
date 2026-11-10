@@ -24,7 +24,7 @@ import { Menu } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
-import { sheetAllowed } from "@/lib/sections";
+import { groupDisplayName, sheetAllowed } from "@/lib/sections";
 import { signOutAndGoToAuth } from "@/lib/access";
 import { LogOut, ShieldCheck, Lock, Download } from "lucide-react";
 import { downloadBackup } from "@/lib/backup";
@@ -84,7 +84,7 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
   const sheetInfo = SHEET_META[baseSheetOf(sheet)];
   const gc = isGuide ? groupColorForSheet("Structure RES") : groupColorForSheet(sheet);
   const groupName = isDigipote ? "Digipote" : isGuide ? "Guide" : (sheetInfo?.group ?? "Feuille");
-  const groupLabel = metaGet(metaOverrides, "group", groupName, groupName);
+  const groupLabel = metaGet(metaOverrides, "group", groupName, groupDisplayName(groupName));
   const baseSheet = baseSheetOf(sheet);
   const scope = sheet.includes("::") ? sheet.split("::")[1] : null;
   const baseLabel = metaGet(metaOverrides, "sheet", baseSheet, sheetInfo?.label ?? baseSheet);

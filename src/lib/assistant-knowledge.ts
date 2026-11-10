@@ -217,10 +217,11 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
   {
     id: "planning",
     sheet: "PLANNING INTEGRE",
-    label: "Planning intégré",
-    path: "/planning-integre",
+    label: "Radar",
+    path: "/radar",
     needs: "planning",
     keywords: [
+      "radar",
       "planning",
       "planning intégré",
       "commercial",
@@ -870,12 +871,13 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     answer:
       "Une fiche contient : une note sans limite de texte (contexte, décisions, compte rendu ; les liens y deviennent cliquables), un responsable, des personnes taguées (uniquement celles qui ont accès à Organisation, elles reçoivent un mail), une échéance, et « Fichiers et liens » : ajoute un lien nommé ou joins un fichier (50 Mo max, glisser-déposer possible) à ouvrir ou télécharger. Supprimer une fiche efface aussi sa note et ses fichiers.",
   },
-  // ——— Planning intégré ———
+  // ——— Radar (ex-Planning intégré) ———
   {
     zone: "planning",
-    title: "Planning intégré : consulter",
+    title: "Radar : consulter le planning",
     keywords: [
       "planning",
+      "radar",
       "planning intégré",
       "timeline",
       "frise",
@@ -891,11 +893,11 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "kpi",
     ],
     answer:
-      "Planning intégré, c'est le planning commercial partagé d'Alterna Énergie. Il s'ouvre sur « 🗓 Mois par mois » : une colonne par mois (le mois en cours est encadré en rouge « Maintenant »), avec en haut ses temps forts (périodes et jalons), puis les campagnes qui démarrent ce mois-là en grandes cartes (aperçu des visuels, type, dates, objectif KPI, canaux et actions du mois) et, sous « En cours », celles qui continuent avec leurs actions du mois. Les onglets Toutes / Acquisition / Fidélisation / Réglementaire trient les cartes. Clique sur une carte : un panneau s'ouvre à droite avec toutes ses actions par canal et leurs images ; clique sur une action pour son détail. En vue Trimestre, les 3 mois tiennent à l'écran ; en vue Mois, une colonne par semaine. En haut : l'année, « ◎ Aujourd'hui », la recherche par titre (Échap pour effacer), « 🔍 Filtres », « ⚙ Affichage », 🌙 (mode sombre, rien que pour toi) et « 🖨 PDF » (A3 paysage). En haut à droite, le bouton « 🗓 Mois par mois / 📅 Frise » bascule entre ce tableau et la frise d'avant (barres sur la ligne du temps), où tu choisis « Par campagne » ou « Par canal » et « Compacte » / « Détaillée » ; Digicom se souvient de ta présentation préférée.",
+      "Le Radar (anciennement « Planning intégré »), c'est le planning commercial partagé d'Alterna Énergie. L'ancien lien /planning-integre mène automatiquement à /radar. Il s'ouvre sur « 🗓 Mois par mois » : une colonne par mois (le mois en cours est encadré en rouge « Maintenant »), avec en haut ses temps forts (périodes et jalons), puis les campagnes qui démarrent ce mois-là en grandes cartes (aperçu des visuels, type, dates, objectif KPI, canaux et actions du mois) et, sous « En cours », celles qui continuent avec leurs actions du mois. Les onglets Toutes / Acquisition / Fidélisation / Réglementaire trient les cartes. Clique sur une carte : un panneau s'ouvre à droite avec toutes ses actions par canal et leurs images ; clique sur une action pour son détail. En vue Trimestre, les 3 mois tiennent à l'écran ; en vue Mois, une colonne par semaine. En haut : l'année, « ◎ Aujourd'hui », la recherche par titre (Échap pour effacer), « 🔍 Filtres », « ⚙ Affichage », 🌙 (mode sombre, rien que pour toi) et « 🖨 PDF » (A3 paysage). En haut à droite, le bouton « 🗓 Mois par mois / 📅 Frise » bascule entre ce tableau et la frise d'avant (barres sur la ligne du temps), où tu choisis « Par campagne » ou « Par canal » et « Compacte » / « Détaillée » ; Digicom se souvient de ta présentation préférée.",
   },
   {
     zone: "planning",
-    title: "Planning intégré : modifier",
+    title: "Radar : modifier le planning",
     keywords: [
       "modifier le planning",
       "ajouter une campagne",
@@ -1068,7 +1070,7 @@ const RUBRIQUE_WORDS: Record<string, RegExp> = {
   benchmark: /benchmark|concurren|fournisseur|tarif/i,
   newsletters: /newsletter|grands comptes|\bsme\b|\bb2c\b|\bbat\b/i,
   organisation: /organisation|\bfiches?\b|t[âa]ches?/i,
-  planning: /planning/i,
+  planning: /planning|radar/i,
 };
 
 /** Corrections de Geoffrey utilisables pour cette personne (aucune qui touche une rubrique fermée). */

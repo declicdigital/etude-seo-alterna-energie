@@ -28,6 +28,14 @@ export const SECTION_TREE: SectionGroup[] = [
   { group: "Planning intégré", subs: [], accent: "bg-cyan-700" },
 ];
 
+/**
+ * Nom affiché d'une rubrique quand il diffère de sa clé. La clé (ex. « Planning intégré »)
+ * reste celle des accès enregistrés (`allowed_sections`) et des fonctions SQL
+ * (`can_view_planning`) : ne jamais la renommer, seulement le nom affiché.
+ */
+export const GROUP_DISPLAY_NAMES: Record<string, string> = { "Planning intégré": "Radar" };
+export const groupDisplayName = (group: string) => GROUP_DISPLAY_NAMES[group] ?? group;
+
 export const ALL_SECTION_KEYS = SECTION_TREE.flatMap((t) => [
   t.group,
   ...t.subs.map((s) => `${t.group}/${s}`),

@@ -9,9 +9,22 @@ export const LEGACY_HOSTS = [
   "etude-seo-alterna-energie.lovable.app",
 ];
 
-/** Redirect target for a request on a former address, or null. */
+/** Former page addresses, sent to their new address (sub-paths included), on every host. */
+export const LEGACY_PATHS: Record<string, string> = { "/planning-integre": "/radar" };
+
+function movedPath(pathname: string): string | null {
+  for (const [from, to] of Object.entries(LEGACY_PATHS)) {
+    if (pathname === from || pathname === `${from}/`) return to;
+    if (pathname.startsWith(`${from}/`)) return to + pathname.slice(from.length);
+  }
+  return null;
+}
+
+/** Redirect target for a request on a former address (host or page), or null. */
 export function legacyRedirect(url: string): string | null {
   const u = new URL(url);
-  if (!LEGACY_HOSTS.includes(u.hostname)) return null;
-  return `${APP_ORIGIN}${u.pathname}${u.search}${u.hash}`;
+  const path = movedPath(u.pathname);
+  const legacyHost = LEGACY_HOSTS.includes(u.hostname);
+  if (!legacyHost && !path) return null;
+  return `${legacyHost ? APP_ORIGIN : u.origin}${path ?? u.pathname}${u.search}${u.hash}`;
 }

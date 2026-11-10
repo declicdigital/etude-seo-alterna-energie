@@ -9,7 +9,7 @@ export const SHEET_PATHS: Record<string, string> = {
   'SUIVI PLANETE': 'parlons-planete/suivi-editorial',
   'PLANETE - ARTICLES': 'parlons-planete/blog',
   'SUIVI FAQ': 'faq/demandes', 'FAQ - DEMANDES': 'faq/questions',
-  BENCHMARK: 'benchmark', ORGANISATION: 'organisation', 'PLANNING INTEGRE': 'planning-integre',
+  BENCHMARK: 'benchmark', ORGANISATION: 'organisation', 'PLANNING INTEGRE': 'radar',
   'NEWSLETTER GRANDS COMPTES': 'calendriers-newsletters/grands-comptes',
   'NEWSLETTER INTERNE': 'calendriers-newsletters/interne',
   'NEWSLETTER B2C': 'calendriers-newsletters/b2c',
@@ -35,6 +35,8 @@ export function sheetFromPath(path: string): string | null {
   const groups: Record<string, string> = { blog: 'SUIVI EDITORIAL', 'strategie-pac': 'SUIVI STRATEGIE', 'parlons-planete': 'SUIVI PLANETE', faq: 'SUIVI FAQ', 'calendriers-newsletters': 'NEWSLETTER GRANDS COMPTES' };
   if (groups[clean]) return groups[clean];
   for (const [sheet, value] of Object.entries(SHEET_PATHS)) if (value === clean) return sheet;
+  // Ancienne adresse du Radar (redirigée côté serveur, gardée ici pour la navigation interne).
+  if (clean === 'planning-integre') return 'PLANNING INTEGRE';
   const audience = /^(blog|faq)\/(particulier|professionnel)(.*)$/.exec(clean);
   if (audience) return `${audience[1] === 'blog' ? 'BLOG - ARTICLES' : 'FAQ - DEMANDES'}::${audience[2] === 'particulier' ? 'Particulier' : 'Professionnel'}${audience[3]}`;
   const scoped = clean.split('/sous-rubrique/');

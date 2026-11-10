@@ -7,7 +7,7 @@ import digicomWordmark from "@/assets/digicom-wordmark.png";
 import { EditableText } from "@/components/editable-text";
 import { metaGet, type MetaMap } from "@/lib/use-meta";
 import { sheetPath, resolvePath } from "@/lib/slugs";
-import { grantedSections, sheetAllowed } from "@/lib/sections";
+import { grantedSections, groupDisplayName, sheetAllowed } from "@/lib/sections";
 
 const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "Parlons Planète", "FAQ", "Benchmark", "Calendriers newsletters", "Organisation", "Planning intégré", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
 const REMOVED_GROUPS = new Set(["Arborescence", "Suivi", "Docs", "Archives", "Autres"]);
@@ -399,7 +399,7 @@ export function SheetSidebar({
               <EditableText
                 className="truncate flex-1"
                 inputClassName="uppercase tracking-wide text-sm font-semibold text-foreground"
-                value={metaGet(meta, "group", g, g)}
+                value={metaGet(meta, "group", g, groupDisplayName(g))}
                 onCommit={(v) => setMetaValue("group", g, v)}
               />
               <button

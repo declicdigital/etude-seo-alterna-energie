@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getAccess, signOutAndGoToAuth } from "@/lib/access";
-import { SECTION_TREE, ALL_SECTION_KEYS, grantedSections, serializeSections } from "@/lib/sections";
+import { SECTION_TREE, ALL_SECTION_KEYS, grantedSections, serializeSections, groupDisplayName } from "@/lib/sections";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, UserPlus, Send } from "lucide-react";
@@ -275,7 +275,7 @@ function SectionToggles({ row, onToggle, onSetAll }: {
               <div className="flex items-center gap-2">
                 <span className={"size-2 shrink-0 rounded-full " + t.accent + (on ? "" : " opacity-30")} aria-hidden />
                 <label htmlFor={switchId} className={"min-w-0 flex-1 cursor-pointer truncate text-sm font-medium " + (on ? "text-foreground" : "text-muted-foreground")}>
-                  {t.group}
+                  {groupDisplayName(t.group)}
                 </label>
                 <Switch
                   id={switchId}

@@ -504,8 +504,8 @@ const ORGANISATION_FLOWS: Flow[] = [
 
 const PLANNING_FLOWS: Flow[] = [
   {
-    title: "Planning intégré",
-    intro: "Le planning commercial partagé · visible seulement avec l'accès Planning intégré",
+    title: "Radar",
+    intro: "Le planning commercial partagé · visible seulement avec l'accès Radar",
     steps: [
       {
         title: "Vues",
@@ -601,7 +601,7 @@ const RUBRIQUES: Record<RubriqueKey, Rubrique> = {
     flows: ORGANISATION_FLOWS,
   },
   planning: {
-    title: "Planning intégré",
+    title: "Radar",
     icon: CalendarRange,
     text: "Le planning commercial d'Alterna Énergie : campagnes, actions par canal, jalons et périodes.",
     flows: PLANNING_FLOWS,
