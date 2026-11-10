@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/kit-communication")({
   ssr: false,
   head: () => ({ meta: [
-    { title: "Kit de communication · Digicom" },
+    { title: "Kit De Communication — Digicom" },
     { name: "description", content: "Logos, polices, couleurs, charte et modèle email à télécharger." },
-    { property: "og:title", content: "Kit de communication · Digicom" },
+    { property: "og:title", content: "Kit De Communication — Digicom" },
     { property: "og:description", content: "Toutes les ressources de communication, ensemble ou à l’unité." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },

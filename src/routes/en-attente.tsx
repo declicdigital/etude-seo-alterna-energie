@@ -9,10 +9,10 @@ export const Route = createFileRoute("/en-attente")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Demande en attente - Digicom" },
+      { title: "Demande En Attente — Digicom" },
       { name: "description", content: "Votre demande d'accès à Digicom est en cours de validation." },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:title", content: "Demande en attente - Digicom" },
+      { property: "og:title", content: "Demande En Attente — Digicom" },
       { property: "og:description", content: "Votre demande d'accès à Digicom est en cours de validation." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

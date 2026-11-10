@@ -9,9 +9,9 @@ import wordmark from "@/assets/digicom-wordmark.png";
 export const Route = createFileRoute("/accept-invitation")({
   ssr: false,
   head: () => ({ meta: [
-    { title: "Votre invitation - Digicom" },
+    { title: "Votre Invitation — Digicom" },
     { name: "description", content: "Choisissez votre mot de passe pour rejoindre Digicom." },
-    { property: "og:title", content: "Votre invitation - Digicom" },
+    { property: "og:title", content: "Votre Invitation — Digicom" },
     { property: "og:description", content: "Choisissez votre mot de passe pour rejoindre Digicom." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },

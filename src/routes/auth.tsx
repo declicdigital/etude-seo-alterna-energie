@@ -9,10 +9,10 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Connexion - Digicom" },
+      { title: "Connexion — Digicom" },
       { name: "description", content: "Connectez-vous ou demandez un accès à Digicom." },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:title", content: "Connexion - Digicom" },
+      { property: "og:title", content: "Connexion — Digicom" },
       { property: "og:description", content: "Connectez-vous ou demandez un accès à Digicom." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

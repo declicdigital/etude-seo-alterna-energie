@@ -28,10 +28,10 @@ export const Route = createFileRoute("/demandes")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Demandes d'accès - Digicom" },
+      { title: "Demandes D'accès — Digicom" },
       { name: "description", content: "Validez ou refusez les demandes d'accès à Digicom." },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:title", content: "Demandes d'accès - Digicom" },
+      { property: "og:title", content: "Demandes D'accès — Digicom" },
       { property: "og:description", content: "Validez ou refusez les demandes d'accès à Digicom." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

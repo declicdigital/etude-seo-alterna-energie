@@ -10,9 +10,9 @@ export const Route = createFileRoute("/reinitialiser-mot-de-passe")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Nouveau mot de passe - Digicom" },
+      { title: "Nouveau Mot De Passe — Digicom" },
       { name: "description", content: "Choisissez un nouveau mot de passe pour Digicom." },
-      { property: "og:title", content: "Nouveau mot de passe - Digicom" },
+      { property: "og:title", content: "Nouveau Mot De Passe — Digicom" },
       { property: "og:description", content: "Choisissez un nouveau mot de passe pour Digicom." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
