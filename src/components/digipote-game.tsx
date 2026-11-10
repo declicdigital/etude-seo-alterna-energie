@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Heart, Maximize2, Minimize2, Play, RotateCcw, Trophy, X } from "lucide-react";
 import { RobotFace, RobotSvg, ROBOT_SKINS, type RobotSkin } from "@/components/digipote-robot";
@@ -57,7 +57,7 @@ const MAPS: Record<GameMapId, MapDef> = {
     scoreMult: 1,
     starRate: 0.07,
     popup: "#0e7490",
-    card: "from-sky-100 via-emerald-50 to-white",
+    card: "from-[#f1ede6] via-[#f5f2ec] to-[#ece4d8]",
   },
   solaire: {
     name: "Toit solaire",
@@ -147,6 +147,57 @@ const pick = (list: string[]) => list[Math.floor(Math.random() * list.length)];
 const BEST_KEY = "dg-game-best";
 const PREFS_KEY = "dg-game-prefs";
 const rankLabel = (n: number) => (n === 1 ? "1er" : `${n}e`);
+
+/**
+ * Les émojis et les bips sont dessinés une seule fois dans de petites images en cache, puis
+ * simplement recopiés à chaque image : redessiner un émoji en couleur à chaque frame est lent.
+ */
+const sprites = new Map<string, HTMLCanvasElement>();
+function emojiSprite(emoji: string, size: number, dpr: number): HTMLCanvasElement {
+  const key = `${emoji}|${size}|${dpr}`;
+  let c = sprites.get(key);
+  if (c) return c;
+  c = document.createElement("canvas");
+  const box = Math.ceil(size * 1.3);
+  c.width = Math.ceil(box * dpr);
+  c.height = Math.ceil(box * dpr);
+  const g = c.getContext("2d");
+  if (g) {
+    g.scale(dpr, dpr);
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.fillStyle = "#000";
+    g.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+    g.fillText(emoji, box / 2, box / 2 + 1);
+  }
+  sprites.set(key, c);
+  return c;
+}
+function shotSprite(light: string, deep: string, dpr: number): HTMLCanvasElement {
+  const key = `shot|${light}|${deep}|${dpr}`;
+  let c = sprites.get(key);
+  if (c) return c;
+  c = document.createElement("canvas");
+  c.width = Math.ceil(24 * dpr);
+  c.height = Math.ceil(44 * dpr);
+  const g = c.getContext("2d");
+  if (g) {
+    g.scale(dpr, dpr);
+    const grad = g.createRadialGradient(12, 12, 0, 12, 12, 12);
+    grad.addColorStop(0, "rgba(255,255,255,1)");
+    grad.addColorStop(0.35, light);
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = grad;
+    g.beginPath();
+    g.arc(12, 12, 12, 0, Math.PI * 2);
+    g.fill();
+    g.globalAlpha = 0.45;
+    g.fillStyle = deep;
+    g.fillRect(10, 18, 4, 18);
+  }
+  sprites.set(key, c);
+  return c;
+}
 
 export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: string }) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -364,6 +415,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     let raf = 0;
     let last = performance.now();
     const ctx = canvasRef.current?.getContext("2d");
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const m = MAPS[map];
     const k = ROBOT_SKINS[avatar];
     const burst = (x: number, y: number, color: string, n = 12) => {
@@ -666,20 +718,8 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       // Dessin.
       if (ctx) {
         ctx.clearRect(0, 0, s.w, s.h);
-        for (const sh of s.shots) {
-          const g = ctx.createRadialGradient(sh.x, sh.y, 0, sh.x, sh.y, 12);
-          g.addColorStop(0, "rgba(255,255,255,1)");
-          g.addColorStop(0.35, k.led[0]);
-          g.addColorStop(1, "rgba(255,255,255,0)");
-          ctx.fillStyle = g;
-          ctx.beginPath();
-          ctx.arc(sh.x, sh.y, 12, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 0.45;
-          ctx.fillStyle = k.led[1];
-          ctx.fillRect(sh.x - 2, sh.y + 6, 4, 18);
-          ctx.globalAlpha = 1;
-        }
+        const shot = shotSprite(k.led[0], k.led[1], dpr);
+        for (const sh of s.shots) ctx.drawImage(shot, sh.x - 12, sh.y - 12, 24, 44);
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         for (const t of s.things) {
@@ -708,13 +748,14 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
             ctx.fill();
           }
           ctx.globalAlpha = t.flash > 0 ? 0.45 : 1;
-          ctx.fillStyle = "#000"; // les émojis prennent l'opacité de fillStyle
-          ctx.font = `${t.r * 2}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
-          ctx.save();
-          ctx.translate(t.x, t.y);
-          ctx.rotate(Math.sin(t.wob) * (t.kind === "boss" ? 0.12 : 0.25));
-          ctx.fillText(t.emoji, 0, 1);
-          ctx.restore();
+          const img = emojiSprite(t.emoji, t.r * 2, dpr);
+          const half = t.r * 1.3;
+          const a = Math.sin(t.wob) * (t.kind === "boss" ? 0.12 : 0.25);
+          const cos = Math.cos(a) * dpr;
+          const sin = Math.sin(a) * dpr;
+          ctx.setTransform(cos, sin, -sin, cos, dpr * t.x, dpr * t.y);
+          ctx.drawImage(img, -half, -half, half * 2, half * 2);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
           ctx.globalAlpha = 1;
           if (t.maxHp > 1) {
             const w = t.kind === "boss" ? 64 : 30;
@@ -728,9 +769,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         for (const p of s.sparks) {
           ctx.globalAlpha = Math.max(0, p.life * 1.6);
           ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.fillRect(p.x - 2.2, p.y - 2.2, 4.4, 4.4);
         }
         ctx.globalAlpha = 1;
         ctx.font = "800 15px Inter, system-ui, sans-serif";
@@ -834,7 +873,9 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     <div
       ref={rootRef}
       className={cn(
-        "fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/55 backdrop-blur-sm",
+        "fixed inset-0 z-[70] flex items-center justify-center",
+        // Le flou d'arrière-plan coûte cher pendant l'animation : seulement sur l'écran d'accord.
+        phase === "consent" ? "bg-slate-950/55 backdrop-blur-sm" : "bg-slate-950/70",
         big ? "p-0" : "p-2 sm:p-4",
       )}
       role="dialog"
@@ -854,7 +895,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       ) : (
         <div
           className={cn(
-            "flex w-full flex-col overflow-hidden border-white/60 bg-white/90 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80",
+            "flex w-full flex-col overflow-hidden border-white/60 bg-white dark:border-white/10 dark:bg-slate-900",
             big
               ? "h-[100dvh] max-w-none rounded-none border-0"
               : "max-h-[96vh] max-w-[1080px] rounded-[28px] border shadow-[0_30px_80px_-20px_rgba(15,23,42,.6)]",
@@ -962,7 +1003,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
               <div
                 ref={robotRef}
                 className={cn(
-                  "absolute left-0 top-0",
+                  "dg-game-robot absolute left-0 top-0",
                   mood === "happy" && "dg-happy",
                   mood === "ouch" && "dg-ouch",
                   phase === "setup" && "invisible",
@@ -1251,7 +1292,7 @@ function FxChip({ children }: { children: React.ReactNode }) {
 }
 
 /** Classements partagés : meilleur score de chaque joueur, mis à jour en continu. */
-function Leaderboard({
+const Leaderboard = memo(function Leaderboard({
   big,
   boards,
   period,
@@ -1361,10 +1402,10 @@ function Leaderboard({
       </p>
     </aside>
   );
-}
+});
 
 /** Décor de chaque carte (derrière le terrain de jeu). */
-function MapBackdrop({ map }: { map: GameMapId }) {
+const MapBackdrop = memo(function MapBackdrop({ map }: { map: GameMapId }) {
   if (map === "solaire")
     return (
       <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -1426,13 +1467,18 @@ function MapBackdrop({ map }: { map: GameMapId }) {
   if (map === "nuit")
     return (
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        {STARS.map(([x, y, s, d], i) => (
-          <span
-            key={i}
-            className="dg-twinkle absolute rounded-full bg-white"
-            style={{ left: `${x}%`, top: `${y}%`, width: s, height: s, animationDelay: `${d}s` }}
-          />
-        ))}
+        <svg className="absolute inset-0 h-full w-full">
+          {STARS.map(([x, y, r, d], i) => (
+            <circle
+              key={i}
+              cx={`${x}%`}
+              cy={`${y}%`}
+              r={r / 2}
+              fill="#fff"
+              opacity={0.45 + d / 6}
+            />
+          ))}
+        </svg>
         <div className="absolute left-[7%] top-[8%] size-16 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fefce8,#e0e7ff_60%,#a5b4fc)] shadow-[0_0_50px_10px_rgba(199,210,254,.35)]" />
         <svg
           className="absolute bottom-0 left-0 h-[110px] w-full"
@@ -1460,11 +1506,181 @@ function MapBackdrop({ map }: { map: GameMapId }) {
         </svg>
       </div>
     );
+  return <OfficeBackdrop />;
+});
+
+/**
+ * Open space : grandes baies vitrées sur la ville, suspensions, tableau blanc Digicom, horloge,
+ * puis une rangée de bureaux (écrans allumés, plantes, café) sur le parquet. Motifs répétés en
+ * pixels pour remplir toute la largeur, en taille normale comme en plein écran.
+ */
+function OfficeBackdrop() {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0">
-      <div className="absolute inset-0 opacity-50 [background-image:linear-gradient(rgba(14,116,144,.07)_1px,transparent_1px),linear-gradient(90deg,rgba(14,116,144,.07)_1px,transparent_1px)] [background-size:28px_28px]" />
-      <div className="absolute -left-16 top-10 size-56 rounded-full bg-cyan-300/30 blur-3xl" />
-      <div className="absolute -right-10 bottom-16 size-56 rounded-full bg-violet-300/30 blur-3xl" />
+    <div aria-hidden className="pointer-events-none absolute inset-0 opacity-90">
+      {/* mur, baies vitrées et suspensions */}
+      <svg className="absolute inset-x-0 top-0 h-[230px] w-full">
+        <defs>
+          <linearGradient id="dg-of-sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#cfe6fb" />
+            <stop offset="1" stopColor="#eef6fd" />
+          </linearGradient>
+          <pattern id="dg-of-win" width="250" height="230" patternUnits="userSpaceOnUse">
+            <rect x="18" y="34" width="214" height="150" rx="6" fill="url(#dg-of-sky)" />
+            <path
+              d="M30 184v-46h22v-30h18v76zM78 184v-62h26v62zM110 184v-38h16v-22h20v60zM152 184v-74h24v74zM182 184v-40h38v40z"
+              fill="#b9c8d9"
+              opacity=".75"
+            />
+            <path
+              d="M42 120h4v4h-4zM88 132h4v4h-4zM160 122h4v4h-4zM160 140h4v4h-4z"
+              fill="#fff"
+              opacity=".8"
+            />
+            <rect
+              x="18"
+              y="34"
+              width="214"
+              height="150"
+              rx="6"
+              fill="none"
+              stroke="#9aa9b8"
+              strokeWidth="5"
+            />
+            <path d="M125 34v150M18 108h214" stroke="#9aa9b8" strokeWidth="3" />
+            <path d="M34 48l40 0-62 62" fill="#fff" opacity=".35" />
+            <rect x="10" y="184" width="230" height="7" rx="2" fill="#d8d0c4" />
+          </pattern>
+          <pattern id="dg-of-lamp" x="125" width="250" height="230" patternUnits="userSpaceOnUse">
+            <path d="M0 0v26" stroke="#475569" strokeWidth="1.5" />
+            <path d="M-17 40l6-14h22l6 14z" fill="#1f2937" />
+            <ellipse cx="0" cy="42" rx="26" ry="9" fill="#fde68a" opacity=".55" />
+            <ellipse cx="0" cy="41" rx="12" ry="3" fill="#fff7cc" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="230" fill="url(#dg-of-win)" />
+        <rect width="100%" height="60" fill="url(#dg-of-lamp)" />
+        {/* tableau blanc au centre, posé devant une baie */}
+        <svg x="50%" y="0" overflow="visible">
+          <g transform="translate(-120 36)">
+            <rect x="-10" y="-6" width="260" height="168" fill="#f3efe8" />
+            <rect width="240" height="140" rx="6" fill="#ffffff" stroke="#94a3b8" strokeWidth="4" />
+            <text
+              x="16"
+              y="28"
+              fontSize="16"
+              fontWeight="800"
+              fill="#0f172a"
+              fontFamily="Inter, system-ui, sans-serif"
+            >
+              digicom
+            </text>
+            <circle cx="22" cy="12" r="2.6" fill="#34d399" />
+            <circle cx="43" cy="12" r="2.6" fill="#34d399" />
+            <path
+              d="M18 112l30-18 26 10 32-30 30 14 34-36"
+              fill="none"
+              stroke="#10b981"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path d="M18 120h150" stroke="#cbd5e1" strokeWidth="2" />
+            <rect
+              x="182"
+              y="16"
+              width="38"
+              height="34"
+              rx="2"
+              fill="#fde047"
+              transform="rotate(4 201 33)"
+            />
+            <rect
+              x="178"
+              y="58"
+              width="38"
+              height="34"
+              rx="2"
+              fill="#f9a8d4"
+              transform="rotate(-5 197 75)"
+            />
+            <rect
+              x="184"
+              y="98"
+              width="38"
+              height="30"
+              rx="2"
+              fill="#86efac"
+              transform="rotate(3 203 113)"
+            />
+            <path
+              d="M188 28h24M188 34h18M184 70h24M190 108h22"
+              stroke="#0f172a"
+              strokeOpacity=".35"
+              strokeWidth="1.6"
+            />
+            <rect x="60" y="140" width="120" height="6" rx="3" fill="#94a3b8" />
+          </g>
+        </svg>
+        {/* horloge murale à droite */}
+        <svg x="100%" y="0" overflow="visible">
+          <g transform="translate(-46 214)">
+            <circle r="17" fill="#fff" stroke="#334155" strokeWidth="3" />
+            <path d="M0 0v-10M0 0l7 4" stroke="#0f172a" strokeWidth="2.2" strokeLinecap="round" />
+          </g>
+        </svg>
+      </svg>
+
+      {/* parquet */}
+      <div className="absolute inset-x-0 bottom-0 h-[64px] bg-[repeating-linear-gradient(90deg,#d6b48c_0_118px,#cfab80_118px_120px)]" />
+      <div className="absolute inset-x-0 bottom-[64px] h-[6px] bg-[#cbbfae]" />
+
+      {/* rangée de bureaux */}
+      <svg className="absolute inset-x-0 bottom-0 h-[170px] w-full">
+        <defs>
+          <linearGradient id="dg-of-screen" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#0e7490" />
+            <stop offset="1" stopColor="#065f46" />
+          </linearGradient>
+          <pattern id="dg-of-desk" width="320" height="170" patternUnits="userSpaceOnUse">
+            {/* bureau */}
+            <rect x="20" y="88" width="190" height="10" rx="3" fill="#c79f74" />
+            <rect x="20" y="96" width="190" height="4" fill="#a7835d" />
+            <rect x="30" y="100" width="6" height="56" fill="#64748b" />
+            <rect x="194" y="100" width="6" height="56" fill="#64748b" />
+            {/* écran */}
+            <rect x="62" y="34" width="86" height="52" rx="4" fill="#1f2937" />
+            <rect x="66" y="38" width="78" height="44" rx="2" fill="url(#dg-of-screen)" />
+            <path
+              d="M72 48h40M72 56h58M72 64h30"
+              stroke="#a7f3d0"
+              strokeWidth="3"
+              strokeLinecap="round"
+              opacity=".8"
+            />
+            <rect x="98" y="86" width="14" height="4" fill="#334155" />
+            {/* clavier, mug */}
+            <rect x="74" y="84" width="54" height="4" rx="2" fill="#e2e8f0" />
+            <rect x="166" y="74" width="14" height="14" rx="3" fill="#f97316" />
+            <path d="M180 78a4 4 0 0 1 0 7" stroke="#f97316" strokeWidth="2" fill="none" />
+            {/* chaise */}
+            <rect x="92" y="104" width="42" height="34" rx="10" fill="#334155" />
+            <rect x="96" y="138" width="34" height="8" rx="3" fill="#1e293b" />
+            <path
+              d="M113 146v12M100 160h26"
+              stroke="#475569"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            {/* plante */}
+            <path d="M262 98c-14-18-10-38 2-48 4 16 8 24-2 48z" fill="#22c55e" />
+            <path d="M266 98c10-20 26-26 36-22-8 12-18 18-36 22z" fill="#16a34a" />
+            <path d="M260 98c-12-8-26-6-34 2 12 6 22 4 34-2z" fill="#4ade80" />
+            <path d="M246 98h36l-5 58h-26z" fill="#e2e8f0" />
+            <path d="M246 98h36l-1 8h-34z" fill="#cbd5e1" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="170" fill="url(#dg-of-desk)" />
+      </svg>
     </div>
   );
 }
@@ -1477,12 +1693,16 @@ const STARS: [number, number, number, number][] = Array.from({ length: 46 }, (_,
 
 const GAME_CSS = `
   .dg-turbine { transform-box: view-box; transform-origin: 50px 50px; animation: dg-spin 3s linear infinite; }
-  .dg-sun { animation: dg-pulse 4s ease-in-out infinite; }
-  .dg-twinkle { animation: dg-pulse 2.6s ease-in-out infinite; }
+  .dg-sun { will-change: opacity; animation: dg-pulse 4s ease-in-out infinite; }
+  .dg-turbine { will-change: transform; }
+  /* Le robot du jeu : son propre calque, sans animations internes (seul le déplacement bouge),
+     pour ne pas recalculer ses effets de verre à chaque image. */
+  .dg-game-robot { will-change: transform; }
+  .dg-game-robot svg, .dg-game-robot svg * { animation: none !important; }
   .dg-live { animation: dg-pulse 1.4s ease-in-out infinite; }
   .dg-shield { animation: dg-pulse 1.2s ease-in-out infinite; }
   @keyframes dg-spin { to { transform: rotate(360deg) } }
   @media (prefers-reduced-motion: reduce) {
-    .dg-turbine, .dg-sun, .dg-twinkle, .dg-live, .dg-shield { animation: none }
+    .dg-turbine, .dg-sun, .dg-live, .dg-shield { animation: none }
   }
 `;
