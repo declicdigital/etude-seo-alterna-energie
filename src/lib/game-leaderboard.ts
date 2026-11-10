@@ -162,3 +162,25 @@ export function difficultyAt(elapsed: number): { speed: number; spawnGap: number
     stage: 1 + Math.floor(t / 30),
   };
 }
+
+/** Temps de jeu en compteur « mm:ss » (« h:mm:ss » au-delà d'une heure). */
+export function formatClock(totalSeconds: number): string {
+  const t = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const sec = t % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return h ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
+}
+
+/** Temps de jeu en toutes lettres : « 3 minutes et 12 secondes », « 1 minute », « 45 secondes ». */
+export function formatDuration(totalSeconds: number): string {
+  const t = Math.max(0, Math.floor(totalSeconds));
+  const m = Math.floor(t / 60);
+  const sec = t % 60;
+  const minutes = `${m} minute${m > 1 ? "s" : ""}`;
+  const seconds = `${sec} seconde${sec > 1 ? "s" : ""}`;
+  if (!m) return seconds;
+  if (!sec) return minutes;
+  return `${minutes} et ${seconds}`;
+}

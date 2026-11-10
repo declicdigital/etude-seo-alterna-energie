@@ -1,11 +1,23 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Heart, Maximize2, Minimize2, Play, RotateCcw, Trophy, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Heart,
+  Maximize2,
+  Minimize2,
+  Play,
+  RotateCcw,
+  Timer,
+  Trophy,
+  X,
+} from "lucide-react";
 import { RobotFace, RobotSvg, ROBOT_SKINS, type RobotSkin } from "@/components/digipote-robot";
 import { getGameLeaderboard, submitGameScore } from "@/lib/game.functions";
 import {
   BOARD_SIZE,
   difficultyAt,
+  formatClock,
+  formatDuration,
   GAME_AVATARS,
   GAME_MAPS,
   liveRank,
@@ -207,6 +219,8 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
   const [consent, setConsent] = useState(false);
   const [big, setBig] = useState(false);
   const [stage, setStage] = useState(1);
+  /** Début du temps de jeu : l'accord donné sur l'écran de consentement. */
+  const [playingSince, setPlayingSince] = useState<number | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const inGame = phase !== "consent";
   const [avatar, setAvatar] = useState<RobotSkin>("digi");
@@ -889,7 +903,10 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
           checked={consent}
           setChecked={setConsent}
           onCancel={onClose}
-          onAccept={() => setPhase("setup")}
+          onAccept={() => {
+            setPlayingSince(Date.now());
+            setPhase("setup");
+          }}
           skin={avatar}
         />
       ) : (
@@ -945,6 +962,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
                 Ton record {best}
               </span>
             </div>
+            {playingSince !== null && <PlayClock since={playingSince} />}
             <button
               type="button"
               onClick={() => void toggleBig()}
@@ -1006,7 +1024,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
                   "dg-game-robot absolute left-0 top-0",
                   mood === "happy" && "dg-happy",
                   mood === "ouch" && "dg-ouch",
-                  phase === "setup" && "invisible",
+                  (phase === "setup" || phase === "over") && "invisible",
                 )}
                 style={{ width: ROBOT_W, height: ROBOT_H }}
               >
@@ -1141,43 +1159,70 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
 
               {phase === "over" && (
                 <div className="absolute inset-0 flex items-center justify-center overflow-y-auto p-4">
-                  <div className="w-full max-w-sm rounded-3xl border border-white/70 bg-white/85 p-5 text-center shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85">
-                    <RobotFace size={56} skin={avatar} className="mx-auto" />
-                    <div className="mt-1 text-lg font-bold text-slate-800 dark:text-slate-100">
-                      Bzzt… batterie à plat 🪫
+                  <div className="flex w-full max-w-lg flex-col items-center">
+                    {/* D.I.G.I.P.O.T.E arrive en volant et pose la question */}
+                    <div className="dg-over-bubble relative mb-2 rounded-3xl bg-white px-5 py-3.5 text-center shadow-xl ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-white/10">
+                      <div className="text-base font-bold leading-snug text-slate-900 sm:text-lg dark:text-white">
+                        Es-tu sûr(e) de vouloir refaire une partie ?
+                      </div>
+                      <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                        Ça fait{" "}
+                        <strong className="text-slate-900 dark:text-white">
+                          {playingSince !== null ? (
+                            <PlayDuration since={playingSince} />
+                          ) : (
+                            "un moment"
+                          )}
+                        </strong>{" "}
+                        que tu joues. ⏱️
+                      </div>
+                      <span className="absolute -bottom-2 left-1/2 size-4 -translate-x-1/2 rotate-45 bg-white dark:bg-slate-800" />
                     </div>
-                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                      Score : <strong>{score}</strong> pts
-                      {score > 0 && score >= best ? " · nouveau record perso ! 🏆" : ""}
-                    </p>
-                    {score > 0 && (
-                      <p className="mt-2 text-xs text-slate-500">
-                        {saved === "saving" && "Enregistrement au classement…"}
-                        {saved === "error" && "Le score n'a pas pu être enregistré au classement."}
-                        {saved === "saved" &&
-                          finalRanks &&
-                          finalRanks
-                            .map(({ p, rank }) =>
-                              rank
-                                ? `${rankLabel(rank)} ${p === "day" ? "du jour" : p === "week" ? "de la semaine" : "du mois"}`
-                                : null,
-                            )
-                            .filter(Boolean)
-                            .join(" · ")}
-                      </p>
-                    )}
-                    <div className="mt-4 flex flex-wrap justify-center gap-2">
-                      <PlayButton onClick={start} icon={<RotateCcw className="size-4" />}>
-                        Rejouer
-                      </PlayButton>
-                      <button
-                        type="button"
-                        onClick={() => setPhase("setup")}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
-                      >
-                        <ArrowLeft className="size-4" />
-                        Robot ou carte
-                      </button>
+                    <span className="dg-over-bot block h-[120px] w-[96px]">
+                      <RobotSvg skin={avatar} />
+                    </span>
+                    <div className="mt-2 w-full max-w-sm rounded-3xl border border-white/70 bg-white/90 p-4 text-center shadow-xl dark:border-white/10 dark:bg-slate-900/90">
+                      <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                        Bzzt… batterie à plat 🪫 · <strong>{score}</strong> pts
+                        {score > 0 && score >= best ? " · nouveau record perso ! 🏆" : ""}
+                      </div>
+                      {score > 0 && (
+                        <p className="mt-1 text-xs text-slate-500">
+                          {saved === "saving" && "Enregistrement au classement…"}
+                          {saved === "error" &&
+                            "Le score n'a pas pu être enregistré au classement."}
+                          {saved === "saved" &&
+                            finalRanks &&
+                            finalRanks
+                              .map(({ p, rank }) =>
+                                rank
+                                  ? `${rankLabel(rank)} ${p === "day" ? "du jour" : p === "week" ? "de la semaine" : "du mois"}`
+                                  : null,
+                              )
+                              .filter(Boolean)
+                              .join(" · ")}
+                        </p>
+                      )}
+                      <div className="mt-3 flex flex-wrap justify-center gap-2">
+                        <PlayButton onClick={start} icon={<RotateCcw className="size-4" />}>
+                          Oui, rejouer
+                        </PlayButton>
+                        <button
+                          type="button"
+                          onClick={() => setPhase("setup")}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
+                        >
+                          <ArrowLeft className="size-4" />
+                          Robot ou carte
+                        </button>
+                        <button
+                          type="button"
+                          onClick={onClose}
+                          className="inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10"
+                        >
+                          Non, je retourne travailler
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1197,6 +1242,35 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       )}
     </div>
   );
+}
+
+/** Fait avancer un affichage chaque seconde sans redessiner tout le jeu. */
+function useSecondsSince(since: number): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  return Math.max(0, (now - since) / 1000);
+}
+
+/** Compteur de temps de jeu en haut à droite, depuis l'accord donné au début. */
+function PlayClock({ since }: { since: number }) {
+  const seconds = useSecondsSince(since);
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-xs font-bold tabular-nums text-white dark:bg-white dark:text-slate-900"
+      title="Temps de jeu"
+      aria-label={`Temps de jeu : ${formatDuration(seconds)}`}
+    >
+      <Timer className="size-3.5" />
+      {formatClock(seconds)}
+    </span>
+  );
+}
+
+function PlayDuration({ since }: { since: number }) {
+  return <>{formatDuration(useSecondsSince(since))}</>;
 }
 
 /** Écran de consentement affiché à chaque ouverture du jeu, avant de pouvoir jouer. */
@@ -1702,7 +1776,11 @@ const GAME_CSS = `
   .dg-live { animation: dg-pulse 1.4s ease-in-out infinite; }
   .dg-shield { animation: dg-pulse 1.2s ease-in-out infinite; }
   @keyframes dg-spin { to { transform: rotate(360deg) } }
+  .dg-over-bot { animation: dg-fly-in .9s cubic-bezier(.2,.9,.25,1.15) both, dg-hover 3.4s ease-in-out .9s infinite; }
+  .dg-over-bubble { transform-origin: 50% 100%; animation: dg-bubble .4s cubic-bezier(.2,.8,.2,1) .75s both; }
+  @keyframes dg-fly-in { 0% { transform: translate(260px,-140px) rotate(25deg) scale(.6); opacity: 0 }
+    60% { opacity: 1 } 100% { transform: none; opacity: 1 } }
   @media (prefers-reduced-motion: reduce) {
-    .dg-turbine, .dg-sun, .dg-live, .dg-shield { animation: none }
+    .dg-turbine, .dg-sun, .dg-live, .dg-shield, .dg-over-bot, .dg-over-bubble { animation: none }
   }
 `;

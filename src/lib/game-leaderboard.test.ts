@@ -3,6 +3,8 @@ import {
   buildBoards,
   difficultyAt,
   earliestStart,
+  formatClock,
+  formatDuration,
   liveRank,
   periodStarts,
   plausibleScore,
@@ -95,5 +97,20 @@ describe("difficultyAt", () => {
     expect(d[5].speed).toBe(2.8);
     expect(d[5].spawnGap).toBe(0.36);
     expect(d[2].stage).toBe(3);
+  });
+});
+
+describe("temps de jeu", () => {
+  it("compteur", () => {
+    expect(formatClock(0)).toBe("00:00");
+    expect(formatClock(65.9)).toBe("01:05");
+    expect(formatClock(3725)).toBe("1:02:05");
+  });
+  it("en toutes lettres", () => {
+    expect(formatDuration(1)).toBe("1 seconde");
+    expect(formatDuration(45)).toBe("45 secondes");
+    expect(formatDuration(60)).toBe("1 minute");
+    expect(formatDuration(61)).toBe("1 minute et 1 seconde");
+    expect(formatDuration(192)).toBe("3 minutes et 12 secondes");
   });
 });
