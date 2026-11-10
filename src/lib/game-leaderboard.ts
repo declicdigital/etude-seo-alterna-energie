@@ -20,6 +20,10 @@ export const PERIOD_LABELS: Record<Period, string> = {
 /** Filtre de carte des classements : une carte précise ou toutes. */
 export type BoardFilter = GameMapId | "all";
 
+/** Solo, ou duo : deux personnes connectées en même temps, côte à côte, 2 fois plus de bugs. */
+export const GAME_MODES = ["solo", "duo"] as const;
+export type GameMode = (typeof GAME_MODES)[number];
+
 export type ScoreRow = {
   user_id: string;
   player_name: string;
@@ -27,18 +31,25 @@ export type ScoreRow = {
   map: string;
   score: number;
   created_at: string;
+  mode?: string | null;
+  partner_id?: string | null;
+  partner_name?: string | null;
+  partner_avatar?: string | null;
 };
 
 export type BoardEntry = {
   name: string;
   avatar: GameAvatarId;
+  /** Robot du ou de la partenaire (duo). */
+  partnerAvatar?: GameAvatarId;
   map: GameMapId;
   score: number;
   at: string;
   me: boolean;
 };
 
-export type Boards = Record<Period, Record<BoardFilter, BoardEntry[]>>;
+export type PeriodBoards = Record<Period, Record<BoardFilter, BoardEntry[]>>;
+export type Boards = Record<GameMode, PeriodBoards>;
 
 export const BOARD_SIZE = 10;
 
@@ -102,33 +113,45 @@ export function buildBoards(rows: ScoreRow[], now: Date, meId: string | null): B
   const starts = periodStarts(now);
   const filters: BoardFilter[] = ["all", ...GAME_MAPS];
   const boards = {} as Boards;
-  for (const period of PERIODS) {
-    boards[period] = {} as Record<BoardFilter, BoardEntry[]>;
-    const since = starts[period].getTime();
-    const inPeriod = rows.filter((r) => new Date(r.created_at).getTime() >= since);
-    for (const filter of filters) {
-      const best = new Map<string, ScoreRow>();
-      for (const r of inPeriod) {
-        if (filter !== "all" && r.map !== filter) continue;
-        const prev = best.get(r.user_id);
-        if (
-          !prev ||
-          r.score > prev.score ||
-          (r.score === prev.score && r.created_at < prev.created_at)
-        )
-          best.set(r.user_id, r);
+  for (const mode of GAME_MODES) {
+    const ofMode = rows.filter((r) => (r.mode === "duo" ? "duo" : "solo") === mode);
+    // Duo : un record par binôme (dans un sens ou dans l'autre) ; solo : un par personne.
+    const keyOf = (r: ScoreRow) =>
+      mode === "duo" ? [r.user_id, r.partner_id ?? ""].sort().join("+") : r.user_id;
+    boards[mode] = {} as PeriodBoards;
+    for (const period of PERIODS) {
+      boards[mode][period] = {} as Record<BoardFilter, BoardEntry[]>;
+      const since = starts[period].getTime();
+      const inPeriod = ofMode.filter((r) => new Date(r.created_at).getTime() >= since);
+      for (const filter of filters) {
+        const best = new Map<string, ScoreRow>();
+        for (const r of inPeriod) {
+          if (filter !== "all" && r.map !== filter) continue;
+          const key = keyOf(r);
+          const prev = best.get(key);
+          if (
+            !prev ||
+            r.score > prev.score ||
+            (r.score === prev.score && r.created_at < prev.created_at)
+          )
+            best.set(key, r);
+        }
+        boards[mode][period][filter] = [...best.values()]
+          .sort((x, y) => y.score - x.score || x.created_at.localeCompare(y.created_at))
+          .slice(0, BOARD_SIZE)
+          .map((r) => ({
+            name:
+              mode === "duo"
+                ? `${r.player_name} & ${r.partner_name || "Partenaire"}`
+                : r.player_name,
+            avatar: asAvatar(r.avatar),
+            ...(mode === "duo" ? { partnerAvatar: asAvatar(r.partner_avatar ?? "digi") } : {}),
+            map: asMap(r.map),
+            score: r.score,
+            at: r.created_at,
+            me: r.user_id === meId || (mode === "duo" && !!meId && r.partner_id === meId),
+          }));
       }
-      boards[period][filter] = [...best.values()]
-        .sort((a, b) => b.score - a.score || a.created_at.localeCompare(b.created_at))
-        .slice(0, BOARD_SIZE)
-        .map((r) => ({
-          name: r.player_name,
-          avatar: asAvatar(r.avatar),
-          map: asMap(r.map),
-          score: r.score,
-          at: r.created_at,
-          me: r.user_id === meId,
-        }));
     }
   }
   return boards;
@@ -145,9 +168,47 @@ export function liveRank(board: BoardEntry[], score: number): number {
 }
 
 /** Score plausible pour une durée de partie (garde-fou contre les envois fantaisistes). */
-export function plausibleScore(score: number, durationS: number): boolean {
-  return Number.isInteger(score) && score >= 0 && score <= 3000 + Math.max(0, durationS) * 400;
+export function plausibleScore(score: number, durationS: number, mode: GameMode = "solo"): boolean {
+  const cap = (3000 + Math.max(0, durationS) * 400) * (mode === "duo" ? 2 : 1);
+  return Number.isInteger(score) && score >= 0 && score <= cap;
 }
+
+/** Une personne présente dans la salle d'attente du mode duo. */
+export type LobbyPeer = {
+  userId: string;
+  name: string;
+  avatar: GameAvatarId;
+  map: GameMapId;
+  /** idle : jeu ouvert ; waiting : cherche un partenaire ; busy : déjà en duo. */
+  status: "idle" | "waiting" | "busy";
+  /** Début de l'attente (ms), pour apparier les plus anciens d'abord. */
+  since: number;
+};
+
+export type DuoPair = { partner: LobbyPeer; host: boolean; room: string };
+
+/**
+ * Appariement automatique : les deux personnes qui attendent depuis le plus longtemps jouent
+ * ensemble. Chaque navigateur fait le même calcul sur la même liste, donc arrive au même
+ * binôme sans échange supplémentaire ; la plus ancienne des deux héberge la partie.
+ */
+export function pickDuoPair(peers: LobbyPeer[], meId: string): DuoPair | null {
+  const waiting = peers
+    .filter((p) => p.status === "waiting")
+    .sort((a, b) => a.since - b.since || a.userId.localeCompare(b.userId));
+  if (waiting.length < 2) return null;
+  const [first, second] = waiting;
+  if (first.userId !== meId && second.userId !== meId) return null;
+  const host = first.userId === meId;
+  return {
+    partner: host ? second : first,
+    host,
+    room: `${first.userId.slice(0, 8)}-${second.userId.slice(0, 8)}-${first.since}`,
+  };
+}
+
+/** Mode duo : les bugs arrivent deux fois plus souvent. */
+export const DUO_SPAWN_FACTOR = 0.5;
 
 /**
  * Difficulté de « Bug Buster » selon le temps de jeu (secondes) : les bugs tombent un peu plus

@@ -99,6 +99,13 @@
       "when": 1794320000000,
       "tag": "0013_faq_validators",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794340000000,
+      "tag": "0014_game_duo",
+      "breakpoints": true
     }
   ]
 }

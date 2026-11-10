@@ -9,13 +9,23 @@ import {
   RotateCcw,
   Timer,
   Trophy,
+  Users,
   X,
 } from "lucide-react";
 import { RobotFace, RobotSvg, ROBOT_SKINS, type RobotSkin } from "@/components/digipote-robot";
 import { getGameLeaderboard, submitGameScore } from "@/lib/game.functions";
 import {
+  duoIdentity,
+  joinLobby,
+  joinRoom,
+  type DuoMessage,
+  type LobbyHandle,
+  type RoomHandle,
+} from "@/lib/duo-transport";
+import {
   BOARD_SIZE,
   difficultyAt,
+  DUO_SPAWN_FACTOR,
   formatClock,
   formatDuration,
   GAME_AVATARS,
@@ -23,8 +33,12 @@ import {
   liveRank,
   PERIOD_LABELS,
   PERIODS,
+  pickDuoPair,
   type BoardFilter,
   type Boards,
+  type DuoPair,
+  type GameMode,
+  type LobbyPeer,
   type GameMapId,
   type Period,
 } from "@/lib/game-leaderboard";
@@ -134,7 +148,32 @@ type Thing = {
   maxHp: number;
   flash: number;
 };
-type Shot = { x: number; y: number; vx: number };
+/** o = 1 : bip lancé par l'autre robot (duo). */
+type Shot = { x: number; y: number; vx: number; o?: number };
+const KINDS: Kind[] = ["bug", "boss", "star", "coffee", "turbo", "shield", "freeze", "mega"];
+/** Arrondi pour des messages réseau compacts. */
+const r3 = (v: number) => Math.round(v * 1000) / 1000;
+
+/** Partie en duo en cours : qui héberge, avec qui, et l'état de la liaison. */
+type DuoInfo = DuoPair & { partnerName: string; partnerAvatar: RobotSkin };
+type DuoLive = {
+  info: DuoInfo;
+  room: RoomHandle;
+  seen: number;
+  partnerX: number;
+  partnerTarget: number;
+  partnerLastShot: number;
+  partnerFire: number;
+  partnerFireSeen: number;
+  fireCount: number;
+  lastSend: number;
+  out: unknown[];
+  snap: Record<string, unknown> | null;
+  startSent: boolean;
+  helloTimer?: number;
+  againMe: boolean;
+  againPartner: boolean;
+};
 type Spark = { x: number; y: number; vx: number; vy: number; life: number; color: string };
 type Popup = { x: number; y: number; text: string; life: number; color: string };
 type Effects = { turbo: boolean; shield: boolean; freeze: boolean };
@@ -215,7 +254,23 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const robotRef = useRef<HTMLDivElement>(null);
-  const [phase, setPhase] = useState<"consent" | "setup" | "play" | "over">("consent");
+  const [phase, setPhase] = useState<"consent" | "setup" | "lobby" | "countdown" | "play" | "over">(
+    "consent",
+  );
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  const partnerRef = useRef<HTMLDivElement>(null);
+  const [mode, setMode] = useState<GameMode>("solo");
+  const [boardMode, setBoardMode] = useState<GameMode>("solo");
+  const [duo, setDuo] = useState<DuoInfo | null>(null);
+  const duoRef = useRef<DuoLive | null>(null);
+  const [meId, setMeId] = useState<string | null>(null);
+  const [peers, setPeers] = useState<LobbyPeer[]>([]);
+  const lobbyRef = useRef<LobbyHandle | null>(null);
+  const [countdown, setCountdown] = useState(0);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [againMe, setAgainMe] = useState(false);
+  const [againPartner, setAgainPartner] = useState(false);
   const [consent, setConsent] = useState(false);
   const [big, setBig] = useState(false);
   const [stage, setStage] = useState(1);
@@ -262,6 +317,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     turboUntil: 0,
     shieldUntil: 0,
     freezeUntil: 0,
+    wind: 0,
     running: false,
   });
   const fxRef = useRef<Effects>(fx);
@@ -302,7 +358,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       if (res.ok) {
         setBoards(res.boards);
         // Le record perso suit aussi les parties enregistrées (autre ordinateur, etc.).
-        const mine = res.boards.month.all.find((e) => e.me)?.score ?? 0;
+        const mine = res.boards.solo.month.all.find((e) => e.me)?.score ?? 0;
         if (mine) setBest((b) => Math.max(b, mine));
       }
     } catch {
@@ -357,6 +413,12 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     const s = state.current;
     if (!s.running || s.elapsed - s.lastShot < minGap) return;
     s.lastShot = s.elapsed;
+    // Invité d'un duo : c'est l'hôte qui crée les bips, on lui envoie seulement l'appui.
+    const d = duoRef.current;
+    if (d && !d.info.host) {
+      d.fireCount += 1;
+      return;
+    }
     const y = s.h - ROBOT_H + 6;
     if (s.elapsed < s.turboUntil) {
       s.shots.push({ x: s.x - 10, y, vx: -130 }, { x: s.x, y, vx: 0 }, { x: s.x + 10, y, vx: 130 });
@@ -365,8 +427,31 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
 
   const start = useCallback(() => {
     const s = state.current;
+    const d = duoRef.current;
+    // Duo : l'hôte démarre à gauche, l'invité à droite, côte à côte.
+    const myX = d ? (d.info.host ? s.w / 3 : (2 * s.w) / 3) : s.w / 2;
+    if (d) {
+      const otherX = d.info.host ? (2 * s.w) / 3 : s.w / 3;
+      Object.assign(d, {
+        partnerX: otherX,
+        partnerTarget: otherX,
+        partnerLastShot: -1,
+        partnerFire: 0,
+        partnerFireSeen: 0,
+        fireCount: 0,
+        lastSend: 0,
+        out: [],
+        snap: null,
+        seen: performance.now(),
+        againMe: false,
+        againPartner: false,
+      });
+      setAgainMe(false);
+      setAgainPartner(false);
+    }
+    setNotice(null);
     Object.assign(s, {
-      x: s.w / 2,
+      x: myX,
       targetX: null,
       vx: 0,
       things: [],
@@ -394,7 +479,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     setStage(1);
     setSaved("idle");
     setPhase("play");
-    say("Bip-boup ! C'est parti 🤖", "happy");
+    say(d ? `En duo avec ${d.info.partnerName} ! 🤝` : "Bip-boup ! C'est parti 🤖", "happy");
   }, [say]);
 
   const finish = useCallback(
@@ -410,9 +495,29 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       });
       if (finalScore <= 0) return;
       setSaved("saving");
+      const d = duoRef.current;
+      if (d && !d.info.host) {
+        // En duo, l'hôte enregistre la partie pour le binôme : on recharge juste le classement.
+        window.setTimeout(() => {
+          void refresh().then(() => setSaved("saved"));
+        }, 2500);
+        return;
+      }
       try {
         const res = await sendScore({
-          data: { score: finalScore, avatar, map, duration: Math.round(duration) },
+          data: {
+            score: finalScore,
+            avatar,
+            map,
+            duration: Math.round(duration),
+            ...(d
+              ? {
+                  mode: "duo" as const,
+                  partnerId: d.info.partner.userId,
+                  partnerAvatar: d.info.partnerAvatar,
+                }
+              : {}),
+          },
         });
         setSaved(res.ok ? "saved" : "error");
       } catch {
@@ -432,7 +537,14 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const m = MAPS[map];
     const k = ROBOT_SKINS[avatar];
+    // En duo, l'hôte note les effets (étincelles, +points, phrases) pour les rejouer chez l'invité.
+    const record = (ev: unknown[]) => {
+      const d = duoRef.current;
+      if (d?.info.host && d.out.length < 80) d.out.push(ev);
+    };
     const burst = (x: number, y: number, color: string, n = 12) => {
+      const sw = state.current;
+      record(["b", r3(x / sw.w), r3(y / sw.h), color, n]);
       for (let i = 0; i < n; i++) {
         const a = Math.random() * Math.PI * 2;
         const v = 60 + Math.random() * 160;
@@ -446,8 +558,16 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         });
       }
     };
-    const pop = (x: number, y: number, text: string, color = m.popup) =>
-      state.current.popups.push({ x, y, text, life: 0.9, color });
+    const pop = (x: number, y: number, text: string, color = m.popup) => {
+      const sw = state.current;
+      record(["p", r3(x / sw.w), r3(y / sw.h), text, color]);
+      sw.popups.push({ x, y, text, life: 0.9, color });
+    };
+    const talk = (text: string, mood: "happy" | "ouch") => {
+      say(text, mood);
+      record(["s", text, mood]);
+    };
+    const kOther = ROBOT_SKINS[duoRef.current?.info.partnerAvatar ?? avatar];
     const addPoints = (base: number, x: number, y: number) => {
       const s = state.current;
       const pts = Math.round(base * s.mult * m.scoreMult);
@@ -462,7 +582,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       if (mult !== s.mult) {
         s.mult = mult;
         setCombo(mult);
-        say(LINES.combo[mult - 2], "happy");
+        talk(LINES.combo[mult - 2], "happy");
       }
     };
     const damage = (x: number, y: number, amount = 1) => {
@@ -472,7 +592,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         s.shieldUntil = 0;
         s.invulnUntil = s.elapsed + 0.6;
         burst(x, y, k.glow, 16);
-        say("Bouclier ! 🛡️", "happy");
+        talk("Bouclier ! 🛡️", "happy");
         return;
       }
       s.lives = Math.max(0, s.lives - amount);
@@ -484,9 +604,11 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       }
       setLives(s.lives);
       burst(x, y, "#f43f5e", 16);
-      say(pick(LINES.ouch), "ouch");
+      talk(pick(LINES.ouch), "ouch");
       if (s.lives <= 0) {
         s.running = false;
+        const d = duoRef.current;
+        if (d?.info.host) d.room.send({ type: "over", sc: s.score, du: r3(s.elapsed) });
         setPhase("over");
         void finish(s.score, s.elapsed);
       }
@@ -505,7 +627,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         }
       }
       s.things = s.things.filter((t) => !(t.kind === "bug" && t.hp <= 0));
-      say("MÉGA-BIP ! 🔋💥", "happy");
+      talk("MÉGA-BIP ! 🔋💥", "happy");
     };
     const spawn = () => {
       const s = state.current;
@@ -564,36 +686,12 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         maxHp: hp,
         flash: 0,
       });
-      say("⚠️ Méga-bug en approche !", "ouch");
+      talk("⚠️ Méga-bug en approche !", "ouch");
     };
 
-    const frame = (now: number) => {
+    /** Déplacement de mon robot (clavier ou pointeur), commun à l'hôte et à l'invité. */
+    const moveMe = (dt: number) => {
       const s = state.current;
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      if (!s.running) return;
-      s.elapsed += dt;
-      const frozen = s.elapsed < s.freezeUntil;
-      const slow = frozen ? 0.35 : 1;
-      const wind = m.wind ? Math.sin(s.elapsed * 0.45) * m.wind : 0;
-
-      // Effets actifs → affichage (uniquement quand ça change).
-      const nextFx = {
-        turbo: s.elapsed < s.turboUntil,
-        shield: s.elapsed < s.shieldUntil,
-        freeze: frozen,
-      };
-      const prevFx = fxRef.current;
-      if (
-        nextFx.turbo !== prevFx.turbo ||
-        nextFx.shield !== prevFx.shield ||
-        nextFx.freeze !== prevFx.freeze
-      ) {
-        fxRef.current = nextFx;
-        setFx(nextFx);
-      }
-
-      // Déplacement du robot (clavier ou pointeur).
       const dir = (s.keys.right ? 1 : 0) - (s.keys.left ? 1 : 0);
       if (dir) {
         s.targetX = null;
@@ -604,117 +702,344 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         s.vx *= 0.8;
       }
       s.x = Math.min(Math.max(s.x + s.vx * dt, ROBOT_W / 2), s.w - ROBOT_W / 2);
-      const robotTop = s.h - ROBOT_H;
       if (robotRef.current) {
         const tilt = Math.max(-14, Math.min(14, s.vx / 35));
-        robotRef.current.style.transform = `translate(${s.x - ROBOT_W / 2}px, ${robotTop}px) rotate(${tilt}deg)`;
+        robotRef.current.style.transform = `translate(${s.x - ROBOT_W / 2}px, ${s.h - ROBOT_H}px) rotate(${tilt}deg)`;
         const blinking = s.elapsed < s.invulnUntil && s.elapsed >= s.shieldUntil;
         robotRef.current.style.opacity = blinking && Math.floor(s.elapsed * 12) % 2 ? "0.4" : "1";
       }
-
-      // Tir automatique (plus rapide en turbo).
-      fire(s.elapsed < s.turboUntil ? 0.2 : 0.3);
-
-      // Apparitions.
-      s.spawnIn -= dt;
-      if (s.spawnIn <= 0) {
-        s.spawnIn = difficultyAt(s.elapsed).spawnGap * m.spawn * (0.7 + Math.random() * 0.6);
-        spawn();
+    };
+    /** Le robot de l'autre joueur suit en douceur la dernière position reçue. */
+    const movePartner = (d: DuoLive, dt: number) => {
+      const s = state.current;
+      const before = d.partnerX;
+      d.partnerX += (d.partnerTarget - d.partnerX) * Math.min(1, dt * 12);
+      d.partnerX = Math.min(Math.max(d.partnerX, ROBOT_W / 2), s.w - ROBOT_W / 2);
+      if (partnerRef.current) {
+        const tilt = Math.max(-14, Math.min(14, (d.partnerX - before) / Math.max(dt, 0.001) / 35));
+        partnerRef.current.style.transform = `translate(${d.partnerX - ROBOT_W / 2}px, ${s.h - ROBOT_H}px) rotate(${tilt}deg)`;
       }
-      const nextStage = difficultyAt(s.elapsed).stage;
-      if (nextStage !== s.stage) {
-        s.stage = nextStage;
-        setStage(nextStage);
-        say(`Ça accélère ! ⚡ Niveau ${nextStage}`, "happy");
+    };
+    /** Invité : applique le dernier état envoyé par l'hôte (positions relatives au terrain). */
+    const applySnap = (d: DuoLive, snap: Record<string, unknown>) => {
+      const s = state.current;
+      const th = (snap.th as unknown[][]) ?? [];
+      s.things = th.map((a) => ({
+        kind: KINDS[a[0] as number] ?? "bug",
+        emoji: String(a[1]),
+        x: (a[2] as number) * s.w,
+        y: (a[3] as number) * s.h,
+        vx: (a[4] as number) * s.w,
+        vy: (a[5] as number) * s.h,
+        r: a[6] as number,
+        hp: a[7] as number,
+        maxHp: a[8] as number,
+        flash: a[9] as number,
+        wob: 0,
+      }));
+      s.shots = ((snap.sh as number[][]) ?? []).map((a) => ({
+        x: a[0] * s.w,
+        y: a[1] * s.h,
+        vx: a[2] * s.w,
+        o: a[3] ? 0 : 1,
+      }));
+      const sc = Number(snap.sc) || 0;
+      if (sc !== s.score) {
+        s.score = sc;
+        setScore(sc);
       }
-      if (s.elapsed >= s.nextBoss && !s.things.some((t) => t.kind === "boss")) {
-        s.nextBoss = s.elapsed + 45;
-        spawnBoss();
+      const li = Number(snap.li);
+      if (li !== s.lives) {
+        if (li < s.lives) setMood("ouch");
+        s.lives = li;
+        setLives(li);
       }
-
-      // Bips lancés.
+      const mu = Number(snap.mu) || 1;
+      if (mu !== s.mult) {
+        s.mult = mu;
+        setCombo(mu);
+      }
+      const st = Number(snap.st) || 1;
+      if (st !== s.stage) {
+        s.stage = st;
+        setStage(st);
+      }
+      const f = (snap.fx as number[]) ?? [0, 0, 0];
+      const nextFx = { turbo: !!f[0], shield: !!f[1], freeze: !!f[2] };
+      const prevFx = fxRef.current;
+      if (
+        nextFx.turbo !== prevFx.turbo ||
+        nextFx.shield !== prevFx.shield ||
+        nextFx.freeze !== prevFx.freeze
+      ) {
+        fxRef.current = nextFx;
+        setFx(nextFx);
+      }
+      s.wind = (Number(snap.wi) || 0) * s.w;
+      d.partnerTarget = (Number(snap.hx) || 0.33) * s.w;
+      for (const ev of (snap.ev as unknown[][]) ?? []) {
+        if (ev[0] === "b")
+          burstLocal(
+            (ev[1] as number) * s.w,
+            (ev[2] as number) * s.h,
+            String(ev[3]),
+            Number(ev[4]),
+          );
+        else if (ev[0] === "p")
+          s.popups.push({
+            x: (ev[1] as number) * s.w,
+            y: (ev[2] as number) * s.h,
+            text: String(ev[3]),
+            life: 0.9,
+            color: String(ev[4]),
+          });
+        else if (ev[0] === "s") say(String(ev[1]), ev[2] === "ouch" ? "ouch" : "happy");
+      }
+    };
+    const burstLocal = (x: number, y: number, color: string, n: number) => {
+      for (let i = 0; i < Math.min(n, 40); i++) {
+        const a = Math.random() * Math.PI * 2;
+        const v = 60 + Math.random() * 160;
+        state.current.sparks.push({
+          x,
+          y,
+          vx: Math.cos(a) * v,
+          vy: Math.sin(a) * v,
+          life: 0.5 + Math.random() * 0.3,
+          color,
+        });
+      }
+    };
+    /** Invité : déplace son robot, envoie sa position, prolonge l'état reçu jusqu'au suivant. */
+    const guestStep = (d: DuoLive, dt: number, now: number) => {
+      const s = state.current;
+      s.elapsed += dt;
+      if (d.snap) {
+        applySnap(d, d.snap);
+        d.snap = null;
+      }
+      moveMe(dt);
+      movePartner(d, dt);
+      if (now - d.lastSend >= 100) {
+        d.lastSend = now;
+        d.room.send({ type: "in", x: r3(s.x / s.w), f: d.fireCount });
+      }
+      const slow = fxRef.current.freeze ? 0.35 : 1;
+      for (const t of s.things) {
+        const enemy = t.kind === "bug" || t.kind === "boss";
+        t.y += t.vy * dt * (enemy ? slow : 1);
+        t.x += (t.vx * (enemy ? slow : 1) + (enemy ? s.wind : 0)) * dt;
+        t.wob = t.y / 22;
+        t.flash = Math.max(0, t.flash - dt);
+      }
       for (const sh of s.shots) {
         sh.y -= 580 * dt;
         sh.x += sh.vx * dt;
       }
-      s.shots = s.shots.filter((sh) => sh.y > -20 && sh.x > -20 && sh.x < s.w + 20);
+    };
 
-      // Objets qui tombent, collisions.
-      const keep: Thing[] = [];
-      for (const t of s.things) {
-        const enemy = t.kind === "bug" || t.kind === "boss";
-        t.wob += dt * 4;
-        t.flash = Math.max(0, t.flash - dt);
-        t.y += t.vy * dt * (enemy ? slow : 1);
-        t.x += (t.vx * (enemy ? slow : 1) + (enemy ? wind : 0)) * dt + Math.sin(t.wob) * 0.4;
-        if (t.x < t.r) {
-          t.x = t.r;
-          t.vx = Math.abs(t.vx);
-        } else if (t.x > s.w - t.r) {
-          t.x = s.w - t.r;
-          t.vx = -Math.abs(t.vx);
-        }
-        let gone = false;
-        if (enemy) {
-          const hit = s.shots.findIndex(
-            (sh) => (sh.x - t.x) ** 2 + (sh.y - t.y) ** 2 < (t.r + 9) ** 2,
-          );
-          if (hit >= 0) {
-            s.shots.splice(hit, 1);
-            t.hp -= 1;
-            t.flash = 0.12;
-            if (t.hp <= 0) {
-              gone = true;
-              registerHit();
-              if (t.kind === "boss") {
-                burst(t.x, t.y, "#facc15", 40);
-                burst(t.x, t.y, k.led[1], 30);
-                addPoints(150, t.x, t.y);
-                say("Méga-bug éliminé ! 🏆", "happy");
-              } else {
-                burst(t.x, t.y, k.led[1]);
-                addPoints(t.maxHp > 1 ? 20 : 10, t.x, t.y);
-                if (Math.random() < 0.3) say(pick(LINES.hit), "happy");
-              }
-            } else burst(t.x, t.y, "#ffffff", 5);
-          }
-        }
-        const touchesRobot =
-          !gone &&
-          t.y + t.r > robotTop + 18 &&
-          t.y - t.r < s.h &&
-          Math.abs(t.x - s.x) < ROBOT_W / 2 + t.r - 8;
-        if (touchesRobot) {
-          gone = true;
-          if (enemy) damage(t.x, t.y, t.kind === "boss" ? 2 : 1);
-          else if (t.kind === "star") {
-            burst(t.x, t.y, "#facc15", 16);
-            addPoints(25, t.x, t.y);
-            say(pick(LINES.star), "happy");
-          } else if (t.kind === "coffee") {
-            s.lives = Math.min(MAX_LIVES, s.lives + 1);
-            setLives(s.lives);
-            burst(t.x, t.y, "#f97316");
-            pop(t.x, t.y, "+1 ❤", "#e11d48");
-            say(pick(LINES.coffee), "happy");
-          } else {
-            burst(t.x, t.y, k.glow, 18);
-            if (t.kind === "turbo") s.turboUntil = s.elapsed + 8;
-            if (t.kind === "shield") s.shieldUntil = s.elapsed + 12;
-            if (t.kind === "freeze") s.freezeUntil = s.elapsed + 5;
-            if (t.kind === "mega") megaBip();
-            else say(`${POWER[t.kind as keyof typeof POWER].label} !`, "happy");
-          }
-        }
-        if (!gone && t.y - t.r > s.h) {
-          gone = true;
-          if (enemy) damage(t.x, s.h - 10, t.kind === "boss" ? 2 : 1);
-        }
-        if (!gone) keep.push(t);
-        if (!s.running) break;
-      }
+    const frame = (now: number) => {
+      const s = state.current;
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
       if (!s.running) return;
-      s.things = keep.filter((t) => t.hp > 0);
+      const duoNow = duoRef.current;
+      // Plus de nouvelles de l'autre joueur depuis 7 s : la partie s'arrête.
+      if (duoNow && now - duoNow.seen > 7000) {
+        partnerLostRef.current();
+        return;
+      }
+      let frozen = fxRef.current.freeze;
+      if (duoNow && !duoNow.info.host) guestStep(duoNow, dt, now);
+      else {
+        s.elapsed += dt;
+        frozen = s.elapsed < s.freezeUntil;
+        const slow = frozen ? 0.35 : 1;
+        const wind = m.wind ? Math.sin(s.elapsed * 0.45) * m.wind : 0;
+
+        // Effets actifs → affichage (uniquement quand ça change).
+        const nextFx = {
+          turbo: s.elapsed < s.turboUntil,
+          shield: s.elapsed < s.shieldUntil,
+          freeze: frozen,
+        };
+        const prevFx = fxRef.current;
+        if (
+          nextFx.turbo !== prevFx.turbo ||
+          nextFx.shield !== prevFx.shield ||
+          nextFx.freeze !== prevFx.freeze
+        ) {
+          fxRef.current = nextFx;
+          setFx(nextFx);
+        }
+
+        moveMe(dt);
+        const robotTop = s.h - ROBOT_H;
+        const d = duoRef.current;
+        if (d) movePartner(d, dt);
+
+        // Tir automatique (plus rapide en turbo).
+        fire(s.elapsed < s.turboUntil ? 0.2 : 0.3);
+        if (d) {
+          // Bips du robot de l'invité : tir automatique + appuis reçus.
+          const gap = s.elapsed < s.turboUntil ? 0.2 : 0.3;
+          const manual = d.partnerFire > d.partnerFireSeen && s.elapsed - d.partnerLastShot >= 0.12;
+          if (manual || s.elapsed - d.partnerLastShot >= gap) {
+            d.partnerFireSeen = d.partnerFire;
+            d.partnerLastShot = s.elapsed;
+            const y = s.h - ROBOT_H + 6;
+            if (s.elapsed < s.turboUntil)
+              s.shots.push(
+                { x: d.partnerX - 10, y, vx: -130, o: 1 },
+                { x: d.partnerX, y, vx: 0, o: 1 },
+                { x: d.partnerX + 10, y, vx: 130, o: 1 },
+              );
+            else s.shots.push({ x: d.partnerX, y, vx: 0, o: 1 });
+          }
+        }
+
+        // Apparitions.
+        s.spawnIn -= dt;
+        if (s.spawnIn <= 0) {
+          // Duo : deux fois plus de bugs.
+          s.spawnIn =
+            difficultyAt(s.elapsed).spawnGap *
+            m.spawn *
+            (d ? DUO_SPAWN_FACTOR : 1) *
+            (0.7 + Math.random() * 0.6);
+          spawn();
+        }
+        const nextStage = difficultyAt(s.elapsed).stage;
+        if (nextStage !== s.stage) {
+          s.stage = nextStage;
+          setStage(nextStage);
+          talk(`Ça accélère ! ⚡ Niveau ${nextStage}`, "happy");
+        }
+        if (s.elapsed >= s.nextBoss && !s.things.some((t) => t.kind === "boss")) {
+          s.nextBoss = s.elapsed + 45;
+          spawnBoss();
+        }
+
+        // Bips lancés.
+        for (const sh of s.shots) {
+          sh.y -= 580 * dt;
+          sh.x += sh.vx * dt;
+        }
+        s.shots = s.shots.filter((sh) => sh.y > -20 && sh.x > -20 && sh.x < s.w + 20);
+
+        // Objets qui tombent, collisions.
+        const keep: Thing[] = [];
+        for (const t of s.things) {
+          const enemy = t.kind === "bug" || t.kind === "boss";
+          t.wob += dt * 4;
+          t.flash = Math.max(0, t.flash - dt);
+          t.y += t.vy * dt * (enemy ? slow : 1);
+          t.x += (t.vx * (enemy ? slow : 1) + (enemy ? wind : 0)) * dt + Math.sin(t.wob) * 0.4;
+          if (t.x < t.r) {
+            t.x = t.r;
+            t.vx = Math.abs(t.vx);
+          } else if (t.x > s.w - t.r) {
+            t.x = s.w - t.r;
+            t.vx = -Math.abs(t.vx);
+          }
+          let gone = false;
+          if (enemy) {
+            const hit = s.shots.findIndex(
+              (sh) => (sh.x - t.x) ** 2 + (sh.y - t.y) ** 2 < (t.r + 9) ** 2,
+            );
+            if (hit >= 0) {
+              s.shots.splice(hit, 1);
+              t.hp -= 1;
+              t.flash = 0.12;
+              if (t.hp <= 0) {
+                gone = true;
+                registerHit();
+                if (t.kind === "boss") {
+                  burst(t.x, t.y, "#facc15", 40);
+                  burst(t.x, t.y, k.led[1], 30);
+                  addPoints(150, t.x, t.y);
+                  talk("Méga-bug éliminé ! 🏆", "happy");
+                } else {
+                  burst(t.x, t.y, k.led[1]);
+                  addPoints(t.maxHp > 1 ? 20 : 10, t.x, t.y);
+                  if (Math.random() < 0.3) talk(pick(LINES.hit), "happy");
+                }
+              } else burst(t.x, t.y, "#ffffff", 5);
+            }
+          }
+          const touchesRobot =
+            !gone &&
+            t.y + t.r > robotTop + 18 &&
+            t.y - t.r < s.h &&
+            (Math.abs(t.x - s.x) < ROBOT_W / 2 + t.r - 8 ||
+              (!!d && Math.abs(t.x - d.partnerX) < ROBOT_W / 2 + t.r - 8));
+          if (touchesRobot) {
+            gone = true;
+            if (enemy) damage(t.x, t.y, t.kind === "boss" ? 2 : 1);
+            else if (t.kind === "star") {
+              burst(t.x, t.y, "#facc15", 16);
+              addPoints(25, t.x, t.y);
+              talk(pick(LINES.star), "happy");
+            } else if (t.kind === "coffee") {
+              s.lives = Math.min(MAX_LIVES, s.lives + 1);
+              setLives(s.lives);
+              burst(t.x, t.y, "#f97316");
+              pop(t.x, t.y, "+1 ❤", "#e11d48");
+              talk(pick(LINES.coffee), "happy");
+            } else {
+              burst(t.x, t.y, k.glow, 18);
+              if (t.kind === "turbo") s.turboUntil = s.elapsed + 8;
+              if (t.kind === "shield") s.shieldUntil = s.elapsed + 12;
+              if (t.kind === "freeze") s.freezeUntil = s.elapsed + 5;
+              if (t.kind === "mega") megaBip();
+              else talk(`${POWER[t.kind as keyof typeof POWER].label} !`, "happy");
+            }
+          }
+          if (!gone && t.y - t.r > s.h) {
+            gone = true;
+            if (enemy) damage(t.x, s.h - 10, t.kind === "boss" ? 2 : 1);
+          }
+          if (!gone) keep.push(t);
+          if (!s.running) break;
+        }
+        if (!s.running) return;
+        s.things = keep.filter((t) => t.hp > 0);
+        s.wind = wind;
+
+        // Hôte : état de la partie envoyé à l'invité 10 fois par seconde.
+        if (d && now - d.lastSend >= 100) {
+          d.lastSend = now;
+          d.room.send({
+            type: "snap",
+            th: s.things.map((t) => [
+              KINDS.indexOf(t.kind),
+              t.emoji,
+              r3(t.x / s.w),
+              r3(t.y / s.h),
+              r3(t.vx / s.w),
+              r3(t.vy / s.h),
+              t.r,
+              t.hp,
+              t.maxHp,
+              t.flash > 0 ? 0.1 : 0,
+            ]),
+            sh: s.shots.map((sh) => [
+              r3(sh.x / s.w),
+              r3(sh.y / s.h),
+              r3(sh.vx / s.w),
+              sh.o ? 1 : 0,
+            ]),
+            sc: s.score,
+            li: s.lives,
+            mu: s.mult,
+            st: s.stage,
+            fx: [nextFx.turbo ? 1 : 0, nextFx.shield ? 1 : 0, nextFx.freeze ? 1 : 0],
+            wi: r3(wind / s.w),
+            hx: r3(s.x / s.w),
+            ev: d.out.splice(0),
+          });
+        }
+      }
 
       for (const p of s.sparks) {
         p.x += p.vx * dt;
@@ -733,7 +1058,9 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       if (ctx) {
         ctx.clearRect(0, 0, s.w, s.h);
         const shot = shotSprite(k.led[0], k.led[1], dpr);
-        for (const sh of s.shots) ctx.drawImage(shot, sh.x - 12, sh.y - 12, 24, 44);
+        const shotOther = shotSprite(kOther.led[0], kOther.led[1], dpr);
+        for (const sh of s.shots)
+          ctx.drawImage(sh.o ? shotOther : shot, sh.x - 12, sh.y - 12, 24, 44);
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         for (const t of s.things) {
@@ -799,6 +1126,270 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
   }, [phase, map, avatar, say, fire, finish]);
+
+  // ---- Mode duo -------------------------------------------------------------------------
+  const mapRef = useRef(map);
+  mapRef.current = map;
+  const avatarRef = useRef(avatar);
+  avatarRef.current = avatar;
+  const startRef = useRef(start);
+  startRef.current = start;
+  const finishRef = useRef(finish);
+  finishRef.current = finish;
+  const countRef = useRef<number | undefined>(undefined);
+  const connectTimer = useRef<number | undefined>(undefined);
+
+  const beginCountdown = useCallback(() => {
+    window.clearInterval(countRef.current);
+    setPhase("countdown");
+    setCountdown(3);
+    let n = 3;
+    countRef.current = window.setInterval(() => {
+      n -= 1;
+      if (n <= 0) {
+        window.clearInterval(countRef.current);
+        if (duoRef.current) startRef.current();
+        else setPhase("setup");
+      } else setCountdown(n);
+    }, 800);
+  }, []);
+
+  const leaveDuo = useCallback((sendBye = true) => {
+    const d = duoRef.current;
+    if (!d) return;
+    if (sendBye) d.room.send({ type: "bye" });
+    window.clearInterval(d.helloTimer);
+    window.clearTimeout(connectTimer.current);
+    const room = d.room;
+    window.setTimeout(() => room.leave(), 400);
+    duoRef.current = null;
+    setDuo(null);
+    setMode("solo");
+    setAgainMe(false);
+    setAgainPartner(false);
+    lobbyRef.current?.update({ status: "idle" });
+  }, []);
+
+  /** L'autre joueur est parti (fermeture, coupure) : on arrête proprement. */
+  const partnerLost = useCallback(() => {
+    const d = duoRef.current;
+    if (!d) return;
+    const s = state.current;
+    const who = d.info.partnerName;
+    const wasPlaying = s.running;
+    s.running = false;
+    window.clearInterval(countRef.current);
+    // L'hôte enregistre quand même la partie du binôme (finish lit le duo tout de suite).
+    if (wasPlaying) void finishRef.current(s.score, s.elapsed);
+    leaveDuo(false);
+    setNotice(`${who} a quitté la partie.`);
+    const ph = phaseRef.current;
+    if (ph === "play") setPhase("over");
+    else if (ph === "lobby" || ph === "countdown") setPhase("setup");
+  }, [leaveDuo]);
+  const partnerLostRef = useRef(partnerLost);
+  partnerLostRef.current = partnerLost;
+
+  const sendStart = useCallback(() => {
+    const d = duoRef.current;
+    if (!d?.info.host) return;
+    d.startSent = true;
+    d.room.send({ type: "start", map: mapRef.current, avatar: avatarRef.current });
+    beginCountdown();
+  }, [beginCountdown]);
+
+  const onDuoMessage = (msg: DuoMessage) => {
+    const d = duoRef.current;
+    if (!d) return;
+    d.seen = performance.now();
+    const s = state.current;
+    const skinOf = (v: unknown) =>
+      (GAME_AVATARS as readonly string[]).includes(String(v)) ? (v as RobotSkin) : null;
+    switch (msg.type) {
+      case "hello": {
+        if (!d.info.host) return;
+        const av = skinOf(msg.avatar);
+        if (av && av !== d.info.partnerAvatar) {
+          d.info = { ...d.info, partnerAvatar: av };
+          setDuo(d.info);
+        }
+        if (!d.startSent && phaseRef.current === "lobby") {
+          window.clearTimeout(connectTimer.current);
+          sendStart();
+        }
+        return;
+      }
+      case "start": {
+        if (d.info.host) return;
+        window.clearInterval(d.helloTimer);
+        window.clearTimeout(connectTimer.current);
+        if ((GAME_MAPS as readonly string[]).includes(String(msg.map)))
+          setMap(msg.map as GameMapId);
+        const av = skinOf(msg.avatar);
+        if (av && av !== d.info.partnerAvatar) {
+          d.info = { ...d.info, partnerAvatar: av };
+          setDuo(d.info);
+        }
+        beginCountdown();
+        return;
+      }
+      case "in":
+        if (!d.info.host) return;
+        d.partnerTarget = (Number(msg.x) || 0) * s.w;
+        d.partnerFire = Number(msg.f) || 0;
+        return;
+      case "snap":
+        if (!d.info.host) d.snap = msg;
+        return;
+      case "over":
+        if (d.info.host || !s.running) return;
+        s.running = false;
+        s.score = Number(msg.sc) || s.score;
+        setScore(s.score);
+        setPhase("over");
+        void finishRef.current(s.score, Number(msg.du) || s.elapsed);
+        return;
+      case "again":
+        d.againPartner = true;
+        setAgainPartner(true);
+        if (d.info.host && d.againMe) sendStart();
+        return;
+      case "bye":
+        partnerLostRef.current();
+        return;
+    }
+  };
+  const onDuoMessageRef = useRef(onDuoMessage);
+  onDuoMessageRef.current = onDuoMessage;
+
+  const connectDuo = useCallback(
+    (pair: DuoPair) => {
+      const info: DuoInfo = {
+        ...pair,
+        partnerName: pair.partner.name || "Partenaire",
+        partnerAvatar: pair.partner.avatar,
+      };
+      lobbyRef.current?.update({ status: "busy" });
+      const live: DuoLive = {
+        info,
+        room: { send: () => undefined, leave: () => undefined },
+        seen: performance.now(),
+        partnerX: 0,
+        partnerTarget: 0,
+        partnerLastShot: 0,
+        partnerFire: 0,
+        partnerFireSeen: 0,
+        fireCount: 0,
+        lastSend: 0,
+        out: [],
+        snap: null,
+        startSent: false,
+        againMe: false,
+        againPartner: false,
+      };
+      duoRef.current = live;
+      live.room = joinRoom(
+        pair.room,
+        (m) => onDuoMessageRef.current(m),
+        () => {
+          // L'invité se signale jusqu'à ce que l'hôte lance le compte à rebours.
+          if (info.host) return;
+          const hello = () =>
+            live.room.send({ type: "hello", avatar: avatarRef.current, name: name ?? "" });
+          hello();
+          live.helloTimer = window.setInterval(hello, 600);
+        },
+      );
+      setDuo(info);
+      setMode("duo");
+      setBoardMode("duo");
+      // Pas de réponse : on se remet en recherche.
+      window.clearTimeout(connectTimer.current);
+      connectTimer.current = window.setTimeout(() => {
+        if (duoRef.current !== live || phaseRef.current !== "lobby") return;
+        leaveDuo(false);
+        setNotice("La connexion n'a pas abouti, nouvelle recherche…");
+        lobbyRef.current?.update({ status: "waiting", since: Date.now() });
+      }, 12000);
+    },
+    [leaveDuo, name],
+  );
+
+  // Salle d'attente : on y est présent dès que le jeu est ouvert (après l'accord).
+  useEffect(() => {
+    if (!inGame) return;
+    let alive = true;
+    let handle: LobbyHandle | null = null;
+    void duoIdentity()
+      .then((id) => {
+        if (!alive || !id) return;
+        setMeId(id);
+        handle = joinLobby(
+          {
+            userId: id,
+            name: name || "Joueur",
+            avatar: avatarRef.current,
+            map: mapRef.current,
+            status: "idle",
+            since: Date.now(),
+          },
+          (list) => alive && setPeers(list),
+        );
+        lobbyRef.current = handle;
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+      handle?.leave();
+      lobbyRef.current = null;
+    };
+  }, [inGame, name]);
+
+  useEffect(() => {
+    lobbyRef.current?.update({ avatar, map });
+  }, [avatar, map]);
+
+  // Appariement automatique dès que deux personnes cherchent un partenaire.
+  useEffect(() => {
+    if (phase !== "lobby" || !meId || duoRef.current) return;
+    const pair = pickDuoPair(peers, meId);
+    if (pair) connectDuo(pair);
+  }, [phase, peers, meId, connectDuo]);
+
+  const searchPartner = () => {
+    setNotice(null);
+    setPhase("lobby");
+    lobbyRef.current?.update({ status: "waiting", since: Date.now() });
+  };
+  const cancelSearch = () => {
+    leaveDuo();
+    lobbyRef.current?.update({ status: "idle" });
+    setPhase("setup");
+  };
+  const askAgain = () => {
+    const d = duoRef.current;
+    if (!d) return;
+    d.againMe = true;
+    setAgainMe(true);
+    d.room.send({ type: "again" });
+    if (d.info.host && d.againPartner) sendStart();
+  };
+
+  useEffect(
+    () => () => {
+      window.clearInterval(countRef.current);
+      leaveDuo();
+    },
+    [leaveDuo],
+  );
+
+  const others = peers.filter((p) => p.userId !== meId);
+  const waitingOthers = others.filter((p) => p.status === "waiting");
+  const lobbyLine = waitingOthers.length
+    ? `🤝 ${waitingOthers.map((p) => p.name).join(", ")} ${waitingOthers.length > 1 ? "cherchent" : "cherche"} un partenaire : clique sur « Jouer en duo » !`
+    : others.length
+      ? `${others.map((p) => p.name).join(", ")} ${others.length > 1 ? "ont" : "a"} aussi le jeu ouvert.`
+      : "Duo : quand un collègue ouvre Bug Buster en même temps que toi, jouez côte à côte !";
 
   // Clavier : flèches pendant la partie, Échap pour fermer.
   useEffect(() => {
@@ -873,15 +1464,15 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     [],
   );
 
-  const dayRank = boards ? liveRank(boards.day.all, score) : null;
+  const dayRank = boards ? liveRank(boards[mode].day.all, score) : null;
   const finalRanks = useMemo(() => {
     if (!boards || phase !== "over" || score <= 0) return null;
     return PERIODS.map((p) => {
-      const board = boards[p].all;
+      const board = boards[mode][p].all;
       const mine = board.find((e) => e.me);
       return { p, rank: mine ? board.indexOf(mine) + 1 : null };
     });
-  }, [boards, phase, score]);
+  }, [boards, phase, score, mode]);
 
   return (
     <div
@@ -926,7 +1517,13 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
               </span>
             </div>
             <div className="ml-auto flex items-center gap-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-              {phase !== "setup" && (
+              {duo && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-xs text-violet-800 dark:bg-violet-400/15 dark:text-violet-200">
+                  <Users className="size-3.5" />
+                  avec {duo.partnerName}
+                </span>
+              )}
+              {phase !== "setup" && phase !== "lobby" && (
                 <>
                   <span className="flex items-center gap-0.5" aria-label={`${lives} vies`}>
                     {Array.from({ length: MAX_LIVES }, (_, i) => (
@@ -1024,10 +1621,15 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
                   "dg-game-robot absolute left-0 top-0",
                   mood === "happy" && "dg-happy",
                   mood === "ouch" && "dg-ouch",
-                  (phase === "setup" || phase === "over") && "invisible",
+                  phase !== "play" && "invisible",
                 )}
                 style={{ width: ROBOT_W, height: ROBOT_H }}
               >
+                {duo && phase === "play" && !talk && (
+                  <span className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+                    Toi
+                  </span>
+                )}
                 {talk && phase === "play" && (
                   <span className="absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-800 shadow-md dark:bg-slate-800 dark:text-slate-100">
                     {talk}
@@ -1045,6 +1647,94 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
                   className={cn(fx.turbo && "drop-shadow-[0_0_10px_rgba(250,204,21,.9)]")}
                 />
               </div>
+
+              {duo && phase === "play" && (
+                <div
+                  ref={partnerRef}
+                  className="dg-game-robot absolute left-0 top-0"
+                  style={{ width: ROBOT_W, height: ROBOT_H }}
+                >
+                  <span className="absolute -top-9 left-1/2 max-w-[140px] -translate-x-1/2 truncate whitespace-nowrap rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+                    {duo.partnerName}
+                  </span>
+                  {fx.shield && (
+                    <span
+                      aria-hidden
+                      className="dg-shield absolute -inset-3 rounded-full border-2"
+                      style={{
+                        borderColor: ROBOT_SKINS[duo.partnerAvatar].glow,
+                        boxShadow: `0 0 18px ${ROBOT_SKINS[duo.partnerAvatar].glow}`,
+                      }}
+                    />
+                  )}
+                  <RobotSvg skin={duo.partnerAvatar} />
+                </div>
+              )}
+
+              {phase === "lobby" && (
+                <div className="absolute inset-0 flex items-center justify-center overflow-y-auto p-4">
+                  <div className="w-full max-w-md rounded-3xl border border-white/70 bg-white/90 p-6 text-center shadow-xl dark:border-white/10 dark:bg-slate-900/90">
+                    <div className="mx-auto flex w-fit items-end gap-1">
+                      <span className="block h-[86px] w-[70px]">
+                        <RobotSvg skin={avatar} />
+                      </span>
+                      <span className="block h-[86px] w-[70px] opacity-60">
+                        <RobotSvg skin={duo?.partnerAvatar ?? "digi"} />
+                      </span>
+                    </div>
+                    <div className="mt-3 text-lg font-bold text-slate-900 dark:text-white">
+                      {duo ? (
+                        <>
+                          Partenaire trouvé : {duo.partnerName} ! 🤝
+                          <div className="mt-1 text-sm font-medium text-slate-500">Connexion…</div>
+                        </>
+                      ) : (
+                        <>
+                          Recherche d'un partenaire
+                          <span className="dg-dots" aria-hidden>
+                            …
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {!duo && (
+                      <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                        Dès qu'une autre personne clique sur « Jouer en duo », vous êtes réunis côte
+                        à côte sur la même carte. Attention : deux fois plus de bugs !
+                      </p>
+                    )}
+                    {!duo && others.length > 0 && (
+                      <p className="mt-2 text-xs text-slate-500">
+                        Ont le jeu ouvert : {others.map((p) => p.name).join(", ")}
+                      </p>
+                    )}
+                    {notice && <p className="mt-2 text-xs text-amber-700">{notice}</p>}
+                    <button
+                      type="button"
+                      onClick={cancelSearch}
+                      className="mt-4 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {phase === "countdown" && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <div
+                    key={countdown}
+                    className="dg-pop text-[96px] font-extrabold leading-none text-slate-900 drop-shadow-lg dark:text-white"
+                  >
+                    {countdown}
+                  </div>
+                  {duo && (
+                    <div className="mt-3 rounded-full bg-white/90 px-4 py-1.5 text-sm font-bold text-slate-800 shadow">
+                      🤝 Duo avec {duo.partnerName} · deux fois plus de bugs !
+                    </div>
+                  )}
+                </div>
+              )}
 
               {phase === "setup" && (
                 <div className="absolute inset-0 overflow-y-auto p-3 sm:p-5">
@@ -1148,11 +1838,26 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
                       gare aux méga-bugs ! ← → ou souris / doigt pour bouger.
                     </div>
 
-                    <div className="mt-4 flex justify-center">
+                    <div className="mt-4 flex flex-wrap justify-center gap-2">
                       <PlayButton onClick={start} icon={<Play className="size-4" />}>
                         Jouer avec {skin.name}
                       </PlayButton>
+                      <button
+                        type="button"
+                        onClick={searchPartner}
+                        disabled={!meId}
+                        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_-8px_rgba(109,40,217,.8)] hover:brightness-110 disabled:opacity-50"
+                      >
+                        <Users className="size-4" />
+                        Jouer en duo
+                      </button>
                     </div>
+                    <p className="mt-2 text-center text-[11.5px] leading-snug text-slate-500">
+                      {lobbyLine}
+                    </p>
+                    {notice && (
+                      <p className="mt-1 text-center text-[11.5px] text-amber-700">{notice}</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -1203,13 +1908,45 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
                               .join(" · ")}
                         </p>
                       )}
+                      {notice && <p className="mt-1 text-xs text-amber-700">{notice}</p>}
+                      {duo && (againMe || againPartner) && (
+                        <p className="mt-1 text-xs font-semibold text-violet-700">
+                          {againMe && !againPartner
+                            ? `En attente de ${duo.partnerName}…`
+                            : !againMe
+                              ? `${duo.partnerName} veut rejouer ! 🤝`
+                              : "C'est reparti !"}
+                        </p>
+                      )}
                       <div className="mt-3 flex flex-wrap justify-center gap-2">
-                        <PlayButton onClick={start} icon={<RotateCcw className="size-4" />}>
-                          Oui, rejouer
-                        </PlayButton>
+                        {duo ? (
+                          <>
+                            <PlayButton onClick={askAgain} icon={<Users className="size-4" />}>
+                              Oui, rejouer en duo
+                            </PlayButton>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                leaveDuo();
+                                start();
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
+                            >
+                              <RotateCcw className="size-4" />
+                              Rejouer en solo
+                            </button>
+                          </>
+                        ) : (
+                          <PlayButton onClick={start} icon={<RotateCcw className="size-4" />}>
+                            Oui, rejouer
+                          </PlayButton>
+                        )}
                         <button
                           type="button"
-                          onClick={() => setPhase("setup")}
+                          onClick={() => {
+                            leaveDuo();
+                            setPhase("setup");
+                          }}
                           className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
                         >
                           <ArrowLeft className="size-4" />
@@ -1217,7 +1954,10 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
                         </button>
                         <button
                           type="button"
-                          onClick={onClose}
+                          onClick={() => {
+                            leaveDuo();
+                            onClose();
+                          }}
                           className="inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10"
                         >
                           Non, je retourne travailler
@@ -1230,6 +1970,8 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
             </div>
 
             <Leaderboard
+              boardMode={boardMode}
+              setBoardMode={setBoardMode}
               big={big}
               boards={boards}
               period={period}
@@ -1367,6 +2109,8 @@ function FxChip({ children }: { children: React.ReactNode }) {
 
 /** Classements partagés : meilleur score de chaque joueur, mis à jour en continu. */
 const Leaderboard = memo(function Leaderboard({
+  boardMode,
+  setBoardMode,
   big,
   boards,
   period,
@@ -1374,6 +2118,8 @@ const Leaderboard = memo(function Leaderboard({
   filter,
   setFilter,
 }: {
+  boardMode: GameMode;
+  setBoardMode: (m: GameMode) => void;
   big: boolean;
   boards: Boards | null;
   period: Period;
@@ -1381,7 +2127,7 @@ const Leaderboard = memo(function Leaderboard({
   filter: BoardFilter;
   setFilter: (f: BoardFilter) => void;
 }) {
-  const list = boards?.[period][filter] ?? [];
+  const list = boards?.[boardMode][period][filter] ?? [];
   const empty =
     period === "day"
       ? "Personne n'a encore joué aujourd'hui : à toi d'ouvrir le bal !"
@@ -1402,6 +2148,32 @@ const Leaderboard = memo(function Leaderboard({
           <span className="dg-live size-1.5 rounded-full bg-emerald-500" />
           en direct
         </span>
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-1 text-xs font-bold">
+        {(["solo", "duo"] as GameMode[]).map((m) => (
+          <button
+            key={m}
+            type="button"
+            aria-pressed={boardMode === m}
+            onClick={() => setBoardMode(m)}
+            className={cn(
+              "inline-flex items-center justify-center gap-1 rounded-xl border py-1.5 transition",
+              boardMode === m
+                ? m === "duo"
+                  ? "border-violet-500 bg-violet-50 text-violet-800 dark:bg-violet-500/15 dark:text-violet-200"
+                  : "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200"
+                : "border-slate-200 text-slate-500 hover:border-slate-300 dark:border-white/10",
+            )}
+          >
+            {m === "duo" ? (
+              <>
+                <Users className="size-3.5" /> Duo
+              </>
+            ) : (
+              "Solo"
+            )}
+          </button>
+        ))}
       </div>
       <div className="mt-2 grid grid-cols-3 rounded-full bg-slate-100 p-0.5 text-xs font-semibold dark:bg-white/5">
         {PERIODS.map((p) => (
@@ -1458,7 +2230,10 @@ const Leaderboard = memo(function Leaderboard({
             <span className="w-6 text-center text-xs font-bold tabular-nums text-slate-500">
               {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
             </span>
-            <RobotFace size={22} skin={e.avatar} />
+            <span className="flex shrink-0 -space-x-1.5">
+              <RobotFace size={22} skin={e.avatar} />
+              {e.partnerAvatar && <RobotFace size={22} skin={e.partnerAvatar} />}
+            </span>
             <span className="min-w-0 flex-1 truncate font-medium text-slate-800 dark:text-slate-100">
               {e.name}
               {e.me && <span className="text-emerald-700 dark:text-emerald-300"> (toi)</span>}
@@ -1471,8 +2246,9 @@ const Leaderboard = memo(function Leaderboard({
         ))}
       </ol>
       <p className="mt-3 text-[10.5px] leading-relaxed text-slate-400">
-        Meilleur score de chaque joueur (heure de Paris). Chaque partie est enregistrée à ton nom
-        Digicom.
+        {boardMode === "duo"
+          ? "Meilleur score de chaque binôme (heure de Paris). En duo, deux fois plus de bugs : la partie est enregistrée aux deux noms Digicom."
+          : "Meilleur score de chaque joueur (heure de Paris). Chaque partie est enregistrée à ton nom Digicom."}
       </p>
     </aside>
   );

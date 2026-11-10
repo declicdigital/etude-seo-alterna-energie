@@ -7,7 +7,9 @@ import {
   formatDuration,
   liveRank,
   periodStarts,
+  pickDuoPair,
   plausibleScore,
+  type LobbyPeer,
   type ScoreRow,
 } from "./game-leaderboard";
 
@@ -52,29 +54,29 @@ describe("buildBoards", () => {
   const boards = buildBoards(rows, now, "a");
 
   it("un seul record par personne et par période", () => {
-    expect(boards.day.all.map((e) => [e.name, e.score])).toEqual([
+    expect(boards.solo.day.all.map((e) => [e.name, e.score])).toEqual([
       ["b", 200],
       ["a", 120],
     ]);
-    expect(boards.week.all.map((e) => [e.name, e.score])).toEqual([
+    expect(boards.solo.week.all.map((e) => [e.name, e.score])).toEqual([
       ["a", 300],
       ["b", 200],
     ]);
-    expect(boards.month.all.map((e) => e.name)).toEqual(["c", "a", "b"]);
+    expect(boards.solo.month.all.map((e) => e.name)).toEqual(["c", "a", "b"]);
   });
 
   it("filtre par carte et marque la personne connectée", () => {
-    expect(boards.week.nuit).toEqual([
+    expect(boards.solo.week.nuit).toEqual([
       expect.objectContaining({ name: "a", score: 300, map: "nuit", me: true }),
     ]);
-    expect(boards.day.solaire[0]).toMatchObject({ name: "b", me: false });
-    expect(boards.month.eolien).toEqual([]);
+    expect(boards.solo.day.solaire[0]).toMatchObject({ name: "b", me: false });
+    expect(boards.solo.month.eolien).toEqual([]);
   });
 
   it("place en direct", () => {
-    expect(liveRank(boards.day.all, 0)).toBe(2);
-    expect(liveRank(boards.day.all, 250)).toBe(1);
-    expect(liveRank(boards.month.all, 100)).toBe(2);
+    expect(liveRank(boards.solo.day.all, 0)).toBe(2);
+    expect(liveRank(boards.solo.day.all, 250)).toBe(1);
+    expect(liveRank(boards.solo.month.all, 100)).toBe(2);
   });
 });
 
@@ -112,5 +114,63 @@ describe("temps de jeu", () => {
     expect(formatDuration(60)).toBe("1 minute");
     expect(formatDuration(61)).toBe("1 minute et 1 seconde");
     expect(formatDuration(192)).toBe("3 minutes et 12 secondes");
+  });
+});
+
+describe("mode duo", () => {
+  const now = new Date("2026-11-11T12:00:00Z");
+  it("classement par binôme, séparé du solo", () => {
+    const rows: ScoreRow[] = [
+      row({ user_id: "a", score: 100, created_at: "2026-11-11T08:00:00Z" }),
+      row({
+        user_id: "a",
+        partner_id: "b",
+        partner_name: "b",
+        partner_avatar: "volt",
+        mode: "duo",
+        score: 400,
+        created_at: "2026-11-11T09:00:00Z",
+      }),
+      row({
+        user_id: "b",
+        partner_id: "a",
+        partner_name: "a",
+        mode: "duo",
+        score: 600,
+        created_at: "2026-11-11T10:00:00Z",
+      }),
+      row({
+        user_id: "c",
+        partner_id: "d",
+        partner_name: "d",
+        mode: "duo",
+        score: 500,
+        created_at: "2026-11-11T10:30:00Z",
+      }),
+    ];
+    const boards = buildBoards(rows, now, "a");
+    expect(boards.solo.day.all.map((e) => e.score)).toEqual([100]);
+    expect(boards.duo.day.all.map((e) => [e.name, e.score, e.me])).toEqual([
+      ["b & a", 600, true],
+      ["c & d", 500, false],
+    ]);
+  });
+
+  it("apparie les deux personnes qui attendent depuis le plus longtemps", () => {
+    const p = (userId: string, since: number, status: LobbyPeer["status"] = "waiting") =>
+      ({ userId, name: userId, avatar: "digi", map: "bureau", status, since }) as LobbyPeer;
+    const peers = [p("zed", 30), p("bob", 10), p("amy", 20), p("idle", 1, "idle")];
+    const forBob = pickDuoPair(peers, "bob");
+    const forAmy = pickDuoPair(peers, "amy");
+    expect(forBob).toMatchObject({ host: true, partner: { userId: "amy" } });
+    expect(forAmy).toMatchObject({ host: false, partner: { userId: "bob" } });
+    expect(forBob?.room).toBe(forAmy?.room);
+    expect(pickDuoPair(peers, "zed")).toBeNull();
+    expect(pickDuoPair([p("bob", 10)], "bob")).toBeNull();
+  });
+
+  it("score plausible doublé en duo", () => {
+    expect(plausibleScore(40000, 60)).toBe(false);
+    expect(plausibleScore(40000, 60, "duo")).toBe(true);
   });
 });

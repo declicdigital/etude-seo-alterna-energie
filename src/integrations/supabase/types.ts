@@ -165,6 +165,10 @@ export type Database = {
           duration_s: number
           id: string
           map: string
+          mode: string
+          partner_avatar: string | null
+          partner_id: string | null
+          partner_name: string
           player_name: string
           score: number
           user_id: string
@@ -175,6 +179,10 @@ export type Database = {
           duration_s?: number
           id?: string
           map: string
+          mode?: string
+          partner_avatar?: string | null
+          partner_id?: string | null
+          partner_name?: string
           player_name?: string
           score: number
           user_id?: string
@@ -185,6 +193,10 @@ export type Database = {
           duration_s?: number
           id?: string
           map?: string
+          mode?: string
+          partner_avatar?: string | null
+          partner_id?: string | null
+          partner_name?: string
           player_name?: string
           score?: number
           user_id?: string
