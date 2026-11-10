@@ -64,6 +64,7 @@ export const EMBED_SHEETS: Record<string, string> = {
   "SUIVI STRATEGIE": "/suivi-editorial.html?space=strategie",
   "SUIVI PLANETE": "/suivi-editorial.html?space=planete",
   BENCHMARK: "/benchmark.html",
+  "PLANNING INTEGRE": "/planning-integre.html",
 };
 
 /** FAQ space: request tracker + Particulier/Professionnel lists, rendered by FaqView. */
@@ -414,6 +415,7 @@ export const SHEET_META: Record<
     group: "Calendriers newsletters",
   },
   ORGANISATION: { headerRow: 0, firstDataRow: 0, label: "Tableau", group: "Organisation" },
+  "PLANNING INTEGRE": { headerRow: 0, firstDataRow: 0, label: "Planning", group: "Planning intégré" },
   "Articles cocon éléctricité": {
     headerRow: 0,
     firstDataRow: 1,

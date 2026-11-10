@@ -13,7 +13,13 @@ describe("rubriques visibles (accueil et guide)", () => {
       "benchmark",
       "newsletters",
       "organisation",
+      "planning",
     ]);
+  });
+
+  it("le Planning intégré reste fermé tant qu'il n'est pas ouvert au compte", () => {
+    expect(keys(["Blog", "Blog/Particulier"])).not.toContain("planning");
+    expect(keys(["Planning intégré"])).toContain("planning");
   });
 
   it("ne montre que les rubriques ouvertes, Parlons Planète et Organisation restant fermées par défaut", () => {

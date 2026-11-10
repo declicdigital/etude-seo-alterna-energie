@@ -9,7 +9,7 @@ import { metaGet, type MetaMap } from "@/lib/use-meta";
 import { sheetPath, resolvePath } from "@/lib/slugs";
 import { grantedSections, sheetAllowed } from "@/lib/sections";
 
-const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "Parlons Planète", "FAQ", "Benchmark", "Calendriers newsletters", "Organisation", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
+const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "Parlons Planète", "FAQ", "Benchmark", "Calendriers newsletters", "Organisation", "Planning intégré", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
 const REMOVED_GROUPS = new Set(["Arborescence", "Suivi", "Docs", "Archives", "Autres"]);
 const ORDER_KEY = "sidebar.groupOrder.v1";
 const PROMOTED_KEY = "sidebar.orderPromoted.v1";
@@ -130,6 +130,12 @@ const GROUP_STYLES: Record<string, {
     active: "bg-amber-500/15 text-amber-900 dark:text-amber-100 font-semibold ring-1 ring-inset ring-amber-500/30",
     hover: "hover:bg-amber-500/10 hover:text-amber-800 dark:hover:text-amber-200",
     bar: "bg-amber-500",
+  },
+  "Planning intégré": {
+    header: "bg-cyan-800 text-white",
+    active: "bg-cyan-700/15 text-cyan-900 dark:text-cyan-100 font-semibold ring-1 ring-inset ring-cyan-700/30",
+    hover: "hover:bg-cyan-700/10 hover:text-cyan-800 dark:hover:text-cyan-200",
+    bar: "bg-cyan-700",
   },
   Docs: {
     header: "bg-rose-500 text-white",

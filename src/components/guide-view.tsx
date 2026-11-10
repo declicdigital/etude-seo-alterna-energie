@@ -16,6 +16,7 @@ import {
   BarChart3,
   CalendarDays,
   KanbanSquare,
+  CalendarRange,
   type LucideIcon,
 } from "lucide-react";
 import logo from "@/assets/alterna-logo.png.asset.json";
@@ -501,6 +502,49 @@ const ORGANISATION_FLOWS: Flow[] = [
   },
 ];
 
+const PLANNING_FLOWS: Flow[] = [
+  {
+    title: "Planning intégré",
+    intro: "Le planning commercial partagé · visible seulement avec l'accès Planning intégré",
+    steps: [
+      {
+        title: "Vues",
+        who: "Tout le monde",
+        color: C.prep,
+        items: ["Timeline ou Par canal", "Année, trimestre ou mois", "Vue compacte ou détaillée"],
+      },
+      {
+        title: "Lire le planning",
+        who: "Tout le monde",
+        color: C.review,
+        items: [
+          "Cartes stratégiques : acquisition, fidélisation, réglementaire",
+          "Actions par canal, avec images",
+          "Jalons et périodes (saisonnalité)",
+        ],
+      },
+      {
+        title: "Trier et exporter",
+        who: "Tout le monde",
+        color: C.integ,
+        items: ["Filtres et options d'affichage", "Mode clair ou sombre", "Export PDF"],
+      },
+      {
+        title: "Modifier",
+        who: "Personnes en mode modification",
+        color: C.remind,
+        items: [
+          "Ajouter ou modifier campagnes, actions, jalons, périodes",
+          "🛠 Configuration : canaux, types, couleurs, pictogrammes",
+          "+ Année et 🕓 Historique des modifications",
+        ],
+      },
+    ],
+    endTitle: "Partagé",
+    end: ["Enregistré automatiquement", "Mis à jour en direct pour tout le monde"],
+  },
+];
+
 type Rubrique = { title: string; icon: LucideIcon; text: string; flows: Flow[] };
 
 const RUBRIQUES: Record<RubriqueKey, Rubrique> = {
@@ -545,6 +589,12 @@ const RUBRIQUES: Record<RubriqueKey, Rubrique> = {
     icon: KanbanSquare,
     text: "Les tâches de l'équipe en fiches : notes, responsables, échéances, fichiers.",
     flows: ORGANISATION_FLOWS,
+  },
+  planning: {
+    title: "Planning intégré",
+    icon: CalendarRange,
+    text: "Le planning commercial d'Alterna Énergie : campagnes, actions par canal, jalons et périodes.",
+    flows: PLANNING_FLOWS,
   },
 };
 

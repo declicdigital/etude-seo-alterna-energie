@@ -9,7 +9,7 @@ export const SHEET_PATHS: Record<string, string> = {
   'SUIVI PLANETE': 'parlons-planete/suivi-editorial',
   'PLANETE - ARTICLES': 'parlons-planete/blog',
   'SUIVI FAQ': 'faq/demandes', 'FAQ - DEMANDES': 'faq/questions',
-  BENCHMARK: 'benchmark', ORGANISATION: 'organisation',
+  BENCHMARK: 'benchmark', ORGANISATION: 'organisation', 'PLANNING INTEGRE': 'planning-integre',
   'NEWSLETTER GRANDS COMPTES': 'calendriers-newsletters/grands-comptes',
   'NEWSLETTER INTERNE': 'calendriers-newsletters/interne',
   'NEWSLETTER B2C': 'calendriers-newsletters/b2c',

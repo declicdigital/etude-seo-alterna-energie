@@ -122,7 +122,8 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
     sheetInfo?.group !== "FAQ" &&
     sheetInfo?.group !== "Benchmark" &&
     sheetInfo?.group !== "Calendriers newsletters" &&
-    sheetInfo?.group !== "Organisation";
+    sheetInfo?.group !== "Organisation" &&
+    sheetInfo?.group !== "Planning intégré";
   const embedSrc = isGuide ? null : embedSrcOf(sheet);
   const editorialFrame = useRef<HTMLIFrameElement>(null);
   const sendReminder = useServerFn(sendStepReminder);

@@ -214,6 +214,23 @@ export const ASSISTANT_ZONES: AssistantZone[] = [
       "pièce jointe",
     ],
   },
+  {
+    id: "planning",
+    sheet: "PLANNING INTEGRE",
+    label: "Planning intégré",
+    path: "/planning-integre",
+    needs: "planning",
+    keywords: [
+      "planning",
+      "planning intégré",
+      "commercial",
+      "campagne",
+      "canal",
+      "timeline",
+      "jalon",
+      "période",
+    ],
+  },
 ];
 
 /** Zones que la personne peut ouvrir. */
@@ -853,6 +870,45 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     answer:
       "Une fiche contient : une note sans limite de texte (contexte, décisions, compte rendu ; les liens y deviennent cliquables), un responsable, des personnes taguées (uniquement celles qui ont accès à Organisation, elles reçoivent un mail), une échéance, et « Fichiers et liens » : ajoute un lien nommé ou joins un fichier (50 Mo max, glisser-déposer possible) à ouvrir ou télécharger. Supprimer une fiche efface aussi sa note et ses fichiers.",
   },
+  // ——— Planning intégré ———
+  {
+    zone: "planning",
+    title: "Planning intégré : consulter",
+    keywords: [
+      "planning",
+      "planning intégré",
+      "timeline",
+      "par canal",
+      "trimestre",
+      "campagne",
+      "action",
+      "jalon",
+      "période",
+      "filtre",
+      "pdf",
+      "kpi",
+    ],
+    answer:
+      "Planning intégré, c'est le planning commercial partagé d'Alterna Énergie. En haut : l'année, la vue « Timeline » ou « Par canal », l'échelle Année / Trimestre / Mois, et l'affichage Compacte ou Détaillée. On y voit les cartes stratégiques (Acquisition, Fidélisation, Réglementaire) avec leurs KPI, les actions par canal (avec leurs images), les jalons et les périodes (saisonnalité). « 🔍 Filtres » trie par campagne, type, canal, couleur ou KPI ; « ⚙ Affichage » choisit ce qui est montré et la densité ; 🌙 passe en mode sombre ; « 🖨 PDF » exporte le planning.",
+  },
+  {
+    zone: "planning",
+    title: "Planning intégré : modifier",
+    keywords: [
+      "modifier le planning",
+      "ajouter une campagne",
+      "ajouter une action",
+      "configuration",
+      "canaux",
+      "pictogramme",
+      "couleur",
+      "nouvelle année",
+      "historique",
+      "lecture seule",
+    ],
+    answer:
+      "Le planning s'enregistre tout seul et se met à jour en direct pour tout le monde. Seules les personnes en mode « ✎ Modification » (affiché en haut à droite) peuvent ajouter ou modifier campagnes, actions, jalons et périodes ; les autres sont en « 👁 Lecture seule ». En mode modification, « 🛠 Configuration » règle les canaux, types de KPI, types de campagne, couleurs, légende et pictogrammes, « + Année » crée une nouvelle année et « 🕓 Historique » montre le journal des modifications. Pour passer en mode modification, demande à Geoffrey.",
+  },
   // ——— Kit ———
   {
     zone: "kit",
@@ -1010,6 +1066,7 @@ const RUBRIQUE_WORDS: Record<string, RegExp> = {
   benchmark: /benchmark|concurren|fournisseur|tarif/i,
   newsletters: /newsletter|grands comptes|\bsme\b|\bb2c\b|\bbat\b/i,
   organisation: /organisation|\bfiches?\b|t[âa]ches?/i,
+  planning: /planning/i,
 };
 
 /** Corrections de Geoffrey utilisables pour cette personne (aucune qui touche une rubrique fermée). */

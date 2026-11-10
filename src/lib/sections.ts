@@ -14,17 +14,30 @@ export const SECTION_TREE: SectionGroup[] = [
   { group: "Blog", subs: ["Particulier", "Professionnel"], accent: "bg-sky-500" },
   { group: "FAQ", subs: ["Particulier", "Professionnel"], accent: "bg-teal-500" },
   { group: "Benchmark", subs: [], defaultOn: true, accent: "bg-emerald-600" },
-  { group: "Calendriers newsletters", subs: ["Grands Comptes", "Interne", "B2C", "SME"], defaultOn: true, accent: "bg-blue-600" },
+  {
+    group: "Calendriers newsletters",
+    subs: ["Grands Comptes", "Interne", "B2C", "SME"],
+    defaultOn: true,
+    accent: "bg-blue-600",
+  },
   // Closed by default: opened per account in « Demandes d'accès ».
   { group: "Parlons Planète", subs: ["Blog"], accent: "bg-lime-600" },
   // Closed by default: opened per account. Also enforced in the database (can_use_organisation).
   { group: "Organisation", subs: [], accent: "bg-amber-500" },
+  // Closed by default: opened per account. Also enforced in the database (can_view_planning).
+  { group: "Planning intégré", subs: [], accent: "bg-cyan-700" },
 ];
 
-export const ALL_SECTION_KEYS = SECTION_TREE.flatMap((t) => [t.group, ...t.subs.map((s) => `${t.group}/${s}`)]);
+export const ALL_SECTION_KEYS = SECTION_TREE.flatMap((t) => [
+  t.group,
+  ...t.subs.map((s) => `${t.group}/${s}`),
+]);
 
 const DEFAULT_ON_KEYS = new Set(
-  SECTION_TREE.filter((t) => t.defaultOn).flatMap((t) => [t.group, ...t.subs.map((s) => `${t.group}/${s}`)]),
+  SECTION_TREE.filter((t) => t.defaultOn).flatMap((t) => [
+    t.group,
+    ...t.subs.map((s) => `${t.group}/${s}`),
+  ]),
 );
 
 const DENIED = "!";
@@ -45,7 +58,9 @@ export function grantedSections(allowed: string[] | null | undefined): Set<strin
   if (!allowed) return new Set(ALL_SECTION_KEYS);
   const listed = new Set(allowed);
   return new Set(
-    ALL_SECTION_KEYS.filter((k) => listed.has(k) || (DEFAULT_ON_KEYS.has(k) && !listed.has(DENIED + k))),
+    ALL_SECTION_KEYS.filter(
+      (k) => listed.has(k) || (DEFAULT_ON_KEYS.has(k) && !listed.has(DENIED + k)),
+    ),
   );
 }
 

@@ -20,8 +20,7 @@ const MAP: Record<string, GroupColor> = {
     accent: "bg-emerald-500",
   },
   FAQ: {
-    header:
-      "bg-gradient-to-r from-teal-500/15 via-teal-500/5 to-transparent border-teal-500/30",
+    header: "bg-gradient-to-r from-teal-500/15 via-teal-500/5 to-transparent border-teal-500/30",
     chip: "text-teal-700 dark:text-teal-300",
     title: "text-teal-900 dark:text-teal-100",
     rowTint: "hover:bg-teal-500/10",
@@ -29,8 +28,7 @@ const MAP: Record<string, GroupColor> = {
     accent: "bg-teal-500",
   },
   Blog: {
-    header:
-      "bg-gradient-to-r from-sky-500/15 via-sky-500/5 to-transparent border-sky-500/30",
+    header: "bg-gradient-to-r from-sky-500/15 via-sky-500/5 to-transparent border-sky-500/30",
     chip: "text-sky-700 dark:text-sky-300",
     title: "text-sky-900 dark:text-sky-100",
     rowTint: "hover:bg-sky-500/10",
@@ -38,8 +36,7 @@ const MAP: Record<string, GroupColor> = {
     accent: "bg-sky-500",
   },
   Suivi: {
-    header:
-      "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/30",
+    header: "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/30",
     chip: "text-amber-700 dark:text-amber-300",
     title: "text-amber-900 dark:text-amber-100",
     rowTint: "hover:bg-amber-500/10",
@@ -56,8 +53,7 @@ const MAP: Record<string, GroupColor> = {
     accent: "bg-violet-500",
   },
   Docs: {
-    header:
-      "bg-gradient-to-r from-rose-500/15 via-rose-500/5 to-transparent border-rose-500/30",
+    header: "bg-gradient-to-r from-rose-500/15 via-rose-500/5 to-transparent border-rose-500/30",
     chip: "text-rose-700 dark:text-rose-300",
     title: "text-rose-900 dark:text-rose-100",
     rowTint: "hover:bg-rose-500/10",
@@ -65,8 +61,7 @@ const MAP: Record<string, GroupColor> = {
     accent: "bg-rose-500",
   },
   "Calendriers newsletters": {
-    header:
-      "bg-gradient-to-r from-blue-600/15 via-blue-600/5 to-transparent border-blue-600/30",
+    header: "bg-gradient-to-r from-blue-600/15 via-blue-600/5 to-transparent border-blue-600/30",
     chip: "text-blue-700 dark:text-blue-300",
     title: "text-blue-900 dark:text-blue-100",
     rowTint: "hover:bg-blue-600/10",
@@ -74,8 +69,7 @@ const MAP: Record<string, GroupColor> = {
     accent: "bg-blue-600",
   },
   "Parlons Planète": {
-    header:
-      "bg-gradient-to-r from-lime-600/15 via-lime-600/5 to-transparent border-lime-600/30",
+    header: "bg-gradient-to-r from-lime-600/15 via-lime-600/5 to-transparent border-lime-600/30",
     chip: "text-lime-700 dark:text-lime-300",
     title: "text-lime-950 dark:text-lime-100",
     rowTint: "hover:bg-lime-600/10",
@@ -83,17 +77,23 @@ const MAP: Record<string, GroupColor> = {
     accent: "bg-lime-600",
   },
   Organisation: {
-    header:
-      "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/30",
+    header: "bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/30",
     chip: "text-amber-700 dark:text-amber-300",
     title: "text-amber-950 dark:text-amber-100",
     rowTint: "hover:bg-amber-500/10",
     activeRow: "bg-amber-500/15 hover:bg-amber-500/20",
     accent: "bg-amber-500",
   },
+  "Planning intégré": {
+    header: "bg-gradient-to-r from-cyan-700/15 via-cyan-700/5 to-transparent border-cyan-700/30",
+    chip: "text-cyan-800 dark:text-cyan-300",
+    title: "text-cyan-950 dark:text-cyan-100",
+    rowTint: "hover:bg-cyan-700/10",
+    activeRow: "bg-cyan-700/15 hover:bg-cyan-700/20",
+    accent: "bg-cyan-700",
+  },
   Autres: {
-    header:
-      "bg-gradient-to-r from-slate-500/15 via-slate-500/5 to-transparent border-slate-500/30",
+    header: "bg-gradient-to-r from-slate-500/15 via-slate-500/5 to-transparent border-slate-500/30",
     chip: "text-slate-700 dark:text-slate-300",
     title: "text-slate-900 dark:text-slate-100",
     rowTint: "hover:bg-slate-500/10",
