@@ -259,7 +259,7 @@ export function DigicomAssistant({
   return (
     <>
       <style>{ROBOT_CSS}</style>
-      {game && <DigipoteGame onClose={() => setGame(false)} />}
+      {game && <DigipoteGame name={name ?? undefined} onClose={() => setGame(false)} />}
 
       {open && (
         <section

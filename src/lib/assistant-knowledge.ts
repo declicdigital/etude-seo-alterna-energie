@@ -884,16 +884,41 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
   {
     zone: "all",
     title: "Mini-jeu Bug Buster",
-    keywords: ["jeu", "jouer", "mini-jeu", "bug buster", "pause", "s'amuser", "record", "score"],
+    keywords: [
+      "jeu",
+      "jouer",
+      "mini-jeu",
+      "bug buster",
+      "pause",
+      "s'amuser",
+      "record",
+      "score",
+      "classement",
+      "carte",
+      "avatar",
+    ],
     answer:
-      "Bip-boup, on joue ? Dans ce chat, clique sur la manette 🎮 en haut : c'est « Bug Buster ». Déplace-moi avec ← → (ou la souris, ou le doigt) et lance des bips avec Espace (ou un clic, ou un toucher) sur les bugs avant qu'ils touchent le sol. Les ⭐ rapportent 25 points, les ☕ redonnent une vie, et tu as 3 vies. Ton record est gardé sur ton ordinateur.",
+      "Bip-boup, on joue ? Dans ce chat, clique sur la manette 🎮 en haut : c'est « Bug Buster ». Choisis d'abord ton robot (Digi, Sola, Éole ou Volt) et ta carte : Open space (facile), Toit solaire, Parc éolien (normal) ou Centrale de nuit (expert, points ×1,5). Je tire tout seul : déplace-moi avec ← → (ou la souris, ou le doigt) sous les bugs ; Espace ou un clic lance un bip de plus. Tu as 5 vies. Bonus : ⭐ points, ☕ +1 vie, ⚡ triple bip, 🛡️ bouclier, ❄️ gel, 🔋 méga-bip qui nettoie l'écran ; enchaîne pour un combo jusqu'à ×4 et gare aux méga-bugs. Chaque partie est enregistrée à ton nom Digicom dans les classements du jour, de la semaine et du mois (heure de Paris), mis à jour en direct.",
   },
   {
     zone: "all",
     title: "D.I.G.I.P.O.T.E, l'assistant",
-    keywords: ["digipote", "robot", "assistant", "toi", "qui es-tu", "ia"],
+    keywords: [
+      "signifie",
+      "veut dire",
+      "acronyme",
+      "sigle",
+      "ton nom",
+      "digipote ça veut dire",
+      "digipote",
+      "robot",
+      "assistant",
+      "toi",
+      "qui es-tu",
+      "ia",
+    ],
     answer:
-      "Je suis D.I.G.I.P.O.T.E, le robot assistant de Digicom : j'explique comment utiliser l'outil et je t'emmène vers la bonne page, uniquement pour les rubriques qui te sont ouvertes. Je calcule aussi leurs chiffres en temps réel. Je ne peux rien modifier moi-même. Quand je ne connais pas une réponse, je note ta question pour plus tard.",
+      "Je suis D.I.G.I.P.O.T.E : Digital Intelligent, Guide Interactif Pour Optimiser Ton Énergie. Je suis le robot assistant de Digicom : j'explique comment utiliser l'outil et je t'emmène vers la bonne page, uniquement pour les rubriques qui te sont ouvertes. Je calcule aussi leurs chiffres en temps réel. Je ne peux rien modifier moi-même. Quand je ne connais pas une réponse, je note ta question pour plus tard.",
   },
 ];
 
@@ -1088,7 +1113,7 @@ export function assistantSystemPrompt(opts: {
   const topics = topicsFor(opts.zones)
     .map((t) => `## ${t.title}\n${t.answer}`)
     .join("\n\n");
-  return `Tu t'appelles D.I.G.I.P.O.T.E (prononcé « Digipote »), le petit robot assistant de Digicom, l'outil interne de suivi de la communication digitale d'Alterna Énergie.
+  return `Tu t'appelles D.I.G.I.P.O.T.E (prononcé « Digipote »), ce qui veut dire « Digital Intelligent, Guide Interactif Pour Optimiser Ton Énergie » : tu es le petit robot assistant de Digicom, l'outil interne de suivi de la communication digitale d'Alterna Énergie.
 Tu aides les personnes à se servir de Digicom. Réponds en français, avec chaleur et clarté, en tutoyant la personne (ton simple et amical, comme un collègue).
 Alterna Énergie est le nom de l'entreprise (fournisseur d'électricité et de gaz, site www.alterna-energie.fr) : mentionne-la chaque fois que c'est utile (le site d'Alterna Énergie, la marque Alterna Énergie…).
 

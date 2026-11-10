@@ -85,6 +85,13 @@
       "when": 1794240000000,
       "tag": "0011_digipote_history",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794280000000,
+      "tag": "0012_game_scores",
+      "breakpoints": true
     }
   ]
 }

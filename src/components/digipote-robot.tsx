@@ -1,5 +1,61 @@
 import { useId, type Ref } from "react";
 import { cn } from "@/lib/utils";
+import type { GameAvatarId } from "@/lib/game-leaderboard";
+
+/** Les 4 looks de D.I.G.I.P.O.T.E (choisis au début du mini-jeu). */
+export type RobotSkin = GameAvatarId;
+type SkinDef = {
+  name: string;
+  tagline: string;
+  iris: [string, string, string];
+  led: [string, string];
+  glow: string;
+  jet: [string, string, string];
+  tie: [string, string, string];
+  accessory: "none" | "solar" | "propeller" | "headphones";
+};
+export const ROBOT_SKINS: Record<RobotSkin, SkinDef> = {
+  digi: {
+    name: "Digi",
+    tagline: "L'original, cravate à carreaux",
+    iris: ["#22d3ee", "#a78bfa", "#34d399"],
+    led: ["#a5f3fc", "#22d3ee"],
+    glow: "#67e8f9",
+    jet: ["#cffafe", "#22d3ee", "#0ea5e9"],
+    tie: ["#f97316", "rgba(124,45,18,.42)", "#c2410c"],
+    accessory: "none",
+  },
+  sola: {
+    name: "Sola",
+    tagline: "Panneau solaire sur la tête",
+    iris: ["#fbbf24", "#fb923c", "#f43f5e"],
+    led: ["#fde68a", "#f59e0b"],
+    glow: "#fcd34d",
+    jet: ["#fef3c7", "#f59e0b", "#ea580c"],
+    tie: ["#2563eb", "rgba(30,58,138,.45)", "#1d4ed8"],
+    accessory: "solar",
+  },
+  eole: {
+    name: "Éole",
+    tagline: "Hélice d'éolienne turbo",
+    iris: ["#34d399", "#2dd4bf", "#38bdf8"],
+    led: ["#a7f3d0", "#10b981"],
+    glow: "#6ee7b7",
+    jet: ["#d1fae5", "#10b981", "#0d9488"],
+    tie: ["#16a34a", "rgba(20,83,45,.45)", "#15803d"],
+    accessory: "propeller",
+  },
+  volt: {
+    name: "Volt",
+    tagline: "Casque audio, énergie électrique",
+    iris: ["#a78bfa", "#e879f9", "#f472b6"],
+    led: ["#f5d0fe", "#d946ef"],
+    glow: "#f0abfc",
+    jet: ["#fae8ff", "#d946ef", "#7c3aed"],
+    tie: ["#7c3aed", "rgba(46,16,101,.45)", "#6d28d9"],
+    accessory: "headphones",
+  },
+};
 
 /**
  * D.I.G.I.P.O.T.E dessiné en SVG : tête et corps en verre liquide, visière noire à yeux LED,
@@ -10,11 +66,14 @@ export function RobotSvg({
   variant = "full",
   eyesRef,
   className,
+  skin = "digi",
 }: {
   variant?: "full" | "head";
   eyesRef?: Ref<SVGGElement>;
   className?: string;
+  skin?: RobotSkin;
 }) {
+  const k = ROBOT_SKINS[skin] ?? ROBOT_SKINS.digi;
   const id = useId().replace(/:/g, "");
   const u = (name: string) => `url(#${id}-${name})`;
   const head = variant === "head";
@@ -33,9 +92,9 @@ export function RobotSvg({
           <stop offset="1" stopColor="#c7d0e2" />
         </radialGradient>
         <linearGradient id={`${id}-iris`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#22d3ee" />
-          <stop offset="0.5" stopColor="#a78bfa" />
-          <stop offset="1" stopColor="#34d399" />
+          <stop offset="0" stopColor={k.iris[0]} />
+          <stop offset="0.5" stopColor={k.iris[1]} />
+          <stop offset="1" stopColor={k.iris[2]} />
         </linearGradient>
         {/* verre liquide : remplissage translucide teinté, liseré lumineux, lumière interne */}
         <radialGradient id={`${id}-glass`} cx="0.32" cy="0.22" r="1">
@@ -48,11 +107,11 @@ export function RobotSvg({
           <stop offset="0" stopColor="#ffffff" stopOpacity="1" />
           <stop offset="0.35" stopColor="#ffffff" stopOpacity="0.35" />
           <stop offset="0.65" stopColor="#c4b5fd" stopOpacity="0.35" />
-          <stop offset="1" stopColor="#67e8f9" stopOpacity="0.9" />
+          <stop offset="1" stopColor={k.glow} stopOpacity="0.9" />
         </linearGradient>
         <radialGradient id={`${id}-caustic`} cx="0.5" cy="1" r="0.7">
-          <stop offset="0" stopColor="#67e8f9" stopOpacity="0.45" />
-          <stop offset="1" stopColor="#67e8f9" stopOpacity="0" />
+          <stop offset="0" stopColor={k.glow} stopOpacity="0.45" />
+          <stop offset="1" stopColor={k.glow} stopOpacity="0" />
         </radialGradient>
         <linearGradient
           id={`${id}-sweep`}
@@ -114,8 +173,8 @@ export function RobotSvg({
         </radialGradient>
         <radialGradient id={`${id}-led`} cx="0.4" cy="0.3" r="0.8">
           <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.4" stopColor="#a5f3fc" />
-          <stop offset="1" stopColor="#22d3ee" />
+          <stop offset="0.4" stopColor={k.led[0]} />
+          <stop offset="1" stopColor={k.led[1]} />
         </radialGradient>
         <pattern id={`${id}-scan`} width="2" height="2" patternUnits="userSpaceOnUse">
           <rect width="2" height="1" fill="rgba(0,0,0,.28)" />
@@ -129,14 +188,14 @@ export function RobotSvg({
           </feMerge>
         </filter>
         <radialGradient id={`${id}-jet`} cx="0.5" cy="0.2" r="0.8">
-          <stop offset="0" stopColor="#cffafe" stopOpacity="0.95" />
-          <stop offset="0.4" stopColor="#22d3ee" stopOpacity="0.55" />
-          <stop offset="1" stopColor="#0ea5e9" stopOpacity="0" />
+          <stop offset="0" stopColor={k.jet[0]} stopOpacity="0.95" />
+          <stop offset="0.4" stopColor={k.jet[1]} stopOpacity="0.55" />
+          <stop offset="1" stopColor={k.jet[2]} stopOpacity="0" />
         </radialGradient>
         <pattern id={`${id}-plaid`} width="5" height="5" patternUnits="userSpaceOnUse">
-          <rect width="5" height="5" fill="#f97316" />
-          <rect width="5" height="1.6" fill="rgba(124,45,18,.42)" />
-          <rect width="1.6" height="5" fill="rgba(124,45,18,.42)" />
+          <rect width="5" height="5" fill={k.tie[0]} />
+          <rect width="5" height="1.6" fill={k.tie[1]} />
+          <rect width="1.6" height="5" fill={k.tie[1]} />
           <rect y="3.2" width="5" height=".6" fill="rgba(255,255,255,.4)" />
           <rect x="3.2" width=".6" height="5" fill="rgba(255,255,255,.4)" />
         </pattern>
@@ -167,7 +226,7 @@ export function RobotSvg({
             cy="81.5"
             rx="11"
             ry="2.4"
-            fill="#67e8f9"
+            fill={k.glow}
             opacity=".7"
             filter={u("glow")}
           />
@@ -197,7 +256,7 @@ export function RobotSvg({
             cy="131"
             rx="5.5"
             ry="1.1"
-            fill="#a5f3fc"
+            fill={k.led[0]}
             filter={u("glow")}
           />
           {/* anneau orbital (moitié avant) */}
@@ -213,13 +272,13 @@ export function RobotSvg({
             <path
               d="M56.6 85.5h6.8l-1 5h-4.8z"
               fill={u("plaid")}
-              stroke="#c2410c"
+              stroke={k.tie[2]}
               strokeWidth=".45"
             />
             <path
               d="M57.5 90.5h5l3.2 13-5.7 6-5.7-6z"
               fill={u("plaid")}
-              stroke="#c2410c"
+              stroke={k.tie[2]}
               strokeWidth=".45"
             />
             <path d="M57.5 90.5h5l3.2 13-5.7 6-5.7-6z" fill={u("tieShade")} />
@@ -274,18 +333,78 @@ export function RobotSvg({
         </>
       )}
 
+      {k.accessory === "headphones" && (
+        <g>
+          <path
+            d="M17 44C15 14 105 14 103 44"
+            fill="none"
+            stroke={u("metal")}
+            strokeWidth="4.2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M19.5 40C19 18 101 18 100.5 40"
+            fill="none"
+            stroke={u("iris")}
+            strokeWidth="1"
+            opacity=".8"
+          />
+        </g>
+      )}
+      {k.accessory === "solar" && (
+        <g>
+          <rect x="58.6" y="10" width="2.8" height="11" rx="1.2" fill={u("metal")} />
+          <path d="M40 3.5h40l-5 9H45z" fill="#1e3a8a" stroke={u("metal")} strokeWidth="1.1" />
+          <path
+            d="M50 3.5l-2 9M60 3.5v9M70 3.5l2 9M42.4 8h35.2"
+            stroke="#93c5fd"
+            strokeWidth=".55"
+            opacity=".9"
+          />
+          <path d="M44 4.4h12l-1 2.4H43z" fill="#ffffff" opacity=".35" />
+        </g>
+      )}
+      {k.accessory === "propeller" && (
+        <g>
+          <rect x="58.6" y="9" width="2.8" height="12" rx="1.2" fill={u("metal")} />
+          <g className="dg-prop">
+            {[0, 120, 240].map((a) => (
+              <path
+                key={a}
+                d="M60 8.5c-2-1.5-3-7 0-9.5 3 2.5 2 8 0 9.5z"
+                fill="#f8fafc"
+                stroke={u("iris")}
+                strokeWidth=".6"
+                transform={`rotate(${a} 60 8.5)`}
+              />
+            ))}
+          </g>
+          <circle cx="60" cy="8.5" r="2.3" fill={u("joint")} />
+        </g>
+      )}
       {/* orbe lumineux et halo au-dessus de la tête */}
-      <ellipse
-        cx="60"
-        cy="13.5"
-        rx="7"
-        ry="1.7"
-        fill="none"
-        stroke={u("iris")}
-        strokeWidth=".9"
-        opacity=".8"
-      />
-      <circle className="dg-antenna" cx="60" cy="8.5" r="3.2" fill={u("led")} filter={u("glow")} />
+      {(k.accessory === "none" || k.accessory === "headphones") && (
+        <>
+          <ellipse
+            cx="60"
+            cy="13.5"
+            rx="7"
+            ry="1.7"
+            fill="none"
+            stroke={u("iris")}
+            strokeWidth=".9"
+            opacity=".8"
+          />
+          <circle
+            className="dg-antenna"
+            cx="60"
+            cy="8.5"
+            r="3.2"
+            fill={u("led")}
+            filter={u("glow")}
+          />
+        </>
+      )}
 
       {/* tête : coque nacrée sans couture, bandes LED latérales */}
       <rect x="15.2" y="38" width="3" height="20" rx="1.5" fill={u("iris")} filter={u("glow")} />
@@ -310,6 +429,30 @@ export function RobotSvg({
         strokeLinecap="round"
         fill="none"
       />
+      {k.accessory === "headphones" && (
+        <g>
+          <rect x="9" y="34" width="12" height="26" rx="6" fill={u("joint")} />
+          <rect x="99" y="34" width="12" height="26" rx="6" fill={u("joint")} />
+          <rect
+            x="11.5"
+            y="39"
+            width="3"
+            height="16"
+            rx="1.5"
+            fill={u("iris")}
+            filter={u("glow")}
+          />
+          <rect
+            x="105.5"
+            y="39"
+            width="3"
+            height="16"
+            rx="1.5"
+            fill={u("iris")}
+            filter={u("glow")}
+          />
+        </g>
+      )}
       {/* visière en verre noir, liseré irisé */}
       <rect
         x="24.5"
@@ -346,14 +489,14 @@ export function RobotSvg({
         <g className="dg-eyes-happy" filter={u("glow")}>
           <path
             d="M39 50q6.5-7 13 0"
-            stroke="#a5f3fc"
+            stroke={k.led[0]}
             strokeWidth="3"
             fill="none"
             strokeLinecap="round"
           />
           <path
             d="M68 50q6.5-7 13 0"
-            stroke="#a5f3fc"
+            stroke={k.led[0]}
             strokeWidth="3"
             fill="none"
             strokeLinecap="round"
@@ -362,7 +505,7 @@ export function RobotSvg({
         <path
           className="dg-smile"
           d="M55 59.5q5 3 10 0"
-          stroke="#a5f3fc"
+          stroke={k.led[0]}
           strokeWidth="1.8"
           fill="none"
           strokeLinecap="round"
@@ -389,14 +532,22 @@ export function RobotSvg({
 }
 
 /** Avatar du chat : la tête seule (size en px). */
-export function RobotFace({ size, className }: { size: number; className?: string }) {
+export function RobotFace({
+  size,
+  className,
+  skin,
+}: {
+  size: number;
+  className?: string;
+  skin?: RobotSkin;
+}) {
   return (
     <span
       aria-hidden
       className={cn("inline-block shrink-0", className)}
       style={{ width: size, height: size }}
     >
-      <RobotSvg variant="head" />
+      <RobotSvg variant="head" skin={skin} />
     </span>
   );
 }
@@ -438,6 +589,8 @@ export const ROBOT_CSS = `
   .dg-arm-l { animation: dg-handfloat 3.4s ease-in-out .4s infinite; }
   .dg-arm-r { transform-box: view-box; transform-origin: 95px 109px; animation: dg-wave 7s ease-in-out 1.2s infinite; }
   .dg-sweep { animation: dg-sweep 5s ease-in-out 1s infinite; }
+  .dg-prop { transform-box: view-box; transform-origin: 60px 8.5px; animation: dg-spin .9s linear infinite; }
+  @keyframes dg-spin { to { transform: rotate(360deg) } }
   .dg-bot:hover .dg-arm-r { animation-duration: 2.2s; animation-delay: 0s; }
 
   .dg-happy .dg-eyes-happy { opacity: 1; } .dg-happy .dg-eyes-open { opacity: 0; }
@@ -462,7 +615,7 @@ export const ROBOT_CSS = `
   .dg-bubble { transform-origin: 80% 100%; animation: dg-bubble .35s cubic-bezier(.2,.8,.2,1) .6s both; }
   .dg-dot { animation: dg-dot 1.1s infinite; }
   @media (prefers-reduced-motion: reduce) {
-    .dg-blink, .dg-hover, .dg-shadow, .dg-arm-l, .dg-arm-r, .dg-sweep, .dg-aura, .dg-jet, .dg-antenna, .dg-status, .dg-core-led, .dg-pop, .dg-bubble, .dg-dot { animation: none }
+    .dg-blink, .dg-hover, .dg-shadow, .dg-arm-l, .dg-arm-r, .dg-sweep, .dg-aura, .dg-jet, .dg-antenna, .dg-status, .dg-core-led, .dg-pop, .dg-bubble, .dg-dot, .dg-prop { animation: none }
     .dg-rig { transition: none }
   }
 `;

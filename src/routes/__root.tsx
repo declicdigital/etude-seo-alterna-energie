@@ -86,8 +86,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Digicom" },
       { name: "twitter:description", content: "L'outil de suivi de la communication digitale." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7763d674-43d9-4d76-bd37-1a592798f182/id-preview-0d9a5e50--8f872911-ca79-48ec-b491-06abc13b4c05.lovable.app-1784539706445.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7763d674-43d9-4d76-bd37-1a592798f182/id-preview-0d9a5e50--8f872911-ca79-48ec-b491-06abc13b4c05.lovable.app-1784539706445.png" },
+      { property: "og:image", content: `${APP_ORIGIN}/og-digicom.jpg` },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      {
+        property: "og:image:alt",
+        content: "Digicom | Alterna Énergie, avec D.I.G.I.P.O.T.E, l'assistant robot",
+      },
+      { name: "twitter:image", content: `${APP_ORIGIN}/og-digicom.jpg` },
     ],
     links: [
       {
