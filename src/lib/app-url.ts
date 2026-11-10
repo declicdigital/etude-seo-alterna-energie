@@ -1,9 +1,13 @@
 /** Public address of Digicom, used in mails, invitations and links. Change it here only. */
-export const APP_ORIGIN = "https://digicom-alterna-energie.lovable.app";
+export const APP_ORIGIN = "https://digicom.life";
 export const appUrl = (path = "") => `${APP_ORIGIN}/${path.replace(/^\/+/, "")}`;
 
 /** Former addresses of Digicom: every page there is sent, with its path, to the same page on APP_ORIGIN. */
-export const LEGACY_HOSTS = ["etude-seo-alterna-energie.lovable.app"];
+export const LEGACY_HOSTS = [
+  "www.digicom.life",
+  "digicom-alterna-energie.lovable.app",
+  "etude-seo-alterna-energie.lovable.app",
+];
 
 /** Redirect target for a request on a former address, or null. */
 export function legacyRedirect(url: string): string | null {

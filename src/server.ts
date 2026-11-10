@@ -50,8 +50,10 @@ export default {
     // Former address: send every page to the same page on the new address (the browser keeps the #anchor).
     const moved = legacyRedirect(request.url);
     if (moved) {
+      // 308 hors GET/HEAD : un envoi (POST…) garde sa méthode et son contenu.
+      const keepsMethod = request.method !== "GET" && request.method !== "HEAD";
       return new Response(null, {
-        status: 301,
+        status: keepsMethod ? 308 : 301,
         headers: { Location: moved, "Cache-Control": "public, max-age=3600" },
       });
     }

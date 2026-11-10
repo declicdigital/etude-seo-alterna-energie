@@ -38,18 +38,21 @@ describe("rubriques visibles (accueil et guide)", () => {
 });
 
 describe("ancienne adresse", () => {
-  it("renvoie chaque page vers la même page sur la nouvelle adresse", async () => {
+  it("renvoie chaque page vers la même page sur digicom.life", async () => {
     const { legacyRedirect } = await import("@/lib/app-url");
     expect(
       legacyRedirect(
         "https://etude-seo-alterna-energie.lovable.app/blog/suivi-editorial/articles/x--id?step=relecture",
       ),
-    ).toBe(
-      "https://digicom-alterna-energie.lovable.app/blog/suivi-editorial/articles/x--id?step=relecture",
+    ).toBe("https://digicom.life/blog/suivi-editorial/articles/x--id?step=relecture");
+    expect(legacyRedirect("https://digicom-alterna-energie.lovable.app/faq/demandes")).toBe(
+      "https://digicom.life/faq/demandes",
     );
-    expect(legacyRedirect("https://etude-seo-alterna-energie.lovable.app/")).toBe(
-      "https://digicom-alterna-energie.lovable.app/",
-    );
-    expect(legacyRedirect("https://digicom-alterna-energie.lovable.app/blog")).toBeNull();
+    expect(legacyRedirect("https://www.digicom.life/")).toBe("https://digicom.life/");
+    expect(legacyRedirect("https://digicom.life/blog")).toBeNull();
+    // les aperçus Lovable restent accessibles
+    expect(
+      legacyRedirect("https://id-preview--8f872911-ca79-48ec-b491-06abc13b4c05.lovable.app/"),
+    ).toBeNull();
   });
 });
