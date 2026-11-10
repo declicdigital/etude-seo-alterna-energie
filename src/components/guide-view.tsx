@@ -527,7 +527,12 @@ const PLANNING_FLOWS: Flow[] = [
         title: "Trier et exporter",
         who: "Tout le monde",
         color: C.integ,
-        items: ["Filtres et options d'affichage", "Mode clair ou sombre", "Export PDF"],
+        items: [
+          "Recherche par titre et bouton Aujourd'hui",
+          "Filtres et options d'affichage",
+          "Mode clair ou sombre",
+          "Export PDF A3 de toute l'année",
+        ],
       },
       {
         title: "Modifier",

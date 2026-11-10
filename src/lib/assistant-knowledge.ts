@@ -889,7 +889,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "kpi",
     ],
     answer:
-      "Planning intégré, c'est le planning commercial partagé d'Alterna Énergie. En haut : l'année, la vue « Timeline » ou « Par canal », l'échelle Année / Trimestre / Mois, et l'affichage Compacte ou Détaillée. On y voit les cartes stratégiques (Acquisition, Fidélisation, Réglementaire) avec leurs KPI, les actions par canal (avec leurs images), les jalons et les périodes (saisonnalité). « 🔍 Filtres » trie par campagne, type, canal, couleur ou KPI ; « ⚙ Affichage » choisit ce qui est montré et la densité ; 🌙 passe en mode sombre ; « 🖨 PDF » exporte le planning.",
+      "Planning intégré, c'est le planning commercial partagé d'Alterna Énergie. En haut : l'année, la vue « Timeline » ou « Par canal », l'échelle Année / Trimestre / Mois, et l'affichage Compacte ou Détaillée. On y voit les cartes stratégiques (Acquisition, Fidélisation, Réglementaire) avec leurs KPI, les actions par canal (avec leurs images), les jalons et les périodes (saisonnalité). La case « Rechercher… » en haut n'affiche que les campagnes et actions dont le titre contient le mot tapé (Échap pour effacer) ; « ◎ Aujourd'hui » montre la date du jour (repère rouge) et, en vue Trimestre ou Mois, ouvre la période en cours. « 🔍 Filtres » trie par campagne, type, canal, couleur ou KPI ; « ⚙ Affichage » choisit ce qui est montré et la densité ; 🌙 passe en mode sombre (rien que pour toi) ; « 🖨 PDF » exporte toute l'année en A3 paysage, sur plusieurs pages si besoin.",
   },
   {
     zone: "planning",

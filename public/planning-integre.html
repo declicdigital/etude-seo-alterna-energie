@@ -630,47 +630,256 @@ h1,h2,h3,.logo,.modal-title,.kpi-value { font-family: var(--font-head); }
 /* Show date only on hover */
 .canal-action-pill .cap-date { display: none; }
 .canal-action-pill:hover .cap-date { display: block; }
+
+/* ════════════════════════════════════════════════════════════════
+   DIGICOM — même univers que l'outil : surfaces blanches, gris ardoise,
+   coins arrondis, accent cyan de la rubrique « Planning intégré ».
+   ════════════════════════════════════════════════════════════════ */
+:root {
+  --bg: #f8fafc; --bg2: #f1f5f9; --bg3: #e2e8f0;
+  --surface: #ffffff; --surface2: #f8fafc;
+  --border: #e2e8f0; --border2: #cbd5e1;
+  --text: #0f172a; --text2: #334155; --text3: #64748b;
+  --accent: #0e7490; --accent2: #155e75; --accent-soft: rgba(14,116,144,.10);
+  --today: #e11d48;
+  --shadow: 0 1px 2px rgba(15,23,42,.06), 0 1px 3px rgba(15,23,42,.08);
+  --shadow-md: 0 12px 32px -12px rgba(15,23,42,.28), 0 2px 6px rgba(15,23,42,.06);
+  --radius: 14px; --radius-sm: 9px;
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-head: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --label-w: 200px;
+}
+[data-theme="dark"] {
+  --bg: #0b1220; --bg2: #111a2e; --bg3: #1e293b;
+  --surface: #0f172a; --surface2: #111a2e;
+  --border: #1e293b; --border2: #334155;
+  --text: #e2e8f0; --text2: #cbd5e1; --text3: #94a3b8;
+  --accent: #22d3ee; --accent2: #67e8f9; --accent-soft: rgba(34,211,238,.12);
+  --today: #fb7185;
+}
+body { font-size: 13px; -webkit-font-smoothing: antialiased; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; border: 3px solid var(--surface); }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* En-tête et barre d'outils */
+#topbar {
+  display: block; padding: 0; gap: 0;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  background-image: linear-gradient(90deg, rgba(14,116,144,.10), rgba(14,116,144,.03) 45%, transparent);
+}
+.tb-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 20px; }
+.tb-row-1 { padding-top: 16px; padding-bottom: 10px; }
+.tb-row-2 { padding-top: 0; padding-bottom: 12px; }
+#topbar .logo { display: flex; flex-direction: column; gap: 2px; color: var(--text); }
+.logo-chip { font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.logo-title { font-size: 20px; font-weight: 700; letter-spacing: -.02em; color: var(--text); white-space: nowrap; }
+#topbar .logo-title span { font-weight: 500; color: var(--text3); font-size: 14px; margin-left: 4px; letter-spacing: 0; }
+.tb-sep { display: none; }
+.tb-group { gap: 6px; }
+.btn {
+  height: 32px; padding: 0 12px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text2);
+  font-size: 12.5px; font-weight: 600; box-shadow: 0 1px 1px rgba(15,23,42,.04);
+}
+.btn:hover { background: var(--bg2); border-color: var(--border2); color: var(--text); }
+.btn.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 6px 14px -8px rgba(14,116,144,.9); }
+[data-theme="dark"] .btn.active { color: #0b1220; }
+.btn.danger { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+.btn.danger:hover { background: #ffe4e6; }
+.btn-icon { width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); }
+.btn-icon:hover { background: var(--bg2); }
+.btn-icon.active { background: var(--accent); color: #fff; }
+/* Groupes segmentés (Timeline / Par canal, Année / Trimestre / Mois…) */
+.tb-seg { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 3px; gap: 2px; }
+.tb-seg .btn { height: 28px; border: 0; background: transparent; box-shadow: none; border-radius: 9px; color: var(--text3); }
+.tb-seg .btn:hover { background: rgba(255,255,255,.6); color: var(--text); }
+.tb-seg .btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(15,23,42,.12), 0 1px 3px rgba(15,23,42,.06); }
+[data-theme="dark"] .tb-seg .btn.active { background: var(--bg3); color: var(--text); }
+#year-sel {
+  height: 32px; padding: 0 30px 0 12px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%2364748b' stroke-width='2.5' d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
+  -webkit-appearance: none; appearance: none;
+  color: var(--text); font-size: 14px; font-weight: 700;
+}
+#year-sel option { background: var(--surface); color: var(--text); }
+.tb-search {
+  display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text3);
+  width: 190px;
+}
+.tb-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.tb-search input { border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: 12.5px; width: 100%; }
+#cloud-status { font-size: 11px !important; opacity: 1 !important; margin: 1px 0 0 !important; font-weight: 500; }
+.mode-chip { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 9px; border-radius: 99px; font-size: 11.5px; font-weight: 600; }
+.mode-chip.edit { background: #ecfdf5; color: #047857; }
+.mode-chip.read { background: var(--bg2); color: var(--text3); }
+
+/* Barre des filtres */
+#filter-bar { padding: 10px 20px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+.filter-tag { background: var(--accent-soft); color: var(--accent); font-family: var(--font); font-weight: 600; padding: 4px 10px; }
+
+/* Planning : en-têtes de calendrier */
+#main { background: var(--bg); }
+#timeline-scroll-root, #canal-scroll-root { background: var(--surface); }
+.tl-label-col { width: var(--label-w); min-width: var(--label-w); border-right: 1px solid var(--border); }
+.tl-header-row, .canal-header-row { background: var(--surface); border-bottom: 1px solid var(--border); }
+.tl-header-row .tl-label-col, .canal-header-row .cv-label-col {
+  background: var(--surface); color: var(--text3); font-family: var(--font);
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  border-right: 1px solid var(--border);
+}
+.header-cell { border-right: 1px solid var(--border); font-family: var(--font); }
+.header-cell.q, .header-cell.in-range.q { background: var(--surface); color: var(--text3); font-size: 10.5px; font-weight: 700; letter-spacing: .08em; }
+.header-cell.m, .header-cell.in-range.m { background: var(--surface2); color: var(--text); font-size: 11.5px; font-weight: 700; text-transform: capitalize; }
+.header-cell.w { background: var(--surface); color: var(--text3); font-size: 9.5px; font-weight: 500; }
+.header-cell.d { background: var(--surface); color: var(--text3); }
+.header-cell.d.weekend { background: var(--bg2); }
+#tl-hrow-d { display: flex; }
+/* Les lignes d'en-tête prennent toute la largeur du calendrier : la colonne des libellés reste
+   visible quand on fait défiler un trimestre ou un mois. */
+.tl-header-row { width: max-content; min-width: 100%; } /* vue Mois : numéros des jours (la ligne était masquée et décalait les lignes) */
+.header-cell.today-col { background: var(--today); color: #fff; font-weight: 700; border-radius: 6px; }
+.canal-week-cell, .canal-day-cell { color: var(--text3); border-right: 1px solid var(--border); font-weight: 600; }
+.canal-header-row .cv-label-col { border-right: 1px solid var(--border); }
+
+/* Lignes */
+.tl-data-row, .cv-data-row { border-bottom: 1px solid var(--border); }
+.tl-data-row .tl-label-col, .cv-data-row .cv-label-col {
+  font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--text);
+  padding: 0 12px; gap: 8px; border-right: 1px solid var(--border);
+}
+.cv-data-row .cv-label-col { width: 150px; min-width: 150px; border-right: 1px solid var(--border); }
+.tl-data-row.season-row, .cv-data-row.cv-season-row { background: var(--surface2); box-shadow: 0 6px 12px -10px rgba(15,23,42,.35); }
+.tl-data-row.season-row .tl-label-col, .tl-data-row .tl-label-col.season, .cv-data-row.cv-season-row .cv-label-col { background: var(--surface2); }
+.row-bg-stripe, .cv-week-stripe { border-right: 1px solid var(--border); opacity: .7; }
+.row-bg-stripe.today { border-left: 2px solid var(--today) !important; opacity: 1; z-index: 4; }
+.milestone-dash-line { border-left-color: var(--border2); opacity: 1; }
+.row-add-btn { width: 24px; height: 24px; border: 1px dashed var(--border2); color: var(--text3); border-radius: 8px; }
+.row-add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.row-type-badge { font-family: var(--font); font-size: 9.5px; padding: 1px 7px; letter-spacing: .06em; }
+.badge-acq { background: #ecfeff; color: #0e7490; }
+.badge-fid { background: #f5f3ff; color: #6d28d9; }
+.badge-reg { background: #fffbeb; color: #b45309; }
+[data-theme="dark"] .badge-acq { background: rgba(34,211,238,.12); color: #67e8f9; }
+[data-theme="dark"] .badge-fid { background: rgba(167,139,250,.14); color: #c4b5fd; }
+[data-theme="dark"] .badge-reg { background: rgba(251,191,36,.14); color: #fcd34d; }
+
+/* Saisonnalité et jalons */
+.season-period { border-radius: 99px; font-family: var(--font); font-size: 10.5px; font-weight: 600; opacity: 1; box-shadow: 0 1px 2px rgba(15,23,42,.12); }
+.milestone-icon { border: 1.5px solid var(--border2); background: var(--surface); box-shadow: 0 2px 6px -2px rgba(15,23,42,.25); }
+
+/* Cartes de campagne : teinte claire de la couleur choisie, liseré de couleur */
+.campaign-card {
+  border: 1px solid var(--cc-border, var(--border)); border-left: 4px solid var(--cc, var(--accent));
+  border-radius: 12px; box-shadow: 0 1px 2px rgba(15,23,42,.06), 0 6px 16px -10px rgba(15,23,42,.3);
+}
+.campaign-card:hover { box-shadow: 0 2px 4px rgba(15,23,42,.08), 0 16px 32px -14px rgba(15,23,42,.45); transform: translateY(-1px); }
+.campaign-card-header { font-family: var(--font); text-shadow: none; }
+.campaign-card-kpi { border-top: 1px solid var(--cc-border, var(--border)); background: rgba(255,255,255,.55); }
+[data-theme="dark"] .campaign-card-kpi { background: rgba(15,23,42,.35); }
+.progress-bar { background: rgba(15,23,42,.10); }
+.progress-fill.green { background: #10b981; }
+.progress-fill.red { background: #f43f5e; }
+.campaign-star { color: #f59e0b; }
+.action-expand-row { background: rgba(255,255,255,.7) !important; border: 1px solid var(--cc-border, var(--border)); }
+[data-theme="dark"] .action-expand-row { background: rgba(15,23,42,.4) !important; }
+
+/* Actions (vue par canal) */
+.cv-action-pill, .canal-action-pill, .action-card { border-radius: 10px; border-color: var(--border); box-shadow: 0 1px 2px rgba(15,23,42,.06); }
+.cv-action-pill:hover, .canal-action-pill:hover { background: var(--surface2); box-shadow: 0 8px 18px -10px rgba(15,23,42,.35); }
+.cap-campaign, .cap-title { font-family: var(--font); }
+
+/* Fenêtres, panneaux, formulaires */
+.modal-overlay { background: rgba(15,23,42,.45); backdrop-filter: blur(4px); }
+.modal { border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 30px 80px -20px rgba(15,23,42,.45); }
+.modal-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 20px; }
+.modal-title { color: var(--text); font-family: var(--font); font-size: 16px; }
+.modal-header .btn-icon, #admin-panel .panel-header .btn-icon { border-color: transparent; }
+.modal-footer { background: var(--surface2); }
+.form-row label { font-family: var(--font); font-size: 11px; color: var(--text3); letter-spacing: .06em; }
+.form-row input, .form-row select, .form-row textarea { border: 1px solid var(--border2); border-radius: 10px; background: var(--surface); }
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.tab { font-family: var(--font); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.color-swatch:hover, .color-swatch.selected { border-color: var(--text); }
+#admin-panel { width: 400px; border-left: 1px solid var(--border); box-shadow: -20px 0 60px -30px rgba(15,23,42,.45); }
+#admin-panel .panel-header { background: var(--surface); color: var(--text); border-bottom: 1px solid var(--border); font-family: var(--font); font-size: 15px; padding: 16px; }
+.admin-section h3 { font-family: var(--font); color: var(--text3); letter-spacing: .08em; }
+.admin-list-item { border-radius: 10px; background: var(--surface2); }
+#display-panel { top: 118px; right: 16px; border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-md); width: 270px; padding: 16px; }
+.toggle.on { background: var(--accent); }
+.toggle-row { padding: 7px 0; }
+#toast { background: #0f172a; color: #fff; border: 0; font-family: var(--font); font-weight: 600; box-shadow: var(--shadow-md); }
+.tooltip { background: #0f172a; color: #fff; border: 0; border-radius: 8px; font-size: 11.5px; padding: 6px 9px; box-shadow: var(--shadow-md); }
+.kpi-card, .action-list-item { border-radius: 12px; background: var(--surface2); }
+.action-list-item:hover { border-color: var(--accent); background: var(--surface); }
+.chip { opacity: 1; }
+.clickable-img:hover { box-shadow: 0 0 0 2px var(--accent); }
+/* Pastille « aujourd'hui » au-dessus du calendrier */
+.today-flag {
+  position: absolute; top: 3px; transform: translateX(-50%); z-index: 5;
+  background: var(--today); color: #fff; border-radius: 99px; padding: 0 7px; height: 16px;
+  font-size: 9.5px; font-weight: 700; line-height: 16px; white-space: nowrap; pointer-events: none;
+  box-shadow: 0 4px 10px -4px rgba(225,29,72,.8);
+}
+.today-pulse { animation: today-pulse 1.2s ease-out 2; }
+@keyframes today-pulse { 0% { box-shadow: 0 0 0 0 rgba(225,29,72,.55); } 100% { box-shadow: 0 0 0 14px rgba(225,29,72,0); } }
+.search-empty { padding: 10px 20px; font-size: 12px; color: var(--text3); background: var(--surface2); border-bottom: 1px solid var(--border); }
+@media (max-width: 760px) {
+  .tb-row { padding-left: 12px; padding-right: 12px; }
+  .logo-title span { display: none; }
+  .tb-search { min-width: 0; flex: 1; }
+  :root { --label-w: 140px; }
+}
 </style>
 </head>
 <body>
 <div id="app">
   <!-- TOP BAR -->
   <div id="topbar">
-    <div class="logo">Planning <span>·</span> Commercial</div>
-    <div class="tb-sep"></div>
-    <div class="tb-group">
-      <select id="year-sel"></select>
-      <button class="btn" id="btn-new-year" title="Créer une nouvelle année" style="display:none">+ Année</button>
+    <div class="tb-row tb-row-1">
+      <div class="logo">
+        <div class="logo-chip">Planning intégré</div>
+        <div class="logo-title">Planning commercial <span>Alterna Énergie</span></div>
+      </div>
+      <div class="tb-spacer"></div>
+      <label class="tb-search" title="Rechercher une campagne ou une action">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2-4.35-4.35"/></svg>
+        <input id="tb-search" type="search" placeholder="Rechercher…" autocomplete="off">
+      </label>
+      <div class="tb-group">
+        <button class="btn" id="btn-filters">🔍 Filtres</button>
+        <button class="btn" id="btn-display">⚙ Affichage</button>
+        <button class="btn" id="btn-export-pdf">🖨 PDF</button>
+        <button class="btn" id="btn-history" style="display:none">🕓 Historique</button>
+        <button class="btn-icon" id="btn-theme" title="Mode clair/sombre">🌙</button>
+        <button class="btn" id="btn-admin" style="display:none">Admin</button>
+        <button class="btn danger" id="btn-quit-admin" style="display:none">✕ Quitter Admin</button>
+      </div>
     </div>
-    <div class="tb-sep"></div>
-    <div class="tb-group" id="view-tabs">
-      <button class="btn active" data-view="timeline">📅 Timeline</button>
-      <button class="btn" data-view="canal">🗂 Par Canal</button>
-    </div>
-    <div class="tb-sep"></div>
-    <div class="tb-group" id="scale-tabs">
-      <button class="btn active" data-scale="year">Année</button>
-      <button class="btn" data-scale="q">Trimestre</button>
-      <button class="btn" data-scale="month">Mois</button>
-    </div>
-    <!-- Sub-selector: shown when scale = q or month -->
-    <div class="tb-group" id="sub-selector" style="display:none"></div>
-    <div class="tb-sep"></div>
-    <div class="tb-group">
-      <button class="btn" id="btn-compact-view">Compacte</button>
-      <button class="btn" id="btn-detail-view">Détaillée</button>
-    </div>
-    <div class="tb-spacer"></div>
-    <div class="tb-group">
-      <button class="btn" id="btn-filters">🔍 Filtres</button>
-      <button class="btn" id="btn-display">⚙ Affichage</button>
-      
-      <button class="btn" id="btn-export-pdf">🖨 PDF</button>
-      <button class="btn" id="btn-history" style="display:none">🕓 Historique</button>
-      <div class="tb-sep"></div>
-      <button class="btn-icon" id="btn-theme" title="Mode clair/sombre">🌙</button>
-      <button class="btn" id="btn-admin" style="display:none">Admin</button>
-      <button class="btn danger" id="btn-quit-admin" style="display:none">✕ Quitter Admin</button>
+    <div class="tb-row tb-row-2">
+      <div class="tb-group">
+        <select id="year-sel" title="Année"></select>
+        <button class="btn" id="btn-new-year" title="Créer une nouvelle année" style="display:none">+ Année</button>
+      </div>
+      <div class="tb-group tb-seg" id="view-tabs">
+        <button class="btn active" data-view="timeline">📅 Timeline</button>
+        <button class="btn" data-view="canal">🗂 Par canal</button>
+      </div>
+      <div class="tb-group tb-seg" id="scale-tabs">
+        <button class="btn active" data-scale="year">Année</button>
+        <button class="btn" data-scale="q">Trimestre</button>
+        <button class="btn" data-scale="month">Mois</button>
+      </div>
+      <!-- Sub-selector: shown when scale = q or month -->
+      <div class="tb-group tb-seg" id="sub-selector" style="display:none"></div>
+      <button class="btn" id="btn-today" title="Aller à aujourd'hui">◎ Aujourd'hui</button>
+      <div class="tb-spacer"></div>
+      <div class="tb-group tb-seg" id="density-tabs">
+        <button class="btn" id="btn-compact-view">Compacte</button>
+        <button class="btn" id="btn-detail-view">Détaillée</button>
+      </div>
     </div>
   </div>
 
@@ -966,7 +1175,7 @@ function load() {
     const saved = JSON.parse(raw);
     STATE.currentYear = saved.currentYear || 2026;
     STATE.years = saved.years || {};
-    STATE.theme = saved.theme || 'light';
+    try { STATE.theme = localStorage.getItem('planning_theme') === 'dark' ? 'dark' : 'light'; } catch(e) { STATE.theme = 'light'; }
     STATE.density = saved.density || 'standard';
     STATE.displayOpts = { ...STATE.displayOpts, ...(saved.displayOpts || {}) };
     STATE.autoSaveEnabled = !!saved.autoSaveEnabled;
@@ -1125,6 +1334,10 @@ document.getElementById('btn-new-year').addEventListener('click', () => {
 // ═══════════════════════════════════════════════════════════════
 let GRID = null;
 
+function timelineLabelW() {
+  return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--label-w'), 10) || 200;
+}
+
 function buildGrid(year, scale) {
   // Always render the FULL year — headers always present when scrolling
   const rangeStart = new Date(year, 0, 1);
@@ -1200,7 +1413,11 @@ function buildGrid(year, scale) {
   const container = (tlRoot && tlRoot.clientWidth > 0) ? tlRoot
                    : (cvRoot && cvRoot.clientWidth > 0) ? cvRoot
                    : (tlRoot || cvRoot);
-  const viewW = Math.max(600, (container ? container.clientWidth - 150 : 0) || 800);
+  // Largeur utile = largeur visible moins la colonne des libellés (vue Année : tout tient à
+  // l'écran, sans défilement horizontal). Pendant un export PDF, largeur fixe.
+  const labelW = container === cvRoot ? 150 : timelineLabelW();
+  const avail = (window.__exportWidth || (container ? container.clientWidth : 0)) - labelW - 1;
+  const viewW = Math.max(600, avail || 800);
   const dayPx = scale === 'year' ? viewW / totalDays : viewW / focusDays;
 
   return {
@@ -1249,8 +1466,8 @@ function renderHeader(grid, root) {
   const today = new Date();
   const todayDay = Math.round((today - grid.start)/864e5);
   const DAY_NAMES = ['Di','Lu','Ma','Me','Je','Ve','Sa'];
-  const scaleLabel = grid.scale==='q' ? ` · ${grid.quarters.map(q=>q.label).join('/')}` :
-                     isMonth ? ` · ${grid.months[0]?.label||''}` : '';
+  const scaleLabel = grid.scale==='q' ? ` · T${STATE.selectedQuarter||1}` :
+                     isMonth ? ` · ${grid.months[STATE.selectedMonth||0]?.label||''}` : '';
   const labelTitle = STATE.currentYear + scaleLabel;
 
   // Q row (top: 0)
@@ -1259,7 +1476,9 @@ function renderHeader(grid, root) {
     const cls = 'header-cell q' + (grid.scale!=='year' ? (q.inRange ? ' in-range' : ' out-of-range') : '');
     const c = ce('div', cls); c.style.width=(days*grid.dayPx)+'px'; c.textContent=q.label; return c;
   });
-  root.appendChild(buildHeaderRow('tl-hrow-q', 0, labelTitle, qCells));
+  const qRow = buildHeaderRow('tl-hrow-q', 0, labelTitle, qCells);
+  addTodayFlag(qRow, grid);
+  root.appendChild(qRow);
 
   // M row (top: 22)
   const mCells = grid.months.map(m => {
@@ -1362,7 +1581,7 @@ function renderTimelineRows(grid, root) {
   // Helper: create a data row = label col + grid cell
   function makeDataRow(extraRowCls, labelContent, minH) {
     const row = ce('div','tl-data-row'+(extraRowCls?' '+extraRowCls:''));
-    row.style.minWidth = (180 + totalPx) + 'px';
+    row.style.minWidth = (timelineLabelW() + totalPx) + 'px';
     if(minH) row.style.minHeight = minH+'px';
 
     const lbl = ce('div','tl-label-col'+(extraRowCls&&extraRowCls.includes('season')?' season':''));
@@ -1483,6 +1702,7 @@ function renderStrategyRowNew(grid, root, type, totalPx, makeDataRow) {
   if(STATE.filters.kpiStatus==='unachieved') campaigns = campaigns.filter(c=>!campaignAtteinte(c));
   if(!STATE.displayOpts.showAchieved) campaigns = campaigns.filter(c=>!campaignAtteinte(c));
   if(!STATE.displayOpts.showUnachieved) campaigns = campaigns.filter(c=>campaignAtteinte(c));
+  campaigns = campaigns.filter(c => matchesSearch(c, d));
   
   const placed = []; // tracks right-edge x per level
   const levelHeights = []; // final height per level (computed first pass)
@@ -1545,7 +1765,7 @@ function renderStrategyRowNew(grid, root, type, totalPx, makeDataRow) {
         if(!byChannel[ch]) byChannel[ch]=[];
         byChannel[ch].push(a);
       });
-      expandedHtml += `<div style="border-top:1px solid rgba(0,0,0,0.15);background:rgba(0,0,0,0.1);padding:4px 6px;">`;
+      expandedHtml += `<div style="border-top:1px solid var(--cc-border);background:rgba(255,255,255,0.35);padding:4px 6px;">`;
       Object.entries(byChannel).forEach(([chName, acts]) => {
         expandedHtml += `<div style="font-size:9px;font-weight:700;text-transform:uppercase;opacity:0.6;margin:4px 0 2px;letter-spacing:.5px">${chName}</div>`;
         acts.forEach(a => {
@@ -1565,7 +1785,7 @@ function renderStrategyRowNew(grid, root, type, totalPx, makeDataRow) {
             (a.kpis||[]).forEach(k => {
               if(!k.type) return;
               const pct = k.objectif?Math.round(Number(k.realise||0)/Number(k.objectif)*100):null;
-              expandedHtml += `<div style="margin-bottom:2px"><div style="display:flex;justify-content:space-between"><span style="opacity:0.8">${k.type}</span><span style="font-weight:700;color:${pct>=100?'#bbf7d0':'#fca5a5'}">${k.realise||0}/${k.objectif||'–'}${pct!==null?` (${pct}%)`:''}</span></div>${pct!==null?`<div style="height:3px;background:rgba(0,0,0,0.2);border-radius:2px;margin-top:1px"><div style="height:100%;width:${Math.min(pct,100)}%;background:${pct>=100?'#4ade80':'#f87171'};border-radius:2px"></div></div>`:''}</div>`;
+              expandedHtml += `<div style="margin-bottom:2px"><div style="display:flex;justify-content:space-between"><span style="opacity:0.8">${k.type}</span><span style="font-weight:700;color:${pct>=100?'#047857':'#e11d48'}">${k.realise||0}/${k.objectif||'–'}${pct!==null?` (${pct}%)`:''}</span></div>${pct!==null?`<div style="height:3px;background:rgba(0,0,0,0.2);border-radius:2px;margin-top:1px"><div style="height:100%;width:${Math.min(pct,100)}%;background:${pct>=100?'#4ade80':'#f87171'};border-radius:2px"></div></div>`:''}</div>`;
             });
             expandedHtml += `</div>`;
           }
@@ -1577,14 +1797,15 @@ function renderStrategyRowNew(grid, root, type, totalPx, makeDataRow) {
 
     const el = ce('div','campaign-card');
     el.dataset.id = camp.id;
-    el.style.cssText = `left:${x1}px;width:${w}px;top:${topOffset}px;z-index:${3+level};background:${color};border-color:${hexToRgba(color,0.7)};color:#fff;min-height:48px`;
+    el.style.cssText = `left:${x1}px;width:${w}px;top:${topOffset}px;z-index:${3+level};--cc:${color};--cc-border:${hexToRgba(color,0.35)};background:linear-gradient(${hexToRgba(color,0.18)},${hexToRgba(color,0.10)}),var(--surface);color:var(--text);min-height:48px`;
+    el.title = `${camp.title||'Campagne'} · ${fmtDate(camp.startDate)}${camp.endDate&&camp.endDate!==camp.startDate?' → '+fmtDate(camp.endDate):''}${actions.length?` · ${actions.length} action${actions.length>1?'s':''}`:''}`;
 
     let html = `<div class="campaign-card-header" style="min-height:32px;padding:5px 8px;flex-direction:column;align-items:flex-start;gap:1px;">
       <div style="display:flex;align-items:center;gap:4px;width:100%">
         ${atteinte?`<span class="campaign-star">★</span>`:''}
         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-size:11px;font-weight:700">${esc(camp.title||'Campagne')}</span>
       </div>
-      <div style="font-size:9px;opacity:0.7;font-weight:400">${fmtDate(camp.startDate)}${camp.endDate&&camp.endDate!==camp.startDate?` → ${fmtDate(camp.endDate)}`:''}</div>
+      <div style="font-size:9.5px;color:var(--text3);font-weight:500">${fmtDate(camp.startDate)}${camp.endDate&&camp.endDate!==camp.startDate?` → ${fmtDate(camp.endDate)}`:''}</div>
     </div>`;
     
     if(STATE.displayOpts.showKpi && prog!==null) {
@@ -1594,7 +1815,7 @@ function renderStrategyRowNew(grid, root, type, totalPx, makeDataRow) {
       html += `<div class="campaign-card-kpi" style="padding:3px 8px 5px;">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div class="kpi-label" style="font-size:9px;opacity:0.75">${esc(camp.kpi?.type||'')}</div>
-          <div style="font-size:9px;font-weight:700;color:${prog>=100?'#bbf7d0':'#fca5a5'}">${overAmt}</div>
+          <div style="font-size:9px;font-weight:700;color:${prog>=100?'#047857':'#e11d48'}">${overAmt}</div>
         </div>
         <div class="progress-bar" style="margin-top:2px"><div class="progress-fill ${fillCls}" style="width:${pct}%"></div></div>
       </div>`;
@@ -1675,8 +1896,8 @@ function renderCanalView() {
   const DAY_NAMES = ['Di','Lu','Ma','Me','Je','Ve','Sa'];
 
   // ── HEADER ROWS (sticky top, same dayPx scale as Timeline) ──
-  const scaleLabel = grid.scale==='q' ? ` · ${grid.quarters.map(q=>q.label).join('/')}` :
-                     isMonth ? ` · ${grid.months[0]?.label||''}` : '';
+  const scaleLabel = grid.scale==='q' ? ` · T${STATE.selectedQuarter||1}` :
+                     isMonth ? ` · ${grid.months[STATE.selectedMonth||0]?.label||''}` : '';
   const labelTitle = 'Canal' + scaleLabel;
 
   function buildCvHeaderRow(id, stickyTop, labelText, cells) {
@@ -1704,7 +1925,9 @@ function renderCanalView() {
     if(grid.scale==='q') c.style.opacity = q.inRange ? '1' : '0.5';
     return c;
   });
-  root.appendChild(buildCvHeaderRow('cv-hrow-q', 0, labelTitle, qCells));
+  const cvQRow = buildCvHeaderRow('cv-hrow-q', 0, labelTitle, qCells);
+  addTodayFlag(cvQRow, grid);
+  root.appendChild(cvQRow);
 
   // M row
   const mCells = grid.months.map(m => {
@@ -1770,8 +1993,10 @@ function renderCanalView() {
       const s = ce('div','cv-week-stripe');
       s.style.left = (todayDay*grid.dayPx)+'px';
       s.style.width = grid.dayPx+'px';
-      s.style.background = 'rgba(84,216,156,0.15)';
-      s.style.borderLeft = '2px solid #16a34a';
+      s.style.background = 'transparent';
+      s.style.borderLeft = '2px solid var(--today)';
+      s.style.opacity = '1';
+      s.style.zIndex = '4';
       s.style.boxShadow = '2px 0 0 rgba(22,163,74,0.35)';
       s.style.zIndex = '3';
       cellEl.appendChild(s);
@@ -1869,7 +2094,7 @@ function renderCanalView() {
       (STATE.isAdmin ? `<button class="row-add-btn" title="Nouvelle action" onclick="openActionModal(null,null,'${channel.id}')">＋</button>` : '');
     const { row, lbl, cell } = makeDataRow('', labelHtml, 36);
 
-    const channelActions = (d.actions||[]).filter(a => a.channelId === channel.id);
+    const channelActions = (d.actions||[]).filter(a => a.channelId === channel.id && actionMatchesSearch(a, d));
 
     // ── PASS 1: assign levels & compute each pill's height ──
     const PILL_H_COLLAPSED = 26;
@@ -3310,44 +3535,61 @@ function renderAdminPanel() {
 // ═══════════════════════════════════════════════════════════════
 async function exportPDF() {
   const { jsPDF } = window.jspdf;
-  const root = document.getElementById(STATE.activeView === 'canal' ? 'canal-scroll-root' : 'timeline-scroll-root');
+  const isCanal = STATE.activeView === 'canal';
+  const root = document.getElementById(isCanal ? 'canal-scroll-root' : 'timeline-scroll-root');
   if(!root) return;
   toast('Génération du PDF en cours…');
+  // Export propre : toute l'année d'un coup, sur une largeur fixe, sans barres de défilement,
+  // en mode clair, puis découpée en pages A3 paysage si le planning est très long.
+  const prev = { scale: STATE.activeScale, theme: document.documentElement.dataset.theme,
+                 style: root.getAttribute('style') || '' };
+  const EXPORT_W = 1800;
   try {
+    window.__exportWidth = EXPORT_W;
+    STATE.activeScale = 'year';
+    document.documentElement.dataset.theme = 'light';
+    root.style.cssText = prev.style + `;width:${EXPORT_W}px;max-width:none;height:auto;overflow:visible;flex:none`;
+    render();
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    root.querySelectorAll('.today-flag').forEach(f => f.style.display = 'none');
     const canvas = await html2canvas(root, {
-      scale: 1.25,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: root.scrollWidth,
-      windowHeight: root.scrollHeight
+      scale: 1.5, useCORS: true, backgroundColor: '#ffffff',
+      width: EXPORT_W, height: root.scrollHeight,
+      windowWidth: EXPORT_W, windowHeight: root.scrollHeight, scrollX: 0, scrollY: 0
     });
-    const imgData = canvas.toDataURL('image/jpeg', 0.65);
-    const pageW = 297; // A4 landscape mm
-    const pageH = 210;
-    const margin = 10;
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3', compress: true });
+    const pageW = 420, pageH = 297, margin = 12, headH = 14;
     const usableW = pageW - margin * 2;
-    const usableH = pageH - margin * 2;
-    const imgRatio = canvas.width / canvas.height;
-    const pageRatio = usableW / usableH;
-    let imgW, imgH;
-    if(imgRatio > pageRatio) {
-      imgW = usableW;
-      imgH = imgW / imgRatio;
-    } else {
-      imgH = usableH;
-      imgW = imgH * imgRatio;
+    const usableH = pageH - margin * 2 - headH;
+    const mmPerPx = usableW / canvas.width;
+    const sliceH = Math.floor(usableH / mmPerPx);
+    const pages = Math.max(1, Math.ceil(canvas.height / sliceH));
+    const when = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+    for(let i = 0; i < pages; i++) {
+      if(i) pdf.addPage('a3', 'landscape');
+      pdf.setTextColor(14, 116, 144); pdf.setFontSize(9);
+      pdf.text('PLANNING INTÉGRÉ · DIGICOM', margin, margin + 3);
+      pdf.setTextColor(15, 23, 42); pdf.setFontSize(16);
+      pdf.text(`Planning commercial Alterna Énergie — ${STATE.currentYear}${isCanal ? ' (par canal)' : ''}`, margin, margin + 10);
+      pdf.setTextColor(100, 116, 139); pdf.setFontSize(9);
+      pdf.text(`Exporté le ${when}${pages > 1 ? ` · page ${i + 1}/${pages}` : ''}`, pageW - margin, margin + 10, { align: 'right' });
+      const part = document.createElement('canvas');
+      const h = Math.min(sliceH, canvas.height - i * sliceH);
+      part.width = canvas.width; part.height = h;
+      part.getContext('2d').drawImage(canvas, 0, i * sliceH, canvas.width, h, 0, 0, canvas.width, h);
+      pdf.addImage(part.toDataURL('image/jpeg', 0.85), 'JPEG', margin, margin + headH, usableW, h * mmPerPx, undefined, 'FAST');
     }
-    pdf.setFontSize(10);
-    pdf.text(`Planning Alterna - ${STATE.currentYear}`, margin, margin - 2);
-    pdf.addImage(imgData, 'JPEG', margin, margin, imgW, imgH, undefined, 'FAST');
     pdf.save(`planning_${STATE.currentYear}.pdf`);
     toast('PDF téléchargé');
   } catch(e) {
     console.error(e);
     toast('Échec de la génération PDF : ' + (e.message||e));
+  } finally {
+    window.__exportWidth = 0;
+    STATE.activeScale = prev.scale;
+    document.documentElement.dataset.theme = prev.theme;
+    root.setAttribute('style', prev.style);
+    render();
   }
 }
 
@@ -3663,11 +3905,22 @@ document.getElementById('btn-detail-view').addEventListener('click', () => {
 // THEME
 // ═══════════════════════════════════════════════════════════════
 document.getElementById('btn-theme').addEventListener('click', () => {
+  // Le mode sombre est un choix personnel : il n'est pas enregistré pour tout le monde.
   STATE.theme = STATE.theme==='light'?'dark':'light';
   document.documentElement.dataset.theme = STATE.theme;
   document.getElementById('btn-theme').textContent = STATE.theme==='dark'?'☀️':'🌙';
-  save();
+  try { localStorage.setItem('planning_theme', STATE.theme); } catch(e){}
 });
+document.getElementById('btn-today').addEventListener('click', scrollToToday);
+(function(){
+  const input = document.getElementById('tb-search');
+  let t;
+  input.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => { STATE.searchQ = input.value; render(); }, 150);
+  });
+  input.addEventListener('keydown', e => { if(e.key === 'Escape') { input.value = ''; STATE.searchQ = ''; render(); } });
+})();
 
 // ═══════════════════════════════════════════════════════════════
 // TOOLTIP WITH IMAGE
@@ -3691,6 +3944,58 @@ document.addEventListener('mousemove', ev => {
 // ═══════════════════════════════════════════════════════════════
 // MAIN RENDER
 // ═══════════════════════════════════════════════════════════════
+// Recherche rapide (barre du haut) : titre de la campagne ou d'une de ses actions.
+function searchText() { return (STATE.searchQ || '').trim().toLowerCase(); }
+function matchesSearch(camp, d) {
+  const q = searchText();
+  if(!q) return true;
+  if((camp.title||'').toLowerCase().includes(q)) return true;
+  return (d.actions||[]).some(a => a.campaignId === camp.id && (a.title||'').toLowerCase().includes(q));
+}
+function actionMatchesSearch(a, d) {
+  const q = searchText();
+  if(!q) return true;
+  if((a.title||'').toLowerCase().includes(q)) return true;
+  const camp = (d.campaigns||[]).find(c => c.id === a.campaignId);
+  return !!camp && (camp.title||'').toLowerCase().includes(q);
+}
+
+// « Aujourd'hui » : pastille au-dessus du calendrier.
+function addTodayFlag(rowEl, grid) {
+  const today = new Date();
+  if(today.getFullYear() !== grid.year) return;
+  const day = Math.round((today - grid.start)/864e5);
+  const cells = rowEl.querySelector('.header-cells');
+  if(!cells) return;
+  cells.style.position = 'relative';
+  const f = ce('div','today-flag');
+  f.textContent = "Aujourd'hui";
+  f.style.left = (day*grid.dayPx + grid.dayPx/2) + 'px';
+  cells.appendChild(f);
+}
+function scrollToToday() {
+  const today = new Date();
+  const sel = document.getElementById('year-sel');
+  if(STATE.currentYear !== today.getFullYear() && STATE.years[today.getFullYear()] && sel) {
+    sel.value = String(today.getFullYear());
+    sel.dispatchEvent(new Event('change'));
+  }
+  if(STATE.currentYear === today.getFullYear()) {
+    // Trimestre / mois : on affiche celui d'aujourd'hui.
+    if(STATE.activeScale === 'q') STATE.selectedQuarter = Math.floor(today.getMonth() / 3) + 1;
+    if(STATE.activeScale === 'month') STATE.selectedMonth = today.getMonth();
+    if(STATE.activeScale !== 'year') { renderSubSelector(); render(); }
+  }
+  requestAnimationFrame(() => {
+    const root = document.getElementById(STATE.activeView === 'canal' ? 'canal-scroll-root' : 'timeline-scroll-root');
+    const grid = GRID;
+    if(!root || !grid || today.getFullYear() !== grid.year) { toast("Aujourd'hui n'est pas dans cette année"); return; }
+    const x = Math.round((today - grid.start)/864e5) * grid.dayPx;
+    if(STATE.activeScale !== 'year') root.scrollTo({ left: Math.max(0, x - root.clientWidth/3), behavior: 'smooth' });
+    root.querySelectorAll('.today-flag').forEach(f => { f.classList.remove('today-pulse'); void f.offsetWidth; f.classList.add('today-pulse'); });
+  });
+}
+
 function renderTimeline() {
   GRID = buildGrid(STATE.currentYear, STATE.activeScale);
   const root = document.getElementById('timeline-scroll-root');
@@ -3698,7 +4003,8 @@ function renderTimeline() {
   root.innerHTML = '';
   renderHeader(GRID, root);
   renderTimelineRows(GRID, root);
-  // Scroll to focus period
+  // Scroll to focus period (vue Année : tout est visible, on revient au début)
+  if(GRID.scale === 'year') root.scrollLeft = 0;
   if(GRID.scale !== 'year') {
     requestAnimationFrame(() => {
       const scrollX = Math.max(0, GRID.focusStartDay * GRID.dayPx - 20);
@@ -3859,11 +4165,11 @@ const CLOUD = (function() {
       const s = data.data;
       STATE.currentYear = s.currentYear || STATE.currentYear;
       STATE.years = s.years || {};
-      STATE.theme = s.theme || STATE.theme;
       STATE.density = s.density || STATE.density;
       STATE.displayOpts = { ...STATE.displayOpts, ...(s.displayOpts || {}) };
       try { localStorage.setItem('planning_v3', JSON.stringify(s)); } catch(e){}
     }
+    try { STATE.theme = localStorage.getItem('planning_theme') === 'dark' ? 'dark' : 'light'; } catch(e){ STATE.theme = 'light'; }
   }
 
   function scheduleSave() {
@@ -3963,10 +4269,10 @@ const CLOUD = (function() {
       el = document.createElement('span');
       el.id = 'cloud-status';
       el.style.cssText = 'margin-left:8px;font-size:11px;opacity:.8;color:#fff';
-      const bar = document.getElementById('topbar');
+      const bar = document.querySelector('#topbar .logo') || document.getElementById('topbar');
       if (bar) bar.appendChild(el);
     }
-    el.style.color = err ? '#ff8080' : '#c8ead8';
+    el.style.color = err ? '#e11d48' : 'var(--text3)';
     el.textContent = msg;
   }
 
@@ -3989,7 +4295,6 @@ const CLOUD = (function() {
           const s = row.data;
           STATE.currentYear = s.currentYear || STATE.currentYear;
           STATE.years = s.years || {};
-          STATE.theme = s.theme || STATE.theme;
           STATE.density = s.density || STATE.density;
           STATE.displayOpts = { ...STATE.displayOpts, ...(s.displayOpts || {}) };
           try { localStorage.setItem('planning_v3', JSON.stringify(s)); } catch(e){}
@@ -4062,11 +4367,10 @@ window.save = function() {
 // Inject cloud UI into the topbar (logout + user manager for admins)
 function __cloudInjectUI() {
   // Dans Digicom : les comptes et la déconnexion se gèrent depuis l'outil, on affiche juste le mode.
-  const btnQuit = document.getElementById('btn-quit-admin');
-  if (!btnQuit) return;
-  const parent = btnQuit.parentNode;
+  const parent = document.querySelector('#topbar .tb-row-2');
+  if (!parent) return;
   const emailTag = document.createElement('span');
-  emailTag.style.cssText = 'margin-left:8px;font-size:11px;opacity:.8;color:#c8ead8';
+  emailTag.className = 'mode-chip ' + (CLOUD.isAdmin ? 'edit' : 'read');
   emailTag.textContent = CLOUD.isAdmin ? '✎ Modification' : '👁 Lecture seule';
   emailTag.title = CLOUD.userEmail;
   parent.appendChild(emailTag);
