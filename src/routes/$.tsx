@@ -4,7 +4,7 @@ import { DigicomView } from '@/components/digicom-view';
 import { resolvePath } from '@/lib/slugs';
 import { getAccess } from '@/lib/access';
 import { rememberEditorialDestination, clearEditorialDestination } from '@/lib/editorial-links';
-import { digicomHead } from '@/lib/digicom-route';
+import { digicomHead, pageLabelFromPath } from '@/lib/digicom-route';
 export const Route = createFileRoute('/$')({
   ssr: false,
   validateSearch: z.object({ step: z.string().optional(), focus: z.string().optional() }),
@@ -18,7 +18,7 @@ export const Route = createFileRoute('/$')({
     clearEditorialDestination();
     return { access, destination };
   },
-  head: ({ params }) => digicomHead((params._splat ?? 'Accueil').split('/').map(s => s.replace(/-/g, ' ')).join(' · ')),
+  head: ({ params }) => digicomHead(pageLabelFromPath(params._splat ?? '')),
   component: SlugPage,
 });
 function SlugPage() {
