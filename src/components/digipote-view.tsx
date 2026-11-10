@@ -21,6 +21,8 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: "corrected", label: "Corrigées" },
 ];
 
+/** Sans réponse et pas encore corrigée : une question corrigée passe dans « Corrigées » uniquement. */
+const isUnanswered = (q: AssistantExchange) => q.unanswered && !q.correction;
 /** Sans réponse, pas encore corrigée ni marquée traitée. */
 const isOpen = (q: AssistantExchange) => q.unanswered && !q.resolved_at && !q.correction;
 
@@ -94,7 +96,7 @@ export function DigipoteView({ onNavigate }: { onNavigate: (path: string) => voi
     return {
       all: all.length,
       open: all.filter(isOpen).length,
-      unanswered: all.filter((q) => q.unanswered).length,
+      unanswered: all.filter(isUnanswered).length,
       corrected: all.filter((q) => q.correction).length,
     };
   }, [items]);
@@ -103,7 +105,7 @@ export function DigipoteView({ onNavigate }: { onNavigate: (path: string) => voi
     const q = norm(query.trim());
     return (items ?? []).filter((x) => {
       if (filter === "open" && !isOpen(x)) return false;
-      if (filter === "unanswered" && !x.unanswered) return false;
+      if (filter === "unanswered" && !isUnanswered(x)) return false;
       if (filter === "corrected" && !x.correction) return false;
       if (!q) return true;
       return norm(
