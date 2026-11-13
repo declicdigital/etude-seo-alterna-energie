@@ -304,6 +304,87 @@ export type Database = {
         }
         Relationships: []
       }
+      planning_audit_log: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          target: string | null
+          user_email: string | null
+          user_id: string | null
+          year: number | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id?: string
+          target?: string | null
+          user_email?: string | null
+          user_id?: string | null
+          year?: number | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          target?: string | null
+          user_email?: string | null
+          user_id?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
+      planning_history: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          id: string
+          snapshot: Json
+          trigger_action: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          id?: string
+          snapshot: Json
+          trigger_action?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          id?: string
+          snapshot?: Json
+          trigger_action?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
+      planning_state: {
+        Row: {
+          data: Json
+          id: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          data?: Json
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          data?: Json
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           allowed_sections: string[] | null
@@ -433,7 +514,10 @@ export type Database = {
           question: string
         }[]
       }
+      can_edit_planning: { Args: { _user_id: string }; Returns: boolean }
       can_use_organisation: { Args: { _user_id: string }; Returns: boolean }
+      can_validate_faq: { Args: { _user_id: string }; Returns: boolean }
+      can_view_planning: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
