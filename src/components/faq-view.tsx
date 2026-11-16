@@ -23,7 +23,8 @@ import {
   faqNeedsCategory,
   faqStatus,
   validatedFaqForTarget,
-  FAQ_CATEGORIES,
+  faqCategories,
+  matchFaqCategory,
   FAQ_CHANNELS,
   type FaqAttachment,
   type FaqComment,
@@ -152,6 +153,7 @@ export function FaqView({
       <div className="p-5 md:p-8 space-y-6 max-w-5xl">
         {!target && (
           <NewRequestForm
+            categories={faqCategories(requests)}
             myName={myName}
             myEmail={access.email ?? ""}
             users={users}
@@ -343,11 +345,14 @@ function Choice({
 }
 
 function NewRequestForm({
+  categories,
   myName,
   myEmail,
   users,
   onSaved,
 }: {
+  /** Catégories de base + nouvelles catégories gardées par Geoffrey ou Matthieu. */
+  categories: string[];
   myName: string;
   myEmail: string;
   users: User[];
@@ -367,7 +372,13 @@ function NewRequestForm({
   const [saving, setSaving] = useState(false);
 
   const needsCategory = faqNeedsCategory(channel);
-  const finalCategory = needsCategory ? (category === NEW_CAT ? newCategory.trim() : category) : "";
+  // Une « nouvelle » catégorie déjà connue (casse ou accents près) reprend son orthographe.
+  const typedKnown = category === NEW_CAT ? matchFaqCategory(newCategory, categories) : null;
+  const finalCategory = needsCategory
+    ? category === NEW_CAT
+      ? (typedKnown ?? newCategory.trim().replace(/\s+/g, " "))
+      : category
+    : "";
   const contentReady = content !== "Contenu déjà fourni" || (question.trim() && answer.trim());
   const ready = !!(
     type &&
@@ -409,7 +420,7 @@ function NewRequestForm({
       target,
       channel,
       category: finalCategory,
-      newCategory: needsCategory && category === NEW_CAT,
+      newCategory: needsCategory && category === NEW_CAT && !typedKnown,
       comments,
       createdAt: now,
     };
@@ -503,7 +514,7 @@ function NewRequestForm({
           <div className="md:col-span-2">
             <span className={label}>Catégorie</span>
             <div className="flex flex-wrap gap-2">
-              {FAQ_CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <button
                   key={c}
                   type="button"
@@ -539,6 +550,11 @@ function NewRequestForm({
                 onChange={(e) => setNewCategory(e.target.value)}
                 placeholder="Nom de la nouvelle catégorie"
               />
+            )}
+            {category === NEW_CAT && typedKnown && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Cette catégorie existe déjà : la demande sera classée dans « {typedKnown} ».
+              </p>
             )}
           </div>
         )}
@@ -796,6 +812,10 @@ function RequestCard({
           approvedAt: new Date().toISOString(),
           approvedBy: userId ?? undefined,
           approvedByName: myName,
+          // Validée par Geoffrey ou Matthieu : la nouvelle catégorie est gardée pour la suite.
+          ...(r.newCategory && canModerate && !r.categoryAcceptedAt
+            ? { categoryAcceptedAt: new Date().toISOString() }
+            : {}),
         }),
       "La validation a échoué. Réessayez.",
     );
@@ -804,6 +824,11 @@ function RequestCard({
       () =>
         onUpdate({ ...r, approvedAt: undefined, approvedBy: undefined, approvedByName: undefined }),
       "L'annulation a échoué. Réessayez.",
+    );
+  const keepCategory = () =>
+    safely(
+      () => onUpdate({ ...r, categoryAcceptedAt: new Date().toISOString() }),
+      "La catégorie n'a pas pu être ajoutée. Réessayez.",
     );
   const deleteComment = (c: FaqComment) => {
     if (!confirm("Supprimer ce commentaire ?")) return;
@@ -904,6 +929,9 @@ function RequestCard({
         approvedAt: r.approvedAt ?? now,
         approvedBy: r.approvedBy ?? userId,
         approvedByName: r.approvedByName ?? myName,
+        ...(r.newCategory && canModerate && !r.categoryAcceptedAt
+          ? { categoryAcceptedAt: now }
+          : {}),
       });
     } catch {
       setValidationError("L'enregistrement a échoué. Réessayez.");
@@ -989,7 +1017,7 @@ function RequestCard({
             {r.category && (
               <span className="rounded-full bg-teal-500/15 text-teal-800 px-2 py-0.5">
                 {r.category}
-                {r.newCategory ? " (nouvelle)" : ""}
+                {r.newCategory && !r.categoryAcceptedAt ? " (nouvelle)" : ""}
               </span>
             )}
           </div>
@@ -1052,6 +1080,20 @@ function RequestCard({
                 ))}
             </div>
           )}
+          {canModerate &&
+            r.newCategory &&
+            !r.categoryAcceptedAt &&
+            r.category &&
+            status !== "en-cours" && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-teal-500/30 bg-teal-500/5 px-3 py-2">
+                <p className="text-sm">
+                  Nouvelle catégorie « <strong>{r.category}</strong> » : pas encore dans la liste.
+                </p>
+                <Button size="sm" variant="outline" onClick={keepCategory} disabled={busy}>
+                  Garder cette catégorie
+                </Button>
+              </div>
+            )}
           {canValidate && !r.validatedAt && (
             <div className="border-b border-border pb-4 space-y-3">
               <p className="text-sm font-semibold">Marquer la FAQ comme réalisée</p>

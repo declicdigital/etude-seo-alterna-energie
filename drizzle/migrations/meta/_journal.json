@@ -127,6 +127,13 @@
       "when": 1794532800000,
       "tag": "0017_faq_moderation_files",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794619200000,
+      "tag": "0018_faq_kept_categories",
+      "breakpoints": true
     }
   ]
 }

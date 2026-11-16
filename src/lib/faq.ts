@@ -71,6 +71,39 @@ export type FaqAttachment = {
   addedAt?: string;
 };
 
+const catKey = (c: string) =>
+  c
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+/**
+ * Catégories proposées : la liste de base, puis les nouvelles catégories gardées (validées par
+ * Geoffrey ou Matthieu), sans doublon de casse ni d'accent ; la plus ancienne orthographe gagne.
+ */
+export function faqCategories(requests: FaqRequest[]): string[] {
+  const out = [...FAQ_CATEGORIES];
+  const seen = new Set(out.map(catKey));
+  const accepted = requests
+    .filter((r) => r.newCategory && r.categoryAcceptedAt && r.category?.trim())
+    .sort((a, b) => (a.categoryAcceptedAt ?? "").localeCompare(b.categoryAcceptedAt ?? ""));
+  for (const r of accepted) {
+    const k = catKey(r.category);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(r.category.trim().replace(/\s+/g, " "));
+  }
+  return out;
+}
+
+/** Une « nouvelle » catégorie qui existe déjà (casse ou accents près) reprend l'orthographe connue. */
+export function matchFaqCategory(name: string, categories: string[]): string | null {
+  const k = catKey(name);
+  return categories.find((c) => catKey(c) === k) ?? null;
+}
+
 /** Où en est la demande : en cours → validée → réalisée (publiée, avec son lien). */
 export type FaqStatus = "en-cours" | "validee" | "realisee";
 export function faqStatus(r: Pick<FaqRequest, "validatedAt" | "approvedAt">): FaqStatus {
@@ -108,6 +141,11 @@ export type FaqRequest = {
   approvedByName?: string;
   /** Pièces jointes de la demande (hors commentaires). */
   files?: FaqAttachment[];
+  /**
+   * Nouvelle catégorie gardée : posé quand Geoffrey (admin) ou Matthieu valident la demande
+   * (ou la marquent réalisée). La catégorie rejoint alors la liste proposée à tout le monde.
+   */
+  categoryAcceptedAt?: string;
   target: string;
   /** Zendesk ou Site Web (absent sur les demandes créées avant ce choix). */
   channel?: string;
