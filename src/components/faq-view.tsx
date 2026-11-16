@@ -12,6 +12,16 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import type { Access } from "@/lib/access";
@@ -793,13 +803,20 @@ function RequestCard({
   const fileRef = useRef<HTMLInputElement>(null);
   const [adding, setAdding] = useState(0);
   const canDelete = (email?: string) => canDeleteFaqItem(email, myEmail, canModerate);
+  // Confirmations et erreurs affichées dans Digicom (les fenêtres du navigateur peuvent être
+  // bloquées : on cliquait alors sur « Supprimer » sans que rien ne se passe).
+  const [ask, setAsk] = useState<{ title: string; run: () => Promise<void>; error: string } | null>(
+    null,
+  );
+  const [cardError, setCardError] = useState<string | null>(null);
   const safely = async (fn: () => Promise<void>, error: string) => {
     if (busy) return;
     setBusy(true);
+    setCardError(null);
     try {
       await fn();
     } catch {
-      alert(error);
+      setCardError(error);
     } finally {
       setBusy(false);
     }
@@ -830,35 +847,41 @@ function RequestCard({
       () => onUpdate({ ...r, categoryAcceptedAt: new Date().toISOString() }),
       "La catégorie n'a pas pu être ajoutée. Réessayez.",
     );
-  const deleteComment = (c: FaqComment) => {
-    if (!confirm("Supprimer ce commentaire ?")) return;
-    void safely(async () => {
-      await onUpdate({ ...r, comments: r.comments.filter((x) => x.id !== c.id) });
-      void removeFaqFiles(c.attachments ?? []).catch(() => {});
-    }, "Le commentaire n'a pas pu être supprimé.");
-  };
-  const deleteFile = (f: FaqAttachment) => {
-    if (!confirm(`Supprimer la pièce jointe « ${f.name} » ?`)) return;
-    void safely(async () => {
-      await onUpdate({
-        ...r,
-        files: (r.files ?? []).filter((x) => x !== f && (!f.id || x.id !== f.id)),
-      });
-      void removeFaqFiles([f]).catch(() => {});
-    }, "La pièce jointe n'a pas pu être supprimée.");
-  };
-  const deleteCommentFile = (c: FaqComment, f: FaqAttachment) => {
-    if (!confirm(`Supprimer la pièce jointe « ${f.name} » ?`)) return;
-    void safely(async () => {
-      await onUpdate({
-        ...r,
-        comments: r.comments.map((x) =>
-          x.id === c.id ? { ...x, attachments: x.attachments.filter((a) => a !== f) } : x,
-        ),
-      });
-      void removeFaqFiles([f]).catch(() => {});
-    }, "La pièce jointe n'a pas pu être supprimée.");
-  };
+  const deleteComment = (c: FaqComment) =>
+    setAsk({
+      title: "Supprimer ce commentaire ?",
+      error: "Le commentaire n'a pas pu être supprimé. Réessayez.",
+      run: async () => {
+        await onUpdate({ ...r, comments: r.comments.filter((x) => x.id !== c.id) });
+        void removeFaqFiles(c.attachments ?? []).catch(() => {});
+      },
+    });
+  const deleteFile = (f: FaqAttachment) =>
+    setAsk({
+      title: `Supprimer la pièce jointe « ${f.name} » ?`,
+      error: "La pièce jointe n'a pas pu être supprimée. Réessayez.",
+      run: async () => {
+        await onUpdate({
+          ...r,
+          files: (r.files ?? []).filter((x) => x !== f && (!f.id || x.id !== f.id)),
+        });
+        void removeFaqFiles([f]).catch(() => {});
+      },
+    });
+  const deleteCommentFile = (c: FaqComment, f: FaqAttachment) =>
+    setAsk({
+      title: `Supprimer la pièce jointe « ${f.name} » ?`,
+      error: "La pièce jointe n'a pas pu être supprimée. Réessayez.",
+      run: async () => {
+        await onUpdate({
+          ...r,
+          comments: r.comments.map((x) =>
+            x.id === c.id ? { ...x, attachments: x.attachments.filter((a) => a !== f) } : x,
+          ),
+        });
+        void removeFaqFiles([f]).catch(() => {});
+      },
+    });
   const addFiles = async (list: FileList | null) => {
     if (!list?.length) return;
     const picked = [...list];
@@ -868,7 +891,7 @@ function RequestCard({
       try {
         done.push(await uploadFaqFile(f, { name: myName, email: myEmail }));
       } catch (e) {
-        alert(e instanceof Error ? e.message : "La pièce jointe n'a pas pu être envoyée.");
+        setCardError(e instanceof Error ? e.message : "La pièce jointe n'a pas pu être envoyée.");
       }
     }
     setAdding(0);
@@ -876,7 +899,7 @@ function RequestCard({
       try {
         await onUpdate({ ...r, files: [...(r.files ?? []), ...done] });
       } catch {
-        alert("Les pièces jointes n'ont pas pu être ajoutées à la demande.");
+        setCardError("Les pièces jointes n'ont pas pu être ajoutées à la demande.");
         void removeFaqFiles(done).catch(() => {});
       }
     }
@@ -1050,8 +1073,37 @@ function RequestCard({
           <Trash2 className="size-4" />
         </button>
       </div>
+      <AlertDialog open={!!ask} onOpenChange={(o) => !o && setAsk(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{ask?.title}</AlertDialogTitle>
+            <AlertDialogDescription>Cette suppression est définitive.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                const a = ask;
+                setAsk(null);
+                if (a) void safely(a.run, a.error);
+              }}
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {open && (
         <div className="border-t px-4 py-4 space-y-3">
+          {cardError && (
+            <p
+              role="alert"
+              className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            >
+              {cardError}
+            </p>
+          )}
           {(status === "validee" || (canValidate && status === "en-cours")) && (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-sky-500/30 bg-sky-500/5 px-3 py-2">
               {status === "validee" ? (
