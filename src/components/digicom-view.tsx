@@ -309,12 +309,11 @@ export function DigicomView({ sheetParam, access, targetHash = "" }: { sheetPara
           />
         ) : embedSrc ? (
           <>
-            {/* Le planning a des boutons en haut à droite (bascule de vue, panneaux) : on le
-                décale sous les boutons Demandes / Sauvegarde / Déconnexion pour qu'ils ne les
-                recouvrent pas. */}
-            {sheetInfo?.group === "Planning intégré" && (
-              <div className="hidden md:block h-12 shrink-0 border-b border-border bg-card" />
-            )}
+            {/* Les outils intégrés (Le Radar, Benchmark, suivis éditoriaux) ont leurs propres
+                boutons et titres en haut de page : on les décale sous les boutons Demandes /
+                Sauvegarde / Déconnexion (fixés en haut à droite) pour qu'ils ne soient jamais
+                recouverts. */}
+            <div className="hidden md:block h-12 shrink-0 border-b border-border bg-card" />
             <iframe
               ref={editorialFrame}
               onLoad={sendReminderAccess}
