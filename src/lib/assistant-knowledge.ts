@@ -636,7 +636,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     title: "Récap mensuel des articles publiés",
     keywords: ["récap", "mensuel", "bilan", "mois", "combien", "nombre d'articles"],
     answer:
-      "Le 1er de chaque mois, un mail récapitulatif part à tous les comptes validés (Christophe Castel et Géraldine Deiber en copie) : il liste les articles du blog d'Alterna Énergie publiés le mois précédent, Particulier puis Professionnel. Pour un chiffre précis (articles publiés, rédigés, en cours, par mois, par catégorie…), pose-moi la question : je le calcule en temps réel.",
+      "Le premier jour ouvré de chaque mois (hors week-ends et jours fériés), un mail récapitulatif part à tous les comptes validés (Christophe Castel et Géraldine Deiber en copie) : il liste les articles du blog d'Alterna Énergie publiés le mois précédent, Particulier puis Professionnel. Pour un chiffre précis (articles publiés, rédigés, en cours, par mois, par catégorie…), pose-moi la question : je le calcule en temps réel.",
   },
   // ——— Listes publiées ———
   {

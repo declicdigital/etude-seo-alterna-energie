@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { recapCc } from "@/lib/monthly-recap-cc";
+import { firstBusinessDay, parisToday } from "@/lib/business-days";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = MAIL_SENDER;
 
@@ -52,7 +53,7 @@ ${section("Blog particulier", "#db2777", p.particulier)}
 ${section("Blog professionnel", "#2563eb", p.pro)}
 <p style="margin:24px 0 0;font-size:15px;line-height:1.6">On continue sur cette lancée ce mois-ci !</p>
 </td></tr>
-<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Récap automatique de Digicom, envoyé le 1er de chaque mois. Merci de ne pas répondre à ce mail.</td></tr>
+<tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Récap automatique de Digicom, envoyé le premier jour ouvré de chaque mois. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -115,13 +116,20 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
           // empty body: normal scheduled run
         }
 
+        // Envoi planifié : seulement le premier jour ouvré du mois (heure de Paris, hors
+        // week-ends et jours fériés). La tâche tourne chaque matin du 1er au 7.
+        const today = parisToday();
+        if (!testTo && !monthOverride && today !== firstBusinessDay(today.slice(0, 7))) {
+          return Response.json({ status: "not_first_business_day", today });
+        }
+
         // Month to recap: previous month (or override in test mode).
-        const now = new Date();
         let month: string;
         if (monthOverride) {
           month = monthOverride;
         } else {
-          const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+          const [y, m] = today.split("-").map(Number);
+          const prev = new Date(Date.UTC(y, m - 2, 1));
           month = prev.toISOString().slice(0, 7);
         }
 
