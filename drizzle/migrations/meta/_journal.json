@@ -134,6 +134,13 @@
       "when": 1794619200000,
       "tag": "0018_faq_kept_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794705600000,
+      "tag": "0019_faq_guard_fix",
+      "breakpoints": true
     }
   ]
 }
