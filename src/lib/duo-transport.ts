@@ -30,6 +30,16 @@ export async function duoIdentity(): Promise<string | null> {
   return data.session?.user.id ?? null;
 }
 
+/**
+ * supabase-js renvoie le canal déjà ouvert s'il en existe un avec le même nom, même s'il est en
+ * train de se fermer : on attend donc la fermeture de l'ancien avant d'en ouvrir un neuf (sinon,
+ * après une reconnexion, on parlait dans un canal mort et l'autre joueur ne voyait rien).
+ */
+async function dropExisting(topic: string) {
+  const old = supabase.getChannels().filter((c) => c.topic === `realtime:${topic}`);
+  await Promise.all(old.map((c) => supabase.removeChannel(c).catch(() => undefined)));
+}
+
 function openChannel(
   topic: string,
   presenceKey: string | undefined,
@@ -38,7 +48,9 @@ function openChannel(
 ): { current: () => RealtimeChannel | null; close: () => void } {
   let ch: RealtimeChannel | null = null;
   let closed = false;
-  const make = (isPrivate: boolean) => {
+  const make = async (isPrivate: boolean) => {
+    await dropExisting(topic);
+    if (closed) return;
     const c = supabase.channel(topic, {
       config: {
         private: isPrivate,
@@ -46,24 +58,25 @@ function openChannel(
         ...(presenceKey ? { presence: { key: presenceKey } } : {}),
       },
     });
+    ch = c;
     setup(c);
     c.subscribe((status) => {
-      if (closed) return;
+      if (closed || ch !== c) return;
       if (status === "SUBSCRIBED") onReady(c);
       else if ((status === "CHANNEL_ERROR" || status === "TIMED_OUT") && isPrivate) {
-        void supabase.removeChannel(c);
-        ch = make(false);
+        ch = null;
+        void make(false);
       }
     });
-    return c;
   };
-  ch = make(true);
+  void make(true);
   return {
     current: () => ch,
     close: () => {
       closed = true;
-      if (ch) void supabase.removeChannel(ch);
+      const c = ch;
       ch = null;
+      if (c) void supabase.removeChannel(c);
     },
   };
 }

@@ -267,6 +267,16 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
   const [meId, setMeId] = useState<string | null>(null);
   const [peers, setPeers] = useState<LobbyPeer[]>([]);
   const lobbyRef = useRef<LobbyHandle | null>(null);
+  /** Ce qu'on annonce dans la salle d'attente : gardé si la connexion se refait (ex. nom chargé). */
+  const lobbyMe = useRef<Pick<LobbyPeer, "status" | "since" | "name">>({
+    status: "idle",
+    since: Date.now(),
+    name: "",
+  });
+  const setLobby = useCallback((patch: Partial<LobbyPeer>) => {
+    lobbyMe.current = { ...lobbyMe.current, ...patch };
+    lobbyRef.current?.update(patch);
+  }, []);
   const [countdown, setCountdown] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
   const [againMe, setAgainMe] = useState(false);
@@ -1154,21 +1164,24 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     }, 800);
   }, []);
 
-  const leaveDuo = useCallback((sendBye = true) => {
-    const d = duoRef.current;
-    if (!d) return;
-    if (sendBye) d.room.send({ type: "bye" });
-    window.clearInterval(d.helloTimer);
-    window.clearTimeout(connectTimer.current);
-    const room = d.room;
-    window.setTimeout(() => room.leave(), 400);
-    duoRef.current = null;
-    setDuo(null);
-    setMode("solo");
-    setAgainMe(false);
-    setAgainPartner(false);
-    lobbyRef.current?.update({ status: "idle" });
-  }, []);
+  const leaveDuo = useCallback(
+    (sendBye = true) => {
+      const d = duoRef.current;
+      if (!d) return;
+      if (sendBye) d.room.send({ type: "bye" });
+      window.clearInterval(d.helloTimer);
+      window.clearTimeout(connectTimer.current);
+      const room = d.room;
+      window.setTimeout(() => room.leave(), 400);
+      duoRef.current = null;
+      setDuo(null);
+      setMode("solo");
+      setAgainMe(false);
+      setAgainPartner(false);
+      setLobby({ status: "idle" });
+    },
+    [setLobby],
+  );
 
   /** L'autre joueur est parti (fermeture, coupure) : on arrête proprement. */
   const partnerLost = useCallback(() => {
@@ -1269,7 +1282,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         partnerName: pair.partner.name || "Partenaire",
         partnerAvatar: pair.partner.avatar,
       };
-      lobbyRef.current?.update({ status: "busy" });
+      setLobby({ status: "busy" });
       const live: DuoLive = {
         info,
         room: { send: () => undefined, leave: () => undefined },
@@ -1309,10 +1322,10 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         if (duoRef.current !== live || phaseRef.current !== "lobby") return;
         leaveDuo(false);
         setNotice("La connexion n'a pas abouti, nouvelle recherche…");
-        lobbyRef.current?.update({ status: "waiting", since: Date.now() });
+        setLobby({ status: "waiting", since: Date.now() });
       }, 12000);
     },
-    [leaveDuo, name],
+    [leaveDuo, name, setLobby],
   );
 
   // Salle d'attente : on y est présent dès que le jeu est ouvert (après l'accord).
@@ -1327,11 +1340,11 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         handle = joinLobby(
           {
             userId: id,
-            name: name || "Joueur",
+            name: lobbyMe.current.name || name || "Joueur",
             avatar: avatarRef.current,
             map: mapRef.current,
-            status: "idle",
-            since: Date.now(),
+            status: lobbyMe.current.status,
+            since: lobbyMe.current.since,
           },
           (list) => alive && setPeers(list),
         );
@@ -1343,11 +1356,18 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       handle?.leave();
       lobbyRef.current = null;
     };
-  }, [inGame, name]);
+    // Le nom n'est pas une dépendance : un changement de nom ne doit pas couper la connexion.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inGame]);
 
   useEffect(() => {
     lobbyRef.current?.update({ avatar, map });
   }, [avatar, map]);
+
+  // Le nom arrive parfois après l'ouverture du jeu : on le met à jour sans se reconnecter.
+  useEffect(() => {
+    if (name) setLobby({ name });
+  }, [name, setLobby]);
 
   // Appariement automatique dès que deux personnes cherchent un partenaire.
   useEffect(() => {
@@ -1359,11 +1379,11 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
   const searchPartner = () => {
     setNotice(null);
     setPhase("lobby");
-    lobbyRef.current?.update({ status: "waiting", since: Date.now() });
+    setLobby({ status: "waiting", since: Date.now() });
   };
   const cancelSearch = () => {
     leaveDuo();
-    lobbyRef.current?.update({ status: "idle" });
+    setLobby({ status: "idle" });
     setPhase("setup");
   };
   const askAgain = () => {
