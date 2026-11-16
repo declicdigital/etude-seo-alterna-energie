@@ -268,7 +268,9 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
   const [peers, setPeers] = useState<LobbyPeer[]>([]);
   const lobbyRef = useRef<LobbyHandle | null>(null);
   /** Ce qu'on annonce dans la salle d'attente : gardé si la connexion se refait (ex. nom chargé). */
-  const lobbyMe = useRef<Pick<LobbyPeer, "status" | "since" | "name">>({
+  const lobbyMe = useRef<
+    Pick<LobbyPeer, "status" | "since" | "name" | "partnerId" | "room" | "host">
+  >({
     status: "idle",
     since: Date.now(),
     name: "",
@@ -1178,7 +1180,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       setMode("solo");
       setAgainMe(false);
       setAgainPartner(false);
-      setLobby({ status: "idle" });
+      setLobby({ status: "idle", partnerId: undefined, room: undefined, host: undefined });
     },
     [setLobby],
   );
@@ -1282,7 +1284,12 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         partnerName: pair.partner.name || "Partenaire",
         partnerAvatar: pair.partner.avatar,
       };
-      setLobby({ status: "busy" });
+      setLobby({
+        status: "busy",
+        partnerId: pair.partner.userId,
+        room: pair.room,
+        host: pair.host,
+      });
       const live: DuoLive = {
         info,
         room: { send: () => undefined, leave: () => undefined },
@@ -1322,7 +1329,13 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         if (duoRef.current !== live || phaseRef.current !== "lobby") return;
         leaveDuo(false);
         setNotice("La connexion n'a pas abouti, nouvelle recherche…");
-        setLobby({ status: "waiting", since: Date.now() });
+        setLobby({
+          status: "waiting",
+          since: Date.now(),
+          partnerId: undefined,
+          room: undefined,
+          host: undefined,
+        });
       }, 12000);
     },
     [leaveDuo, name, setLobby],
@@ -1345,6 +1358,9 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
             map: mapRef.current,
             status: lobbyMe.current.status,
             since: lobbyMe.current.since,
+            partnerId: lobbyMe.current.partnerId,
+            room: lobbyMe.current.room,
+            host: lobbyMe.current.host,
           },
           (list) => alive && setPeers(list),
         );
@@ -1379,7 +1395,13 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
   const searchPartner = () => {
     setNotice(null);
     setPhase("lobby");
-    setLobby({ status: "waiting", since: Date.now() });
+    setLobby({
+      status: "waiting",
+      since: Date.now(),
+      partnerId: undefined,
+      room: undefined,
+      host: undefined,
+    });
   };
   const cancelSearch = () => {
     leaveDuo();

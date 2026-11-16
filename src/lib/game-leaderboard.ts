@@ -183,6 +183,14 @@ export type LobbyPeer = {
   status: "idle" | "waiting" | "busy";
   /** Début de l'attente (ms), pour apparier les plus anciens d'abord. */
   since: number;
+  /**
+   * Partie en cours d'ouverture : avec qui et dans quelle salle. Celui qui apparie le premier
+   * l'annonce, l'autre la rejoint même s'il n'a pas vu les deux joueurs « en recherche » en même
+   * temps (sinon il restait bloqué sur « Recherche d'un partenaire »).
+   */
+  partnerId?: string;
+  room?: string;
+  host?: boolean;
 };
 
 export type DuoPair = { partner: LobbyPeer; host: boolean; room: string };
@@ -193,6 +201,11 @@ export type DuoPair = { partner: LobbyPeer; host: boolean; room: string };
  * binôme sans échange supplémentaire ; la plus ancienne des deux héberge la partie.
  */
 export function pickDuoPair(peers: LobbyPeer[], meId: string): DuoPair | null {
+  // Quelqu'un a déjà ouvert une partie avec moi : je la rejoins, avec le rôle inverse.
+  const invite = peers
+    .filter((p) => p.userId !== meId && p.status === "busy" && p.partnerId === meId && p.room)
+    .sort((a, b) => a.since - b.since)[0];
+  if (invite) return { partner: invite, host: !invite.host, room: invite.room! };
   const waiting = peers
     .filter((p) => p.status === "waiting")
     .sort((a, b) => a.since - b.since || a.userId.localeCompare(b.userId));

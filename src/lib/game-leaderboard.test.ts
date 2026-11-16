@@ -169,6 +169,35 @@ describe("mode duo", () => {
     expect(pickDuoPair([p("bob", 10)], "bob")).toBeNull();
   });
 
+  it("rejoint la partie ouverte par l'autre même s'il l'a vu passer en « occupé » d'abord", () => {
+    const amy = {
+      userId: "amy",
+      name: "Amy",
+      avatar: "digi",
+      map: "bureau",
+      status: "busy",
+      since: 20,
+      partnerId: "bob",
+      room: "amy-bob-20",
+      host: true,
+    } as LobbyPeer;
+    const bob = {
+      userId: "bob",
+      name: "Bob",
+      avatar: "digi",
+      map: "bureau",
+      status: "waiting",
+      since: 25,
+    } as LobbyPeer;
+    expect(pickDuoPair([amy, bob], "bob")).toMatchObject({
+      host: false,
+      room: "amy-bob-20",
+      partner: { userId: "amy" },
+    });
+    // Une partie ouverte avec quelqu'un d'autre ne me concerne pas.
+    expect(pickDuoPair([{ ...amy, partnerId: "zed" }, bob], "bob")).toBeNull();
+  });
+
   it("score plausible doublé en duo", () => {
     expect(plausibleScore(40000, 60)).toBe(false);
     expect(plausibleScore(40000, 60, "duo")).toBe(true);
