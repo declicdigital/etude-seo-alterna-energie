@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { recapCc } from "@/lib/monthly-recap-cc";
 import { firstBusinessDay, parisToday } from "@/lib/business-days";
+import { newYearGreeting, type NewYearGreeting } from "@/lib/recap-greeting";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = MAIL_SENDER;
 
@@ -27,7 +28,13 @@ function monthLabel(month: string): string {
   return `${MONTHS_FR[m - 1]} ${y}`;
 }
 
-function buildHtml(p: { month: string; particulier: Article[]; pro: Article[]; total: number }): string {
+function buildHtml(p: {
+  month: string;
+  particulier: Article[];
+  pro: Article[];
+  total: number;
+  greeting: NewYearGreeting | null;
+}): string {
   const section = (label: string, color: string, list: Article[]) =>
     list.length === 0
       ? ""
@@ -47,11 +54,18 @@ function buildHtml(p: { month: string; particulier: Article[]; pro: Article[]; t
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
 <tr><td style="background:#047857;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">Digicom · Blog</td></tr>
 <tr><td style="padding:28px">
-<p style="margin:0 0 16px;font-size:16px"><strong>Merci et félicitations à toute l'équipe !</strong></p>
+${
+  p.greeting
+    ? `<div style="margin:0 0 22px;padding:18px 20px;border-radius:10px;background:#fdf6e3;border:1px solid #f3e1a6">
+<p style="margin:0 0 8px;font-size:20px;font-weight:bold;color:#92400e">${esc(p.greeting.title)}</p>
+${p.greeting.lines.map((l) => `<p style="margin:0 0 6px;font-size:15px;line-height:1.6">${esc(l)}</p>`).join("")}
+</div>`
+    : ""
+}<p style="margin:0 0 16px;font-size:16px"><strong>Merci et félicitations à toute l'équipe !</strong></p>
 <p style="margin:0 0 8px;font-size:15px;line-height:1.6">En <strong>${esc(p.month)}</strong>, nous avons publié <strong>${p.total} article${p.total > 1 ? "s" : ""}</strong> sur le blog. Bravo à toutes et tous pour ce travail.</p>
 ${section("Blog particulier", "#db2777", p.particulier)}
 ${section("Blog professionnel", "#2563eb", p.pro)}
-<p style="margin:24px 0 0;font-size:15px;line-height:1.6">On continue sur cette lancée ce mois-ci !</p>
+<p style="margin:24px 0 0;font-size:15px;line-height:1.6">${esc(p.greeting ? p.greeting.closing : "On continue sur cette lancée ce mois-ci !")}</p>
 </td></tr>
 <tr><td style="padding:16px 28px;background:#f9fafb;font-size:12px;color:#9ca3af">Récap automatique de Digicom, envoyé le premier jour ouvré de chaque mois. Merci de ne pas répondre à ce mail.</td></tr>
 </table></td></tr></table></body></html>`;
@@ -155,6 +169,7 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
         }
         const particulier: Article[] = [];
         const pro: Article[] = [];
+        let yearTotal = 0;
         for (const row of rows ?? []) {
           let a: Article;
           try {
@@ -164,6 +179,7 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
           }
           const integration = a.steps?.find((s) => s.key === "integration");
           if (!integration || integration.status !== "done" || !integration.date) continue;
+          if (integration.date.startsWith(month.slice(0, 4))) yearTotal++;
           if (!integration.date.startsWith(month)) continue;
           const aud = (a.audience || "").toLowerCase();
           if (aud.startsWith("pro")) pro.push(a);
@@ -193,22 +209,24 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
         if (recipients.length === 0) return Response.json({ status: "no_recipients", month });
 
         const label = monthLabel(month);
-        const subject = `Récap ${label} : ${total} article${total > 1 ? "s" : ""} publié${total > 1 ? "s" : ""} — merci à toute l'équipe !`;
+        const greeting = newYearGreeting(month, yearTotal);
+        const subject = `${greeting ? `Bonne année ${greeting.year} ! ` : ""}Récap ${label} : ${total} article${total > 1 ? "s" : ""} publié${total > 1 ? "s" : ""} — merci à toute l'équipe !`;
         const line = (a: Article) => `- ${a.title || "Article"}${a.finalLink ? ` : ${a.finalLink}` : ""}`;
         const text = [
           `Bonjour à toute l'équipe,`,
           ``,
+          ...(greeting ? [greeting.title, ...greeting.lines, ``] : []),
           `Merci et félicitations à toute l'équipe !`,
           `En ${label}, nous avons publié ${total} article${total > 1 ? "s" : ""} sur le blog.`,
           ``,
           particulier.length ? `Blog particulier :\n${particulier.map(line).join("\n")}` : null,
           pro.length ? `Blog professionnel :\n${pro.map(line).join("\n")}` : null,
           ``,
-          `On continue sur cette lancée ce mois-ci !`,
+          greeting ? greeting.closing : `On continue sur cette lancée ce mois-ci !`,
         ]
           .filter((l): l is string => l !== null)
           .join("\r\n");
-        const html = buildHtml({ month: label, particulier, pro, total });
+        const html = buildHtml({ month: label, particulier, pro, total, greeting });
 
         try {
           // Always copy Christophe and Géraldine, and never twice the same person.
