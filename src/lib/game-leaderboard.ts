@@ -169,7 +169,8 @@ export function liveRank(board: BoardEntry[], score: number): number {
 
 /** Score plausible pour une durée de partie (garde-fou contre les envois fantaisistes). */
 export function plausibleScore(score: number, durationS: number, mode: GameMode = "solo"): boolean {
-  const cap = (3000 + Math.max(0, durationS) * 400) * (mode === "duo" ? 2 : 1);
+  // Large : points ×2, diamants et bips perçants peuvent faire de belles séries.
+  const cap = (3000 + Math.max(0, durationS) * 600) * (mode === "duo" ? 2 : 1);
   return Number.isInteger(score) && score >= 0 && score <= cap;
 }
 

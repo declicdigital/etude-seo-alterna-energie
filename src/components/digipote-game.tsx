@@ -134,8 +134,25 @@ const MAPS: Record<GameMapId, MapDef> = {
   },
 };
 
-type Kind = "bug" | "boss" | "star" | "coffee" | "turbo" | "shield" | "freeze" | "mega";
+type Kind =
+  | "bug"
+  | "boss"
+  | "star"
+  | "coffee"
+  | "turbo"
+  | "shield"
+  | "freeze"
+  | "mega"
+  | "gem"
+  | "double"
+  | "pierce"
+  | "magnet";
 type Thing = {
+  /** Identifiant stable (duo : l'invité retrouve chaque objet d'un état à l'autre). */
+  id: number;
+  /** Écart à rattraper en douceur après un état reçu (invité du duo). */
+  ex?: number;
+  ey?: number;
   x: number;
   y: number;
   vy: number;
@@ -148,9 +165,45 @@ type Thing = {
   maxHp: number;
   flash: number;
 };
-/** o = 1 : bip lancé par l'autre robot (duo). */
-type Shot = { x: number; y: number; vx: number; o?: number };
-const KINDS: Kind[] = ["bug", "boss", "star", "coffee", "turbo", "shield", "freeze", "mega"];
+/**
+ * Bip. o : 0 = robot de l'hôte (ou solo), 1 = robot de l'invité (duo). hit : objets déjà
+ * traversés par un bip perçant. local : bip prédit chez l'invité (affiché tout de suite).
+ */
+type Shot = {
+  id?: number;
+  x: number;
+  y: number;
+  vx: number;
+  o?: number;
+  hit?: number[];
+  local?: boolean;
+  ex?: number;
+  ey?: number;
+};
+// L'ordre compte (index envoyés en duo) : nouveaux types toujours ajoutés à la fin.
+const KINDS: Kind[] = [
+  "bug",
+  "boss",
+  "star",
+  "coffee",
+  "turbo",
+  "shield",
+  "freeze",
+  "mega",
+  "gem",
+  "double",
+  "pierce",
+  "magnet",
+];
+type PowerKind = "turbo" | "double" | "pierce" | "magnet";
+/** Effets propres à chaque robot (index 0 : hôte ou solo, 1 : invité). */
+type PlayerFx = Record<PowerKind, [number, number]>;
+const noPlayerFx = (): PlayerFx => ({
+  turbo: [0, 0],
+  double: [0, 0],
+  pierce: [0, 0],
+  magnet: [0, 0],
+});
 /** Arrondi pour des messages réseau compacts. */
 const r3 = (v: number) => Math.round(v * 1000) / 1000;
 
@@ -176,13 +229,34 @@ type DuoLive = {
 };
 type Spark = { x: number; y: number; vx: number; vy: number; life: number; color: string };
 type Popup = { x: number; y: number; text: string; life: number; color: string };
-type Effects = { turbo: boolean; shield: boolean; freeze: boolean };
+type Effects = {
+  turbo: boolean;
+  shield: boolean;
+  freeze: boolean;
+  double: boolean;
+  pierce: boolean;
+  magnet: boolean;
+};
+const NO_FX: Effects = {
+  turbo: false,
+  shield: false,
+  freeze: false,
+  double: false,
+  pierce: false,
+  magnet: false,
+};
 
-const POWER: Record<"turbo" | "shield" | "freeze" | "mega", { emoji: string; label: string }> = {
-  turbo: { emoji: "⚡", label: "Turbo : triple bip" },
-  shield: { emoji: "🛡️", label: "Bouclier" },
-  freeze: { emoji: "❄️", label: "Gel des bugs" },
-  mega: { emoji: "🔋", label: "Méga-bip" },
+const POWER: Record<
+  "turbo" | "shield" | "freeze" | "mega" | "double" | "pierce" | "magnet",
+  { emoji: string; label: string; seconds: number }
+> = {
+  turbo: { emoji: "⚡", label: "Turbo : triple bip", seconds: 8 },
+  shield: { emoji: "🛡️", label: "Bouclier", seconds: 12 },
+  freeze: { emoji: "❄️", label: "Gel des bugs", seconds: 5 },
+  mega: { emoji: "🔋", label: "Méga-bip", seconds: 0 },
+  double: { emoji: "✨", label: "Points ×2", seconds: 10 },
+  pierce: { emoji: "🔱", label: "Bips perçants", seconds: 8 },
+  magnet: { emoji: "🧲", label: "Aimant à bonus", seconds: 10 },
 };
 const MAX_LIVES = 5;
 const ROBOT_W = 80;
@@ -190,6 +264,7 @@ const ROBOT_H = 100;
 const LINES = {
   hit: ["Bip ! Touché !", "Bzzt ! Bug éliminé", "Boum ! 💥", "Mission accomplie"],
   star: ["Étoile captée ⭐", "Bip-boup, bonus !"],
+  gem: ["Diamant ! 💎", "Jackpot 💎"],
   coffee: ["Café = énergie ☕", "Batterie rechargée !"],
   ouch: ["Aïe, un bug !", "Bzzt… ça pique", "Alerte bug ! 🚨"],
   combo: ["Combo ×2 ! 🔥", "Combo ×3 ! 🔥🔥", "Combo ×4 !!! 🚀"],
@@ -295,7 +370,9 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(MAX_LIVES);
   const [combo, setCombo] = useState(1);
-  const [fx, setFx] = useState<Effects>({ turbo: false, shield: false, freeze: false });
+  const [fx, setFx] = useState<Effects>(NO_FX);
+  /** Duel : [mes points, ceux de l'autre joueur]. */
+  const [duel, setDuel] = useState<[number, number]>([0, 0]);
   const [best, setBest] = useState(0);
   const [talk, setTalk] = useState<string | null>(null);
   const [mood, setMood] = useState<"ok" | "happy" | "ouch">("ok");
@@ -326,11 +403,14 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     hits: 0,
     mult: 1,
     invulnUntil: 0,
-    turboUntil: 0,
     shieldUntil: 0,
     freezeUntil: 0,
     wind: 0,
     running: false,
+    /** Points de chaque robot (0 : hôte ou solo, 1 : invité) ; score = total du binôme. */
+    pts: [0, 0] as [number, number],
+    pfx: noPlayerFx(),
+    nextId: 1,
   });
   const fxRef = useRef<Effects>(fx);
   const talkTimer = useRef<number | undefined>(undefined);
@@ -421,20 +501,27 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     // Le terrain n'existe qu'après l'écran de consentement.
   }, [inGame]);
 
-  const fire = useCallback((minGap: number) => {
+  const fire = useCallback((minGap: number, manual = false) => {
     const s = state.current;
     if (!s.running || s.elapsed - s.lastShot < minGap) return;
     s.lastShot = s.elapsed;
-    // Invité d'un duo : c'est l'hôte qui crée les bips, on lui envoie seulement l'appui.
     const d = duoRef.current;
-    if (d && !d.info.host) {
-      d.fireCount += 1;
-      return;
-    }
+    const guest = !!d && !d.info.host;
+    const me = guest ? 1 : 0;
     const y = s.h - ROBOT_H + 6;
-    if (s.elapsed < s.turboUntil) {
-      s.shots.push({ x: s.x - 10, y, vx: -130 }, { x: s.x, y, vx: 0 }, { x: s.x + 10, y, vx: 130 });
-    } else s.shots.push({ x: s.x, y, vx: 0 });
+    // Invité d'un duo : c'est l'hôte qui crée les vrais bips (on lui envoie l'appui), mais on
+    // affiche tout de suite les nôtres pour que le tir réponde sans attendre le réseau.
+    // Seuls les appuis volontaires partent vers l'hôte (il gère déjà le tir automatique).
+    if (guest && manual) d.fireCount += 1;
+    const base = guest ? { o: 1, local: true } : { o: 0 };
+    const id = () => (guest ? 0 : s.nextId++);
+    if (s.elapsed < s.pfx.turbo[me]) {
+      s.shots.push(
+        { ...base, id: id(), x: s.x - 10, y, vx: -130 },
+        { ...base, id: id(), x: s.x, y, vx: 0 },
+        { ...base, id: id(), x: s.x + 10, y, vx: 130 },
+      );
+    } else s.shots.push({ ...base, id: id(), x: s.x, y, vx: 0 });
   }, []);
 
   const start = useCallback(() => {
@@ -480,12 +567,17 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       hits: 0,
       mult: 1,
       invulnUntil: 0,
-      turboUntil: 0,
       shieldUntil: 4, // quelques secondes de protection au départ
       freezeUntil: 0,
       running: true,
+      pts: [0, 0],
+      pfx: noPlayerFx(),
+      nextId: 1,
     });
     setScore(0);
+    setDuel([0, 0]);
+    fxRef.current = NO_FX;
+    setFx(NO_FX);
     setLives(MAX_LIVES);
     setCombo(1);
     setStage(1);
@@ -580,12 +672,18 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       record(["s", text, mood]);
     };
     const kOther = ROBOT_SKINS[duoRef.current?.info.partnerAvatar ?? avatar];
-    const addPoints = (base: number, x: number, y: number) => {
+    /** Couleur du joueur qui marque (duel : chacun la sienne). */
+    const colorOf = (who: number) => (duoRef.current ? (who ? kOther.led[1] : k.led[1]) : m.popup);
+    /** Points pour le robot `who` (0 : hôte ou solo, 1 : invité), doublés s'il a « Points ×2 ». */
+    const addPoints = (base: number, x: number, y: number, who = 0) => {
       const s = state.current;
-      const pts = Math.round(base * s.mult * m.scoreMult);
+      const dbl = s.elapsed < s.pfx.double[who] ? 2 : 1;
+      const pts = Math.round(base * s.mult * m.scoreMult * dbl);
+      s.pts[who] += pts;
       s.score += pts;
       setScore(s.score);
-      pop(x, y, `+${pts}`);
+      setDuel([s.pts[0], s.pts[1]]);
+      pop(x, y, `+${pts}`, colorOf(who));
     };
     const registerHit = () => {
       const s = state.current;
@@ -620,17 +718,18 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       if (s.lives <= 0) {
         s.running = false;
         const d = duoRef.current;
-        if (d?.info.host) d.room.send({ type: "over", sc: s.score, du: r3(s.elapsed) });
+        if (d?.info.host)
+          d.room.send({ type: "over", sc: s.score, pt: [s.pts[0], s.pts[1]], du: r3(s.elapsed) });
         setPhase("over");
         void finish(s.score, s.elapsed);
       }
     };
-    const megaBip = () => {
+    const megaBip = (who = 0) => {
       const s = state.current;
       for (const t of s.things) {
         if (t.kind === "bug") {
           burst(t.x, t.y, k.led[1], 8);
-          addPoints(10, t.x, t.y);
+          addPoints(10, t.x, t.y, who);
           registerHit();
           t.hp = 0;
         } else if (t.kind === "boss") {
@@ -651,11 +750,14 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       let kind: Kind = "bug";
       if (roll < m.starRate) kind = "star";
       else if (roll < m.starRate + 0.04 && s.lives < MAX_LIVES) kind = "coffee";
-      else if (roll < m.starRate + 0.08) kind = pick(["turbo", "shield", "freeze", "mega"]) as Kind;
+      else if (roll < m.starRate + 0.1)
+        kind = pick(["turbo", "shield", "freeze", "mega", "double", "pierce", "magnet"]) as Kind;
+      else if (roll < m.starRate + 0.115) kind = "gem";
       const tough = kind === "bug" && !!m.tough && Math.random() < 0.22;
       const r = tough ? 19 : kind === "bug" ? 16 : 15;
       const bonus = kind !== "bug";
       s.things.push({
+        id: s.nextId++,
         x: r + Math.random() * (s.w - 2 * r),
         y: -r,
         vy: (bonus ? 95 : (50 + Math.random() * 40) * level * m.speed * (tough ? 0.8 : 1)) * fall,
@@ -670,7 +772,9 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
               ? "⭐"
               : kind === "coffee"
                 ? "☕"
-                : POWER[kind as keyof typeof POWER].emoji,
+                : kind === "gem"
+                  ? "💎"
+                  : POWER[kind as keyof typeof POWER].emoji,
         r,
         wob: Math.random() * Math.PI * 2,
         hp: tough ? 2 : 1,
@@ -682,6 +786,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       const s = state.current;
       const hp = 6 + Math.floor(s.elapsed / 45) * 2;
       s.things.push({
+        id: s.nextId++,
         x: s.w / 2,
         y: -30,
         vy:
@@ -732,33 +837,68 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         partnerRef.current.style.transform = `translate(${d.partnerX - ROBOT_W / 2}px, ${s.h - ROBOT_H}px) rotate(${tilt}deg)`;
       }
     };
-    /** Invité : applique le dernier état envoyé par l'hôte (positions relatives au terrain). */
+    /**
+     * Invité : applique le dernier état envoyé par l'hôte (positions relatives au terrain).
+     * Chaque objet est retrouvé par son identifiant et rattrape sa vraie position en douceur
+     * (au lieu de sauter d'un état à l'autre), ce qui rend le duo beaucoup plus fluide.
+     */
     const applySnap = (d: DuoLive, snap: Record<string, unknown>) => {
       const s = state.current;
+      const prev = new Map(s.things.map((t) => [t.id, t]));
       const th = (snap.th as unknown[][]) ?? [];
-      s.things = th.map((a) => ({
-        kind: KINDS[a[0] as number] ?? "bug",
-        emoji: String(a[1]),
-        x: (a[2] as number) * s.w,
-        y: (a[3] as number) * s.h,
-        vx: (a[4] as number) * s.w,
-        vy: (a[5] as number) * s.h,
-        r: a[6] as number,
-        hp: a[7] as number,
-        maxHp: a[8] as number,
-        flash: a[9] as number,
-        wob: 0,
-      }));
-      s.shots = ((snap.sh as number[][]) ?? []).map((a) => ({
-        x: a[0] * s.w,
-        y: a[1] * s.h,
-        vx: a[2] * s.w,
-        o: a[3] ? 0 : 1,
-      }));
+      s.things = th.map((a) => {
+        const id = a[0] as number;
+        const x = (a[3] as number) * s.w;
+        const y = (a[4] as number) * s.h;
+        const old = prev.get(id);
+        const t: Thing = {
+          id,
+          kind: KINDS[a[1] as number] ?? "bug",
+          emoji: String(a[2]),
+          x: old ? old.x : x,
+          y: old ? old.y : y,
+          ex: old ? x - old.x : 0,
+          ey: old ? y - old.y : 0,
+          vx: (a[5] as number) * s.w,
+          vy: (a[6] as number) * s.h,
+          r: a[7] as number,
+          hp: a[8] as number,
+          maxHp: a[9] as number,
+          flash: a[10] as number,
+          wob: old?.wob ?? 0,
+        };
+        // Trop loin (objet repoussé, gros décalage) : on le place directement.
+        if (Math.abs(t.ex!) > 80 || Math.abs(t.ey!) > 80) {
+          t.x = x;
+          t.y = y;
+          t.ex = 0;
+          t.ey = 0;
+        }
+        return t;
+      });
+      // Bips : ceux de l'hôte viennent de l'état reçu ; les miens restent prédits localement.
+      const prevShots = new Map(s.shots.filter((sh) => !sh.local).map((sh) => [sh.id, sh]));
+      const hostShots = ((snap.sh as number[][]) ?? [])
+        .filter((a) => !a[4])
+        .map((a) => {
+          const x = a[1] * s.w;
+          const y = a[2] * s.h;
+          const old = prevShots.get(a[0]);
+          return old
+            ? { ...old, vx: a[3] * s.w, ex: x - old.x, ey: y - old.y }
+            : { id: a[0], x, y, vx: a[3] * s.w, o: 0 };
+        });
+      s.shots = [...hostShots, ...s.shots.filter((sh) => sh.local)];
       const sc = Number(snap.sc) || 0;
       if (sc !== s.score) {
         s.score = sc;
         setScore(sc);
+      }
+      const pt = (snap.pt as number[]) ?? [0, 0];
+      if (pt[0] !== s.pts[0] || pt[1] !== s.pts[1]) {
+        s.pts = [Number(pt[0]) || 0, Number(pt[1]) || 0];
+        // Chez l'invité : « moi » = robot 1.
+        setDuel([s.pts[1], s.pts[0]]);
       }
       const li = Number(snap.li);
       if (li !== s.lives) {
@@ -776,13 +916,22 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         s.stage = st;
         setStage(st);
       }
-      const f = (snap.fx as number[]) ?? [0, 0, 0];
-      const nextFx = { turbo: !!f[0], shield: !!f[1], freeze: !!f[2] };
-      const prevFx = fxRef.current;
+      // Effets : bouclier et gel communs, les autres sont ceux de mon robot (index 1).
+      const f = (snap.fx as number[]) ?? [0, 0];
+      const mine = ((snap.pf as number[][]) ?? [])[1] ?? [0, 0, 0, 0];
+      const nextFx: Effects = {
+        shield: !!f[0],
+        freeze: !!f[1],
+        turbo: !!mine[0],
+        double: !!mine[1],
+        pierce: !!mine[2],
+        magnet: !!mine[3],
+      };
+      // Mes effets servent aussi à prédire mes bips (turbo).
+      s.pfx.turbo[1] = nextFx.turbo ? s.elapsed + 1 : 0;
+      s.pfx.pierce[1] = nextFx.pierce ? s.elapsed + 1 : 0;
       if (
-        nextFx.turbo !== prevFx.turbo ||
-        nextFx.shield !== prevFx.shield ||
-        nextFx.freeze !== prevFx.freeze
+        (Object.keys(nextFx) as (keyof Effects)[]).some((key) => nextFx[key] !== fxRef.current[key])
       ) {
         fxRef.current = nextFx;
         setFx(nextFx);
@@ -832,22 +981,54 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       }
       moveMe(dt);
       movePartner(d, dt);
-      if (now - d.lastSend >= 100) {
+      // Tir automatique de mon robot (prédit localement ; l'hôte tire de son côté).
+      fire(s.elapsed < s.pfx.turbo[1] ? 0.2 : 0.3);
+      if (now - d.lastSend >= 50) {
         d.lastSend = now;
         d.room.send({ type: "in", x: r3(s.x / s.w), f: d.fireCount });
       }
       const slow = fxRef.current.freeze ? 0.35 : 1;
+      const catchUp = Math.min(1, dt * 10);
       for (const t of s.things) {
         const enemy = t.kind === "bug" || t.kind === "boss";
         t.y += t.vy * dt * (enemy ? slow : 1);
         t.x += (t.vx * (enemy ? slow : 1) + (enemy ? s.wind : 0)) * dt;
-        t.wob = t.y / 22;
+        if (t.ex || t.ey) {
+          const cx = (t.ex ?? 0) * catchUp;
+          const cy = (t.ey ?? 0) * catchUp;
+          t.x += cx;
+          t.y += cy;
+          t.ex = (t.ex ?? 0) - cx;
+          t.ey = (t.ey ?? 0) - cy;
+        }
+        t.wob += dt * 4;
         t.flash = Math.max(0, t.flash - dt);
       }
+      const pierce = s.elapsed < s.pfx.pierce[1];
       for (const sh of s.shots) {
         sh.y -= 580 * dt;
         sh.x += sh.vx * dt;
+        if (sh.ex || sh.ey) {
+          const cx = (sh.ex ?? 0) * catchUp;
+          const cy = (sh.ey ?? 0) * catchUp;
+          sh.x += cx;
+          sh.y += cy;
+          sh.ex = (sh.ex ?? 0) - cx;
+          sh.ey = (sh.ey ?? 0) - cy;
+        }
       }
+      // Mes bips prédits disparaissent en touchant un bug (l'hôte décide du reste).
+      s.shots = s.shots.filter(
+        (sh) =>
+          sh.y > -20 &&
+          (!sh.local ||
+            pierce ||
+            !s.things.some(
+              (t) =>
+                (t.kind === "bug" || t.kind === "boss") &&
+                (sh.x - t.x) ** 2 + (sh.y - t.y) ** 2 < (t.r + 9) ** 2,
+            )),
+      );
     };
 
     const frame = (now: number) => {
@@ -869,17 +1050,20 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         const slow = frozen ? 0.35 : 1;
         const wind = m.wind ? Math.sin(s.elapsed * 0.45) * m.wind : 0;
 
-        // Effets actifs → affichage (uniquement quand ça change).
-        const nextFx = {
-          turbo: s.elapsed < s.turboUntil,
+        // Effets actifs → affichage (uniquement quand ça change). Mes effets = robot 0.
+        const on = (k2: PowerKind, who: number) => s.elapsed < s.pfx[k2][who];
+        const nextFx: Effects = {
+          turbo: on("turbo", 0),
           shield: s.elapsed < s.shieldUntil,
           freeze: frozen,
+          double: on("double", 0),
+          pierce: on("pierce", 0),
+          magnet: on("magnet", 0),
         };
-        const prevFx = fxRef.current;
         if (
-          nextFx.turbo !== prevFx.turbo ||
-          nextFx.shield !== prevFx.shield ||
-          nextFx.freeze !== prevFx.freeze
+          (Object.keys(nextFx) as (keyof Effects)[]).some(
+            (key) => nextFx[key] !== fxRef.current[key],
+          )
         ) {
           fxRef.current = nextFx;
           setFx(nextFx);
@@ -891,22 +1075,22 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         if (d) movePartner(d, dt);
 
         // Tir automatique (plus rapide en turbo).
-        fire(s.elapsed < s.turboUntil ? 0.2 : 0.3);
+        fire(on("turbo", 0) ? 0.2 : 0.3);
         if (d) {
           // Bips du robot de l'invité : tir automatique + appuis reçus.
-          const gap = s.elapsed < s.turboUntil ? 0.2 : 0.3;
+          const gap = on("turbo", 1) ? 0.2 : 0.3;
           const manual = d.partnerFire > d.partnerFireSeen && s.elapsed - d.partnerLastShot >= 0.12;
           if (manual || s.elapsed - d.partnerLastShot >= gap) {
             d.partnerFireSeen = d.partnerFire;
             d.partnerLastShot = s.elapsed;
             const y = s.h - ROBOT_H + 6;
-            if (s.elapsed < s.turboUntil)
+            if (on("turbo", 1))
               s.shots.push(
-                { x: d.partnerX - 10, y, vx: -130, o: 1 },
-                { x: d.partnerX, y, vx: 0, o: 1 },
-                { x: d.partnerX + 10, y, vx: 130, o: 1 },
+                { id: s.nextId++, x: d.partnerX - 10, y, vx: -130, o: 1 },
+                { id: s.nextId++, x: d.partnerX, y, vx: 0, o: 1 },
+                { id: s.nextId++, x: d.partnerX + 10, y, vx: 130, o: 1 },
               );
-            else s.shots.push({ x: d.partnerX, y, vx: 0, o: 1 });
+            else s.shots.push({ id: s.nextId++, x: d.partnerX, y, vx: 0, o: 1 });
           }
         }
 
@@ -940,6 +1124,44 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         s.shots = s.shots.filter((sh) => sh.y > -20 && sh.x > -20 && sh.x < s.w + 20);
 
         // Objets qui tombent, collisions.
+        /** Bonus attrapé (au robot ou d'un bip) par le robot `who`. */
+        const collect = (t: Thing, who: number) => {
+          const glow = who ? kOther.glow : k.glow;
+          if (t.kind === "star") {
+            burst(t.x, t.y, "#facc15", 16);
+            addPoints(25, t.x, t.y, who);
+            talk(pick(LINES.star), "happy");
+          } else if (t.kind === "gem") {
+            burst(t.x, t.y, "#22d3ee", 24);
+            addPoints(100, t.x, t.y, who);
+            talk(pick(LINES.gem), "happy");
+          } else if (t.kind === "coffee") {
+            s.lives = Math.min(MAX_LIVES, s.lives + 1);
+            setLives(s.lives);
+            burst(t.x, t.y, "#f97316");
+            pop(t.x, t.y, "+1 ❤", "#e11d48");
+            talk(pick(LINES.coffee), "happy");
+          } else {
+            burst(t.x, t.y, glow, 18);
+            const kind = t.kind as keyof typeof POWER;
+            if (kind === "shield") s.shieldUntil = s.elapsed + POWER.shield.seconds;
+            else if (kind === "freeze") s.freezeUntil = s.elapsed + POWER.freeze.seconds;
+            else if (
+              kind === "turbo" ||
+              kind === "double" ||
+              kind === "pierce" ||
+              kind === "magnet"
+            )
+              s.pfx[kind][who] = s.elapsed + POWER[kind].seconds;
+            if (kind === "mega") megaBip(who);
+            else {
+              const by = d ? (who ? `${d.info.partnerName} : ` : "Toi : ") : "";
+              talk(`${by}${POWER[kind].label} !`, "happy");
+            }
+          }
+        };
+        // Aimant : les bonus glissent vers le robot qui l'a activé.
+        const magnets = [0, 1].filter((who) => on("magnet", who) && (who === 0 || !!d));
         const keep: Thing[] = [];
         for (const t of s.things) {
           const enemy = t.kind === "bug" || t.kind === "boss";
@@ -947,6 +1169,12 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
           t.flash = Math.max(0, t.flash - dt);
           t.y += t.vy * dt * (enemy ? slow : 1);
           t.x += (t.vx * (enemy ? slow : 1) + (enemy ? wind : 0)) * dt + Math.sin(t.wob) * 0.4;
+          if (!enemy && magnets.length) {
+            const tx = magnets.length === 1 ? (magnets[0] ? d!.partnerX : s.x) : s.x;
+            const dx = tx - t.x;
+            t.x += Math.sign(dx) * Math.min(Math.abs(dx), 220 * dt);
+            t.y += 60 * dt;
+          }
           if (t.x < t.r) {
             t.x = t.r;
             t.vx = Math.abs(t.vx);
@@ -955,12 +1183,18 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
             t.vx = -Math.abs(t.vx);
           }
           let gone = false;
-          if (enemy) {
-            const hit = s.shots.findIndex(
-              (sh) => (sh.x - t.x) ** 2 + (sh.y - t.y) ** 2 < (t.r + 9) ** 2,
-            );
-            if (hit >= 0) {
-              s.shots.splice(hit, 1);
+          // Bips : touchent les bugs, et attrapent aussi les bonus (à chaque fois).
+          const hit = s.shots.findIndex(
+            (sh) =>
+              !sh.hit?.includes(t.id) && (sh.x - t.x) ** 2 + (sh.y - t.y) ** 2 < (t.r + 9) ** 2,
+          );
+          if (hit >= 0) {
+            const sh = s.shots[hit];
+            const who = sh.o ? 1 : 0;
+            if (enemy) {
+              // Bips perçants : le bip continue sa route après avoir touché.
+              if (on("pierce", who)) (sh.hit ??= []).push(t.id);
+              else s.shots.splice(hit, 1);
               t.hp -= 1;
               t.flash = 0.12;
               if (t.hp <= 0) {
@@ -968,43 +1202,38 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
                 registerHit();
                 if (t.kind === "boss") {
                   burst(t.x, t.y, "#facc15", 40);
-                  burst(t.x, t.y, k.led[1], 30);
-                  addPoints(150, t.x, t.y);
+                  burst(t.x, t.y, who ? kOther.led[1] : k.led[1], 30);
+                  addPoints(150, t.x, t.y, who);
                   talk("Méga-bug éliminé ! 🏆", "happy");
                 } else {
-                  burst(t.x, t.y, k.led[1]);
-                  addPoints(t.maxHp > 1 ? 20 : 10, t.x, t.y);
+                  burst(t.x, t.y, who ? kOther.led[1] : k.led[1]);
+                  addPoints(t.maxHp > 1 ? 20 : 10, t.x, t.y, who);
                   if (Math.random() < 0.3) talk(pick(LINES.hit), "happy");
                 }
               } else burst(t.x, t.y, "#ffffff", 5);
+            } else {
+              s.shots.splice(hit, 1);
+              gone = true;
+              collect(t, who);
             }
           }
-          const touchesRobot =
-            !gone &&
-            t.y + t.r > robotTop + 18 &&
-            t.y - t.r < s.h &&
-            (Math.abs(t.x - s.x) < ROBOT_W / 2 + t.r - 8 ||
-              (!!d && Math.abs(t.x - d.partnerX) < ROBOT_W / 2 + t.r - 8));
-          if (touchesRobot) {
+          const reach = (x: number) => Math.abs(t.x - x) < ROBOT_W / 2 + t.r - 8;
+          const low = t.y + t.r > robotTop + 18 && t.y - t.r < s.h;
+          const touchesMe = !gone && low && reach(s.x);
+          const touchesPartner = !gone && low && !!d && reach(d.partnerX);
+          if (touchesMe || touchesPartner) {
             gone = true;
             if (enemy) damage(t.x, t.y, t.kind === "boss" ? 2 : 1);
-            else if (t.kind === "star") {
-              burst(t.x, t.y, "#facc15", 16);
-              addPoints(25, t.x, t.y);
-              talk(pick(LINES.star), "happy");
-            } else if (t.kind === "coffee") {
-              s.lives = Math.min(MAX_LIVES, s.lives + 1);
-              setLives(s.lives);
-              burst(t.x, t.y, "#f97316");
-              pop(t.x, t.y, "+1 ❤", "#e11d48");
-              talk(pick(LINES.coffee), "happy");
-            } else {
-              burst(t.x, t.y, k.glow, 18);
-              if (t.kind === "turbo") s.turboUntil = s.elapsed + 8;
-              if (t.kind === "shield") s.shieldUntil = s.elapsed + 12;
-              if (t.kind === "freeze") s.freezeUntil = s.elapsed + 5;
-              if (t.kind === "mega") megaBip();
-              else talk(`${POWER[t.kind as keyof typeof POWER].label} !`, "happy");
+            else {
+              const who =
+                touchesMe && touchesPartner
+                  ? Math.abs(t.x - s.x) <= Math.abs(t.x - d!.partnerX)
+                    ? 0
+                    : 1
+                  : touchesMe
+                    ? 0
+                    : 1;
+              collect(t, who);
             }
           }
           if (!gone && t.y - t.r > s.h) {
@@ -1018,12 +1247,17 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         s.things = keep.filter((t) => t.hp > 0);
         s.wind = wind;
 
-        // Hôte : état de la partie envoyé à l'invité 10 fois par seconde.
-        if (d && now - d.lastSend >= 100) {
+        // Hôte : état de la partie envoyé à l'invité 20 fois par seconde.
+        if (d && now - d.lastSend >= 50) {
           d.lastSend = now;
+          const pf = (who: number) =>
+            (["turbo", "double", "pierce", "magnet"] as PowerKind[]).map((k2) =>
+              on(k2, who) ? 1 : 0,
+            );
           d.room.send({
             type: "snap",
             th: s.things.map((t) => [
+              t.id,
               KINDS.indexOf(t.kind),
               t.emoji,
               r3(t.x / s.w),
@@ -1035,17 +1269,17 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
               t.maxHp,
               t.flash > 0 ? 0.1 : 0,
             ]),
-            sh: s.shots.map((sh) => [
-              r3(sh.x / s.w),
-              r3(sh.y / s.h),
-              r3(sh.vx / s.w),
-              sh.o ? 1 : 0,
-            ]),
+            // Les bips de l'invité ne sont pas renvoyés : il affiche déjà les siens.
+            sh: s.shots
+              .filter((sh) => !sh.o)
+              .map((sh) => [sh.id ?? 0, r3(sh.x / s.w), r3(sh.y / s.h), r3(sh.vx / s.w), 0]),
             sc: s.score,
+            pt: [s.pts[0], s.pts[1]],
             li: s.lives,
             mu: s.mult,
             st: s.stage,
-            fx: [nextFx.turbo ? 1 : 0, nextFx.shield ? 1 : 0, nextFx.freeze ? 1 : 0],
+            fx: [nextFx.shield ? 1 : 0, nextFx.freeze ? 1 : 0],
+            pf: [pf(0), pf(1)],
             wi: r3(wind / s.w),
             hx: r3(s.x / s.w),
             ev: d.out.splice(0),
@@ -1071,8 +1305,10 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         ctx.clearRect(0, 0, s.w, s.h);
         const shot = shotSprite(k.led[0], k.led[1], dpr);
         const shotOther = shotSprite(kOther.led[0], kOther.led[1], dpr);
+        // Mes bips à ma couleur, ceux de l'autre robot à la sienne.
+        const meIdx = duoRef.current && !duoRef.current.info.host ? 1 : 0;
         for (const sh of s.shots)
-          ctx.drawImage(sh.o ? shotOther : shot, sh.x - 12, sh.y - 12, 24, 44);
+          ctx.drawImage((sh.o ?? 0) === meIdx ? shot : shotOther, sh.x - 12, sh.y - 12, 24, 44);
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         for (const t of s.things) {
@@ -1083,7 +1319,9 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
                 ? "rgba(250,204,21,.28)"
                 : t.kind === "coffee"
                   ? "rgba(249,115,22,.24)"
-                  : "rgba(167,139,250,.32)";
+                  : t.kind === "gem"
+                    ? "rgba(34,211,238,.3)"
+                    : "rgba(167,139,250,.32)";
             ctx.beginPath();
             ctx.arc(t.x, t.y, t.r + 8 + Math.sin(t.wob * 2) * 2, 0, Math.PI * 2);
             ctx.fill();
@@ -1261,6 +1499,11 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         s.running = false;
         s.score = Number(msg.sc) || s.score;
         setScore(s.score);
+        if (Array.isArray(msg.pt)) {
+          const pt = msg.pt as number[];
+          s.pts = [Number(pt[0]) || 0, Number(pt[1]) || 0];
+          setDuel([s.pts[1], s.pts[0]]);
+        }
         setPhase("over");
         void finishRef.current(s.score, Number(msg.du) || s.elapsed);
         return;
@@ -1444,7 +1687,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
       if (phase !== "play") return;
       if (["ArrowLeft", "a", "A", "q", "Q"].includes(e.key)) s.keys.left = true;
       else if (["ArrowRight", "d", "D"].includes(e.key)) s.keys.right = true;
-      else if (e.key === " " || e.key === "ArrowUp") fire(0.12);
+      else if (e.key === " " || e.key === "ArrowUp") fire(0.12, true);
       else return;
       e.preventDefault();
     };
@@ -1578,7 +1821,32 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
                       />
                     ))}
                   </span>
-                  <span className="tabular-nums">{score} pts</span>
+                  {duo ? (
+                    <span
+                      className="flex items-center gap-1.5 tabular-nums"
+                      aria-label="Scores du duel"
+                    >
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-xs font-bold text-white",
+                          duel[0] >= duel[1] ? "bg-emerald-600" : "bg-emerald-600/60",
+                        )}
+                      >
+                        Toi {duel[0]}
+                      </span>
+                      <span className="text-xs text-slate-400">vs</span>
+                      <span
+                        className={cn(
+                          "max-w-[160px] truncate rounded-full px-2 py-0.5 text-xs font-bold text-white",
+                          duel[1] > duel[0] ? "bg-violet-600" : "bg-violet-600/60",
+                        )}
+                      >
+                        {duo.partnerName.split(" ")[0]} {duel[1]}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="tabular-nums">{score} pts</span>
+                  )}
                   {phase === "play" && (
                     <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs text-sky-800 dark:bg-sky-400/15 dark:text-sky-200">
                       Niv. {stage}
@@ -1640,7 +1908,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
               onPointerDown={(e) => {
                 if (phase !== "play") return;
                 state.current.targetX = pointerX(e);
-                fire(0.12);
+                fire(0.12, true);
               }}
             >
               <MapBackdrop map={map} />
@@ -1649,11 +1917,14 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
               )}
               <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
-              {phase === "play" && (fx.turbo || fx.shield || fx.freeze) && (
-                <div className="pointer-events-none absolute left-3 top-3 flex gap-1.5">
+              {phase === "play" && Object.values(fx).some(Boolean) && (
+                <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap gap-1.5">
                   {fx.turbo && <FxChip>⚡ Turbo</FxChip>}
                   {fx.shield && <FxChip>🛡️ Bouclier</FxChip>}
                   {fx.freeze && <FxChip>❄️ Gel</FxChip>}
+                  {fx.double && <FxChip>✨ Points ×2</FxChip>}
+                  {fx.pierce && <FxChip>🔱 Bips perçants</FxChip>}
+                  {fx.magnet && <FxChip>🧲 Aimant</FxChip>}
                 </div>
               )}
 
@@ -1875,9 +2146,11 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
                     </div>
 
                     <div className="mt-3 rounded-2xl bg-slate-100/80 p-2.5 text-[11.5px] leading-relaxed text-slate-600 dark:bg-white/5 dark:text-slate-300">
-                      ⭐ points · ☕ +1 vie · ⚡ triple bip · 🛡️ bouclier · ❄️ gel · 🔋 méga-bip qui
-                      nettoie l'écran. Enchaîne sans te faire toucher pour un combo jusqu'à ×4, et
-                      gare aux méga-bugs ! ← → ou souris / doigt pour bouger.
+                      Attrape les bonus avec ton robot ou tire dessus : ⭐ points · 💎 gros points ·
+                      ☕ +1 vie · ⚡ triple bip · 🛡️ bouclier · ❄️ gel · 🔋 méga-bip qui nettoie
+                      l'écran · ✨ points ×2 · 🔱 bips perçants · 🧲 aimant à bonus. Enchaîne sans
+                      te faire toucher pour un combo jusqu'à ×4, et gare aux méga-bugs ! En duo,
+                      c'est un duel : chacun ses points. ← → ou souris / doigt pour bouger.
                     </div>
 
                     <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -1930,8 +2203,34 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
                     </span>
                     <div className="mt-2 w-full max-w-sm rounded-3xl border border-white/70 bg-white/90 p-4 text-center shadow-xl dark:border-white/10 dark:bg-slate-900/90">
                       <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                        Bzzt… batterie à plat 🪫 · <strong>{score}</strong> pts
-                        {score > 0 && score >= best ? " · nouveau record perso ! 🏆" : ""}
+                        {duo ? (
+                          <>
+                            <div className="text-base font-bold text-slate-900 dark:text-white">
+                              {duel[0] > duel[1]
+                                ? "🏆 Tu gagnes le duel !"
+                                : duel[0] < duel[1]
+                                  ? `🏆 ${duo.partnerName} gagne le duel !`
+                                  : "🤝 Égalité parfaite !"}
+                            </div>
+                            <div className="mt-1.5 flex items-center justify-center gap-2 tabular-nums">
+                              <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-bold text-white">
+                                Toi {duel[0]}
+                              </span>
+                              <span className="text-xs text-slate-400">vs</span>
+                              <span className="max-w-[180px] truncate rounded-full bg-violet-600 px-2.5 py-0.5 text-xs font-bold text-white">
+                                {duo.partnerName} {duel[1]}
+                              </span>
+                            </div>
+                            <div className="mt-1 text-xs font-normal text-slate-500">
+                              Score du binôme au classement duo : <strong>{score}</strong> pts
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            Bzzt… batterie à plat 🪫 · <strong>{score}</strong> pts
+                            {score > 0 && score >= best ? " · nouveau record perso ! 🏆" : ""}
+                          </>
+                        )}
                       </div>
                       {score > 0 && (
                         <p className="mt-1 text-xs text-slate-500">
