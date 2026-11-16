@@ -730,13 +730,17 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     keywords: [
       "valider faq",
       "faq validée",
+      "faq réalisée",
+      "réalisée",
+      "pièce jointe",
+      "supprimer commentaire",
       "lien de la faq",
       "question finale",
       "commentaire faq",
       "supprimer demande",
     ],
     answer:
-      "Chaque demande est une carte où l'on échange par commentaires (@ pour taguer, pièces jointes possibles). Geoffrey, Matthieu ou Marick valident en indiquant la question finale et le lien de la FAQ en ligne (« Enregistrer le lien » le garde sans valider, et le lien se met à jour après validation) : la FAQ apparaît alors dans FAQ › Particulier ou Professionnel, avec « Voir la FAQ ↗ ».",
+      "Chaque demande est une carte où l'on échange par commentaires (@ pour taguer, pièces jointes possibles). Elle passe par trois statuts : « En cours », « Validée · à réaliser » quand Geoffrey, Matthieu ou Marick cliquent sur « Valider la demande » (ils peuvent « Annuler la validation »), puis « ✓ Réalisée » quand ils renseignent la question finale et le lien de la FAQ en ligne et cliquent sur « Marquer comme réalisée » (« Enregistrer le lien » le garde sans la marquer réalisée, et le lien se met à jour ensuite) : la FAQ apparaît alors dans FAQ › Particulier ou Professionnel, avec « Voir la FAQ ↗ ». Chaque carte a aussi un bloc « Pièces jointes de la demande » (« Ajouter une pièce jointe », 25 Mo max par fichier) : un clic sur un fichier l'ouvre en lecture seule dans Digicom (images, PDF, textes, vidéos ; les autres formats se téléchargent avec « Télécharger »). Chacun peut supprimer ses propres commentaires et pièces jointes (bouton « Supprimer » ou corbeille) ; Geoffrey et Matthieu peuvent supprimer ceux de n'importe qui.",
   },
   {
     zone: ["faq-part", "faq-pro"],
