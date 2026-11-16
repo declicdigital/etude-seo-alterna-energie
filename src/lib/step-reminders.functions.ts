@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { signHtml, signText } from "@/lib/mail-signature";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { MAIL_SENDER } from "./mail-sender";
 import { editorialMailHtml } from "./mail-layout";
@@ -52,7 +53,7 @@ export const sendStepReminder = createServerFn({ method: "POST" })
         headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": brevoKey, "Content-Type": "application/json" },
         body: JSON.stringify({ sender: MAIL_SENDER, to: reminder.recipients.map(email => ({ email })),
           ...(!reminder.recipients.includes(GEOFFREY_EMAIL) ? { cc: [{ email: GEOFFREY_EMAIL }] } : {}),
-          subject: reminder.subject, textContent, htmlContent }),
+          subject: reminder.subject, textContent: signText(textContent), htmlContent: signHtml(htmlContent) }),
       });
       if (!response.ok) {
         const body = await response.text();

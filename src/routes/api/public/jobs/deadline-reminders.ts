@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { signHtml, signText } from "@/lib/mail-signature";
 import { editorialLink } from "@/lib/editorial-links";
 import { ALL_SPACES, spaceLabel, spacePrefix } from "@/lib/editorial-spaces";
 import { MAIL_SENDER } from "@/lib/mail-sender";
@@ -58,8 +59,8 @@ async function sendBrevo(to: string[], subject: string, text: string, html: stri
       to: to.map((email) => ({ email })),
       ...(!to.includes(CC_EMAIL) ? { cc: [{ email: CC_EMAIL }] } : {}),
       subject,
-      textContent: text,
-      htmlContent: html,
+      textContent: signText(text),
+      htmlContent: signHtml(html),
     }),
   });
   if (!res.ok) {

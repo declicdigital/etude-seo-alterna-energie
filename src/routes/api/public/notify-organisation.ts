@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { signHtml, signText } from "@/lib/mail-signature";
 import { z } from "zod";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { authenticateRequest } from "@/lib/route-auth.server";
@@ -81,8 +82,8 @@ async function sendOne(to: string, subject: string, text: string, html: string):
       sender: MAIL_SENDER,
       to: [{ email: to }],
       subject,
-      textContent: text,
-      htmlContent: html,
+      textContent: signText(text),
+      htmlContent: signHtml(html),
     }),
   });
   if (!res.ok) console.error(`Brevo send failed [${res.status}]: ${await res.text()}`);

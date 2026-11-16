@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { signHtml, signText } from "@/lib/mail-signature";
 import { z } from "zod";
 import { notificationLink } from "@/lib/editorial-links";
 import { notificationCta, notificationDeadline, notificationRecipients, SERVICE_COMMUNICATION_EMAILS } from "@/lib/article-notification";
@@ -192,8 +193,8 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
             to: recipients.map((email) => ({ email })),
             ...(!recipients.includes(CC_EMAIL) ? { cc: [{ email: CC_EMAIL }] } : {}),
             subject: subjectWithDeadline,
-            textContent: textWithDeadline,
-            htmlContent: buildHtml(payload),
+            textContent: signText(textWithDeadline),
+            htmlContent: signHtml(buildHtml(payload)),
           }),
         });
         if (!res.ok) {

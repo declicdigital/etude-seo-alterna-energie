@@ -12,7 +12,7 @@ export function newYearGreeting(recapMonth: string, yearTotal: number): NewYearG
     year,
     title: `🎉 Bonne année ${year} !`,
     lines: [
-      `Toute l'équipe Digicom vous souhaite une très belle année ${year} : de la réussite, de beaux projets et plein de nouveaux contenus à publier ensemble.`,
+      `Je vous souhaite à toutes et à tous une très belle année ${year} : de la réussite, de beaux projets et plein de nouveaux contenus à publier ensemble.`,
       `Merci à chacune et chacun pour le travail accompli en ${y}${
         yearTotal > 0
           ? ` : ${yearTotal} article${yearTotal > 1 ? "s" : ""} publié${yearTotal > 1 ? "s" : ""} sur le blog sur toute l'année, bravo !`

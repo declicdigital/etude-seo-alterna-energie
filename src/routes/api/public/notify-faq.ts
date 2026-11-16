@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { signHtml, signText } from "@/lib/mail-signature";
 import { z } from "zod";
 import { faqLink } from "@/lib/faq";
 import { MAIL_SENDER } from "@/lib/mail-sender";
@@ -119,8 +120,8 @@ export const Route = createFileRoute("/api/public/notify-faq")({
             to: to.map((email) => ({ email })),
             ...(to.some((e) => e.toLowerCase() === GEOFFREY) ? {} : { cc: [{ email: GEOFFREY }] }),
             subject,
-            textContent: text,
-            htmlContent: buildHtml(intro, p),
+            textContent: signText(text),
+            htmlContent: signHtml(buildHtml(intro, p)),
           }),
         });
         if (!res.ok) {

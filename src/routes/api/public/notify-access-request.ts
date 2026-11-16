@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { signHtml, signText } from "@/lib/mail-signature";
 import { z } from "zod";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { authenticateRequest } from "@/lib/route-auth.server";
@@ -59,8 +60,8 @@ ${profile.full_name ? `<strong>${esc(profile.full_name)}</strong><br>` : ""}${es
             to: [{ email: ADMIN_EMAIL }],
             cc: [{ email: CC_EMAIL }],
             subject,
-            textContent: text,
-            htmlContent: html,
+            textContent: signText(text),
+            htmlContent: signHtml(html),
           }),
         });
         if (!res.ok) {
