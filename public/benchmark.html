@@ -464,7 +464,7 @@ function openLatestMonthRanking(){
 
 async function _postShared(payload){
   for(var attempt=0; attempt<2; attempt++){
-    if(!isEditor){ showToast('Seul Geoffrey peut modifier le benchmark','error'); return {ok:false,cancelled:true}; }
+    if(!isEditor){ showToast('Seule l’équipe Digicom peut modifier le benchmark','error'); return {ok:false,cancelled:true}; }
     var res;
     try {
       res = await fetch(SHARED_API, {
@@ -4136,7 +4136,7 @@ function getMonthLabel(key){
   return months[parseInt(p[1])-1]+' '+p[0];
 }
 function saveCurrentMonth(){
-  if(!isEditor){ showToast('Seul Geoffrey peut modifier le benchmark','error'); return; }
+  if(!isEditor){ showToast('Seule l’équipe Digicom peut modifier le benchmark','error'); return; }
   // Modification d'un mois déjà archivé : on enregistre directement au même endroit
   if(currentMonthKey){
     var k = currentMonthKey;

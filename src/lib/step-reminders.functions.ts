@@ -12,7 +12,7 @@ export const sendStepReminder = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: isAdmin, error: roleError } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (roleError || !canSendStepReminder(isAdmin === true, typeof context.claims.email === "string" ? context.claims.email : undefined)) {
-      return { ok: false, error: "Seul Geoffrey peut envoyer ces rappels." };
+      return { ok: false, error: "Seule l'équipe Digicom peut envoyer ces rappels." };
     }
     const prefix = spacePrefix(data.space);
     const keys = [`${prefix}article:${data.articleId}`, `${prefix}pipeline-config`, `${prefix}articles-index`];

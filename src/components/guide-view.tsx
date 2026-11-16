@@ -58,7 +58,7 @@ const PAC_FLOWS: Flow[] = [
     steps: [
       {
         title: "À rédiger",
-        who: "Marina · Caroline · Elodie · Geoffrey",
+        who: "Marina · Caroline · Elodie · équipe Digicom",
         color: C.prep,
         items: [
           "Sujet",
@@ -84,11 +84,11 @@ const PAC_FLOWS: Flow[] = [
           "Sans date : date du jour",
           "Passage auto à Image",
         ],
-        mail: "Mail → Geoffrey",
+        mail: "Mail → équipe Digicom",
       },
       {
         title: "3 · Image",
-        who: "Geoffrey",
+        who: "Équipe Digicom",
         color: C.remind,
         items: ["Ajouter l'image (glisser / clic)", "Valider l'étape"],
         mail: "Mail → Fannie & Coraline",
@@ -98,11 +98,11 @@ const PAC_FLOWS: Flow[] = [
         who: "Service Communication · Fannie & Coraline",
         color: C.review,
         items: ["Relire l'article", "Deadline : 3 jours ouvrés après l'Image", "Valider l'étape"],
-        mail: "Mail → Marick",
+        mail: "Mail → équipe Digicom",
       },
       {
         title: "5 · Intégration",
-        who: "Marick",
+        who: "Équipe Digicom",
         color: C.integ,
         items: [
           "Télécharger l'image",
@@ -111,7 +111,7 @@ const PAC_FLOWS: Flow[] = [
           "Lien publié obligatoire",
           "Valider",
         ],
-        mail: "Mail → Geoffrey",
+        mail: "Mail → équipe Digicom",
       },
     ],
     end: ["En haut de « Contenus »", "Si Blog → aussi en haut de Blog › Particulier"],
@@ -122,7 +122,7 @@ const PAC_FLOWS: Flow[] = [
     steps: [
       {
         title: "À rédiger",
-        who: "Marina · Caroline · Elodie · Geoffrey",
+        who: "Marina · Caroline · Elodie · équipe Digicom",
         color: C.prep,
         items: [
           "Type : Réécriture",
@@ -139,14 +139,14 @@ const PAC_FLOWS: Flow[] = [
         who: "Validés à l'enregistrement",
         color: C.prep,
         items: ["Carte créée", "Brief + doc liés", "Passage direct à l'intégration"],
-        mail: "Mail → Marick",
+        mail: "Mail → équipe Digicom",
       },
       {
         title: "3 · Intégration",
-        who: "Marick",
+        who: "Équipe Digicom",
         color: C.integ,
         items: ["Intégrer sur le site", "Lien publié obligatoire", "Valider"],
-        mail: "Mail → Geoffrey",
+        mail: "Mail → équipe Digicom",
       },
     ],
     end: ["En haut de « Contenus »", "Si Blog → aussi en haut de Blog › Particulier"],
@@ -160,7 +160,7 @@ const BLOG_FLOWS: Flow[] = [
     steps: [
       {
         title: "À rédiger",
-        who: "Marina · Caroline · Elodie · Geoffrey",
+        who: "Marina · Caroline · Elodie · équipe Digicom",
         color: C.prep,
         items: [
           "Sujet",
@@ -184,11 +184,11 @@ const BLOG_FLOWS: Flow[] = [
           "Sans date : date du jour",
           "Passage auto à Image",
         ],
-        mail: "Mail → Geoffrey",
+        mail: "Mail → équipe Digicom",
       },
       {
         title: "2 · Image",
-        who: "Geoffrey",
+        who: "Équipe Digicom",
         color: C.remind,
         items: ["Ajouter l'image (glisser / clic)", "Valider l'étape"],
         mail: "Mail → Fannie & Coraline",
@@ -198,11 +198,11 @@ const BLOG_FLOWS: Flow[] = [
         who: "Service Communication · Fannie & Coraline",
         color: C.review,
         items: ["Relire l'article", "Deadline : 3 jours ouvrés après l'Image", "Valider l'étape"],
-        mail: "Mail → Marick",
+        mail: "Mail → équipe Digicom",
       },
       {
         title: "4 · Intégration",
-        who: "Marick",
+        who: "Équipe Digicom",
         color: C.integ,
         items: [
           "Télécharger l'image",
@@ -211,7 +211,7 @@ const BLOG_FLOWS: Flow[] = [
           "Lien publié obligatoire",
           "Valider",
         ],
-        mail: "Mail → Geoffrey",
+        mail: "Mail → équipe Digicom",
       },
     ],
     end: ["En haut du Blog de la bonne cible", "Coché « Publié »"],
@@ -236,11 +236,11 @@ const BLOG_FLOWS: Flow[] = [
         who: "Expert métier à renseigner dans la carte",
         color: C.remind,
         items: ["Relire le document", "Vérifier les informations métier", "Valider la relecture"],
-        mail: "Mail → Geoffrey",
+        mail: "Mail → équipe Digicom",
       },
       {
         title: "3 · Image",
-        who: "Geoffrey",
+        who: "Équipe Digicom",
         color: C.remind,
         items: ["Ajouter l'image", "Valider l'étape"],
         mail: "Mail → Fannie & Coraline",
@@ -250,14 +250,14 @@ const BLOG_FLOWS: Flow[] = [
         who: "Service Communication · Fannie & Coraline",
         color: C.review,
         items: ["Relire l'article", "Deadline : 3 jours ouvrés après l'Image", "Valider l'étape"],
-        mail: "Mail → Marick",
+        mail: "Mail → équipe Digicom",
       },
       {
         title: "5 · Intégration",
-        who: "Marick",
+        who: "Équipe Digicom",
         color: C.integ,
         items: ["Intégrer sur le site", "Lien publié obligatoire", "Valider"],
-        mail: "Mail → Geoffrey",
+        mail: "Mail → équipe Digicom",
       },
     ],
     end: ["En haut du Blog Pro", "Coché « Publié »"],
@@ -267,7 +267,7 @@ const BLOG_FLOWS: Flow[] = [
 const PLANETE_FLOWS: Flow[] = [
   {
     title: "Parlons Planète",
-    intro: "Articles de parlonsplanete.com · rédaction Aurorae, intégration Geoffrey",
+    intro: "Articles de parlonsplanete.com · rédaction Aurorae, intégration équipe Digicom",
     steps: [
       {
         title: "À rédiger",
@@ -294,11 +294,11 @@ const PLANETE_FLOWS: Flow[] = [
           "Sans date : date du jour",
           "Passage auto à l'intégration",
         ],
-        mail: "Mail → Geoffrey",
+        mail: "Mail → équipe Digicom",
       },
       {
         title: "2 · Intégration",
-        who: "Geoffrey",
+        who: "Équipe Digicom",
         color: C.integ,
         items: [
           "Intégrer sur parlonsplanete.com",
@@ -336,7 +336,7 @@ const FAQ_FLOWS: Flow[] = [
           "Commentaire avec @ et pièce jointe",
           "Tout rempli → Sauvegarder",
         ],
-        mail: "Mail → Geoffrey",
+        mail: "Mail → équipe Digicom",
       },
       {
         title: "Échanges sur la carte",
@@ -346,20 +346,20 @@ const FAQ_FLOWS: Flow[] = [
           "Nouveaux messages",
           "@ pour taguer (un seul mail)",
           "Pièces jointes ouvertes en lecture seule",
-          "Chacun supprime ses messages ; Geoffrey et Matthieu tous",
+          "Chacun supprime ses messages ; l'équipe Digicom tous",
         ],
         mail: "Mail aux personnes taguées",
       },
       {
         title: "Validation",
-        who: "Geoffrey, Matthieu ou Marick",
+        who: "Équipe Digicom",
         color: C.review,
         items: ["Cliquer sur « Valider la demande »", "Annulable"],
         mail: "Badge « Validée · à réaliser »",
       },
       {
         title: "Réalisation",
-        who: "Geoffrey, Matthieu ou Marick",
+        who: "Équipe Digicom",
         color: C.integ,
         items: ["Question finale", "Lien de la FAQ", "Cliquer sur « Marquer comme réalisée »"],
         mail: "Badge « ✓ Réalisée »",
@@ -388,7 +388,7 @@ const BENCHMARK_FLOWS: Flow[] = [
       },
       {
         title: "Saisie",
-        who: "Geoffrey",
+        who: "Équipe Digicom",
         color: C.remind,
         items: [
           "Un fournisseur à la fois",
@@ -399,7 +399,7 @@ const BENCHMARK_FLOWS: Flow[] = [
       },
       {
         title: "Validation",
-        who: "Geoffrey",
+        who: "Équipe Digicom",
         color: C.integ,
         items: ["Valider chaque fournisseur", "Badge « Validé »", "Enregistrer le mois"],
       },
@@ -715,7 +715,7 @@ export function GuideView({
         </div>
         {rubriques.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            Aucune rubrique ne vous est encore ouverte. Demandez l'accès à Geoffrey.
+            Aucune rubrique ne vous est encore ouverte. Demandez l'accès à l'équipe Digicom.
           </p>
         )}
         {rubriques.map((r) => {
@@ -743,13 +743,13 @@ export function GuideView({
             <div>• « Marquer validée » sans date → la date du jour est mise automatiquement</div>
             <div>
               • Deadlines automatiques : Relecture 3 jours ouvrés après l'Image, Intégration 5 jours
-              ouvrés après la Relecture (Geoffrey peut les changer) → deadline écrite dans le mail
+              ouvrés après la Relecture (l'équipe Digicom peut les changer) → deadline écrite dans le mail
               d'étape et rappel au responsable le jour J
             </div>
             <div>• @ dans un message → un seul mail à toutes les personnes taguées</div>
             <div>• Messages modifiables sans renvoi de mail</div>
             <div>• Lien des mails → ouvre la carte à la bonne étape</div>
-            <div>• Geoffrey en copie de tous les mails</div>
+            <div>• L'équipe Digicom en copie de tous les mails</div>
           </section>
         )}
       </div>

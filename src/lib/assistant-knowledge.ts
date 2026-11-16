@@ -317,20 +317,20 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     ],
     answer: (z) => {
       const lines = [
-        "Geoffrey (service Communication d'Alterna Énergie) pilote Digicom et en est l'administrateur.",
+        "L'équipe Digicom (service Communication d'Alterna Énergie) pilote l'outil et l'administre.",
       ];
       const editorial = z.has("blog-suivi") || z.has("pac-suivi");
       if (editorial)
         lines.push(
-          "Caroline et Elodie (Aurorae) et Marina sont rédactrices ; Geoffrey s'occupe de l'étape Image ; Fannie et Coraline (Service Communication) relisent ; Marick intègre les articles sur le site d'Alterna Énergie.",
+          "Caroline et Elodie (Aurorae) et Marina sont rédactrices ; l'équipe Digicom s'occupe de l'étape Image ; Fannie et Coraline (Service Communication) relisent ; l'équipe Digicom intègre les articles sur le site d'Alterna Énergie.",
         );
       if (z.has("blog-suivi"))
         lines.push("Pour un article Professionnel, un expert métier relit aussi le contenu.");
       if (z.has("planete-suivi"))
-        lines.push("Parlons Planète : Caroline et Elodie (Aurorae) rédigent, Geoffrey intègre.");
+        lines.push("Parlons Planète : Caroline et Elodie (Aurorae) rédigent, l'équipe Digicom intègre.");
       if (z.has("faq-demandes"))
-        lines.push("FAQ : Geoffrey, Matthieu et Marick valident les demandes.");
-      if (z.has("benchmark")) lines.push("Benchmark : Geoffrey saisit les tarifs.");
+        lines.push("FAQ : l'équipe Digicom valide les demandes.");
+      if (z.has("benchmark")) lines.push("Benchmark : l'équipe Digicom saisit les tarifs.");
       return lines.join(" ");
     },
   },
@@ -370,7 +370,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "oublié",
     ],
     answer:
-      "Sur la page de connexion : « Se connecter » avec ton email et ton mot de passe (la connexion Google n'existe plus). Sans compte, « Demander un accès » crée ta demande : tu restes sur « Demande en attente de validation » jusqu'à ce que Geoffrey la valide. Si tu as reçu une invitation par mail, son lien te fait choisir ton mot de passe ; s'il a expiré, demande une nouvelle invitation à Geoffrey. Mot de passe oublié : sur la page de connexion, clique sur « Mot de passe oublié ? » (à droite du champ Mot de passe), entre ton email puis « Recevoir le lien » ; le mail contient un lien qui ouvre la page « Nouveau mot de passe » (8 caractères minimum, à saisir deux fois). Si tu te connectais avant avec Google, ton compte est conservé avec la même adresse : entre-la puis « Mot de passe oublié ? » (ou « Créer mon mot de passe », proposé après un essai de connexion) pour recevoir le lien et créer ton mot de passe.",
+      "Sur la page de connexion : « Se connecter » avec ton email et ton mot de passe (la connexion Google n'existe plus). Sans compte, « Demander un accès » crée ta demande : tu restes sur « Demande en attente de validation » jusqu'à ce que l'équipe Digicom la valide. Si tu as reçu une invitation par mail, son lien te fait choisir ton mot de passe ; s'il a expiré, demande une nouvelle invitation à l'équipe Digicom. Mot de passe oublié : sur la page de connexion, clique sur « Mot de passe oublié ? » (à droite du champ Mot de passe), entre ton email puis « Recevoir le lien » ; le mail contient un lien qui ouvre la page « Nouveau mot de passe » (8 caractères minimum, à saisir deux fois). Si tu te connectais avant avec Google, ton compte est conservé avec la même adresse : entre-la puis « Mot de passe oublié ? » (ou « Créer mon mot de passe », proposé après un essai de connexion) pour recevoir le lien et créer ton mot de passe.",
   },
   {
     zone: "all",
@@ -385,7 +385,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "ouvrir une rubrique",
     ],
     answer:
-      "Les rubriques s'ouvrent compte par compte, et parfois sous-rubrique par sous-rubrique. Tu ne vois que celles qui te sont ouvertes. S'il t'en manque une, demande-la à Geoffrey.",
+      "Les rubriques s'ouvrent compte par compte, et parfois sous-rubrique par sous-rubrique. Tu ne vois que celles qui te sont ouvertes. S'il t'en manque une, demande-la à l'équipe Digicom.",
   },
   {
     zone: "demandes",
@@ -409,7 +409,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     title: "Les mails automatiques",
     keywords: ["mail", "email", "notification", "expéditeur", "copie", "pas reçu", "lien du mail"],
     answer:
-      "Les mails partent de « Alterna énergie - Digicom ». Geoffrey est en copie de tous les mails d'étape. Le bouton du mail ouvre directement la bonne carte à la bonne étape (connecte-toi si besoin, tu y seras redirigé). Si un mail n'arrive pas, regarde dans tes indésirables puis préviens Geoffrey.",
+      "Les mails partent de « Alterna énergie - Digicom ». L'équipe Digicom est en copie de tous les mails d'étape. Le bouton du mail ouvre directement la bonne carte à la bonne étape (connecte-toi si besoin, tu y seras redirigé). Si un mail n'arrive pas, regarde dans tes indésirables puis préviens l'équipe Digicom.",
   },
   {
     zone: "all",
@@ -433,7 +433,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "lecture seule",
     ],
     answer:
-      "En haut du Suivi éditorial, bloc « À rédiger » : « + Ajouter une ligne », puis remplis ce que tu sais (sujet, éditrice, date de rédaction, titre H1, cible, catégorie, énergie, deadline, lien du doc). Dès que le lien du doc est collé, « Enregistrer » s'active : la carte de l'article est créée (« Dans le suivi ✓ »), l'étape Rédaction est validée (datée du jour si besoin) et Geoffrey reçoit un mail. Le reste se complète ensuite dans la carte. La corbeille 🗑 supprime une ligne. Seules les rédactrices (Caroline, Elodie, Marina) et Geoffrey peuvent modifier ce bloc ; pour les autres il est en lecture seule.",
+      "En haut du Suivi éditorial, bloc « À rédiger » : « + Ajouter une ligne », puis remplis ce que tu sais (sujet, éditrice, date de rédaction, titre H1, cible, catégorie, énergie, deadline, lien du doc). Dès que le lien du doc est collé, « Enregistrer » s'active : la carte de l'article est créée (« Dans le suivi ✓ »), l'étape Rédaction est validée (datée du jour si besoin) et l'équipe Digicom reçoit un mail. Le reste se complète ensuite dans la carte. La corbeille 🗑 supprime une ligne. Seules les rédactrices (Caroline, Elodie, Marina) et l'équipe Digicom peuvent modifier ce bloc ; pour les autres il est en lecture seule.",
   },
   {
     zone: "blog-suivi",
@@ -448,7 +448,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "rédaction en retard",
     ],
     answer:
-      "Dans « À rédiger », un point rouge apparaît quand la deadline est à moins de 5 jours (survole-le pour voir le nombre de jours). Les lignes sont triées par deadline la plus proche. Tant que la ligne n'est pas enregistrée en article, l'éditrice choisie reçoit un mail le lundi si sa deadline tombe dans la semaine, puis un mail le jour J (Aurorae : Caroline et Elodie ; Marina : Marina), avec Geoffrey en copie.",
+      "Dans « À rédiger », un point rouge apparaît quand la deadline est à moins de 5 jours (survole-le pour voir le nombre de jours). Les lignes sont triées par deadline la plus proche. Tant que la ligne n'est pas enregistrée en article, l'éditrice choisie reçoit un mail le lundi si sa deadline tombe dans la semaine, puis un mail le jour J (Aurorae : Caroline et Elodie ; Marina : Marina), avec l'équipe Digicom en copie.",
   },
   {
     zone: "blog-suivi",
@@ -473,7 +473,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "particulier",
     ],
     answer:
-      "Particulier (cartes roses) : Rédaction → Image (Geoffrey) → Relecture (Fannie et Coraline) → Intégration (Marick) → Publié. Professionnel (cartes bleues) : Édition → Relecture de l'expert métier (nom à renseigner dans la carte) → Image → Relecture → Intégration. À chaque validation, la personne de l'étape suivante reçoit un mail avec un lien qui ouvre la carte à la bonne étape, Geoffrey en copie.",
+      "Particulier (cartes roses) : Rédaction → Image (équipe Digicom) → Relecture (Fannie et Coraline) → Intégration (équipe Digicom) → Publié. Professionnel (cartes bleues) : Édition → Relecture de l'expert métier (nom à renseigner dans la carte) → Image → Relecture → Intégration. À chaque validation, la personne de l'étape suivante reçoit un mail avec un lien qui ouvre la carte à la bonne étape, l'équipe Digicom en copie.",
   },
   {
     zone: "blog-suivi",
@@ -524,7 +524,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "modifier la date",
     ],
     answer:
-      "Ouvre l'étape dans la carte : le champ « Responsable » propose les personnes prévues (par exemple Aurorae ou Marina pour la Rédaction) à cocher, ou un nom à écrire. L'Image (Geoffrey) et la Relecture (Service Communication : Fannie et Coraline) ont un responsable fixe. Le champ « Date » se modifie à tout moment ; une date déjà saisie n'est jamais écrasée.",
+      "Ouvre l'étape dans la carte : le champ « Responsable » propose les personnes prévues (par exemple Aurorae ou Marina pour la Rédaction) à cocher, ou un nom à écrire. L'Image (équipe Digicom) et la Relecture (Service Communication : Fannie et Coraline) ont un responsable fixe. Le champ « Date » se modifie à tout moment ; une date déjà saisie n'est jamais écrasée.",
   },
   {
     zone: "blog-suivi",
@@ -541,7 +541,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "format",
     ],
     answer:
-      "À l'étape Image (Geoffrey), deux cases : « 1500 × 700 » et « 950 × 475 ». Glisse l'image dans la case ou clique dessus pour la choisir. Une case remplie se remplace de la même façon ; un clic sur l'aperçu télécharge l'image et la croix × la retire. Une fois l'étape validée, Fannie et Coraline reçoivent le mail de relecture.",
+      "À l'étape Image (équipe Digicom), deux cases : « 1500 × 700 » et « 950 × 475 ». Glisse l'image dans la case ou clique dessus pour la choisir. Une case remplie se remplace de la même façon ; un clic sur l'aperçu télécharge l'image et la croix × la retire. Une fois l'étape validée, Fannie et Coraline reçoivent le mail de relecture.",
   },
   {
     zone: "blog-suivi",
@@ -556,7 +556,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "corriger image",
     ],
     answer:
-      "À l'étape Relecture, les images s'affichent en grand : un clic les agrandit en plein écran sans les télécharger (Échap ou un clic pour fermer). Sous chaque image, écris la modification à faire : le commentaire est enregistré avec ton nom et s'affiche sur la case de l'image à l'étape Image, pour Geoffrey. Valide la relecture quand tout est bon : Marick reçoit le mail d'intégration.",
+      "À l'étape Relecture, les images s'affichent en grand : un clic les agrandit en plein écran sans les télécharger (Échap ou un clic pour fermer). Sous chaque image, écris la modification à faire : le commentaire est enregistré avec ton nom et s'affiche sur la case de l'image à l'étape Image, pour l'équipe Digicom. Valide la relecture quand tout est bon : l'équipe Digicom reçoit le mail d'intégration.",
   },
   {
     zone: "blog-suivi",
@@ -571,7 +571,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "ajouté au blog",
     ],
     answer:
-      "À l'étape Intégration (Marick), les images validées sont affichées pour être téléchargées. Après la mise en ligne sur le site d'Alterna Énergie, colle le lien publié (https://www.alterna-energie.fr/blog-article/…) puis « Marquer validée » : l'article s'ajoute en haut du Blog Particulier ou Professionnel, coché « Publié », la carte affiche « Ajouté au blog » et Geoffrey reçoit un mail.",
+      "À l'étape Intégration (équipe Digicom), les images validées sont affichées pour être téléchargées. Après la mise en ligne sur le site d'Alterna Énergie, colle le lien publié (https://www.alterna-energie.fr/blog-article/…) puis « Marquer validée » : l'article s'ajoute en haut du Blog Particulier ou Professionnel, coché « Publié », la carte affiche « Ajouté au blog » et l'équipe Digicom reçoit un mail.",
   },
   {
     zone: "blog-suivi",
@@ -585,7 +585,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     title: "Deadlines des étapes et rappels",
     keywords: ["deadline", "délai", "rappel", "retard", "échéance", "relance", "jours ouvrés"],
     answer:
-      "Deadlines automatiques : la Relecture est attendue 3 jours ouvrés après la validation de l'Image, l'Intégration 5 jours ouvrés après la validation de la Relecture. Geoffrey peut aussi poser ou modifier la deadline de chaque étape dans la carte. La deadline est écrite dans le mail d'étape, et le responsable reçoit un rappel le matin du jour J (le vendredi d'avant si elle tombe un week-end). Sur l'étape, le badge ⏰ passe en orange à 2 jours et en rouge en cas de retard. Geoffrey peut aussi envoyer un rappel à la main avec le bouton ✉ de l'étape.",
+      "Deadlines automatiques : la Relecture est attendue 3 jours ouvrés après la validation de l'Image, l'Intégration 5 jours ouvrés après la validation de la Relecture. L'équipe Digicom peut aussi poser ou modifier la deadline de chaque étape dans la carte. La deadline est écrite dans le mail d'étape, et le responsable reçoit un rappel le matin du jour J (le vendredi d'avant si elle tombe un week-end). Sur l'étape, le badge ⏰ passe en orange à 2 jours et en rouge en cas de retard. L'équipe Digicom peut aussi envoyer un rappel à la main avec le bouton ✉ de l'étape.",
   },
   {
     zone: "blog-suivi",
@@ -622,7 +622,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "ajouter une étape",
     ],
     answer:
-      "« Réglages du pipeline », en haut du suivi, permet de renommer une étape, définir son responsable par défaut, la liste des responsables possibles et leurs adresses mail, la rendre facultative (bouton « Passer cette étape »), ou ajouter / supprimer une étape. Ces réglages s'appliquent à tous les articles : change-les en accord avec Geoffrey.",
+      "« Réglages du pipeline », en haut du suivi, permet de renommer une étape, définir son responsable par défaut, la liste des responsables possibles et leurs adresses mail, la rendre facultative (bouton « Passer cette étape »), ou ajouter / supprimer une étape. Ces réglages s'appliquent à tous les articles : change-les en accord avec l'équipe Digicom.",
   },
   {
     zone: "blog-suivi",
@@ -681,7 +681,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "pompe à chaleur",
     ],
     answer: (z) =>
-      "PAC veut dire pompe à chaleur : la rubrique Stratégie PAC suit les contenus sur la pompe à chaleur. Suivi Stratégie PAC (contenus Particulier) : dans « À rédiger », renseigne le type (Création ou Réécriture), Blog ou Éditorial, sujet, titre H1, éditrice, deadline, lien du brief et lien du doc, puis « Enregistrer ». Création : Brief + Rédaction → Image (Geoffrey) → Relecture (Fannie et Coraline) → Intégration (Marick). Réécriture : Brief + Rédaction → Intégration directe par Marick. Une fois publié, le contenu s'ajoute en haut de « Contenus »" +
+      "PAC veut dire pompe à chaleur : la rubrique Stratégie PAC suit les contenus sur la pompe à chaleur. Suivi Stratégie PAC (contenus Particulier) : dans « À rédiger », renseigne le type (Création ou Réécriture), Blog ou Éditorial, sujet, titre H1, éditrice, deadline, lien du brief et lien du doc, puis « Enregistrer ». Création : Brief + Rédaction → Image (équipe Digicom) → Relecture (Fannie et Coraline) → Intégration (équipe Digicom). Réécriture : Brief + Rédaction → Intégration directe par l'équipe Digicom. Une fois publié, le contenu s'ajoute en haut de « Contenus »" +
       (z.has("blog-part") || z.has("blog-suivi")
         ? ", et aussi en haut du Blog Particulier si c'est un contenu Blog (la catégorie du blog est alors obligatoire)."
         : ". Pour un contenu Blog, la catégorie du blog est obligatoire."),
@@ -692,7 +692,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     title: "Parlons Planète",
     keywords: ["parlons planète", "planète", "aurorae", "parlonsplanete", "intégration planète"],
     answer:
-      "Suivi Parlons Planète (articles de parlonsplanete.com) : Rédaction (Caroline et Elodie d'Aurorae) puis Intégration (Geoffrey). Dans « À rédiger », le lien du doc suffit pour enregistrer et Geoffrey reçoit le mail d'intégration. La catégorie est obligatoire avant l'intégration, la sous-catégorie est facultative. Une fois l'intégration validée avec le lien publié, l'article s'ajoute en haut de Parlons Planète › Blog avec sa catégorie, sa sous-catégorie et sa date de publication, coché « Publié ».",
+      "Suivi Parlons Planète (articles de parlonsplanete.com) : Rédaction (Caroline et Elodie d'Aurorae) puis Intégration (équipe Digicom). Dans « À rédiger », le lien du doc suffit pour enregistrer et l'équipe Digicom reçoit le mail d'intégration. La catégorie est obligatoire avant l'intégration, la sous-catégorie est facultative. Une fois l'intégration validée avec le lien publié, l'article s'ajoute en haut de Parlons Planète › Blog avec sa catégorie, sa sous-catégorie et sa date de publication, coché « Publié ».",
   },
   {
     zone: "planete-suivi",
@@ -722,7 +722,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "réécrire faq",
     ],
     answer:
-      "FAQ › Demandes, bloc « Nouvelle demande FAQ » : choisis Création ou Réécriture, écris le sujet, puis le contenu « À créer » ou « Contenu déjà fourni » (avec la question et la réponse exactes), la cible (Particulier ou Professionnel), Zendesk ou Site Web (où la FAQ sera publiée) puis, pour Zendesk uniquement, la catégorie (ou « + Nouvelle catégorie ») : une FAQ Site Web n'a pas de catégorie. Ajoute si besoin un commentaire avec @ et des pièces jointes, puis « Sauvegarder » : Geoffrey est prévenu par mail. Toutes les cases doivent être remplies.",
+      "FAQ › Demandes, bloc « Nouvelle demande FAQ » : choisis Création ou Réécriture, écris le sujet, puis le contenu « À créer » ou « Contenu déjà fourni » (avec la question et la réponse exactes), la cible (Particulier ou Professionnel), Zendesk ou Site Web (où la FAQ sera publiée) puis, pour Zendesk uniquement, la catégorie (ou « + Nouvelle catégorie ») : une FAQ Site Web n'a pas de catégorie. Ajoute si besoin un commentaire avec @ et des pièces jointes, puis « Sauvegarder » : l'équipe Digicom est prévenue par mail. Toutes les cases doivent être remplies.",
   },
   {
     zone: "faq-demandes",
@@ -740,7 +740,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "supprimer demande",
     ],
     answer:
-      "Chaque demande est une carte où l'on échange par commentaires (@ pour taguer, pièces jointes possibles). Elle passe par trois statuts : « En cours », « Validée · à réaliser » quand Geoffrey, Matthieu ou Marick cliquent sur « Valider la demande » (ils peuvent « Annuler la validation »), puis « ✓ Réalisée » quand ils renseignent la question finale et le lien de la FAQ en ligne et cliquent sur « Marquer comme réalisée » (« Enregistrer le lien » le garde sans la marquer réalisée, et le lien se met à jour ensuite) : la FAQ apparaît alors dans FAQ › Particulier ou Professionnel, avec « Voir la FAQ ↗ ». Chaque carte a aussi un bloc « Pièces jointes de la demande » (« Ajouter une pièce jointe », 25 Mo max par fichier) : un clic sur un fichier l'ouvre en lecture seule dans Digicom (images, PDF, textes, vidéos ; les autres formats se téléchargent avec « Télécharger »). Chacun peut supprimer ses propres commentaires et pièces jointes (bouton « Supprimer » ou corbeille) ; Geoffrey et Matthieu peuvent supprimer ceux de n'importe qui. Une nouvelle catégorie créée dans une demande est gardée pour la suite dès que Geoffrey ou Matthieu valident la demande (ou la marquent réalisée) : elle apparaît alors dans la liste des catégories du formulaire pour tout le monde (si Marick valide, Geoffrey ou Matthieu ont un bouton « Garder cette catégorie »). Si quelqu'un retape une catégorie qui existe déjà, la demande est classée dans la catégorie existante.",
+      "Chaque demande est une carte où l'on échange par commentaires (@ pour taguer, pièces jointes possibles). Elle passe par trois statuts : « En cours », « Validée · à réaliser » quand l'équipe Digicom clique sur « Valider la demande » (elle peut « Annuler la validation »), puis « ✓ Réalisée » quand elle renseigne la question finale et le lien de la FAQ en ligne et clique sur « Marquer comme réalisée » (« Enregistrer le lien » le garde sans la marquer réalisée, et le lien se met à jour ensuite) : la FAQ apparaît alors dans FAQ › Particulier ou Professionnel, avec « Voir la FAQ ↗ ». Chaque carte a aussi un bloc « Pièces jointes de la demande » (« Ajouter une pièce jointe », 25 Mo max par fichier) : un clic sur un fichier l'ouvre en lecture seule dans Digicom (images, PDF, textes, vidéos ; les autres formats se téléchargent avec « Télécharger »). Chacun peut supprimer ses propres commentaires et pièces jointes (bouton « Supprimer » ou corbeille) ; l'équipe Digicom peut supprimer ceux de n'importe qui. Une nouvelle catégorie créée dans une demande est gardée pour la suite dès que l'équipe Digicom valide la demande (ou la marque réalisée) : elle apparaît alors dans la liste des catégories du formulaire pour tout le monde (sinon, un bouton « Garder cette catégorie » permet de la garder). Si quelqu'un retape une catégorie qui existe déjà, la demande est classée dans la catégorie existante.",
   },
   {
     zone: ["faq-part", "faq-pro"],
@@ -771,11 +771,11 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "csv",
     ],
     answer:
-      "Le Benchmark compare chaque mois les offres d'électricité et de gaz des fournisseurs avec la référence d'Alterna Énergie. Choisis Électricité ou Gaz, puis le mois dans « Historique ». L'onglet « Valeurs » montre les tarifs saisis, l'onglet « Classement » le classement des offres (prix TTC). Tu peux exporter en PDF ou en CSV, et le bouton de partage copie un lien. La consultation est en lecture seule, seul Geoffrey saisit.",
+      "Le Benchmark compare chaque mois les offres d'électricité et de gaz des fournisseurs avec la référence d'Alterna Énergie. Choisis Électricité ou Gaz, puis le mois dans « Historique ». L'onglet « Valeurs » montre les tarifs saisis, l'onglet « Classement » le classement des offres (prix TTC). Tu peux exporter en PDF ou en CSV, et le bouton de partage copie un lien. La consultation est en lecture seule, seule l'équipe Digicom saisit.",
   },
   {
     zone: "benchmark",
-    title: "Saisir le Benchmark (Geoffrey)",
+    title: "Saisir le Benchmark (équipe Digicom)",
     keywords: [
       "saisie",
       "saisir",
@@ -787,7 +787,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "tarifs",
     ],
     answer:
-      "Réservé à Geoffrey, onglet « Saisie » : choisis un fournisseur dans la liste à gauche, saisis ses tarifs (prix tout compris TTC ou tarif décomposé) ou utilise « Extraire les tarifs » depuis un PDF ou un texte collé, ajoute un éventuel code promo (déduit du coût annuel), puis valide le fournisseur. « 💾 Sauvegarder » enregistre le mois, « + Nouveau » crée le mois suivant ; double-clic sur un mois pour le renommer.",
+      "Réservé à l'équipe Digicom, onglet « Saisie » : choisis un fournisseur dans la liste à gauche, saisis ses tarifs (prix tout compris TTC ou tarif décomposé) ou utilise « Extraire les tarifs » depuis un PDF ou un texte collé, ajoute un éventuel code promo (déduit du coût annuel), puis valide le fournisseur. « 💾 Sauvegarder » enregistre le mois, « + Nouveau » crée le mois suivant ; double-clic sur un mois pour le renommer.",
   },
   // ——— Newsletters ———
   {
@@ -812,28 +812,28 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     title: "Newsletter Grands Comptes",
     keywords: ["grands comptes", "watt's next", "guillaume", "mensuelle"],
     answer:
-      "Newsletter mensuelle, envoyée le premier jeudi à partir du 3 du mois. Étapes : proposition de sujets (Watt's Next → Guillaume, B2B), validation / ajustement (B2B → Watt's Next), envoi de la rédaction (Watt's Next → B2B), relecture & modifications (B2B → Communication : Geoffrey et Matthieu), BAT (Communication → B2B), envoi aux clients Grands Comptes.",
+      "Newsletter mensuelle, envoyée le premier jeudi à partir du 3 du mois. Étapes : proposition de sujets (Watt's Next → Guillaume, B2B), validation / ajustement (B2B → Watt's Next), envoi de la rédaction (Watt's Next → B2B), relecture & modifications (B2B → Communication : l'équipe Digicom), BAT (Communication → B2B), envoi aux clients Grands Comptes.",
   },
   {
     zone: "nl-interne",
     title: "Newsletter Interne",
     keywords: ["interne", "trimestrielle", "géraldine", "christophe", "bat final", "personnel"],
     answer:
-      "Newsletter interne trimestrielle (février, mai, août, novembre), envoyée le troisième lundi du mois. Étapes : récolte des sujets auprès de tous les internes, rédaction (Communication : Geoffrey et Matthieu), BAT (→ Christophe, B2C), BAT final (→ Géraldine), envoi à tout le personnel.",
+      "Newsletter interne trimestrielle (février, mai, août, novembre), envoyée le troisième lundi du mois. Étapes : récolte des sujets auprès de tous les internes, rédaction (Communication : l'équipe Digicom), BAT (→ Christophe, B2C), BAT final (→ Géraldine), envoi à tout le personnel.",
   },
   {
     zone: "nl-b2c",
     title: "Newsletter B2C",
     keywords: ["b2c", "clients b2c", "christophe"],
     answer:
-      "Newsletter B2C trimestrielle (janvier, avril, juillet, octobre), envoyée le troisième jeudi du mois. Étapes : rédaction (Communication : Geoffrey et Matthieu), BAT (→ Christophe, B2C), envoi aux clients B2C.",
+      "Newsletter B2C trimestrielle (janvier, avril, juillet, octobre), envoyée le troisième jeudi du mois. Étapes : rédaction (Communication : l'équipe Digicom), BAT (→ Christophe, B2C), envoi aux clients B2C.",
   },
   {
     zone: "nl-sme",
     title: "Newsletter SME",
     keywords: ["sme", "killian", "yves"],
     answer:
-      "Newsletter SME trimestrielle (mars, juin, septembre, décembre), avec les mêmes étapes et le même rythme que Grands Comptes : Watt's Next propose et rédige, Killian et Yves (B2B) valident et relisent, Communication (Geoffrey et Matthieu) fait le BAT, puis envoi aux clients SME.",
+      "Newsletter SME trimestrielle (mars, juin, septembre, décembre), avec les mêmes étapes et le même rythme que Grands Comptes : Watt's Next propose et rédige, Killian et Yves (B2B) valident et relisent, Communication (équipe Digicom) fait le BAT, puis envoi aux clients SME.",
   },
   // ——— Organisation ———
   {
@@ -915,7 +915,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "lecture seule",
     ],
     answer:
-      "Le planning s'enregistre tout seul et se met à jour en direct pour tout le monde. Seules les personnes en mode « ✎ Modification » (affiché en haut à droite) peuvent le modifier ; les autres sont en « 👁 Lecture seule ». En mode modification : le bouton « ＋ Ajouter » crée une campagne (acquisition, fidélisation ou réglementaire), une action, une période ou un jalon. Pour modifier une campagne, clique sur sa carte puis « ✏️ Modifier la campagne » dans le panneau, ou « ＋ Ajouter une action » pour lui ajouter une action ; une période ou un jalon se modifie en cliquant dessus. « 🛠 Réglages » règle les canaux, types de KPI, types de campagne, couleurs, légende et pictogrammes, « + Année » crée une nouvelle année et 🕓 montre l'historique des modifications. Pour passer en mode modification, demande à Geoffrey.",
+      "Le planning s'enregistre tout seul et se met à jour en direct pour tout le monde. Seules les personnes en mode « ✎ Modification » (affiché en haut à droite) peuvent le modifier ; les autres sont en « 👁 Lecture seule ». En mode modification : le bouton « ＋ Ajouter » crée une campagne (acquisition, fidélisation ou réglementaire), une action, une période ou un jalon. Pour modifier une campagne, clique sur sa carte puis « ✏️ Modifier la campagne » dans le panneau, ou « ＋ Ajouter une action » pour lui ajouter une action ; une période ou un jalon se modifie en cliquant dessus. « 🛠 Réglages » règle les canaux, types de KPI, types de campagne, couleurs, légende et pictogrammes, « + Année » crée une nouvelle année et 🕓 montre l'historique des modifications. Pour passer en mode modification, demande à l'équipe Digicom.",
   },
   // ——— Kit ———
   {
@@ -1030,7 +1030,7 @@ export function localAnswer(
   return localAnswerResult(question, zones, name, opts).text;
 }
 
-/** Réponse de secours et indication « réponse trouvée ou non » (pour transmettre la question à Geoffrey). */
+/** Réponse de secours et indication « réponse trouvée ou non » (pour transmettre la question à l'équipe Digicom). */
 export function localAnswerResult(
   question: string,
   zones: AssistantZone[],

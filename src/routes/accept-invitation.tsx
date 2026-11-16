@@ -69,7 +69,7 @@ function AcceptInvitation() {
       <img src={wordmark} alt="digicom" className="mx-auto mb-6 h-12 w-auto" />
       <h1 className="mb-5 text-xl font-semibold text-foreground">Bienvenue sur Digicom</h1>
       {state === "loading" ? <p className="text-muted-foreground">Vérification de votre invitation…</p> : state === "invalid" ? <>
-        <p role="alert" className="mb-4 text-destructive">Ce lien d’invitation est invalide ou a expiré. Demandez une nouvelle invitation à Geoffrey.</p>
+        <p role="alert" className="mb-4 text-destructive">Ce lien d’invitation est invalide ou a expiré. Demandez une nouvelle invitation à l'équipe Digicom.</p>
         <Button asChild variant="outline"><Link to="/auth">Retour à la connexion</Link></Button>
       </> : <form onSubmit={submit} className="space-y-4">
         <div><label htmlFor="new-password" className="mb-1 block text-sm">Choisissez votre mot de passe</label>

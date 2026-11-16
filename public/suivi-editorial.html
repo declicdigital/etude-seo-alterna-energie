@@ -775,7 +775,7 @@ html:not(.no-cat) .col-brief{display:none!important}
       </div>
       <button class="btn" id="todoAddBtn">+ Ajouter une ligne</button>
     </div>
-    <p class="hint todo-hint">Dès que le lien du doc est collé, le bouton « Enregistrer » est actif, même si d'autres cases sont vides : l'article est alors créé dans le suivi (étape Rédaction) et Geoffrey reçoit un mail. Les cases laissées vides se complètent ensuite dans la fiche de l'article. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
+    <p class="hint todo-hint">Dès que le lien du doc est collé, le bouton « Enregistrer » est actif, même si d'autres cases sont vides : l'article est alors créé dans le suivi (étape Rédaction) et l'équipe Digicom reçoit un mail. Les cases laissées vides se complètent ensuite dans la fiche de l'article. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
     <div class="todo-scroll"><table class="todo-table">
       <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th class="col-brief">Catégorie</th><th>Édition</th><th>Date de rédaction</th><th>Nom de l'article (H1)</th><th class="col-cible">Cible</th><th class="col-cat">Catégorie</th><th class="col-subcat">Sous-catégorie</th><th class="col-energy">Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
@@ -812,7 +812,7 @@ if(SPACE){ document.title = 'Suivi éditorial (' + SPACE_LABEL + ') — Outil co
 if(PLANETE){
   document.documentElement.classList.add('planete');
   const hint = document.querySelector('.todo-hint');
-  if(hint) hint.textContent = "Dès que le lien du doc est collé, le bouton « Enregistrer » est actif, même si d'autres cases sont vides : l'article est alors créé dans le suivi et Geoffrey reçoit un mail pour l'intégrer. La catégorie reste obligatoire avant l'intégration (elle peut être choisie ici ou dans la fiche). Une fois intégré, il s'ajoute à Parlons Planète > Blog dans sa catégorie (et sa sous-catégorie si elle en a une). Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.";
+  if(hint) hint.textContent = "Dès que le lien du doc est collé, le bouton « Enregistrer » est actif, même si d'autres cases sont vides : l'article est alors créé dans le suivi et l'équipe Digicom reçoit un mail pour l'intégrer. La catégorie reste obligatoire avant l'intégration (elle peut être choisie ici ou dans la fiche). Une fois intégré, il s'ajoute à Parlons Planète > Blog dans sa catégorie (et sa sous-catégorie si elle en a une). Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.";
 }
 const AUDIENCES = ['Particulier', 'Professionnel'];
 const DESTS = ['Blog', 'Éditorial'];
@@ -1471,6 +1471,14 @@ function syncListRows(article, field){
   }, 700);
 }
 
+/* À l'écran, les membres de l'équipe Digicom ne sont pas nommés (les réglages gardent leur nom
+   pour l'envoi des mails). */
+const TEAM_NAMES = ['geoffrey', 'matthieu', 'marick'];
+function teamAlias(name){
+  const n = String(name || '').trim();
+  return TEAM_NAMES.includes(n.toLowerCase()) ? 'Équipe Digicom' : n;
+}
+
 function normalizeUrl(v){
   if(!v) return '';
   v = v.trim();
@@ -1652,7 +1660,7 @@ function renderArticleCard(article){
         <span class="num">Étape ${i+1}</span>
         <span class="status-icon">${iconContent}</span>
         <div class="label">${escapeHtml(cfg.label)}</div>
-        <div class="assignee">${escapeHtml(step.assignee) || '—'}</div>
+        <div class="assignee">${escapeHtml(teamAlias(step.assignee)) || '—'}</div>
         <div class="date">${step.status === 'done' ? fmtDate(step.date) || '' : ''}</div>
         ${step.deadline && step.status === 'pending' ? `<span class="step-deadline ${stepDeadlineClass(step.deadline)}" title="Deadline de l'étape">⏰ ${escapeHtml(fmtDate(step.deadline))}</span>` : ''}
         ${canRemind ? `<button class="btn reminder-btn" data-action="remind-step" data-article-id="${escapeAttr(article.id)}" data-step-key="${escapeAttr(step.key)}" title="Envoyer un rappel — ${escapeAttr(cfg.label)}" aria-label="Envoyer un rappel — ${escapeAttr(cfg.label)}">${REMINDER_ICON}</button>` : ''}
@@ -1680,7 +1688,7 @@ function renderArticleCard(article){
           </div>
           <div class="field">
             <label>Responsable</label>
-            ${['image', 'relecture'].includes(step.key) ? `<span class="step-name">${step.key === 'image' ? 'Geoffrey' : 'Service Communication'}</span>`
+            ${['image', 'relecture'].includes(step.key) ? `<span class="step-name">${step.key === 'image' ? 'Équipe Digicom' : 'Service Communication'}</span>`
             : (cfg.options && cfg.options.length) ? `
               <div class="assignee-options">
                 ${cfg.options.map(o => `
@@ -2052,7 +2060,8 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     const step = article?.steps.find(s => s.key === reminderBtn.dataset.stepKey);
     if(!article || !step) return;
     const cfg = getArticleConfig(article, step.key);
-    const who = isImageStep(step.key) ? 'Geoffrey' : step.key === 'relecture' ? 'Fannie et Coraline' : step.assignee || cfg?.assignee || (step.key === 'brief' ? 'Geoffrey' : 'le responsable');
+    const named = teamAlias(step.assignee || cfg?.assignee || '');
+    const who = isImageStep(step.key) || step.key === 'brief' || named === 'Équipe Digicom' ? 'l’équipe Digicom' : step.key === 'relecture' ? 'Fannie et Coraline' : named || 'le responsable';
     if(!confirm(`Envoyer un rappel à ${who} pour l’étape « ${cfg?.label || step.key} » de « ${article.title} » ?`)) return;
     reminderBtn.disabled = true;
     const requestId = uid();
@@ -2598,7 +2607,7 @@ function renderTodos(){
     <td><div class="td-linkwrap"><input data-f="docx" value="${escapeAttr(t.docx||'')}" placeholder="https://…">${(t.docx||'').trim() ? `<a class="todo-open" href="${escapeAttr(normalizeUrl(t.docx.trim()))}" target="_blank" rel="noopener noreferrer" title="Ouvrir le lien">↗</a>` : ''}</div></td>
     <td style="white-space:nowrap">${t.articleId ? '<span class="todo-badge">Dans le suivi ✓</span>' : ro ? '<span style="color:var(--muted);font-size:0.75rem">Lecture seule</span>' : `<button class="btn" data-todo-save ${todoComplete(t) ? '' : 'disabled'} style="padding:4px 10px;font-size:0.78rem" title="${todoComplete(t) ? 'Enregistrer' : TODO_SAVE_HINT}">Enregistrer</button> <button class="todo-del" data-todo-del title="Supprimer">🗑</button>`}</td>
   </tr>`).join('');
-  if(ro) body.querySelectorAll('input,select').forEach(el => { el.disabled = true; el.title = 'Seules Marina, Elodie, Caroline et Geoffrey peuvent modifier cette liste'; });
+  if(ro) body.querySelectorAll('input,select').forEach(el => { el.disabled = true; el.title = 'Seules les rédactrices et l’équipe Digicom peuvent modifier cette liste'; });
 }
 async function maybeCreateFromTodo(t){
   if(t.articleId) return;

@@ -73,7 +73,7 @@ export const Route = createFileRoute("/api/public/benchmark-months")({
         const auth = await authenticate(request);
         if (!auth) return json({ error: "unauthorized" }, 401);
         if (auth === "forbidden") return json({ error: "Accès au Benchmark non autorisé." }, 403);
-        if (!auth.editor) return json({ error: "Seul Geoffrey peut modifier le benchmark." }, 403);
+        if (!auth.editor) return json({ error: "Seule l'équipe Digicom peut modifier le benchmark." }, 403);
 
         let raw: unknown;
         try { raw = await request.json(); } catch { return json({ error: "invalid json" }, 400); }

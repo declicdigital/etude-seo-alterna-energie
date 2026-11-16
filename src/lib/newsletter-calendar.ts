@@ -166,7 +166,7 @@ export const GRANDS_COMPTES: NewsletterCalendar = {
   actors: {
     presta: { label: "Prestataire", short: "Presta", people: "Watt's Next" },
     b2b: { label: "B2B", short: "B2B", people: "Guillaume" },
-    comm: { label: "Communication", short: "Comm.", people: "Geoffrey & Matthieu" },
+    comm: { label: "Communication", short: "Comm.", people: "Équipe Digicom" },
     clients: { label: "Clients", short: "Clients", people: "Clients Grands Comptes" },
   },
   steps: [
@@ -205,7 +205,7 @@ export const GRANDS_COMPTES: NewsletterCalendar = {
     { role: "Prestataire", people: "Watt's Next", step: 0 },
     { role: "B2B", people: "Guillaume", step: 1 },
     { role: "Relecture", people: "Lidvine & Guillaume", step: 3 },
-    { role: "Communication", people: "Geoffrey & Matthieu", step: 4 },
+    { role: "Communication", people: "Équipe Digicom", step: 4 },
   ],
   newsletters: [
     {
@@ -277,7 +277,7 @@ export const INTERNE: NewsletterCalendar = {
   title: "Interne",
   description: "Production et envoi de la newsletter interne trimestrielle.",
   actors: {
-    comm: { label: "Communication", short: "Comm.", people: "Geoffrey & Matthieu" },
+    comm: { label: "Communication", short: "Comm.", people: "Équipe Digicom" },
     personnel: { label: "Personnel", short: "Personnel", people: "Tous les internes" },
     b2c: { label: "B2C", short: "B2C", people: "Christophe" },
     geraldine: { label: "Géraldine", short: "Géraldine", people: "Géraldine" },
@@ -296,7 +296,7 @@ export const INTERNE: NewsletterCalendar = {
     },
   ],
   team: [
-    { role: "Communication", people: "Geoffrey & Matthieu", step: 1 },
+    { role: "Communication", people: "Équipe Digicom", step: 1 },
     { role: "B2C", people: "Christophe", step: 2 },
     { role: "Géraldine", step: 3 },
     { role: "Personnel", people: "Tous les internes", step: 4 },
@@ -335,7 +335,7 @@ export const B2C: NewsletterCalendar = {
   title: "B2C",
   description: "Production et envoi de la newsletter B2C trimestrielle.",
   actors: {
-    comm: { label: "Communication", short: "Comm.", people: "Geoffrey & Matthieu" },
+    comm: { label: "Communication", short: "Comm.", people: "Équipe Digicom" },
     b2c: { label: "B2C", short: "B2C", people: "Christophe" },
     clients: { label: "Clients", short: "Clients", people: "Clients B2C" },
   },
@@ -345,7 +345,7 @@ export const B2C: NewsletterCalendar = {
     { key: "envoi", label: "Envoi de la newsletter", short: "Envoi", from: "comm", to: "clients" },
   ],
   team: [
-    { role: "Communication", people: "Geoffrey & Matthieu", step: 0 },
+    { role: "Communication", people: "Équipe Digicom", step: 0 },
     { role: "B2C", people: "Christophe", step: 1 },
   ],
   newsletters: [
@@ -372,7 +372,7 @@ export const SME: NewsletterCalendar = {
     { role: "Prestataire", people: "Watt's Next", step: 0 },
     { role: "B2B", people: "Killian & Yves", step: 1 },
     { role: "Relecture", people: "Killian & Yves", step: 3 },
-    { role: "Communication", people: "Geoffrey & Matthieu", step: 4 },
+    { role: "Communication", people: "Équipe Digicom", step: 4 },
   ],
   newsletters: [
     {

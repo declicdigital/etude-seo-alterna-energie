@@ -156,7 +156,7 @@ export function FaqView({
         <p className="mt-1 text-sm text-muted-foreground">
           {target
             ? `Questions FAQ — ${target.toLowerCase()}.`
-            : "Remplissez une demande, puis sauvegardez : Geoffrey est prévenu par mail. Geoffrey, Matthieu et Marick la valident."}
+            : "Remplissez une demande, puis sauvegardez : l'équipe Digicom est prévenue par mail, la valide puis la marque réalisée une fois la FAQ en ligne."}
         </p>
       </header>
 
@@ -1109,7 +1109,7 @@ function RequestCard({
               {status === "validee" ? (
                 <p className="text-sm">
                   <strong>Demande validée</strong>
-                  {r.approvedByName ? ` par ${r.approvedByName}` : ""}
+                  {" par l'équipe Digicom"}
                   {r.approvedAt
                     ? ` le ${new Date(r.approvedAt).toLocaleDateString("fr-FR")}`
                     : ""}{" "}
