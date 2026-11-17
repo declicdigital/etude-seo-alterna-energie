@@ -1,3 +1,4 @@
+- [x] Distinguer les intégrations Pro (2 semaines), Particulier (1 semaine) et PAC Blog (même file Particulier, 1 semaine ; Éditorial exclu), garder Marick visible et ses deadlines ; ancrer sur les anciennes publications (PAC : 16 novembre → 23 novembre) ; fiches existantes sauvegardées et relues, Marick et deadline vérifiés ; Particulier 23/30 novembre/7 décembre, Pro 30 novembre ; aucun mail envoyé.
 - [x] Échéances d’intégration Blog Pro : un lundi par semaine, prochain jour ouvré si férié sans décaler la semaine suivante ; articles publiés préservés, prochaine date 23 novembre conservée ; 37 tests réussis et sauvegarde/relecture dans la fiche réelle vérifiée sans mail.
 - [ ] Donner des chemins lisibles aux rubriques, sous-rubriques et fiches ; utiliser ces destinations dans les mails et conserver les anciens liens.
 - [ ] Relier et vérifier Gmail dans l'espace actuel après le nouveau déplacement du projet.

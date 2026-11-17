@@ -105,7 +105,7 @@
   function applyAutoDeadline(article, validatedKey, space) {
     const rule = AUTO_DEADLINES[validatedKey];
     if(!rule || !article || !Array.isArray(article.steps)) return false;
-    if(validatedKey === 'relecture' && isPro(article, space)) return false;
+    if(validatedKey === 'relecture' && (!space || (space === 'strategie' && article.dest === 'Blog'))) return false;
     const done = article.steps.find(s => s.key === validatedKey);
     const next = article.steps.find(s => s.key === rule.next);
     if(!done || done.status !== 'done' || !next || next.status !== 'pending' || next.deadline) return false;
@@ -136,29 +136,41 @@
     d.setUTCDate(d.getUTCDate() + (upcoming && offset ? 7 - offset : -offset));
     return d.toISOString().slice(0, 10);
   }
-  function nextWeek(monday) {
-    return new Date(Date.parse(monday) + 7 * 86400000).toISOString().slice(0, 10);
+  function nextSlot(monday, weeks) {
+    return new Date(Date.parse(monday) + weeks * 7 * 86400000).toISOString().slice(0, 10);
   }
-  // One slot per calendar week; holiday shifts never drift the following Monday.
-  function scheduleProIntegration(articles, space, today) {
-    if(space || !validIso(today)) return [];
-    const pro = articles.filter(a => isPro(a, space) && Array.isArray(a.steps));
-    const integration = a => a.steps.find(s => s.key === 'integration');
-    const queue = pro.filter(a => integration(a)?.status === 'pending' && !a.blogRowId)
-      .sort((a,b) => (integration(a).deadline || '9999').localeCompare(integration(b).deadline || '9999') || (a.createdAt || '').localeCompare(b.createdAt || '') || a.id.localeCompare(b.id));
-    if(!queue.length) return [];
-    const lastPublished = pro.filter(a => integration(a)?.status === 'done' && validIso(integration(a).date))
-      .map(a => integration(a).date).sort().pop();
-    const first = integration(queue[0]).deadline;
-    let monday = mondayOf(validIso(first) ? first : today, !validIso(first));
-    if(lastPublished && monday <= mondayOf(lastPublished, false)) monday = nextWeek(mondayOf(lastPublished, false));
+  // Independent audience queues; holiday shifts never drift the next calendar slot.
+  function scheduleIntegration(articles, space, today) {
+    if((space && space !== 'strategie') || !validIso(today)) return [];
     const changed = [];
-    for(const article of queue) {
-      const step = integration(article), deadline = proPublicationDay(monday);
-      if(step.deadline !== deadline) { step.deadline = deadline; changed.push(article); }
-      monday = nextWeek(monday);
+    const integration = a => a.steps.find(s => s.key === 'integration');
+    const audiences = ['Professionnel', 'Particulier'];
+    for(const audience of audiences) {
+      const weeks = audience === 'Professionnel' ? 2 : 1;
+      const group = articles.filter(a => {
+        const origin = a._scheduleSpace ?? space;
+        return (!origin || (origin === 'strategie' && a.dest === 'Blog')) && (origin === 'strategie' ? audience === 'Particulier' : a.audience === audience) && Array.isArray(a.steps);
+      });
+      const queue = group.filter(a => integration(a)?.status === 'pending' && !a.blogRowId)
+        .sort((a,b) => (integration(a).deadline || '9999').localeCompare(integration(b).deadline || '9999') || (a.createdAt || '').localeCompare(b.createdAt || '') || a.id.localeCompare(b.id));
+      if(!queue.length) continue;
+      const lastPublished = group.filter(a => integration(a)?.status === 'done' && validIso(integration(a).date))
+        .map(a => integration(a).date).sort().pop();
+      const first = integration(queue[0]).deadline;
+      let monday = mondayOf(validIso(first) ? first : today, !validIso(first));
+      if(lastPublished) {
+        const next = nextSlot(mondayOf(lastPublished, false), weeks);
+        monday = next;
+      }
+      for(const article of queue) {
+        const step = integration(article), deadline = proPublicationDay(monday);
+        if(step.deadline !== deadline) { step.deadline = deadline; changed.push(article); }
+        monday = nextSlot(monday, weeks);
+      }
     }
     return changed;
   }
-  root.EditorialPipeline = { PLANETE_STEPS, isPro, isRewrite, normalizeConfig, configFor, sync, nextNotification, completeStep, addBusinessDays, applyAutoDeadline, scheduleProIntegration, proPublicationDay };
+  // Kept for existing consumers; schedules both Blog audiences.
+  const scheduleProIntegration = scheduleIntegration;
+  root.EditorialPipeline = { PLANETE_STEPS, isPro, isRewrite, normalizeConfig, configFor, sync, nextNotification, completeStep, addBusinessDays, applyAutoDeadline, scheduleIntegration, scheduleProIntegration, proPublicationDay };
 })(globalThis);

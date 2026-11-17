@@ -6,19 +6,37 @@ import { isBusinessDay } from './business-days';
 const scope: any = {};
 runInNewContext(readFileSync('public/editorial-pipeline.js', 'utf8'), scope);
 const pipeline = scope.EditorialPipeline;
-describe('Weekly Blog Pro integration', () => {
+describe('Blog integration cadence', () => {
   const article = (id: string, deadline?: string, audience = 'Professionnel') => ({id, audience, createdAt:id, steps:[{key:'integration', status:'pending', deadline}]});
-  it('spaces all Pro deadlines by consecutive Mondays, leaving Particulier and published dates untouched', () => {
+  it('spaces Pro deadlines by two weeks and preserves published dates', () => {
     const rows: any[] = [article('a','2026-11-23'),article('b','2026-11-23'),article('c'),article('part','2026-11-24','Particulier'),{id:'old', audience:'Professionnel',steps:[{key:'integration',status:'done',date:'2026-11-16',deadline:'2026-11-12'}]}];
     pipeline.scheduleProIntegration(rows,'','2026-11-17');
-    expect(rows.map(a => a.steps[0].deadline)).toEqual(['2026-11-23','2026-11-30','2026-12-07','2026-11-24','2026-11-12']);
+    expect(rows.map(a => a.steps[0].deadline)).toEqual(['2026-11-30','2026-12-14','2026-12-28','2026-11-23','2026-11-12']);
     expect(rows[4].steps[0].date).toBe('2026-11-16');
     expect(pipeline.scheduleProIntegration(rows,'','2026-11-18')).toEqual([]);
   });
-  it('moves Easter Monday to Tuesday, then resumes the following Monday', () => {
+  it('spaces Particulier by exactly seven days independently of Pro', () => {
+    const rows = [article('a','2026-11-23','Particulier'),article('b','2026-11-23','Particulier'),article('c',undefined,'Particulier'),article('pro','2026-11-23')];
+    pipeline.scheduleIntegration(rows,'','2026-11-17');
+    expect(rows.map(a => a.steps[0].deadline)).toEqual(['2026-11-23','2026-11-30','2026-12-07','2026-11-23']);
+    expect(pipeline.scheduleIntegration(rows,'','2026-11-18')).toEqual([]);
+  });
+  it('shares PAC Blog and Particulier slots, excluding editorial content', () => {
+    const rows: any[] = [article('part','2026-11-16','Particulier'),{...article('pac','2026-11-16','Particulier'),dest:'Blog',_scheduleSpace:'strategie'},{...article('edito','2026-11-16'),dest:'Éditorial',_scheduleSpace:'strategie'},{id:'old',audience:'Particulier',steps:[{key:'integration',status:'done',date:'2026-11-16'}]}];
+    pipeline.scheduleIntegration(rows,'','2026-11-17');
+    expect(rows.map(a => a.steps[0].deadline)).toEqual(['2026-11-30','2026-11-23','2026-11-16',undefined]);
+    expect(pipeline.scheduleIntegration(rows,'','2026-11-18')).toEqual([]);
+  });
+  it('keeps PAC Editorial outside the Blog cadence and retains its review deadline rule', () => {
+    const editorial: any = {id:'edito',dest:'Éditorial',audience:'Particulier',steps:[{key:'relecture',status:'done',date:'2026-11-17'},{key:'integration',status:'pending'}]};
+    expect(pipeline.scheduleIntegration([editorial],'strategie','2026-11-17')).toEqual([]);
+    expect(pipeline.applyAutoDeadline(editorial,'relecture','strategie')).toBe(true);
+    expect(editorial.steps[1].deadline).toBe('2026-11-24');
+  });
+  it('moves Easter Monday to Tuesday, then resumes two calendar weeks later', () => {
     const rows = [article('a','2027-03-29'), article('b')];
     pipeline.scheduleProIntegration(rows,'','2027-03-22');
-    expect(rows.map(a => a.steps[0].deadline)).toEqual(['2027-03-30','2027-04-05']);
+    expect(rows.map(a => a.steps[0].deadline)).toEqual(['2027-03-30','2027-04-12']);
     expect(pipeline.scheduleProIntegration(rows,'','2027-03-23')).toEqual([]);
   });
   it('moves Whit Monday and fixed holidays to the next working day', () => {
@@ -33,10 +51,10 @@ describe('Weekly Blog Pro integration', () => {
   it('assigns the next available Monday after an already published Pro article', () => {
     const rows: any[] = [article('next'),{id:'old',audience:'Professionnel',steps:[{key:'integration',status:'done',date:'2026-11-16'}]}];
     pipeline.scheduleProIntegration(rows,'','2026-11-17');
-    expect(rows[0].steps[0].deadline).toBe('2026-11-23');
-    expect(pipeline.scheduleProIntegration([article('pac')],'strategie','2026-11-17')).toEqual([]);
+    expect(rows[0].steps[0].deadline).toBe('2026-11-30');
+    expect(pipeline.scheduleIntegration([article('planete')],'planete','2026-11-17')).toEqual([]);
   });
-  it('does not replace the Pro weekly slot with the five-day review deadline', () => {
+  it('does not replace a Blog calendar slot with the five-day review deadline', () => {
     const pro: any = {audience:'Professionnel',steps:[{key:'relecture',status:'done',date:'2026-11-17'},{key:'integration',status:'pending'}]};
     expect(pipeline.applyAutoDeadline(pro,'relecture','')).toBe(false);
     expect(pro.steps[1].deadline).toBeUndefined();
@@ -183,11 +201,11 @@ describe('Separate Image and Relecture', () => {
     expect(pipeline.applyAutoDeadline(article, 'image')).toBe(true);
     expect(article.steps[2].deadline).toBe('2026-11-11');
     article.steps[2].status = 'done'; article.steps[2].date = '2026-11-09';
-    expect(pipeline.applyAutoDeadline(article, 'relecture')).toBe(true);
+    expect(pipeline.applyAutoDeadline(article, 'relecture', 'other')).toBe(true);
     expect(article.steps[3].deadline).toBe('2026-11-16');
     // A deadline already set (by Geoffrey) is kept.
     article.steps[3].deadline = '2026-11-20';
-    expect(pipeline.applyAutoDeadline(article, 'relecture')).toBe(false);
+    expect(pipeline.applyAutoDeadline(article, 'relecture', 'other')).toBe(false);
     expect(article.steps[3].deadline).toBe('2026-11-20');
     expect(pipeline.applyAutoDeadline(article, 'redaction')).toBe(false);
   });

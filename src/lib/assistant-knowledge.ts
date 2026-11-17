@@ -571,7 +571,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "ajouté au blog",
     ],
     answer:
-      "À l'étape Intégration (équipe Digicom), les images validées sont affichées pour être téléchargées. Après la mise en ligne sur le site d'Alterna Énergie, colle le lien publié (https://www.alterna-energie.fr/blog-article/…) puis « Marquer validée » : l'article s'ajoute en haut du Blog Particulier ou Professionnel, coché « Publié », la carte affiche « Ajouté au blog » et l'équipe Digicom reçoit un mail.",
+      "À l'étape Intégration (Marick), les images validées sont affichées pour être téléchargées. Après la mise en ligne sur le site d'Alterna Énergie, colle le lien publié (https://www.alterna-energie.fr/blog-article/…) puis « Marquer validée » : l'article s'ajoute en haut du Blog Particulier ou Professionnel, coché « Publié », la carte affiche « Ajouté au blog » et l'équipe Digicom reçoit un mail.",
   },
   {
     zone: "blog-suivi",
@@ -585,7 +585,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     title: "Deadlines des étapes et rappels",
     keywords: ["deadline", "délai", "rappel", "retard", "échéance", "relance", "jours ouvrés"],
     answer:
-      "Deadlines automatiques : la Relecture est attendue 3 jours ouvrés après la validation de l'Image. Pour le Blog Pro, les échéances d'Intégration sont réparties à raison d'un article par lundi, chaque semaine ; si le lundi est férié en France, l'échéance passe au prochain jour ouvré, sans décaler les lundis suivants. Les articles déjà publiés gardent leurs dates réelles. Pour le Blog Particulier et la Stratégie PAC, l'Intégration reste attendue 5 jours ouvrés après la validation de la Relecture. L'équipe Digicom peut aussi poser ou modifier la deadline de chaque étape dans la carte ; celles de l'Intégration Pro restent réparties par semaine. La deadline est écrite dans le mail d'étape, et le responsable reçoit un rappel le matin du jour J (le vendredi d'avant si elle tombe un week-end). Sur l'étape, le badge ⏰ passe en orange à 2 jours et en rouge en cas de retard. L'équipe Digicom peut aussi envoyer un rappel à la main avec le bouton ✉ de l'étape.",
+      "Deadlines automatiques : la Relecture est attendue 3 jours ouvrés après la validation de l'Image. Pour le Blog Pro, les échéances d'Intégration sont réparties à raison d'un article toutes les deux semaines, le lundi ; si le lundi est férié en France, l'échéance passe au prochain jour ouvré, sans décaler les lundis suivants. Les articles déjà publiés gardent leurs dates réelles. Le Blog Particulier et les contenus PAC classés Blog partagent un seul calendrier d'intégration de Marick, avec un article par semaine stricte ; les contenus PAC Éditorial sont exclus de ce calendrier, le lundi, avec le même report des lundis fériés. La deadline de Marick reste visible dans la carte, y compris après validation. L'équipe Digicom peut aussi poser ou modifier la deadline de chaque étape dans la carte ; celles de l'Intégration restent réparties toutes les deux semaines pour Pro et chaque semaine dans la file commune Particulier et PAC Blog, en partant des dernières publications. La deadline est écrite dans le mail d'étape, et le responsable reçoit un rappel le matin du jour J (le vendredi d'avant si elle tombe un week-end). Sur l'étape, le badge ⏰ passe en orange à 2 jours et en rouge en cas de retard. L'équipe Digicom peut aussi envoyer un rappel à la main avec le bouton ✉ de l'étape.",
   },
   {
     zone: "blog-suivi",

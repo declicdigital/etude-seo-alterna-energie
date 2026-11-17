@@ -1309,8 +1309,7 @@ async function loadArticles(){
     }
     out.sort((a,b)=> (a.createdAt||'').localeCompare(b.createdAt||''));
     articles = out;
-    const rescheduled = EditorialPipeline.scheduleProIntegration(articles, SPACE, todayIso());
-    await Promise.all([...new Set([...pendingSaves, ...rescheduled])].map(a => saveArticle(a)));
+    await persistScheduledArticles(pendingSaves);
   }catch(e){
     articles = [];
   }
@@ -1322,13 +1321,33 @@ async function saveIndex(){
   }catch(e){ console.error('Erreur de sauvegarde index', e); }
 }
 
+// Both Blog surfaces share the Particulier calendar; only indexed live records participate.
+async function persistScheduledArticles(toSave){
+  const records = articles.map(article => ({article, key:KEY('article:' + article.id), space:SPACE}));
+  for(const article of toSave) if(!records.some(r => r.article.id === article.id)) records.push({article,key:KEY('article:' + article.id),space:SPACE});
+  if(!SPACE || STRAT){
+    const prefix = STRAT ? '' : 'strat:';
+    const idx = await fetch(REST + '?select=value&key=eq.' + encodeURIComponent(prefix + 'articles-index'), {headers:authHeaders()});
+    if(!idx.ok) throw new Error('Erreur de lecture du calendrier Blog');
+    const indexRows = await idx.json();
+    const ids = indexRows.length ? JSON.parse(indexRows[0].value) : [];
+    if(ids.length){
+      const keys = ids.map(id => '"' + prefix + 'article:' + id + '"');
+      const res = await fetch(REST + '?select=key,value&key=in.(' + encodeURIComponent(keys.join(',')) + ')', {headers:authHeaders()});
+      if(!res.ok) throw new Error('Erreur de lecture du calendrier Blog');
+      for(const row of await res.json()) records.push({article:JSON.parse(row.value),key:row.key,space:STRAT ? '' : 'strategie'});
+    }
+  }
+  const scheduled = records.map(r => ({...r.article, _scheduleSpace:r.space}));
+  const changed = new Set(EditorialPipeline.scheduleIntegration(scheduled, SPACE, todayIso()));
+  await Promise.all(records.filter((r,i) => toSave.includes(r.article) || changed.has(scheduled[i])).map(r => fetch(REST + '?on_conflict=key', {
+    method:'POST', headers:Object.assign({},authHeaders(),{'Prefer':'resolution=merge-duplicates,return=minimal'}),
+    body:JSON.stringify({key:r.key,value:JSON.stringify(r.article),updated_at:new Date().toISOString()})
+  }).then(res => {if(!res.ok) throw new Error('Erreur d’enregistrement du calendrier');})));
+}
 async function saveArticle(article){
-  try{
-    const all = articles.some(a => a.id === article.id) ? articles : [...articles, article];
-    const changed = EditorialPipeline.scheduleProIntegration(all, SPACE, todayIso());
-    await Promise.all([...new Set([article, ...changed])].map(a => storage.set('article:' + a.id, JSON.stringify(a), false)));
-    showSaved();
-  }catch(e){ console.error('Erreur de sauvegarde article', e); }
+  try{ await persistScheduledArticles([article]); showSaved(); }
+  catch(e){ console.error('Erreur de sauvegarde article',e); }
 }
 
 async function deleteArticleStorage(id){
@@ -1474,9 +1493,8 @@ function syncListRows(article, field){
   }, 700);
 }
 
-/* À l'écran, les membres de l'équipe Digicom ne sont pas nommés (les réglages gardent leur nom
-   pour l'envoi des mails). */
-const TEAM_NAMES = ['geoffrey', 'matthieu', 'marick'];
+/* Marick reste nommé sur ses étapes ; les autres alias restent inchangés. */
+const TEAM_NAMES = ['geoffrey', 'matthieu'];
 function teamAlias(name){
   const n = String(name || '').trim();
   return TEAM_NAMES.includes(n.toLowerCase()) ? 'Équipe Digicom' : n;
@@ -1665,7 +1683,7 @@ function renderArticleCard(article){
         <div class="label">${escapeHtml(cfg.label)}</div>
         <div class="assignee">${escapeHtml(teamAlias(step.assignee)) || '—'}</div>
         <div class="date">${step.status === 'done' ? fmtDate(step.date) || '' : ''}</div>
-        ${step.deadline && step.status === 'pending' ? `<span class="step-deadline ${stepDeadlineClass(step.deadline)}" title="Deadline de l'étape">⏰ ${escapeHtml(fmtDate(step.deadline))}</span>` : ''}
+        ${step.deadline && (step.status === 'pending' || (step.key === 'integration' && !PLANETE)) ? `<span class="step-deadline ${step.status === 'pending' ? stepDeadlineClass(step.deadline) : ''}" title="Deadline de l'étape">⏰ ${escapeHtml(fmtDate(step.deadline))}</span>` : ''}
         ${canRemind ? `<button class="btn reminder-btn" data-action="remind-step" data-article-id="${escapeAttr(article.id)}" data-step-key="${escapeAttr(step.key)}" title="Envoyer un rappel — ${escapeAttr(cfg.label)}" aria-label="Envoyer un rappel — ${escapeAttr(cfg.label)}">${REMINDER_ICON}</button>` : ''}
       </div>`;
 
