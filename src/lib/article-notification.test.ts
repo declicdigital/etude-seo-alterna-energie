@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { notificationCta, notificationDeadline, notificationRecipients, SERVICE_COMMUNICATION_EMAILS } from "./article-notification";
+import { savedIntegrationDeadline, notificationCta, notificationDeadline, notificationRecipients, SERVICE_COMMUNICATION_EMAILS } from "./article-notification";
 
 describe("notificationDeadline", () => {
   it("removes the deadline from every notification addressed to Fannie", () => {
@@ -62,4 +62,9 @@ describe('split notification recipients', () => {
   it('sends Relecture only to Fannie and Coraline even with another configured recipient', () => {
     expect(notificationRecipients('relecture', ['other@example.org'])).toEqual([...SERVICE_COMMUNICATION_EMAILS]);
   });
+});
+
+it('reads the saved Marick slot, not the article writing deadline', () => {
+  expect(savedIntegrationDeadline(JSON.stringify({deadline:'2026-11-16',steps:[{key:'integration',deadline:'2026-11-30'}]}))).toBe('2026-11-30');
+  expect(savedIntegrationDeadline(JSON.stringify({deadline:'2026-11-16',steps:[{key:'integration'}]}))).toBeUndefined();
 });

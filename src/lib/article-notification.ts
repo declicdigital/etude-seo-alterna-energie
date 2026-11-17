@@ -27,3 +27,10 @@ export function notificationDeadline(
 export function notificationCta(kind: string | undefined): string {
   return kind === "image" ? "Ajouter l'image" : kind === "relecture" ? "Relire l'article" : "Ouvrir Digicom";
 }
+
+/** Integration notification dates come only from the persisted integration step. */
+export function savedIntegrationDeadline(value: string): string | undefined {
+  const article = JSON.parse(value) as { steps?: { key: string; deadline?: string }[] };
+  const deadline = article.steps?.find(step => step.key === "integration")?.deadline;
+  return deadline && /^\d{4}-\d{2}-\d{2}$/.test(deadline) ? deadline : undefined;
+}

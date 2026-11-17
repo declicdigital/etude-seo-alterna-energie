@@ -79,3 +79,11 @@ describe("mise en forme des rappels", () => {
     expect(html).toContain("Notification automatique de Digicom");
   });
 });
+
+it('uses the saved integration deadline for Marick rather than the writing deadline', () => {
+  const saved = {...article,steps:article.steps.map(s => s.key === 'integration' ? {...s,deadline:'2026-11-30'} : s)};
+  expect(buildStepReminder({articleId:'test',stepKey:'integration'},saved,config).deadline).toBe('2026-11-30');
+});
+it('does not substitute a writing deadline when Marick integration has no deadline', () => {
+  expect(buildStepReminder({articleId:'test',stepKey:'integration'},article,config).deadline).toBeUndefined();
+});

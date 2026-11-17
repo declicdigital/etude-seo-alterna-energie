@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { signHtml, signText } from "@/lib/mail-signature";
 import { z } from "zod";
 import { notificationLink } from "@/lib/editorial-links";
-import { notificationCta, notificationDeadline, notificationRecipients, SERVICE_COMMUNICATION_EMAILS } from "@/lib/article-notification";
+import { notificationCta, notificationDeadline, notificationRecipients, savedIntegrationDeadline, SERVICE_COMMUNICATION_EMAILS } from "@/lib/article-notification";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { frDate } from "@/lib/step-deadlines";
 import { editorialMailHtml } from "@/lib/mail-layout";
@@ -81,6 +81,16 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           payload = BodySchema.parse(await request.json());
         } catch {
           return Response.json({ error: "invalid_body" }, { status: 400 });
+        }
+
+        // Integration mails always use the saved slot, never the caller's stale writing date.
+        if (payload.kind === "integration" && payload.articleId) {
+          const { data: saved, error: readError } = await supabaseAdmin.from("editorial_kv").select("value")
+            .eq("key", `${spacePrefix(payload.space)}article:${payload.articleId}`).maybeSingle();
+          if (readError || !saved) return Response.json({ error: "article_unavailable" }, { status: 409 });
+          try {
+            payload = { ...payload, deadline: undefined, stepDeadline: savedIntegrationDeadline(saved.value) };
+          } catch { return Response.json({ error: "article_unavailable" }, { status: 409 }); }
         }
 
         const lovableKey = process.env["LOVABLE_API_KEY"];

@@ -322,7 +322,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       const editorial = z.has("blog-suivi") || z.has("pac-suivi");
       if (editorial)
         lines.push(
-          "Caroline et Elodie (Aurorae) et Marina sont rédactrices ; l'équipe Digicom s'occupe de l'étape Image ; Fannie et Coraline (Service Communication) relisent ; l'équipe Digicom intègre les articles sur le site d'Alterna Énergie.",
+          "Caroline et Elodie (Aurorae) et Marina sont rédactrices ; l'équipe Digicom s'occupe de l'étape Image ; Fannie et Coraline (Service Communication) relisent ; Marick intègre les articles sur le site d'Alterna Énergie.",
         );
       if (z.has("blog-suivi"))
         lines.push("Pour un article Professionnel, un expert métier relit aussi le contenu.");
@@ -473,7 +473,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "particulier",
     ],
     answer:
-      "Particulier (cartes roses) : Rédaction → Image (équipe Digicom) → Relecture (Fannie et Coraline) → Intégration (équipe Digicom) → Publié. Professionnel (cartes bleues) : Édition → Relecture de l'expert métier (nom à renseigner dans la carte) → Image → Relecture → Intégration. À chaque validation, la personne de l'étape suivante reçoit un mail avec un lien qui ouvre la carte à la bonne étape, l'équipe Digicom en copie.",
+      "Particulier (cartes roses) : Rédaction → Image (équipe Digicom) → Relecture (Fannie et Coraline) → Intégration (Marick) → Publié. Professionnel (cartes bleues) : Édition → Relecture de l'expert métier (nom à renseigner dans la carte) → Image → Relecture → Intégration. À chaque validation, la personne de l'étape suivante reçoit un mail avec un lien qui ouvre la carte à la bonne étape, l'équipe Digicom en copie.",
   },
   {
     zone: "blog-suivi",
@@ -556,7 +556,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "corriger image",
     ],
     answer:
-      "À l'étape Relecture, les images s'affichent en grand : un clic les agrandit en plein écran sans les télécharger (Échap ou un clic pour fermer). Sous chaque image, écris la modification à faire : le commentaire est enregistré avec ton nom et s'affiche sur la case de l'image à l'étape Image, pour l'équipe Digicom. Valide la relecture quand tout est bon : l'équipe Digicom reçoit le mail d'intégration.",
+      "À l'étape Relecture, les images s'affichent en grand : un clic les agrandit en plein écran sans les télécharger (Échap ou un clic pour fermer). Sous chaque image, écris la modification à faire : le commentaire est enregistré avec ton nom et s'affiche sur la case de l'image à l'étape Image, pour l'équipe Digicom. Valide la relecture quand tout est bon : Marick reçoit le mail d'intégration avec sa deadline.",
   },
   {
     zone: "blog-suivi",
@@ -681,7 +681,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "pompe à chaleur",
     ],
     answer: (z) =>
-      "PAC veut dire pompe à chaleur : la rubrique Stratégie PAC suit les contenus sur la pompe à chaleur. Suivi Stratégie PAC (contenus Particulier) : dans « À rédiger », renseigne le type (Création ou Réécriture), Blog ou Éditorial, sujet, titre H1, éditrice, deadline, lien du brief et lien du doc, puis « Enregistrer ». Création : Brief + Rédaction → Image (équipe Digicom) → Relecture (Fannie et Coraline) → Intégration (équipe Digicom). Réécriture : Brief + Rédaction → Intégration directe par l'équipe Digicom. Une fois publié, le contenu s'ajoute en haut de « Contenus »" +
+      "PAC veut dire pompe à chaleur : la rubrique Stratégie PAC suit les contenus sur la pompe à chaleur. Suivi Stratégie PAC (contenus Particulier) : dans « À rédiger », renseigne le type (Création ou Réécriture), Blog ou Éditorial, sujet, titre H1, éditrice, deadline, lien du brief et lien du doc, puis « Enregistrer ». Création : Brief + Rédaction → Image (équipe Digicom) → Relecture (Fannie et Coraline) → Intégration (Marick). Réécriture : Brief + Rédaction → Intégration directe par Marick. Les contenus PAC Blog partagent le calendrier hebdomadaire du Blog Particulier ; les contenus Éditorial en sont exclus. Une fois publié, le contenu s'ajoute en haut de « Contenus »" +
       (z.has("blog-part") || z.has("blog-suivi")
         ? ", et aussi en haut du Blog Particulier si c'est un contenu Blog (la catégorie du blog est alors obligatoire)."
         : ". Pour un contenu Blog, la catégorie du blog est obligatoire."),

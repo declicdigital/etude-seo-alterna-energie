@@ -85,3 +85,9 @@ describe("deadlines par étape", () => {
     );
   });
 });
+
+it('reminds Marick on the saved November 30 Pro slot and leaves completed publications alone', () => {
+  expect(dueStepDeadlines([{key:'integration',status:'pending',deadline:'2026-11-30'},{key:'integration',status:'done',deadline:'2026-11-30'}],'2026-11-30')).toEqual([{key:'integration',deadline:'2026-11-30'}]);
+  const mail = buildStepDeadlineMail({space:'',articleId:'a1',stepKey:'integration',deadline:'2026-11-30',today:'2026-11-30',article:{title:'Pro',deadline:'2026-11-16',steps:[{key:'integration',assignee:'Marick',status:'pending',deadline:'2026-11-30'}]},config});
+  expect(mail.recipients).toEqual(['marick.navarro.ext@soregies.fr']);
+});

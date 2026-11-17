@@ -13,7 +13,7 @@ export const stepReminderSchema = z.object({
 export function canSendStepReminder(isAdmin: boolean, email: string | null | undefined) {
   return isAdmin && email?.toLowerCase() === GEOFFREY_EMAIL;
 }
-const stepSchema = z.object({ key: z.string(), assignee: z.string().optional(), status: z.string().optional() });
+const stepSchema = z.object({ key: z.string(), assignee: z.string().optional(), status: z.string().optional(), deadline: z.string().optional() });
 export const reminderArticleSchema = z.object({
   title: z.string(), audience: z.string().optional(), type: z.string().optional(),
   subject: z.string().optional(), deadline: z.string().optional(), docxLink: z.string().optional(),
@@ -74,6 +74,6 @@ export function buildStepReminder(
     recipients, label, message, introHtml, subject: `Rappel · ${label} : « ${article.title} »`,
     cta: notificationCta(kind),
     url: editorialLink(input.articleId, input.stepKey, kind === "image" ? "images" : undefined, false, input.space, article.title),
-    deadline: notificationDeadline(article.deadline, kind, recipients),
+    deadline: notificationDeadline(step.deadline || (input.stepKey === "integration" ? undefined : article.deadline), kind, recipients),
   };
 }

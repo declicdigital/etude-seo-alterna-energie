@@ -98,16 +98,17 @@ const PAC_FLOWS: Flow[] = [
         who: "Service Communication · Fannie & Coraline",
         color: C.review,
         items: ["Relire l'article", "Deadline : 3 jours ouvrés après l'Image", "Valider l'étape"],
-        mail: "Mail → équipe Digicom",
+        mail: "Mail → Marick",
       },
       {
         title: "5 · Intégration",
-        who: "Équipe Digicom",
+        who: "Marick",
         color: C.integ,
         items: [
           "Télécharger l'image",
           "Intégrer sur le site",
-          "Deadline : 5 jours ouvrés après la Relecture",
+          "Blog : même calendrier hebdomadaire que le Blog Particulier",
+          "Éditorial : hors calendrier Blog",
           "Lien publié obligatoire",
           "Valider",
         ],
@@ -139,11 +140,11 @@ const PAC_FLOWS: Flow[] = [
         who: "Validés à l'enregistrement",
         color: C.prep,
         items: ["Carte créée", "Brief + doc liés", "Passage direct à l'intégration"],
-        mail: "Mail → équipe Digicom",
+        mail: "Mail → Marick",
       },
       {
         title: "3 · Intégration",
-        who: "Équipe Digicom",
+        who: "Marick",
         color: C.integ,
         items: ["Intégrer sur le site", "Lien publié obligatoire", "Valider"],
         mail: "Mail → équipe Digicom",
@@ -198,16 +199,17 @@ const BLOG_FLOWS: Flow[] = [
         who: "Service Communication · Fannie & Coraline",
         color: C.review,
         items: ["Relire l'article", "Deadline : 3 jours ouvrés après l'Image", "Valider l'étape"],
-        mail: "Mail → équipe Digicom",
+        mail: "Mail → Marick",
       },
       {
         title: "4 · Intégration",
-        who: "Équipe Digicom",
+        who: "Marick",
         color: C.integ,
         items: [
           "Télécharger l'image",
           "Intégrer sur le site",
-          "Deadline : 5 jours ouvrés après la Relecture",
+          "Un article par lundi, PAC Blog inclus",
+          "Lundi férié : prochain jour ouvré",
           "Lien publié obligatoire",
           "Valider",
         ],
@@ -250,13 +252,13 @@ const BLOG_FLOWS: Flow[] = [
         who: "Service Communication · Fannie & Coraline",
         color: C.review,
         items: ["Relire l'article", "Deadline : 3 jours ouvrés après l'Image", "Valider l'étape"],
-        mail: "Mail → équipe Digicom",
+        mail: "Mail → Marick",
       },
       {
         title: "5 · Intégration",
-        who: "Équipe Digicom",
+        who: "Marick",
         color: C.integ,
-        items: ["Intégrer sur le site", "Lien publié obligatoire", "Valider"],
+        items: ["Intégrer sur le site", "Un lundi toutes les deux semaines", "Lundi férié : prochain jour ouvré", "Deadline de Marick toujours visible", "Lien publié obligatoire", "Valider"],
         mail: "Mail → équipe Digicom",
       },
     ],
@@ -742,9 +744,11 @@ export function GuideView({
             <div className="font-semibold text-base mb-2">Partout dans les suivis</div>
             <div>• « Marquer validée » sans date → la date du jour est mise automatiquement</div>
             <div>
-              • Deadlines automatiques : Relecture 3 jours ouvrés après l'Image, Intégration 5 jours
-              ouvrés après la Relecture (l'équipe Digicom peut les changer) → deadline écrite dans le mail
-              d'étape et rappel au responsable le jour J
+              • Relecture : 3 jours ouvrés après l'Image. Intégration de Marick : un lundi toutes les deux
+              semaines pour Pro ; un lundi par semaine dans le calendrier commun Particulier + PAC Blog.
+              PAC Éditorial reste hors calendrier Blog. Les créneaux partent des dernières publications ;
+              lundi férié reporté au prochain jour ouvré, sans décaler les suivants. Deadline visible dans
+              la carte, le mail d'intégration et le rappel du jour J.
             </div>
             <div>• @ dans un message → un seul mail à toutes les personnes taguées</div>
             <div>• Messages modifiables sans renvoi de mail</div>
