@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { WebpMigrationCard } from "@/components/webp-migration-card";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getAccess, signOutAndGoToAuth } from "@/lib/access";
@@ -161,6 +162,8 @@ function RequestsPage() {
           {inviteError && <p role="alert" className="mt-3 text-sm text-destructive">{inviteError}</p>}
           {inviteSuccess && <p role="status" className="mt-3 text-sm text-primary">{inviteSuccess}</p>}
         </section>}
+
+        {me && <WebpMigrationCard />}
 
         {loadError && <div role="alert" className="mb-4 flex flex-wrap items-center gap-3 text-sm text-destructive">
           {loadError}<Button variant="outline" size="sm" onClick={() => void load()}>Réessayer</Button>
