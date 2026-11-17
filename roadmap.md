@@ -1,3 +1,4 @@
+- [x] Échéances d’intégration Blog Pro : un lundi par semaine, prochain jour ouvré si férié sans décaler la semaine suivante ; articles publiés préservés, prochaine date 23 novembre conservée ; 37 tests réussis et sauvegarde/relecture dans la fiche réelle vérifiée sans mail.
 - [ ] Donner des chemins lisibles aux rubriques, sous-rubriques et fiches ; utiliser ces destinations dans les mails et conserver les anciens liens.
 - [ ] Relier et vérifier Gmail dans l'espace actuel après le nouveau déplacement du projet.
 - [ ] Relier et vérifier Brevo dans l'espace actuel après le nouveau déplacement du projet ; ne pas reprendre le diagnostic de l'ancienne connexion.

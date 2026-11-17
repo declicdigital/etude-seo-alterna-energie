@@ -1300,16 +1300,17 @@ async function loadArticles(){
         if(img && img.status !== 'done' && (img.attachments || []).some(x => x && x.type === 'image')){
           if(!/^\d{4}-\d{2}-\d{2}$/.test(img.date || '')) img.date = todayIso();
           img.status = 'done';
-          EditorialPipeline.applyAutoDeadline(a, 'image');
+          EditorialPipeline.applyAutoDeadline(a, 'image', SPACE);
           articleChanged = true;
         }
-        if(articleChanged) pendingSaves.push(saveArticle(a));
+        if(articleChanged) pendingSaves.push(a);
         out.push(a);
       }catch(e){}
     }
-    await Promise.all(pendingSaves);
     out.sort((a,b)=> (a.createdAt||'').localeCompare(b.createdAt||''));
     articles = out;
+    const rescheduled = EditorialPipeline.scheduleProIntegration(articles, SPACE, todayIso());
+    await Promise.all([...new Set([...pendingSaves, ...rescheduled])].map(a => saveArticle(a)));
   }catch(e){
     articles = [];
   }
@@ -1323,7 +1324,9 @@ async function saveIndex(){
 
 async function saveArticle(article){
   try{
-    await storage.set('article:' + article.id, JSON.stringify(article), false);
+    const all = articles.some(a => a.id === article.id) ? articles : [...articles, article];
+    const changed = EditorialPipeline.scheduleProIntegration(all, SPACE, todayIso());
+    await Promise.all([...new Set([article, ...changed])].map(a => storage.set('article:' + a.id, JSON.stringify(a), false)));
     showSaved();
   }catch(e){ console.error('Erreur de sauvegarde article', e); }
 }
@@ -2228,7 +2231,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     }
     if(!/^\d{4}-\d{2}-\d{2}$/.test(step.date || '')) step.date = todayIso();
     if(!EditorialPipeline.completeStep(step)) return;
-    EditorialPipeline.applyAutoDeadline(article, key);
+    EditorialPipeline.applyAutoDeadline(article, key, SPACE);
     await saveArticle(article);
     if(key === 'integration') await pushToBlog(article);
     const mail = EditorialPipeline.nextNotification(article, key, SPACE);

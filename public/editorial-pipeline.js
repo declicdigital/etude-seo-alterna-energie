@@ -102,9 +102,10 @@
      Intégration 5 jours ouvrés après la validation de la Relecture. Une deadline déjà posée
      (par Geoffrey) est conservée. Renvoie true si une deadline a été ajoutée. */
   const AUTO_DEADLINES = { image: { next: 'relecture', days: 3 }, relecture: { next: 'integration', days: 5 } };
-  function applyAutoDeadline(article, validatedKey) {
+  function applyAutoDeadline(article, validatedKey, space) {
     const rule = AUTO_DEADLINES[validatedKey];
     if(!rule || !article || !Array.isArray(article.steps)) return false;
+    if(validatedKey === 'relecture' && isPro(article, space)) return false;
     const done = article.steps.find(s => s.key === validatedKey);
     const next = article.steps.find(s => s.key === rule.next);
     if(!done || done.status !== 'done' || !next || next.status !== 'pending' || next.deadline) return false;
@@ -113,5 +114,51 @@
     next.deadline = deadline;
     return true;
   }
-  root.EditorialPipeline = { PLANETE_STEPS, isPro, isRewrite, normalizeConfig, configFor, sync, nextNotification, completeStep, addBusinessDays, applyAutoDeadline };
+  // French metropolitan public holidays, using the same Easter calculation as business-days.ts.
+  function proPublicationDay(monday) {
+    const d = new Date(monday + 'T00:00:00Z');
+    const year = d.getUTCFullYear();
+    const a = year % 19, b = Math.floor(year / 100), c = year % 100;
+    const h = (19 * a + b - Math.floor(b / 4) - Math.floor((b - Math.floor((b + 8) / 25) + 1) / 3) + 15) % 30;
+    const l = (32 + 2 * (b % 4) + 2 * Math.floor(c / 4) - h - c % 4) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const easter = new Date(Date.UTC(year, Math.floor((h + l - 7 * m + 114) / 31) - 1, (h + l - 7 * m + 114) % 31 + 1));
+    const iso = date => date.toISOString().slice(0, 10);
+    const holidays = new Set(['01-01','05-01','05-08','07-14','08-15','11-01','11-11','12-25'].map(x => year + '-' + x));
+    for(const days of [1,39,50]) holidays.add(iso(new Date(easter.getTime() + days * 86400000)));
+    while([0,6].includes(d.getUTCDay()) || holidays.has(iso(d))) d.setUTCDate(d.getUTCDate() + 1);
+    return iso(d);
+  }
+  const validIso = value => /^\d{4}-\d{2}-\d{2}$/.test(value || '') && !Number.isNaN(Date.parse(value));
+  function mondayOf(iso, upcoming) {
+    const d = new Date(iso + 'T00:00:00Z');
+    const offset = (d.getUTCDay() + 6) % 7;
+    d.setUTCDate(d.getUTCDate() + (upcoming && offset ? 7 - offset : -offset));
+    return d.toISOString().slice(0, 10);
+  }
+  function nextWeek(monday) {
+    return new Date(Date.parse(monday) + 7 * 86400000).toISOString().slice(0, 10);
+  }
+  // One slot per calendar week; holiday shifts never drift the following Monday.
+  function scheduleProIntegration(articles, space, today) {
+    if(space || !validIso(today)) return [];
+    const pro = articles.filter(a => isPro(a, space) && Array.isArray(a.steps));
+    const integration = a => a.steps.find(s => s.key === 'integration');
+    const queue = pro.filter(a => integration(a)?.status === 'pending' && !a.blogRowId)
+      .sort((a,b) => (integration(a).deadline || '9999').localeCompare(integration(b).deadline || '9999') || (a.createdAt || '').localeCompare(b.createdAt || '') || a.id.localeCompare(b.id));
+    if(!queue.length) return [];
+    const lastPublished = pro.filter(a => integration(a)?.status === 'done' && validIso(integration(a).date))
+      .map(a => integration(a).date).sort().pop();
+    const first = integration(queue[0]).deadline;
+    let monday = mondayOf(validIso(first) ? first : today, !validIso(first));
+    if(lastPublished && monday <= mondayOf(lastPublished, false)) monday = nextWeek(mondayOf(lastPublished, false));
+    const changed = [];
+    for(const article of queue) {
+      const step = integration(article), deadline = proPublicationDay(monday);
+      if(step.deadline !== deadline) { step.deadline = deadline; changed.push(article); }
+      monday = nextWeek(monday);
+    }
+    return changed;
+  }
+  root.EditorialPipeline = { PLANETE_STEPS, isPro, isRewrite, normalizeConfig, configFor, sync, nextNotification, completeStep, addBusinessDays, applyAutoDeadline, scheduleProIntegration, proPublicationDay };
 })(globalThis);

@@ -1,10 +1,47 @@
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
+import { isBusinessDay } from './business-days';
 
 const scope: any = {};
 runInNewContext(readFileSync('public/editorial-pipeline.js', 'utf8'), scope);
 const pipeline = scope.EditorialPipeline;
+describe('Weekly Blog Pro integration', () => {
+  const article = (id: string, deadline?: string, audience = 'Professionnel') => ({id, audience, createdAt:id, steps:[{key:'integration', status:'pending', deadline}]});
+  it('spaces all Pro deadlines by consecutive Mondays, leaving Particulier and published dates untouched', () => {
+    const rows: any[] = [article('a','2026-11-23'),article('b','2026-11-23'),article('c'),article('part','2026-11-24','Particulier'),{id:'old', audience:'Professionnel',steps:[{key:'integration',status:'done',date:'2026-11-16',deadline:'2026-11-12'}]}];
+    pipeline.scheduleProIntegration(rows,'','2026-11-17');
+    expect(rows.map(a => a.steps[0].deadline)).toEqual(['2026-11-23','2026-11-30','2026-12-07','2026-11-24','2026-11-12']);
+    expect(rows[4].steps[0].date).toBe('2026-11-16');
+    expect(pipeline.scheduleProIntegration(rows,'','2026-11-18')).toEqual([]);
+  });
+  it('moves Easter Monday to Tuesday, then resumes the following Monday', () => {
+    const rows = [article('a','2027-03-29'), article('b')];
+    pipeline.scheduleProIntegration(rows,'','2027-03-22');
+    expect(rows.map(a => a.steps[0].deadline)).toEqual(['2027-03-30','2027-04-05']);
+    expect(pipeline.scheduleProIntegration(rows,'','2027-03-23')).toEqual([]);
+  });
+  it('moves Whit Monday and fixed holidays to the next working day', () => {
+    expect(pipeline.proPublicationDay('2027-05-17')).toBe('2027-05-18');
+    expect(pipeline.proPublicationDay('2028-05-01')).toBe('2028-05-02');
+    expect(pipeline.proPublicationDay('2028-12-25')).toBe('2028-12-26');
+    for(let year=2026; year<=2030; year++) for(let month=1; month<=12; month++) {
+      const day = `${year}-${String(month).padStart(2,'0')}-01`;
+      expect(isBusinessDay(pipeline.proPublicationDay(day))).toBe(true);
+    }
+  });
+  it('assigns the next available Monday after an already published Pro article', () => {
+    const rows: any[] = [article('next'),{id:'old',audience:'Professionnel',steps:[{key:'integration',status:'done',date:'2026-11-16'}]}];
+    pipeline.scheduleProIntegration(rows,'','2026-11-17');
+    expect(rows[0].steps[0].deadline).toBe('2026-11-23');
+    expect(pipeline.scheduleProIntegration([article('pac')],'strategie','2026-11-17')).toEqual([]);
+  });
+  it('does not replace the Pro weekly slot with the five-day review deadline', () => {
+    const pro: any = {audience:'Professionnel',steps:[{key:'relecture',status:'done',date:'2026-11-17'},{key:'integration',status:'pending'}]};
+    expect(pipeline.applyAutoDeadline(pro,'relecture','')).toBe(false);
+    expect(pro.steps[1].deadline).toBeUndefined();
+  });
+});
 describe('Actual completion dates', () => {
   it('keeps the brief on October 14 and writing on October 21', () => {
     const brief = { key:'brief', status:'pending', date:'2026-10-14' };
