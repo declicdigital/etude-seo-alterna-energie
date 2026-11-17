@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { FaqAttachment } from "@/lib/faq";
+import { toWebp } from "@/lib/webp";
 
 /** Pièces jointes des demandes FAQ : bucket privé « faq-files » (migration 0017). */
 const BUCKET = "faq-files";
@@ -14,9 +15,11 @@ const safeName = (name: string) =>
     .slice(-120) || "fichier";
 
 export async function uploadFaqFile(
-  file: File,
+  original: File,
   by: { name: string; email: string },
 ): Promise<FaqAttachment> {
+  // Les images partent en WebP (converties dans le navigateur avant l'envoi).
+  const file = await toWebp(original);
   if (file.size > FAQ_FILE_MAX) throw new Error(`« ${file.name} » dépasse 25 Mo.`);
   const id = crypto.randomUUID();
   const path = `${id}/${safeName(file.name)}`;

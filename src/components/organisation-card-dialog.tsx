@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { toWebp } from "@/lib/webp";
 import {
   CalendarDays,
   Check,
@@ -511,13 +512,15 @@ function useCardAttachments(card: OrgCard, me: string | null, onChange: NoteProp
     if (!ok.length) return;
     setUploading((u) => [...u, ...ok.map((f) => f.name)]);
     const added: OrgAttachment[] = [];
-    for (const f of ok) {
+    for (const picked of ok) {
+      // Les images partent en WebP (converties dans le navigateur avant l'envoi).
+      const f = await toWebp(picked);
       const path = `${card.id}/${crypto.randomUUID()}-${storageName(f.name)}`;
       const { error: err } = await supabase.storage
         .from(ORG_FILES_BUCKET)
         .upload(path, f, { contentType: f.type || undefined, upsert: false });
       setUploading((u) => {
-        const i = u.indexOf(f.name);
+        const i = u.indexOf(picked.name);
         return i < 0 ? u : [...u.slice(0, i), ...u.slice(i + 1)];
       });
       if (err) {

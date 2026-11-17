@@ -1192,6 +1192,25 @@ body.view-simple #density-tabs { display: none; }
 <div id="tooltip" class="tooltip" style="display:none"></div>
 
 <script>
+/* Images : converties automatiquement en WebP dans le navigateur avant l'envoi (même logique que
+   src/lib/webp.ts). GIF, SVG et WebP gardés tels quels ; si le navigateur ne sait pas produire
+   de WebP (Safari), le fichier d'origine part. */
+async function toWebp(file, quality){
+  if(!/^image\/(jpeg|jpg|pjpeg|png|bmp|x-ms-bmp|avif)$/i.test(file.type || '') || typeof createImageBitmap !== 'function') return file;
+  try{
+    const bitmap = await createImageBitmap(file);
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width; canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d'); if(!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0);
+    if(bitmap.close) bitmap.close();
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/webp', quality || 0.9));
+    if(!blob || blob.type !== 'image/webp') return file;
+    const name = (String(file.name || 'image').replace(/\.[^./\\]+$/, '') || 'image') + '.webp';
+    return new File([blob], name, { type: 'image/webp', lastModified: Date.now() });
+  }catch(e){ return file; }
+}
+
 'use strict';
 // ═══════════════════════════════════════════════════════════════
 // DATA MODEL
@@ -2808,9 +2827,10 @@ function openCampaignModal(existing, defaultType) {
 
     // Image upload
     modal.querySelectorAll('.a-image').forEach(inp => {
-      inp.onchange = function() {
+      inp.onchange = async function() {
         const aid = this.dataset.aid;
-        const file = this.files[0]; if(!file) return;
+        const picked = this.files[0]; if(!picked) return;
+        const file = await toWebp(picked);
         const reader = new FileReader();
         reader.onload = e => {
           const a = campActions.find(x=>x.id===aid);
@@ -3125,7 +3145,8 @@ function openActionModal(existing, campaignId, channelId, onCloseCallback) {
     const toRead = files.slice(0, remaining);
     if(files.length > remaining) toast(`Seules ${remaining} images ajoutées (max ${MAX_ACTION_IMAGES})`);
     let done = 0;
-    toRead.forEach(file => {
+    toRead.forEach(async picked => {
+      const file = await toWebp(picked);
       const reader = new FileReader();
       reader.onload = e => {
         action.imageDatas.push(e.target.result);

@@ -541,7 +541,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "format",
     ],
     answer:
-      "À l'étape Image (équipe Digicom), deux cases : « 1500 × 700 » et « 950 × 475 ». Glisse l'image dans la case ou clique dessus pour la choisir. Une case remplie se remplace de la même façon ; un clic sur l'aperçu télécharge l'image et la croix × la retire. Une fois l'étape validée, Fannie et Coraline reçoivent le mail de relecture.",
+      "À l'étape Image (équipe Digicom), deux cases : « 1500 × 700 » et « 950 × 475 ». Toute image ajoutée dans Digicom (suivis, FAQ, Organisation, Le Radar) est convertie automatiquement en WebP, même taille, dès l'envoi : celle qu'on télécharge ensuite est donc déjà en WebP (les GIF et SVG restent tels quels). Glisse l'image dans la case ou clique dessus pour la choisir. Une case remplie se remplace de la même façon ; un clic sur l'aperçu télécharge l'image et la croix × la retire. Une fois l'étape validée, Fannie et Coraline reçoivent le mail de relecture.",
   },
   {
     zone: "blog-suivi",
