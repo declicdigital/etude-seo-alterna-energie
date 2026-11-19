@@ -1367,10 +1367,62 @@ async function persistScheduledArticles(toSave){
   }
   const scheduled = records.map(r => ({...r.article, _scheduleSpace:r.space}));
   const changed = new Set(EditorialPipeline.scheduleIntegration(scheduled, SPACE, todayIso()));
-  await Promise.all(records.filter((r,i) => toSave.includes(r.article) || changed.has(scheduled[i])).map(r => fetch(REST + '?on_conflict=key', {
+  const write = (key, value) => fetch(REST + '?on_conflict=key', {
     method:'POST', headers:Object.assign({},authHeaders(),{'Prefer':'resolution=merge-duplicates,return=minimal'}),
-    body:JSON.stringify({key:r.key,value:JSON.stringify(r.article),updated_at:new Date().toISOString()})
-  }).then(res => {if(!res.ok) throw new Error('Erreur d’enregistrement du calendrier');})));
+    body:JSON.stringify({key,value:JSON.stringify(value),updated_at:new Date().toISOString()})
+  }).then(res => {if(!res.ok) throw new Error('Erreur d’enregistrement du calendrier');});
+  await Promise.all(records.map(async (r, i) => {
+    if(toSave.includes(r.article)){
+      // L'article modifié : on reprend ce que les autres ont ajouté entre-temps (images,
+      // commentaires d'image) avant d'enregistrer, pour ne jamais l'effacer.
+      const fresh = await readArticleRow(r.key);
+      if(fresh) mergeConcurrentChanges(r.article, fresh);
+      return write(r.key, r.article);
+    }
+    if(!changed.has(scheduled[i])) return;
+    // Autre article dont seule la date d'intégration change : on relit la version enregistrée
+    // et on ne modifie que cette date (sinon une copie ancienne écrasait le travail des autres).
+    const deadline = (scheduled[i].steps || []).find(s => s.key === 'integration')?.deadline;
+    const fresh = await readArticleRow(r.key);
+    if(!fresh || !deadline) return;
+    const step = (fresh.steps || []).find(s => s.key === 'integration');
+    if(!step || step.deadline === deadline) return;
+    step.deadline = deadline;
+    return write(r.key, fresh);
+  }));
+}
+async function readArticleRow(key){
+  try{
+    const res = await fetch(REST + '?select=value&key=eq.' + encodeURIComponent(key), {headers:authHeaders()});
+    if(!res.ok) return null;
+    const rows = await res.json();
+    return rows.length ? JSON.parse(rows[0].value) : null;
+  }catch(e){ return null; }
+}
+/* Pièces jointes retirées et commentaires d'image effacés volontairement dans cette page : eux
+   seuls peuvent disparaître à l'enregistrement. */
+const removedAttachIds = new Set();
+const clearedNoteIds = new Set();
+function mergeConcurrentChanges(local, fresh){
+  for(const fs of (fresh.steps || [])){
+    const ls = (local.steps || []).find(s => s.key === fs.key);
+    if(!ls) continue;
+    ls.attachments = ls.attachments || [];
+    for(const fa of (fs.attachments || [])){
+      const la = ls.attachments.find(a => a.id === fa.id);
+      if(la){
+        // Commentaire d'image le plus récent gagné, sauf s'il vient d'être effacé ici.
+        if(fa.note && !clearedNoteIds.has(fa.id) && (!la.note || (fa.noteAt || '') > (la.noteAt || ''))){
+          la.note = fa.note; la.noteBy = fa.noteBy; la.noteAt = fa.noteAt;
+        }
+        continue;
+      }
+      if(removedAttachIds.has(fa.id)) continue;
+      // Image d'un format déjà rempli ici : remplacée volontairement, on ne la ramène pas.
+      if(fa.format && ls.attachments.some(a => imageFormat(a) === imageFormat(fa))) continue;
+      ls.attachments.push(fa);
+    }
+  }
 }
 async function saveArticle(article){
   try{ await persistScheduledArticles([article]); showSaved(); }
@@ -2338,6 +2390,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     const article = getArticle(id);
     const step = article.steps.find(s => s.key === key);
     step.attachments = (step.attachments||[]).filter(a => a.id !== attachId);
+    removedAttachIds.add(attachId);
     forgetArchivedAttachment(article, attachId);
     await saveArticle(article);
     renderArticles();
@@ -2452,7 +2505,7 @@ async function addImageAttachments(zone, files){
     if(!step.attachments) step.attachments = [];
     // Une seule image par format : la nouvelle remplace l'ancienne.
     if(format){
-      for(const old of step.attachments.filter(a => imageFormat(a) === format)) forgetArchivedAttachment(article, old.id);
+      for(const old of step.attachments.filter(a => imageFormat(a) === format)){ removedAttachIds.add(old.id); forgetArchivedAttachment(article, old.id); }
       step.attachments = step.attachments.filter(a => imageFormat(a) !== format);
     }
     step.attachments.push(...images);
@@ -2537,7 +2590,8 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
     if(!att) return;
     const note = t.value.slice(0, 2000);
     if(note.trim()){ att.note = note; att.noteBy = currentUserName(); att.noteAt = new Date().toISOString(); }
-    else { delete att.note; delete att.noteBy; delete att.noteAt; }
+    else { delete att.note; delete att.noteBy; delete att.noteAt; clearedNoteIds.add(att.id); }
+    if(note.trim()) clearedNoteIds.delete(att.id);
     // Enregistré après une courte pause de frappe (les articles avec images sont lourds).
     clearTimeout(noteSaveTimers[article.id]);
     noteSaveTimers[article.id] = setTimeout(() => saveArticle(article), 700);
