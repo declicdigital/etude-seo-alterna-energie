@@ -59,6 +59,8 @@ function RequestsPage() {
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState("");
   const [inviteSuccess, setInviteSuccess] = useState("");
+  const [accessDrafts, setAccessDrafts] = useState<Record<string, string[]>>({});
+  const [deciding, setDeciding] = useState<string | null>(null);
 
   async function invite(event: React.FormEvent) {
     event.preventDefault();
@@ -108,11 +110,33 @@ function RequestsPage() {
   }, [me, load]);
 
   async function decide(id: string, status: "approved" | "rejected") {
-    await supabase
+    if (!me || deciding) return;
+    setDeciding(id);
+    setLoadError("");
+    const { error } = await supabase
       .from("profiles")
-      .update({ status, reviewed_at: new Date().toISOString(), reviewed_by: me })
+      .update({ status, reviewed_at: new Date().toISOString(), reviewed_by: me,
+        ...(status === "approved" ? { allowed_sections: accessDrafts[id] ?? serializeSections(new Set()) } : {}) })
       .eq("id", id);
-    await load();
+    if (error) setLoadError("La décision n’a pas pu être enregistrée. Réessayez.");
+    else await load();
+    setDeciding(null);
+  }
+
+  function draftSections(r: Profile) {
+    return accessDrafts[r.id] ?? serializeSections(new Set());
+  }
+
+  function toggleDraft(r: Profile, key: string) {
+    const selected = grantedSections(draftSections(r));
+    if (selected.has(key)) selected.delete(key); else selected.add(key);
+    setAccessDrafts(current => ({ ...current, [r.id]: serializeSections(selected) }));
+  }
+
+  function pendingAccess(r: Profile) {
+    return <SectionToggles row={{ ...r, allowed_sections: draftSections(r) }}
+      onToggle={key => toggleDraft(r, key)}
+      onSetAll={on => setAccessDrafts(current => ({ ...current, [r.id]: serializeSections(new Set(on ? ALL_SECTION_KEYS : [])) }))} />;
   }
 
   async function saveSections(r: Profile, granted: Set<string>) {
@@ -177,19 +201,17 @@ function RequestsPage() {
                 <p className="px-4 py-5 text-sm text-emerald-700/70">Aucune demande en attente.</p>
               ) : (
                 pending.map((r) => (
-                  <Row key={r.id} row={r}>
-                    <button
+                  <Row key={r.id} row={r} extra={pendingAccess(r)}>
+                    <Button size="sm" disabled={!!deciding}
                       onClick={() => decide(r.id, "approved")}
-                      className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
                     >
-                      Valider
-                    </button>
-                    <button
+                      <Check />Valider ces accès
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={!!deciding}
                       onClick={() => decide(r.id, "rejected")}
-                      className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
                     >
                       Refuser
-                    </button>
+                    </Button>
                   </Row>
                 ))
               )}
@@ -203,7 +225,7 @@ function RequestsPage() {
                   <Row key={r.id} row={r} extra={r.status === "approved" && r.id !== me ? <SectionToggles row={r} onToggle={(k) => toggleSection(r, k)} onSetAll={(on) => {
                     if (!on && !window.confirm(`Retirer tous les accès de ${r.full_name || r.email} ?`)) return;
                     void saveSections(r, new Set(on ? ALL_SECTION_KEYS : []));
-                  }} /> : null}>
+                  }} /> : r.status === "rejected" ? pendingAccess(r) : null}>
                     <span
                       className={
                         r.status === "approved"
@@ -213,12 +235,11 @@ function RequestsPage() {
                     >
                       {STATUS_LABEL[r.status] ?? r.status}
                     </span>
-                    <button
+                    <Button size="sm" variant="outline" disabled={!!deciding}
                       onClick={() => decide(r.id, r.status === "approved" ? "rejected" : "approved")}
-                      className="rounded-lg border border-emerald-200 px-3 py-1.5 text-xs text-emerald-800 hover:bg-emerald-50"
                     >
-                      {r.status === "approved" ? "Révoquer" : "Valider"}
-                    </button>
+                      {r.status === "approved" ? "Révoquer" : "Valider ces accès"}
+                    </Button>
                   </Row>
                 ))
               )}
