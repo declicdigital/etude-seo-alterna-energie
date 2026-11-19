@@ -402,7 +402,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "dernière connexion",
     ],
     answer:
-      "Page « Demandes d'accès » (bouton Demandes en haut à droite, réservé à l'administrateur) : valide ou refuse les nouvelles demandes, « Inviter une personne » (prénom et nom + adresse e-mail → « Envoyer l'invitation »), et pour chaque compte clique sur une rubrique ou une sous-rubrique pour l'autoriser ou la retirer. Tu y vois aussi la dernière connexion et si l'invitation a été acceptée ; « Révoquer » retire l'accès à un compte validé.",
+      "Page « Demandes d'accès » (bouton Demandes en haut à droite, réservé à l'administrateur) : choisis les rubriques et sous-rubriques sur chaque demande en attente puis « Valider ces accès » (seule cette sélection est accordée), ou refuse la demande. « Copier le lien » copie le lien de demande d’accès à partager sans saisir de destinataire ; la personne renseigne elle-même ses coordonnées. « Inviter une personne » (prénom et nom + adresse e-mail → « Envoyer l'invitation »), et pour chaque compte clique sur une rubrique ou une sous-rubrique pour l'autoriser ou la retirer. Tu y vois aussi la dernière connexion et si l'invitation a été acceptée ; « Révoquer » retire l'accès à un compte validé.",
   },
   {
     zone: "all",

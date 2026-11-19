@@ -6,7 +6,8 @@ import { getAccess, signOutAndGoToAuth } from "@/lib/access";
 import { SECTION_TREE, ALL_SECTION_KEYS, grantedSections, serializeSections, groupDisplayName } from "@/lib/sections";
 import digicomWordmark from "@/assets/digicom-wordmark.png";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, UserPlus, Send } from "lucide-react";
+import { Check, UserPlus, Send, Copy, Link as LinkIcon } from "lucide-react";
+import { appUrl } from "@/lib/app-url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -61,6 +62,13 @@ function RequestsPage() {
   const [inviteSuccess, setInviteSuccess] = useState("");
   const [accessDrafts, setAccessDrafts] = useState<Record<string, string[]>>({});
   const [deciding, setDeciding] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const requestLink = appUrl("auth?demande=1");
+
+  async function copyRequestLink() {
+    try { await navigator.clipboard.writeText(requestLink); setLinkCopied(true); }
+    catch { setLoadError("Le lien n’a pas pu être copié. Vous pouvez le sélectionner ci-dessous."); }
+  }
 
   async function invite(event: React.FormEvent) {
     event.preventDefault();
@@ -175,6 +183,11 @@ function RequestsPage() {
         </div>
 
         {me && <section className="mb-6 border-y border-border py-5">
+          <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground"><LinkIcon className="size-5" />Lien de demande d’accès</h2>
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            <Input aria-label="Lien de demande d’accès" value={requestLink} readOnly className="min-w-0 flex-1" />
+            <Button type="button" variant="outline" onClick={copyRequestLink}><Copy />{linkCopied ? "Lien copié" : "Copier le lien"}</Button>
+          </div>
           <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-foreground"><UserPlus className="size-5" />Inviter une personne</h2>
           <form onSubmit={invite} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_auto]">
             <div><label htmlFor="invite-name" className="mb-1 block text-sm text-foreground">Prénom et Nom</label>

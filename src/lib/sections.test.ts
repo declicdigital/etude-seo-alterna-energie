@@ -34,6 +34,14 @@ describe("section access", () => {
     expect(grantedSections(serializeSections(new Set()))).toEqual(new Set());
   });
 
+  it("approves only the selected Blog Pro access, with every unselected section closed", () => {
+    const stored = serializeSections(new Set(["Blog", "Blog/Professionnel"]));
+    expect(sheetAllowed("BLOG - ARTICLES::Professionnel", stored)).toBe(true);
+    expect(sheetAllowed("BLOG - ARTICLES::Particulier", stored)).toBe(false);
+    expect(sheetAllowed("BENCHMARK", stored)).toBe(false);
+    expect(grantedSections(stored)).toEqual(new Set(["Blog", "Blog/Professionnel"]));
+  });
+
   it("gives everything when no list is set", () => {
     expect(grantedSections(null)).toEqual(new Set(ALL_SECTION_KEYS));
     expect(sheetAllowed("BENCHMARK", null)).toBe(true);

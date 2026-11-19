@@ -7,6 +7,7 @@ import logo from "@/assets/alterna-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>): { demande?: boolean } => ({ demande: search.demande === true || search.demande === 1 || search.demande === "1" }),
   head: () => ({
     meta: [
       { title: "Connexion — Digicom" },
@@ -23,7 +24,8 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
+  const { demande } = Route.useSearch();
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">(demande ? "signup" : "login");
   const [sent, setSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
