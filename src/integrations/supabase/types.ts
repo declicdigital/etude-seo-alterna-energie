@@ -515,10 +515,18 @@ export type Database = {
         }[]
       }
       can_edit_planning: { Args: { _user_id: string }; Returns: boolean }
+      can_moderate_content: { Args: { _user_id: string }; Returns: boolean }
       can_moderate_faq: { Args: { _user_id: string }; Returns: boolean }
       can_use_organisation: { Args: { _user_id: string }; Returns: boolean }
       can_validate_faq: { Args: { _user_id: string }; Returns: boolean }
       can_view_planning: { Args: { _user_id: string }; Returns: boolean }
+      editorial_item_ids: {
+        Args: { doc: Json }
+        Returns: {
+          has_note: boolean
+          id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
