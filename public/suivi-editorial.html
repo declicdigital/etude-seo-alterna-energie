@@ -626,6 +626,7 @@ button{ font-family: inherit; cursor:pointer; }
 .slot-name{ font-size:0.75rem; font-weight:500; color:var(--ink-60); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .slot-remove{ position:absolute; top:6px; right:6px; width:26px; height:26px; border-radius:50%; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; font-size:1rem; line-height:1; }
 .slot-remove:hover{ border-color:var(--ink); }
+.attach-image-label.slot-locked{ cursor: default; }
 .slot-note{ font-size:0.75rem; color:#92400e; background:#fef3c7; border-radius:6px; padding:4px 8px; max-width:100%; text-align:left; white-space:pre-wrap; }
 .review-images{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin:4px 0 14px; }
 .review-image{ display:flex; flex-direction:column; gap:8px; margin:0; padding:12px; border:1.5px solid var(--line); border-radius:10px; background:#fff; }
@@ -982,7 +983,7 @@ function renderComments(articleId){
   const list = commentsByArticle[articleId] || [];
   const items = list.map(c => `
     <div class="comment-item">
-      <button class="comment-del" data-action="delete-comment" data-comment-id="${c.id}" data-article-id="${articleId}" title="Supprimer ce message">🗑</button>
+      ${canModerate() ? `<button class="comment-del" data-action="delete-comment" data-comment-id="${c.id}" data-article-id="${articleId}" title="Supprimer ce message">🗑</button>` : ''}
       <button class="comment-edit" data-action="edit-comment" data-comment-id="${c.id}" data-article-id="${articleId}" title="Modifier ce message">✏️</button>
       <div class="comment-meta">${escapeHtml(c.author_name || c.author_email)} · ${fmtDateTime(c.created_at)}</div>
       <div class="comment-body">${renderCommentBody(c.body)}</div>
@@ -1239,6 +1240,10 @@ let articles = [];
 let openPanels = {};
 let confirmingDelete = null;
 let canRemind = false;
+/* Supprimer une image, une pièce jointe ou un message : seulement l'équipe Digicom (Geoffrey via
+   canRemind, et Matthieu). Même règle côté base (migration 0020). */
+const MODERATOR_EMAILS = ['matthieu.roux@alterna-energie.fr'];
+function canModerate(){ return canRemind || MODERATOR_EMAILS.includes(currentUserEmail().toLowerCase()); }
 const reminderRequests = new Map();
 const REMINDER_ICON = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m3 6 9 7 9-7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
 window.addEventListener('message', (event) => {
@@ -1902,7 +1907,7 @@ function renderImageSlots(article, step){
   return `<div class="image-slots">${IMAGE_FORMATS.map(f => {
     const a = atts.find(x => imageFormat(x) === f.key);
     return `
-      <label class="attach-image-label ${a ? 'slot-filled' : ''}" data-article-id="${article.id}" data-step-key="${step.key}" data-format="${f.key}" title="${a ? 'Cliquer pour remplacer l\'image ' + f.label : 'Ajouter l\'image ' + f.label}">
+      <label class="attach-image-label ${a ? 'slot-filled' : ''} ${a && !canModerate() ? 'slot-locked' : ''}" data-article-id="${article.id}" data-step-key="${step.key}" data-format="${f.key}" title="${a ? (canModerate() ? 'Cliquer pour remplacer l\'image ' + f.label : 'Image ' + f.label + ' : seule l\'équipe Digicom peut la remplacer') : 'Ajouter l\'image ' + f.label}">
         <span class="slot-size">${f.label}</span>
         ${a ? `
           <a class="slot-thumb" href="${escapeAttr(imgSrc(a))}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image ${f.label}">
@@ -1910,9 +1915,9 @@ function renderImageSlots(article, step){
           </a>
           <span class="slot-name">${escapeHtml(a.name || '')}</span>
           ${a.note ? `<span class="slot-note">💬 Relecture${a.noteBy ? ' (' + escapeHtml(a.noteBy) + ')' : ''} : ${escapeHtml(a.note)}</span>` : ''}
-          <button type="button" class="slot-remove" data-action="remove-attachment" data-article-id="${article.id}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer l'image ${f.label}" aria-label="Retirer l'image ${f.label}">×</button>`
+          ${canModerate() ? `<button type="button" class="slot-remove" data-action="remove-attachment" data-article-id="${article.id}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer l'image ${f.label}" aria-label="Retirer l'image ${f.label}">×</button>` : ''}`
         : `<span class="attach-image-copy"><small>Glisser l'image ici ou cliquer pour choisir</small></span>`}
-        <input type="file" accept="image/*" class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" aria-label="Image ${f.label}">
+        ${a && !canModerate() ? '' : `<input type="file" accept="image/*" class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" aria-label="Image ${f.label}">`}
       </label>`;
   }).join('')}</div>`;
 }
@@ -1928,20 +1933,20 @@ function renderAttachments(articleId, step){
             <img loading="lazy" src="${escapeAttr(imgSrc(a))}" alt="${escapeAttr(a.name||'Image')}">
             <span class="attachment-badge">⤓</span>
           </a>
-          <button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>
+          ${canModerate() ? `<button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>` : ''}
         </div>`;
     }
     if(a.type === 'link'){
       return `
         <div class="attachment-chip attachment-link">
           <a href="${escapeAttr(normalizeUrl(a.value))}" target="_blank" rel="noopener noreferrer">${escapeHtml(shortenUrl(a.value))}</a>
-          <button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>
+          ${canModerate() ? `<button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>` : ''}
         </div>`;
     }
     return `
       <div class="attachment-chip attachment-note">
         <span>${escapeHtml(a.value)}</span>
-        <button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>
+        ${canModerate() ? `<button class="attachment-remove" data-action="remove-attachment" data-article-id="${articleId}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer">×</button>` : ''}
       </div>`;
   }).join('');
 }
@@ -1966,7 +1971,7 @@ function renderReviewImages(article){
           <img loading="lazy" src="${escapeAttr(imgSrc(a))}" alt="Image ${escapeAttr(label)}">
         </button>
         <span class="review-image-name">${escapeHtml(a.name || '')}</span>
-        <textarea class="review-note" data-action="edit-image-note" data-article-id="${escapeAttr(article.id)}" data-attach-id="${escapeAttr(a.id)}" placeholder="Une modification à faire sur cette image ? Écrivez-la ici." aria-label="Commentaire sur l'image ${escapeAttr(label)}">${escapeHtml(a.note || '')}</textarea>
+        <textarea class="review-note" data-action="edit-image-note" data-article-id="${escapeAttr(article.id)}" data-attach-id="${escapeAttr(a.id)}" placeholder="Une modification à faire sur cette image ? Écrivez-la ici." aria-label="Commentaire sur l'image ${escapeAttr(label)}" ${a.note && a.noteBy && a.noteBy !== currentUserName() && !canModerate() ? 'readonly title="Commentaire de ' + escapeAttr(a.noteBy) + ' : seule l\'équipe Digicom peut le modifier"' : ''}>${escapeHtml(a.note || '')}</textarea>
         ${a.note && a.noteBy ? `<span class="review-note-by">Commentaire de ${escapeHtml(a.noteBy)}</span>` : ''}
       </figure>`;
   }).join('')}</div>`;
@@ -2292,7 +2297,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
   const editCommentBtn = e.target.closest('[data-action="edit-comment"]');
   if(editCommentBtn){ await editComment(editCommentBtn.dataset.articleId, editCommentBtn.dataset.commentId); return; }
   const delCommentBtn = e.target.closest('[data-action="delete-comment"]');
-  if(delCommentBtn){
+  if(delCommentBtn && canModerate()){
     await deleteComment(delCommentBtn.dataset.articleId, delCommentBtn.dataset.commentId);
     return;
   }
@@ -2384,6 +2389,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
 
   const removeAttach = e.target.closest('[data-action="remove-attachment"]');
   if(removeAttach){
+    if(!canModerate()) return;
     const id = removeAttach.dataset.articleId;
     const key = removeAttach.dataset.stepKey;
     const attachId = removeAttach.dataset.attachId;
@@ -2496,6 +2502,11 @@ async function addImageAttachments(zone, files){
     const step = article?.steps.find(s => s.key === zone.dataset.stepKey);
     if(!step) return;
     const format = zone.dataset.format || '';
+    // Remplacer une image existante = la supprimer : réservé à l'équipe Digicom.
+    if(format && !canModerate() && (step.attachments || []).some(a => imageFormat(a) === format)){
+      alert("Seule l'équipe Digicom peut remplacer une image déjà déposée.");
+      return;
+    }
     const images = [];
     for(const picked of (format ? files.slice(0, 1) : files)){
       const file = await toWebp(picked);
@@ -2589,6 +2600,8 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
     const att = img && (img.attachments || []).find(a => a.id === t.dataset.attachId);
     if(!att) return;
     const note = t.value.slice(0, 2000);
+    // Effacer un commentaire d'image : réservé à l'équipe Digicom (il revient au prochain affichage).
+    if(!note.trim() && att.note && !canModerate()) return;
     if(note.trim()){ att.note = note; att.noteBy = currentUserName(); att.noteAt = new Date().toISOString(); }
     else { delete att.note; delete att.noteBy; delete att.noteAt; clearedNoteIds.add(att.id); }
     if(note.trim()) clearedNoteIds.delete(att.id);
@@ -2840,7 +2853,7 @@ todoBlockEl.addEventListener('click', async (e) => {
   const editCommentBtn = e.target.closest('[data-action="edit-comment"]');
   if(editCommentBtn){ await editComment(editCommentBtn.dataset.articleId, editCommentBtn.dataset.commentId); return; }
   const delCommentBtn = e.target.closest('[data-action="delete-comment"]');
-  if(delCommentBtn){
+  if(delCommentBtn && canModerate()){
     await deleteComment(delCommentBtn.dataset.articleId, delCommentBtn.dataset.commentId);
   }
 });

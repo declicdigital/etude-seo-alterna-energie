@@ -541,7 +541,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "format",
     ],
     answer:
-      "À l'étape Image (équipe Digicom), deux cases : « 1500 × 700 » et « 950 × 475 ». Toute image ajoutée dans Digicom (suivis, FAQ, Organisation, Le Radar) est convertie automatiquement en WebP, même taille, dès l'envoi : celle qu'on télécharge ensuite est donc déjà en WebP (les GIF et SVG restent tels quels). Glisse l'image dans la case ou clique dessus pour la choisir. Une case remplie se remplace de la même façon ; un clic sur l'aperçu télécharge l'image et la croix × la retire. Une fois l'étape validée, Fannie et Coraline reçoivent le mail de relecture.",
+      "À l'étape Image (équipe Digicom), deux cases : « 1500 × 700 » et « 950 × 475 ». Toute image ajoutée dans Digicom (suivis, FAQ, Organisation, Le Radar) est convertie automatiquement en WebP, même taille, dès l'envoi : celle qu'on télécharge ensuite est donc déjà en WebP (les GIF et SVG restent tels quels). Glisse l'image dans la case ou clique dessus pour la choisir. Une case remplie se remplace de la même façon ; un clic sur l'aperçu télécharge l'image ; seule l'équipe Digicom peut la retirer (croix ×) ou la remplacer par une autre. Une fois l'étape validée, Fannie et Coraline reçoivent le mail de relecture.",
   },
   {
     zone: "blog-suivi",
@@ -606,7 +606,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "🔔",
     ],
     answer:
-      "En bas de chaque carte, la zone Messages : écris ton message et tape @ pour taguer une personne, elle reçoit un mail (un seul mail même si plusieurs personnes sont taguées). ✏️ modifie un message sans renvoyer de mail, 🗑 le supprime. La cloche 🔔 en haut du suivi liste les messages où tu es tagué, avec un compteur des nouveaux ; un clic t'emmène sur le message.",
+      "En bas de chaque carte, la zone Messages : écris ton message et tape @ pour taguer une personne, elle reçoit un mail (un seul mail même si plusieurs personnes sont taguées). ✏️ modifie ton message sans renvoyer de mail ; seule l'équipe Digicom peut supprimer un message (🗑), une pièce jointe ou un commentaire d'image. La cloche 🔔 en haut du suivi liste les messages où tu es tagué, avec un compteur des nouveaux ; un clic t'emmène sur le message.",
   },
   {
     zone: "blog-suivi",
