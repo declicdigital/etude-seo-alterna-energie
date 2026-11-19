@@ -517,6 +517,15 @@ button{ font-family: inherit; cursor:pointer; }
 .attachment-chip span{ white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
 .attachment-link{ background: var(--blue-bg); border-color: var(--blue); }
 .attachment-note{ background: var(--yellow-bg); border-color: var(--yellow); }
+/* Notes : toujours lisibles en entier (pleine largeur, texte sur plusieurs lignes). */
+.attachment-chip.attachment-note{
+  flex: 1 1 100%; max-width: 100%; align-items: flex-start;
+  border-radius: 12px; padding: 8px 8px 8px 12px; line-height: 1.45;
+}
+.attachment-chip.attachment-note span{
+  white-space: pre-wrap; overflow: visible; text-overflow: clip;
+  overflow-wrap: anywhere; flex: 1; min-width: 0;
+}
 .attachment-remove{
   border:none; background: transparent; color: var(--ink-30);
   font-size: 0.9rem; line-height:1; cursor:pointer; padding: 2px 4px; flex-shrink:0;
