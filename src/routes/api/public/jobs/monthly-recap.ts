@@ -3,6 +3,7 @@ import { signHtml, signText } from "@/lib/mail-signature";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { recapCc } from "@/lib/monthly-recap-cc";
 import { firstBusinessDay, parisToday } from "@/lib/business-days";
+import { sheetAllowed } from "@/lib/sections";
 import { newYearGreeting, type NewYearGreeting } from "@/lib/recap-greeting";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = MAIL_SENDER;
@@ -195,17 +196,23 @@ export const Route = createFileRoute("/api/public/jobs/monthly-recap")({
         pro.sort(byDate);
         const total = particulier.length + pro.length;
 
-        // Recipients: every approved user (test mode overrides).
+        // Recipients: approved users who can open the Blog (test mode overrides).
         let recipients: string[] = [];
         if (testTo && testTo !== "all") {
           recipients = [testTo];
         } else {
-          const { data: users, error: usersError } = await supabaseAdmin.rpc("approved_users");
+          const { data: users, error: usersError } = await supabaseAdmin
+            .from("profiles")
+            .select("email, allowed_sections")
+            .eq("status", "approved");
           if (usersError) {
-            console.error("approved_users failed", usersError);
+            console.error("profiles failed", usersError);
             return Response.json({ error: "users_failed" }, { status: 500 });
           }
-          recipients = (users ?? []).map((u) => u.email).filter((e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
+          recipients = (users ?? [])
+            .filter((u) => sheetAllowed("BLOG", u.allowed_sections))
+            .map((u) => u.email)
+            .filter((e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
         }
         if (recipients.length === 0) return Response.json({ status: "no_recipients", month });
 
