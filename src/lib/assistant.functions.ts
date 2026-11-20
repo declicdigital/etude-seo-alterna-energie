@@ -246,9 +246,11 @@ export const askAssistant = createServerFn({ method: "POST" })
       stats,
       corrections,
     });
-    const history = data.messages.slice(-12).map((m) => ({
-      role: m.role,
-      content: m.role === "assistant" ? splitNoAnswer(m.content).text : m.content,
+    // Only the person's own questions are forwarded: earlier robot replies come from the
+    // browser and cannot be trusted as model output.
+    const history = data.messages.filter((m) => m.role === "user").slice(-6).map((m) => ({
+      role: "user" as const,
+      content: m.content,
     }));
     const messages = [{ role: "system", content: system }, ...history];
 

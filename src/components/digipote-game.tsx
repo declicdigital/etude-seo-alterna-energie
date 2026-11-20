@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { RobotFace, RobotSvg, ROBOT_SKINS, type RobotSkin } from "@/components/digipote-robot";
-import { getGameLeaderboard, submitGameScore } from "@/lib/game.functions";
+import { getGameLeaderboard, startGameSession, submitGameScore } from "@/lib/game.functions";
 import {
   duoIdentity,
   joinLobby,
@@ -382,6 +382,8 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
   const [saved, setSaved] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const fetchBoards = useServerFn(getGameLeaderboard);
   const sendScore = useServerFn(submitGameScore);
+  const openSession = useServerFn(startGameSession);
+  const sessionRef = useRef<Promise<string | null> | null>(null);
   const state = useRef({
     w: 600,
     h: 420,
@@ -525,6 +527,9 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
   }, []);
 
   const start = useCallback(() => {
+    sessionRef.current = openSession()
+      .then((r) => r.sessionId)
+      .catch(() => null);
     const s = state.current;
     const d = duoRef.current;
     // Duo : l'hôte démarre à gauche, l'invité à droite, côte à côte.
@@ -584,7 +589,7 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
     setSaved("idle");
     setPhase("play");
     say(d ? `En duo avec ${d.info.partnerName} ! 🤝` : "Bip-boup ! C'est parti 🤖", "happy");
-  }, [say]);
+  }, [say, openSession]);
 
   const finish = useCallback(
     async (finalScore: number, duration: number) => {
@@ -608,8 +613,15 @@ export function DigipoteGame({ onClose, name }: { onClose: () => void; name?: st
         return;
       }
       try {
+        const sessionId = await (sessionRef.current ?? Promise.resolve(null));
+        sessionRef.current = null;
+        if (!sessionId) {
+          setSaved("error");
+          return;
+        }
         const res = await sendScore({
           data: {
+            sessionId,
             score: finalScore,
             avatar,
             map,

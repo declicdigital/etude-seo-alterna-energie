@@ -25,7 +25,12 @@ export const sendStepReminder = createServerFn({ method: "POST" })
       const article = reminderArticleSchema.parse(JSON.parse(values.get(keys[0]) || "null"));
       const config = reminderConfigSchema.parse(JSON.parse(values.get(keys[1]) || "null"));
       const { data: users } = await context.supabase.rpc("approved_users");
-      const reminder = buildStepReminder(data, article, config, users ?? []);
+      const built = buildStepReminder(data, article, config, users ?? []);
+      // Recipients must be approved Digicom accounts (or the fixed team addresses).
+      const approved = new Set((users ?? []).map((u: { email: string }) => u.email.toLowerCase()));
+      approved.add(GEOFFREY_EMAIL.toLowerCase());
+      const reminder = { ...built, recipients: built.recipients.filter((m) => approved.has(m.toLowerCase())) };
+      if (!reminder.recipients.length) return { ok: false, error: "Aucun destinataire valide pour ce rappel." };
       const lovableKey = process.env.LOVABLE_API_KEY;
       const brevoKey = process.env.BREVO_API_KEY;
       if (!lovableKey || !brevoKey) return { ok: false, error: "L’envoi des mails n’est pas configuré." };

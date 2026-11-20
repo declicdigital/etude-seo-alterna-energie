@@ -155,6 +155,13 @@
       "when": 1795170282525,
       "tag": "0021_org_cards_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1795181888000,
+      "tag": "0022_harden_access_helpers_and_game_sessions",
+      "breakpoints": true
     }
   ]
 }

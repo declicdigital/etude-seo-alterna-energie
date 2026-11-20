@@ -118,7 +118,10 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
             for (const c of cfg) for (const raw of Object.values(c.emails ?? {}))
               String(raw).split(/[,;\s]+/).forEach((m) => m.trim() && known.add(m.trim().toLowerCase()));
           } catch { /* ignore */ }
-          allowedTo = [...new Set(payload.to.filter((m) => known.has(m.toLowerCase())))];
+          // Only addresses of approved Digicom accounts may receive these notifications.
+          const { data: approvedRows } = await supabaseAdmin.from("profiles").select("email").eq("status", "approved");
+          const approved = new Set((approvedRows ?? []).map((r) => String(r.email).toLowerCase()));
+          allowedTo = [...new Set(payload.to.filter((m) => known.has(m.toLowerCase()) && approved.has(m.toLowerCase())))];
         }
         const recipients = notificationRecipients(payload.kind, allowedTo.length ? allowedTo : defaultTo);
         payload = { ...payload, deadline: notificationDeadline(payload.deadline, payload.kind, recipients) };

@@ -17,6 +17,13 @@ import {
  * par la base (RLS : comptes validés uniquement ; nom du joueur fixé depuis son profil).
  */
 
+export const startGameSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ sessionId: string | null }> => {
+    const { data, error } = await context.supabase.from("game_sessions").insert({}).select("id").single();
+    return { sessionId: error || !data ? null : data.id };
+  });
+
 export const submitGameScore = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -29,6 +36,7 @@ export const submitGameScore = createServerFn({ method: "POST" })
         mode: z.enum(GAME_MODES).default("solo"),
         partnerId: z.string().uuid().optional(),
         partnerAvatar: z.enum(GAME_AVATARS).optional(),
+        sessionId: z.string().uuid(),
       })
       .parse(input),
   )
@@ -43,7 +51,8 @@ export const submitGameScore = createServerFn({ method: "POST" })
       score: data.score,
       avatar: data.avatar,
       map: data.map,
-      duration_s: data.duration,
+      duration_s: data.duration, // recalculé par la base depuis la session
+      session_id: data.sessionId,
       mode: data.mode,
       partner_id: data.mode === "duo" ? data.partnerId : null,
       partner_avatar: data.mode === "duo" ? (data.partnerAvatar ?? "digi") : null,

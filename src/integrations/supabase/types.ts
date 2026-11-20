@@ -174,6 +174,7 @@ export type Database = {
           partner_name: string
           player_name: string
           score: number
+          session_id: string | null
           user_id: string
         }
         Insert: {
@@ -188,6 +189,7 @@ export type Database = {
           partner_name?: string
           player_name?: string
           score: number
+          session_id?: string | null
           user_id?: string
         }
         Update: {
@@ -202,6 +204,25 @@ export type Database = {
           partner_name?: string
           player_name?: string
           score?: number
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      game_sessions: {
+        Row: {
+          id: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          started_at?: string
+          user_id?: string
+        }
+        Update: {
+          id?: string
+          started_at?: string
           user_id?: string
         }
         Relationships: []
