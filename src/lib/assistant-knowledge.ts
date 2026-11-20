@@ -852,7 +852,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "rechercher",
     ],
     answer:
-      "Organisation présente les tâches de l'équipe en fiches rangées par sections. « Ajouter une fiche » dans une section, glisse-dépose une fiche pour la déplacer, ou « Passer à l'étape suivante ». Double-clic sur le nom d'une section pour la renommer ; une section doit être vide pour être supprimée. En haut : recherche dans les fiches et filtres Toutes / Mes fiches / Où je suis tagué.",
+      "Organisation présente les tâches de l'équipe en fiches rangées par sections. « Ajouter une fiche » dans une section, glisse-dépose une fiche pour la déplacer, ou « Passer à l'étape suivante ». Double-clic sur le nom d'une section pour la renommer ; une section doit être vide pour être supprimée. En haut : recherche dans les fiches, filtres Toutes / Mes fiches / Où je suis tagué, et un filtre de marque Toutes / AE (Alterna Énergie) / PP (Parlons Planète) pour n'afficher que les fiches d'une marque.",
   },
   {
     zone: "organisation",
@@ -873,7 +873,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "50 mo",
     ],
     answer:
-      "Une fiche contient : une note sans limite de texte (contexte, décisions, compte rendu ; les liens y deviennent cliquables), un responsable, des personnes taguées (uniquement celles qui ont accès à Organisation, elles reçoivent un mail), une échéance, et « Fichiers et liens » : ajoute un lien nommé ou joins un fichier (50 Mo max, glisser-déposer possible) à ouvrir ou télécharger. Supprimer une fiche efface aussi sa note et ses fichiers.",
+      "Une fiche contient : une note sans limite de texte (contexte, décisions, compte rendu ; les liens y deviennent cliquables), un responsable, des personnes taguées (uniquement celles qui ont accès à Organisation, elles reçoivent un mail), une échéance, une marque au choix (AE = Alterna Énergie ou PP = Parlons Planète, affichée en pastille sur la fiche et filtrable en haut du tableau), et « Fichiers et liens » : ajoute un lien nommé ou joins un fichier (50 Mo max, glisser-déposer possible) à ouvrir ou télécharger. Supprimer une fiche efface aussi sa note et ses fichiers.",
   },
   // ——— Radar (ex-Planning intégré) ———
   {

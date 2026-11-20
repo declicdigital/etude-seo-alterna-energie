@@ -48,7 +48,14 @@ import {
 export type CardPatch = Partial<
   Pick<
     OrgCard,
-    "title" | "content" | "column_id" | "assignee_id" | "tagged_ids" | "due_date" | "attachments"
+    | "title"
+    | "content"
+    | "column_id"
+    | "assignee_id"
+    | "tagged_ids"
+    | "due_date"
+    | "brand"
+    | "attachments"
   >
 >;
 
@@ -327,6 +334,48 @@ export function CardNote({
               value={card.tagged_ids}
               onChange={(tagged_ids) => void onChange(card.id, { tagged_ids })}
             />
+          </dd>
+          <dt className="text-muted-foreground">Marque</dt>
+          <dd>
+            <div role="group" aria-label="Marque de la fiche" className="flex items-center gap-1.5">
+              {(
+                [
+                  ["AE", "Alterna Énergie"],
+                  ["PP", "Parlons Planète"],
+                ] as const
+              ).map(([key, label]) => {
+                const on = card.brand === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={on}
+                    title={label}
+                    onClick={() => void onChange(card.id, { brand: on ? null : key })}
+                    className={cn(
+                      "inline-flex h-7 items-center rounded-full px-2.5 text-xs font-semibold tracking-wide transition-colors",
+                      on
+                        ? key === "AE"
+                          ? "bg-emerald-600 text-white"
+                          : "bg-sky-600 text-white"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    {key}
+                  </button>
+                );
+              })}
+              {card.brand && (
+                <button
+                  type="button"
+                  onClick={() => void onChange(card.id, { brand: null })}
+                  aria-label="Retirer la marque"
+                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </div>
           </dd>
           <dt className="text-muted-foreground">Échéance</dt>
           <dd className="flex items-center gap-2">

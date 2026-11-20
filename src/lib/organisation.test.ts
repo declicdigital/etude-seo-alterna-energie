@@ -32,6 +32,7 @@ const card = (
   assignee_id: null,
   tagged_ids: [],
   due_date: null,
+  brand: null,
   attachments: [],
   created_by: null,
   created_at: "2026-11-05T10:00:00Z",
@@ -96,6 +97,20 @@ describe("organisation board", () => {
     expect(matchesFilter(c, "tagged", "you", "")).toBe(true);
     expect(matchesFilter(c, "all", null, "webflow")).toBe(true);
     expect(matchesFilter(c, "all", null, "newsletter")).toBe(false);
+  });
+
+  it("filtre par marque AE / PP, « Toutes » inclus les fiches sans marque", () => {
+    const ae = card("ae", "c1", 1, { brand: "AE" });
+    const pp = card("pp", "c1", 2, { brand: "PP" });
+    const none = card("none", "c1", 3);
+    expect(matchesFilter(ae, "all", null, "", "AE")).toBe(true);
+    expect(matchesFilter(pp, "all", null, "", "AE")).toBe(false);
+    expect(matchesFilter(none, "all", null, "", "AE")).toBe(false);
+    expect(matchesFilter(pp, "all", null, "", "PP")).toBe(true);
+    expect(matchesFilter(ae, "all", null, "", "PP")).toBe(false);
+    expect(matchesFilter(none, "all", null, "", "all")).toBe(true);
+    // Le filtre de marque se combine avec les autres filtres.
+    expect(matchesFilter(ae, "mine", "me", "", "AE")).toBe(false);
   });
 
   it("only notifies people newly involved, never the author", () => {

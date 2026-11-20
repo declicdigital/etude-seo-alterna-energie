@@ -148,6 +148,13 @@
       "when": 1794792000000,
       "tag": "0020_editorial_moderation",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1795170282525,
+      "tag": "0021_org_cards_brand",
+      "breakpoints": true
     }
   ]
 }

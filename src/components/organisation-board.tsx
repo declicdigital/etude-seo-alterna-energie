@@ -45,6 +45,7 @@ import {
   positionBetween,
   positionForDrop,
   sortByPosition,
+  type BrandFilter,
   type CardFilter,
   type OrgCard,
   type OrgColumn,
@@ -52,7 +53,7 @@ import {
 } from "@/lib/organisation";
 
 const CARD_FIELDS =
-  "id, column_id, title, content, position, assignee_id, tagged_ids, due_date, attachments, created_by, created_at, updated_by, updated_at";
+  "id, column_id, title, content, position, assignee_id, tagged_ids, due_date, brand, attachments, created_by, created_at, updated_by, updated_at";
 
 function errorMessage(e: { message?: string } | null): string {
   const m = e?.message ?? "";
@@ -106,6 +107,7 @@ export function OrganisationBoard({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<CardFilter>("all");
+  const [brandFilter, setBrandFilter] = useState<BrandFilter>("all");
   const [query, setQuery] = useState("");
   const [openId, setOpenId] = useState<string | null>(() => cardIdFromHash(hash));
   const [notice, setNotice] = useState<string | null>(null);
@@ -345,8 +347,8 @@ export function OrganisationBoard({
   }
 
   const visible = useMemo(
-    () => cards.filter((c) => matchesFilter(c, filter, me, query)),
-    [cards, filter, me, query],
+    () => cards.filter((c) => matchesFilter(c, filter, me, query, brandFilter)),
+    [cards, filter, me, query, brandFilter],
   );
   const openCardData = cards.find((c) => c.id === openId) ?? null;
   const mineCount = cards.filter((c) => c.assignee_id === me).length;
@@ -430,6 +432,41 @@ export function OrganisationBoard({
               </button>
             )}
           </label>
+          <div
+            role="group"
+            aria-label="Filtrer par marque"
+            className="flex h-9 items-center rounded-full border border-border bg-background p-0.5 text-sm"
+          >
+            {(
+              [
+                ["all", "Toutes"],
+                ["AE", "AE"],
+                ["PP", "PP"],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={brandFilter === key}
+                title={
+                  key === "AE"
+                    ? "Alterna Énergie"
+                    : key === "PP"
+                      ? "Parlons Planète"
+                      : "Toutes les marques"
+                }
+                onClick={() => setBrandFilter(key)}
+                className={cn(
+                  "h-full rounded-full px-3 transition-colors",
+                  brandFilter === key
+                    ? "bg-amber-700 font-medium text-white"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <Button
             size="sm"
             className="h-9 rounded-full bg-amber-700 px-4 text-white hover:bg-amber-800"
@@ -845,13 +882,26 @@ function CardRow({
       >
         <span
           className={cn(
-            "block text-[15px] leading-snug",
+            "flex items-center gap-1.5 text-[15px] leading-snug",
             done
               ? "text-muted-foreground line-through decoration-muted-foreground/40"
               : "text-foreground",
           )}
         >
-          {card.title}
+          {card.brand && (
+            <span
+              title={card.brand === "AE" ? "Alterna Énergie" : "Parlons Planète"}
+              className={cn(
+                "inline-flex shrink-0 items-center rounded px-1 py-px text-[10px] font-semibold tracking-wide no-underline",
+                card.brand === "AE"
+                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
+                  : "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200",
+              )}
+            >
+              {card.brand}
+            </span>
+          )}
+          <span className="min-w-0">{card.title}</span>
         </span>
         {(preview || card.due_date || attached > 0) && (
           <span className="mt-0.5 flex items-baseline gap-2 text-[13px] text-muted-foreground">

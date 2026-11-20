@@ -8,6 +8,9 @@ export const ORGANISATION_SHEET = "ORGANISATION";
 
 export type OrgColumn = { id: string; title: string; position: number };
 
+/** Marque rattachée à la fiche : « AE » (Alterna Énergie) ou « PP ». */
+export type OrgBrand = "AE" | "PP";
+
 export type OrgCard = {
   id: string;
   column_id: string;
@@ -17,6 +20,7 @@ export type OrgCard = {
   assignee_id: string | null;
   tagged_ids: string[];
   due_date: string | null;
+  brand: OrgBrand | null;
   /** Links and files attached to the card (files live in the « org-files » bucket). */
   attachments: OrgAttachment[];
   created_by: string | null;
@@ -125,15 +129,18 @@ export function dueState(due: string, today: Date): DueState {
 }
 
 export type CardFilter = "all" | "mine" | "tagged";
+export type BrandFilter = "all" | OrgBrand;
 
 export function matchesFilter(
   card: OrgCard,
   filter: CardFilter,
   me: string | null,
   query: string,
+  brand: BrandFilter = "all",
 ): boolean {
   if (filter === "mine" && card.assignee_id !== me) return false;
   if (filter === "tagged" && !(me && card.tagged_ids.includes(me))) return false;
+  if (brand !== "all" && card.brand !== brand) return false;
   const q = query.trim().toLocaleLowerCase("fr");
   if (!q) return true;
   return `${card.title}\n${card.content}`.toLocaleLowerCase("fr").includes(q);
