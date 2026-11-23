@@ -14,6 +14,7 @@ describe("rubriques visibles (accueil et guide)", () => {
       "newsletters",
       "organisation",
       "planning",
+      "alienor",
     ]);
   });
 
@@ -23,9 +24,10 @@ describe("rubriques visibles (accueil et guide)", () => {
   });
 
   it("ne montre que les rubriques ouvertes, Parlons Planète et Organisation restant fermées par défaut", () => {
-    expect(keys(["Blog", "Blog/Particulier"])).toEqual(["blog", "benchmark", "newsletters"]);
+    expect(keys(["Blog", "Blog/Particulier"])).toEqual(["blog", "benchmark", "newsletters", "alienor"]);
     expect(keys(["!Benchmark", "!Calendriers newsletters", "FAQ", "FAQ/Professionnel"])).toEqual([
       "faq",
+      "alienor",
     ]);
     expect(keys(["Parlons Planète", "Parlons Planète/Blog", "Organisation"])).toEqual(
       expect.arrayContaining(["planete", "organisation"]),

@@ -563,6 +563,12 @@ const PLANNING_FLOWS: Flow[] = [
 type Rubrique = { title: string; icon: LucideIcon; text: string; flows: Flow[] };
 
 const RUBRIQUES: Record<RubriqueKey, Rubrique> = {
+  alienor: {
+    title: "Aliénor",
+    icon: HelpCircle,
+    text: "Votre IA Soregies.ai, avec son propre compte et sa connexion indépendante de Digicom.",
+    flows: [],
+  },
   pac: {
     title: "Stratégie PAC",
     icon: Target,

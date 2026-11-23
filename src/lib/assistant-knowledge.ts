@@ -20,6 +20,14 @@ export type AssistantZone = {
 
 export const ASSISTANT_ZONES: AssistantZone[] = [
   {
+    id: "alienor",
+    sheet: "ALIENOR",
+    label: "Aliénor",
+    path: "/alienor",
+    needs: "alienor",
+    keywords: ["aliénor", "alienor", "soregies", "ia interne"],
+  },
+  {
     id: "accueil",
     label: "Accueil",
     path: "/accueil",
@@ -266,6 +274,12 @@ export type AssistantTopic = {
 };
 
 export const ASSISTANT_TOPICS: TopicDef[] = [
+  {
+    zone: "alienor",
+    title: "Accéder à Aliénor",
+    keywords: ["aliénor", "alienor", "soregies", "ia interne"],
+    answer: "Aliénor ouvre Soregies.ai directement dans Digicom. Sa connexion reste indépendante : utilise ton compte Soregies.ai et suis son formulaire de connexion. Digicom ne transmet ni ton mot de passe ni ta session. Si la connexion ne fonctionne pas dans la page, « Ouvrir dans un onglet » ouvre le même service séparément. L'équipe Digicom peut ouvrir la rubrique dans tes accès ; cela ne crée pas de compte Soregies.ai.",
+  },
   // ——— Général ———
   {
     zone: "all",
@@ -1067,6 +1081,7 @@ export function localAnswerResult(
 
 /** Mots qui désignent chaque rubrique : une correction qui en parle n'est donnée qu'aux personnes qui y ont accès. */
 const RUBRIQUE_WORDS: Record<string, RegExp> = {
+  alienor: /ali[ée]nor|soregies/i,
   pac: /\bpac\b|strat[ée]gie|pompe [àa] chaleur/i,
   blog: /\bblog\b/i,
   planete: /plan[èe]te|aurorae/i,

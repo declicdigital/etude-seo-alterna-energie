@@ -22,6 +22,7 @@ export const RUBRIQUE_SHEETS = [
   },
   { key: "organisation", sheets: ["ORGANISATION"], editorial: false },
   { key: "planning", sheets: ["PLANNING INTEGRE"], editorial: false },
+  { key: "alienor", sheets: ["ALIENOR"], editorial: false },
 ] as const;
 
 export type RubriqueKey = (typeof RUBRIQUE_SHEETS)[number]["key"];

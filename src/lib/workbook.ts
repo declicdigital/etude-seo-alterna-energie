@@ -90,6 +90,7 @@ export const sheetNames = [
   NEWSLETTER_B2C,
   NEWSLETTER_SME,
   ORGANISATION,
+  "ALIENOR",
 ];
 
 export function embedSrcOf(sheet: string): string | null {
@@ -390,6 +391,7 @@ export const SHEET_META: Record<
   "SUIVI FAQ": { headerRow: 0, firstDataRow: 0, label: "Demande", group: "FAQ" },
   "FAQ - DEMANDES": { headerRow: 0, firstDataRow: 0, label: "FAQ", group: "FAQ" },
   BENCHMARK: { headerRow: 0, firstDataRow: 0, label: "Benchmark Énergie", group: "Benchmark" },
+  ALIENOR: { headerRow: 0, firstDataRow: 0, label: "Aliénor", group: "Aliénor" },
   "NEWSLETTER GRANDS COMPTES": {
     headerRow: 0,
     firstDataRow: 0,

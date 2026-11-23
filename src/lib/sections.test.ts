@@ -4,6 +4,11 @@ import { ALL_SECTION_KEYS, grantedSections, serializeSections, sheetAllowed } fr
 const CALENDAR = "NEWSLETTER GRANDS COMPTES";
 
 describe("section access", () => {
+  it("makes Aliénor available to existing accounts while respecting explicit refusal", () => {
+    expect(sheetAllowed("ALIENOR", ["Blog"])).toBe(true);
+    expect(sheetAllowed("ALIENOR", ["Aliénor"])).toBe(true);
+    expect(sheetAllowed("ALIENOR", ["!Aliénor"])).toBe(false);
+  });
   it("keeps Benchmark and the newsletter calendar for lists saved before they existed", () => {
     const legacy = ["Blog", "Blog/Particulier"];
     expect(sheetAllowed("BENCHMARK", legacy)).toBe(true);

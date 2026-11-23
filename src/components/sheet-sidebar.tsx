@@ -9,7 +9,7 @@ import { metaGet, type MetaMap } from "@/lib/use-meta";
 import { sheetPath, resolvePath } from "@/lib/slugs";
 import { grantedSections, groupDisplayName, sheetAllowed } from "@/lib/sections";
 
-const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "Parlons Planète", "FAQ", "Benchmark", "Calendriers newsletters", "Organisation", "Planning intégré", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
+const DEFAULT_ORDER = ["Stratégie PAC", "Blog", "Parlons Planète", "FAQ", "Benchmark", "Calendriers newsletters", "Organisation", "Planning intégré", "Aliénor", "Arborescence", "Suivi", "Docs", "Autres", "Archives"];
 const REMOVED_GROUPS = new Set(["Arborescence", "Suivi", "Docs", "Archives", "Autres"]);
 const ORDER_KEY = "sidebar.groupOrder.v1";
 const PROMOTED_KEY = "sidebar.orderPromoted.v1";
@@ -71,6 +71,12 @@ const GROUP_STYLES: Record<string, {
   hover: string;
   bar: string;
 }> = {
+  "Aliénor": {
+    header: "bg-primary text-primary-foreground",
+    active: "bg-primary/15 text-primary font-semibold ring-1 ring-inset ring-primary/30",
+    hover: "hover:bg-primary/10 hover:text-primary",
+    bar: "bg-primary",
+  },
   Arborescence: {
     header: "bg-emerald-600 text-white",
     active: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-semibold ring-1 ring-inset ring-emerald-500/30",

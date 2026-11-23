@@ -26,6 +26,7 @@ export const SECTION_TREE: SectionGroup[] = [
   { group: "Organisation", subs: [], accent: "bg-amber-500" },
   // Closed by default: opened per account. Also enforced in the database (can_view_planning).
   { group: "Planning intégré", subs: [], accent: "bg-cyan-700" },
+  { group: "Aliénor", subs: [], defaultOn: true, accent: "bg-primary" },
 ];
 
 /**
