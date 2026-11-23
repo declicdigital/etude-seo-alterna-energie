@@ -567,6 +567,7 @@ export type Database = {
           id: string
         }[]
       }
+      pipeline_config_emails: { Args: { _v: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "member"

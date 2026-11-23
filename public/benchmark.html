@@ -606,6 +606,7 @@ let suppliersGaz = SUPPLIERS_GAZ.map(function(name){ return {
   gas:{data:{}, status:'empty', pdfName:null, decomposed:false}
 };});
 
+function bmEsc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function getSuppliersList() { return currentEnergy === 'elec' ? suppliers : suppliersGaz; }
 function setSuppliersList(list) { if(currentEnergy==='elec') suppliers=list; else suppliersGaz=list; }
 
@@ -1077,10 +1078,10 @@ function renderSidebar() {
           return '<div class="supplier-item '+dc+(isActive?' active':'')+'" id="si_'+i+'" onclick="selectSupplier('+i+')">'
             + '<div class="s-dot"></div>'
             + (isEditing
-                ? '<input class="s-edit-input" id="sinput_'+i+'" value="'+s.name+'" onclick="event.stopPropagation()" onkeydown="sKeydown(event,'+i+')" onblur="commitName('+i+')" autofocus>'
-                : '<div class="s-name"'+(s.name==='EDF (TRV)'?' style="color:#1d4ed8;font-weight:600"':'')+'>'+s.name+'</div>')
+                ? '<input class="s-edit-input" id="sinput_'+i+'" value="'+bmEsc(s.name)+'" onclick="event.stopPropagation()" onkeydown="sKeydown(event,'+i+')" onblur="commitName('+i+')" autofocus>'
+                : '<div class="s-name"'+(s.name==='EDF (TRV)'?' style="color:#1d4ed8;font-weight:600"':'')+'>'+bmEsc(s.name)+'</div>')
             + '<div class="s-badges">'
-            + (s.url ? '<a href="'+s.url+'" target="_blank" onclick="event.stopPropagation()" title="Grille tarifaire" style="font-size:10px;text-decoration:none;opacity:0.7;" tabindex="-1">🔗</a>' : '')
+            + (s.url && /^https?:\/\//i.test(s.url) ? '<a href="'+bmEsc(s.url)+'" target="_blank" onclick="event.stopPropagation()" title="Grille tarifaire" style="font-size:10px;text-decoration:none;opacity:0.7;" tabindex="-1">🔗</a>' : '')
             + (s.elec&&s.elec.status==='done' ? '<span class="s-badge e">⚡</span>' : '')
             + (s.gas&&s.gas.status==='done' ? '<span class="s-badge g">🔥</span>' : '')
             + (isEditor?'<button class="s-icon-btn editor-only" title="Renommer" onclick="event.stopPropagation();startEdit('+i+')" tabindex="-1">✏️</button>':'')
@@ -1404,7 +1405,7 @@ function renderEntry() {
   return `
   <div class="entry-header">
     <div>
-      <div class="entry-title">${s.name} ${isElec?'⚡':'🔥'} ${statusBadge}</div>
+      <div class="entry-title">${bmEsc(s.name)} ${isElec?'⚡':'🔥'} ${statusBadge}</div>
       <div class="entry-sub">${isElec?'Électricité':'Gaz'} ${pdfBadge}${isReadOnly?' · <span style="color:var(--blue);font-weight:500">Lecture seule</span>':(currentMonthKey?' · <span style="color:var(--warn);font-weight:500">Édition de l\u2019historique</span>':'')}</div>
     </div>
     ${isEditor && currentMonthKey ? (isReadOnly
@@ -4556,7 +4557,7 @@ function rankTable(data, cols, refSupplier, prevData) {
     var deltaHTML = rankDeltaHTML(row.name, realRank, prevMap);
 
     var cells = '<td class="'+rankCls+'" style="'+(isTRV?'color:#2255cc;font-weight:700;':isSelf?'color:#1a8a5a;font-weight:700;':'')+'">'+rankLabel+deltaHTML+'</td>'
-      + '<td class="'+nameCls+'" style="'+(isTRV?'color:#2255cc;font-weight:600;':isSelf?'color:#1a8a5a;font-weight:600;':'')+'">'+row.name+(isTRV?' <span class="ref-badge" style="background:#2255cc;color:white;padding:1px 4px;border-radius:3px;">'+refSupplier.label+'</span>':'')+'</td>'
+      + '<td class="'+nameCls+'" style="'+(isTRV?'color:#2255cc;font-weight:600;':isSelf?'color:#1a8a5a;font-weight:600;':'')+'">'+bmEsc(row.name)+(isTRV?' <span class="ref-badge" style="background:#2255cc;color:white;padding:1px 4px;border-radius:3px;">'+refSupplier.label+'</span>':'')+'</td>'
       + '<td class="offer-cell">'+(row.offer||'—')+'</td>';
 
     // Code promo (montant déduit une fois du coût annuel)

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { signHtml, signText } from "@/lib/mail-signature";
 import { z } from "zod";
-import { faqLink } from "@/lib/faq";
+import { faqLink, type FaqRequest } from "@/lib/faq";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { authenticateRequest } from "@/lib/route-auth.server";
 const BodySchema = z.object({
@@ -70,8 +70,27 @@ export const Route = createFileRoute("/api/public/notify-faq")({
         p.authorName = auth.profile.full_name || auth.profile.email;
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         // The request must exist in the tracker: prevents using this route as an open relay.
-        const { data: row } = await supabaseAdmin.from("editorial_kv").select("key").eq("key", `faq:${p.id}`).maybeSingle();
+        const { data: row } = await supabaseAdmin.from("editorial_kv").select("value").eq("key", `faq:${p.id}`).maybeSingle();
         if (!row) return Response.json({ error: "unknown_request" }, { status: 404 });
+        // Mail content and recipients come from the saved request, never from the caller.
+        let saved: FaqRequest;
+        try { saved = JSON.parse(row.value) as FaqRequest; } catch { return Response.json({ error: "unknown_request" }, { status: 404 }); }
+        const s = (v: unknown, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
+        p.request = {
+          subject: s(saved.subject, 300), requester: s(saved.requester, 200), type: s(saved.type, 40),
+          content: s(saved.content, 60), category: s(saved.category, 120), target: s(saved.target, 40), channel: s(saved.channel, 40),
+        };
+        const me = auth.profile.email.toLowerCase();
+        if (p.kind === "new") {
+          if (String(saved.requesterEmail ?? "").toLowerCase() !== me) return Response.json({ error: "forbidden" }, { status: 403 });
+          p.message = s(saved.comments?.[0]?.body, 4000);
+        } else {
+          const mine = (saved.comments ?? []).filter((c) => String(c.authorEmail ?? "").toLowerCase() === me && c.body === p.message);
+          const c = mine[mine.length - 1];
+          if (!c) return Response.json({ error: "unknown_comment" }, { status: 404 });
+          const allowed = new Set((c.mentions ?? []).map((m) => String(m).toLowerCase()));
+          p.mentions = (p.mentions ?? []).filter((m) => allowed.has(m.toLowerCase()));
+        }
 
         let to: string[];
         let subject: string;

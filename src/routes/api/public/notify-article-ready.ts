@@ -83,13 +83,27 @@ export const Route = createFileRoute("/api/public/notify-article-ready")({
           return Response.json({ error: "invalid_body" }, { status: 400 });
         }
 
-        // Integration mails always use the saved slot, never the caller's stale writing date.
-        if (payload.kind === "integration" && payload.articleId) {
+        // Mail content always comes from the saved article, never from the caller's payload.
+        if (!payload.articleId) return Response.json({ error: "article_required" }, { status: 400 });
+        {
           const { data: saved, error: readError } = await supabaseAdmin.from("editorial_kv").select("value")
             .eq("key", `${spacePrefix(payload.space)}article:${payload.articleId}`).maybeSingle();
           if (readError || !saved) return Response.json({ error: "article_unavailable" }, { status: 409 });
           try {
-            payload = { ...payload, deadline: undefined, stepDeadline: savedIntegrationDeadline(saved.value) };
+            const a = JSON.parse(saved.value) as Record<string, unknown> & { steps?: { key: string; assignee?: string; deadline?: string }[] };
+            const str = (v: unknown, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
+            const red = a.steps?.find((st) => st.key === "redaction");
+            const nextStep = a.steps?.find((st) => st.key === payload.stepKey);
+            const nd = nextStep?.deadline && /^\d{4}-\d{2}-\d{2}$/.test(nextStep.deadline) ? nextStep.deadline : undefined;
+            payload = {
+              ...payload,
+              type: a["type"] === "Réécriture" || a["type"] === "Création" ? (a["type"] as "Réécriture" | "Création") : undefined,
+              sujet: str(a["subject"], 300), h1: str(a["title"], 300), editrice: str(red?.assignee, 120),
+              cible: str(a["audience"], 60), categorie: str(a["category"], 120), energie: str(a["energy"], 120),
+              deadline: str(a["deadline"], 40), docx: str(a["docxLink"], 1000),
+              stepDeadline: payload.kind === "integration" ? savedIntegrationDeadline(saved.value) : nd,
+            };
+            if (payload.kind === "integration") payload = { ...payload, deadline: undefined };
           } catch { return Response.json({ error: "article_unavailable" }, { status: 409 }); }
         }
 

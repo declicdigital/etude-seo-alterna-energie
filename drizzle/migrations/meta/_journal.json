@@ -162,6 +162,13 @@
       "when": 1795181888000,
       "tag": "0022_harden_access_helpers_and_game_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795451555762,
+      "tag": "0023_guard_pipeline_config_emails",
+      "breakpoints": true
     }
   ]
 }
