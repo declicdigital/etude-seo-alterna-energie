@@ -278,7 +278,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     zone: "alienor",
     title: "Accéder à Aliénor",
     keywords: ["aliénor", "alienor", "soregies", "ia interne"],
-    answer: "Aliénor ouvre Soregies.ai directement dans Digicom. Sa connexion reste indépendante : utilise ton compte Soregies.ai et suis son formulaire de connexion. Digicom ne transmet ni ton mot de passe ni ta session. Si la connexion ne fonctionne pas dans la page, « Ouvrir dans un onglet » ouvre le même service séparément. L'équipe Digicom peut ouvrir la rubrique dans tes accès ; cela ne crée pas de compte Soregies.ai.",
+    answer: "La rubrique Aliénor propose le bouton « Ouvrir Aliénor », qui ouvre Soregies.ai dans sa propre fenêtre (ou « Ou dans un nouvel onglet »). Connecte-toi avec ton compte et ton mot de passe Soregies.ai : la connexion ne peut pas se faire à l'intérieur de la page Digicom. Digicom ne transmet ni ton mot de passe ni ta session. L'équipe Digicom peut ouvrir la rubrique dans tes accès ; cela ne crée pas de compte Soregies.ai.",
   },
   // ——— Général ———
   {
