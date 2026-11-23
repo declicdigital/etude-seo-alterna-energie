@@ -31,6 +31,9 @@ describe("manual reminders", () => {
   it("resolves both Aurorae recipients for edition", () => {
     expect(buildStepReminder({ articleId: "test", stepKey: "redaction" }, article, config).recipients).toEqual(["caroline@aurorae-editorial.com", "elodie@aurorae-editorial.com"]);
   });
+  it("refuses a reminder for the « Autre » label", () => {
+    expect(() => buildStepReminder({ articleId: "test", stepKey: "redaction" }, { ...article, steps: [{ key: "redaction", assignee: "Autre" }] }, config)).toThrow("ne désigne personne de précis");
+  });
   it("sends the expert reminder to the individually assigned expert", () => {
     const mail = buildStepReminder({ articleId: "test", stepKey: "expert" }, article, config);
     expect(mail.recipients).toEqual(["clement@example.org"]);

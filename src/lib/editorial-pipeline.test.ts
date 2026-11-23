@@ -210,3 +210,21 @@ describe('Separate Image and Relecture', () => {
     expect(pipeline.applyAutoDeadline(article, 'redaction')).toBe(false);
   });
 });
+describe('« Autre » among the rédacteurs', () => {
+  it('is offered for the Rédaction step of every space', () => {
+    for(const space of ['', 'strategie', 'planete']){
+      const cfg: any = pipeline.normalizeConfig([{ key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae','Marina'] }], space);
+      expect(cfg.find((c: any) => c.key === 'redaction').options).toContain('Autre');
+    }
+    expect((pipeline.normalizeConfig([{ key:'redaction', label:'Rédaction' }], 'strategie') as any[]).find((c: any) => c.key === 'redaction').options).toEqual(['Autre']);
+  });
+  it('is listed only once when it is already configured', () => {
+    const cfg: any = pipeline.normalizeConfig([{ key:'redaction', label:'Rédaction', options:['Aurorae','Autre'] }], '');
+    expect(cfg.find((c: any) => c.key === 'redaction').options).toEqual(['Aurorae', 'Autre']);
+  });
+  it('keeps an article assigned to « Autre » instead of replacing it with the default', () => {
+    const article: any = { audience:'Particulier', steps:[{ key:'redaction', status:'pending', assignee:'Autre' }] };
+    pipeline.sync(article, [{ key:'redaction', label:'Rédaction', assignee:'Aurorae', options:['Aurorae','Marina'] }], '');
+    expect(article.steps.find((s: any) => s.key === 'redaction').assignee).toBe('Autre');
+  });
+});

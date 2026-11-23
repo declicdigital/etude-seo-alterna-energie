@@ -26,7 +26,7 @@ describe("Parlons Planète", () => {
     expect(cfg[1].assignee).toBe("Geoffrey");
     expect(cfg[1].emails.Geoffrey).toBe("geoffrey.delabarre@alterna-energie.fr");
     const fresh = pipeline.normalizeConfig([], "planete");
-    expect(fresh[0].options).toEqual(["Aurorae"]);
+    expect(fresh[0].options).toEqual(["Aurorae", "Autre"]);
   });
 
   it("keeps the Blog pipeline unchanged", () => {

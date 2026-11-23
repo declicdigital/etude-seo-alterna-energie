@@ -44,6 +44,8 @@ export function buildStepReminder(
   const cfg = config.find(c => c.key === input.stepKey);
   if (!step || !cfg) throw new Error("Cette étape n’existe plus. Rechargez la page.");
   const assignee = step.assignee?.trim() || cfg.assignee?.trim() || (input.stepKey === "brief" || (planete && input.stepKey === "integration") ? "Geoffrey" : "");
+  // « Autre » n'est qu'une étiquette : elle ne désigne personne de précis, donc aucun rappel ne peut partir.
+  if (assignee === "Autre") throw new Error("« Autre » ne désigne personne de précis : choisis un rédacteur nommé pour envoyer un rappel.");
   const raw = cfg.emails?.[assignee] || defaults[input.stepKey]?.[assignee] || "";
   const configured = raw.split(/[,;\s]+/).filter(Boolean);
   const matched = users.filter(u => u.full_name?.trim().toLowerCase() === assignee.toLowerCase()).map(u => u.email);

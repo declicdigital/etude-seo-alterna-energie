@@ -336,7 +336,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       const editorial = z.has("blog-suivi") || z.has("pac-suivi");
       if (editorial)
         lines.push(
-          "Caroline et Elodie (Aurorae) et Marina sont rédactrices ; l'équipe Digicom s'occupe de l'étape Image ; Fannie et Coraline (Service Communication) relisent ; Marick intègre les articles sur le site d'Alterna Énergie.",
+          "Caroline et Elodie (Aurorae) et Marina sont rédactrices ; « Autre » sert à marquer une ligne confiée à quelqu'un d'autre, sans mail de rappel ; l'équipe Digicom s'occupe de l'étape Image ; Fannie et Coraline (Service Communication) relisent ; Marick intègre les articles sur le site d'Alterna Énergie.",
         );
       if (z.has("blog-suivi"))
         lines.push("Pour un article Professionnel, un expert métier relit aussi le contenu.");
@@ -462,7 +462,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "rédaction en retard",
     ],
     answer:
-      "Dans « À rédiger », un point rouge apparaît quand la deadline est à moins de 5 jours (survole-le pour voir le nombre de jours). Les lignes sont triées par deadline la plus proche. Tant que la ligne n'est pas enregistrée en article, l'éditrice choisie reçoit un mail le lundi si sa deadline tombe dans la semaine, puis un mail le jour J (Aurorae : Caroline et Elodie ; Marina : Marina), avec l'équipe Digicom en copie.",
+      "Dans « À rédiger », un point rouge apparaît quand la deadline est à moins de 5 jours (survole-le pour voir le nombre de jours). Les lignes sont triées par deadline la plus proche. Tant que la ligne n'est pas enregistrée en article, le rédacteur choisi reçoit un mail le lundi si sa deadline tombe dans la semaine, puis un mail le jour J (Aurorae : Caroline et Elodie ; Marina : Marina), avec l'équipe Digicom en copie. « Autre » ne reçoit aucun mail : c'est une simple étiquette pour une ligne confiée hors liste.",
   },
   {
     zone: "blog-suivi",
@@ -538,7 +538,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "modifier la date",
     ],
     answer:
-      "Ouvre l'étape dans la carte : le champ « Responsable » propose les personnes prévues (par exemple Aurorae ou Marina pour la Rédaction) à cocher, ou un nom à écrire. L'Image (équipe Digicom) et la Relecture (Service Communication : Fannie et Coraline) ont un responsable fixe. Le champ « Date » se modifie à tout moment ; une date déjà saisie n'est jamais écrasée.",
+      "Ouvre l'étape dans la carte : le champ « Responsable » propose les personnes prévues (par exemple Aurorae ou Marina pour la Rédaction) à cocher, ou un nom à écrire. « Autre » est une simple étiquette pour un rédacteur hors liste : elle n'envoie aucun mail de rappel. L'Image (équipe Digicom) et la Relecture (Service Communication : Fannie et Coraline) ont un responsable fixe. Le champ « Date » se modifie à tout moment ; une date déjà saisie n'est jamais écrasée.",
   },
   {
     zone: "blog-suivi",

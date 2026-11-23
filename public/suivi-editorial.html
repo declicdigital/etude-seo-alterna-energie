@@ -242,6 +242,7 @@ button{ font-family: inherit; cursor:pointer; }
 }
 .assignee-option.checked{ border-color: var(--ink); color: var(--ink); background: var(--lgreen-bg); }
 .assignee-option input{ accent-color: var(--ink); cursor: pointer; }
+.assignee-hint{ font-size: 0.68rem; color: var(--ink-60); font-weight: 400; font-style: italic; }
 
 .title-input{
   font-family: 'Poppins', sans-serif;
@@ -1185,10 +1186,10 @@ const storage = {
 function isImageStep(key){ return key === 'image'; }
 
 const DEFAULT_CONFIG = PLANETE ? [
-  { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae'], skippable:false },
+  { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae','Autre'], skippable:false },
   { key:'integration', label:'Intégration', assignee:'Geoffrey', skippable:false }
 ] : [
-  { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae','Marina'], skippable:false },
+  { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae','Marina','Autre'], skippable:false },
   { key:'image', label:'Image', assignee:'Geoffrey', skippable:false },
   { key:'relecture', label:'Relecture', assignee:'Service Communication', skippable:false },
   { key:'integration', label:'Intégration', assignee:'Marick', skippable:false }
@@ -1203,7 +1204,7 @@ function normalizeConfig(){
     changed = true;
   }
   const red = config.find(c => c.key === 'redaction');
-  if(red && !Array.isArray(red.options)){ red.options = PLANETE ? ['Aurorae'] : ['Aurorae','Marina']; changed = true; }
+  if(red && !Array.isArray(red.options)){ red.options = PLANETE ? ['Aurorae','Autre'] : ['Aurorae','Marina','Autre']; changed = true; }
   // Adresses mail par défaut des responsables (modifiables dans les réglages).
   const DEFAULT_EMAILS = {
     redaction: { 'Aurorae': 'caroline@aurorae-editorial.com, elodie@aurorae-editorial.com', 'Marina': 'contact@marinatravert.com' },
@@ -1627,7 +1628,8 @@ function cfgNames(c){
     : (c.options || []);
   const names = [...opts];
   if(c.assignee && !names.includes(c.assignee)) names.push(c.assignee);
-  return names;
+  // « Autre » n'est qu'une étiquette : aucune adresse mail ne peut lui être associée.
+  return names.filter(n => n !== 'Autre');
 }
 function emailsFor(cfg, name){
   if(!cfg || !cfg.emails || !name) return [];
@@ -1799,7 +1801,7 @@ function renderArticleCard(article){
                 ${cfg.options.map(o => `
                   <label class="assignee-option ${step.assignee === o ? 'checked' : ''}">
                     <input type="checkbox" data-action="pick-assignee" data-article-id="${article.id}" data-step-key="${step.key}" data-value="${escapeAttr(o)}" ${step.assignee === o ? 'checked' : ''}>
-                    ${escapeHtml(o)}
+                    ${escapeHtml(o)}${o === 'Autre' ? ' <span class="assignee-hint">sans mail de rappel</span>' : ''}
                   </label>`).join('')}
               </div>`
             : `<input type="text" data-action="edit-assignee" data-article-id="${article.id}" data-step-key="${step.key}" value="${escapeAttr(step.assignee)}" placeholder="Nom">`}
@@ -2166,6 +2168,7 @@ document.getElementById('articlesContainer').addEventListener('click', async (e)
     if(!article || !step) return;
     const cfg = getArticleConfig(article, step.key);
     const named = teamAlias(step.assignee || cfg?.assignee || '');
+    if(named === 'Autre'){ alert('« Autre » ne désigne personne de précis : choisis un rédacteur nommé dans la liste pour envoyer un rappel.'); return; }
     const who = isImageStep(step.key) || step.key === 'brief' || named === 'Équipe Digicom' ? 'l’équipe Digicom' : step.key === 'relecture' ? 'Fannie et Coraline' : named || 'le responsable';
     if(!confirm(`Envoyer un rappel à ${who} pour l’étape « ${cfg?.label || step.key} » de « ${article.title} » ?`)) return;
     reminderBtn.disabled = true;
@@ -2711,7 +2714,7 @@ function renderTodos(){
     <td><input data-f="sujet" value="${escapeAttr(t.sujet||'')}" placeholder="Sujet"></td>
     <td class="col-brief"><select data-f="type"><option value="">—</option>${['Réécriture','Création'].map(o=>`<option ${t.type===o?'selected':''}>${o}</option>`).join('')}</select></td>
     <td class="col-brief"><select data-f="dest"><option value="">—</option>${DESTS.map(o=>`<option ${t.dest===o?'selected':''}>${o}</option>`).join('')}</select></td>
-    <td><select data-f="editrice"><option value="">—</option>${(((getConfigFor('redaction')||{}).options)||['Aurorae','Marina']).map(o=>`<option ${t.editrice===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
+    <td><select data-f="editrice"><option value="">—</option>${(((getConfigFor('redaction')||{}).options)||['Aurorae','Marina','Autre']).map(o=>`<option ${t.editrice===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>
     <td><input type="date" data-f="redactionDate" aria-label="Date de rédaction" value="${escapeAttr(t.redactionDate||'')}"></td>
     <td><input data-f="h1" value="${escapeAttr(t.h1||'')}" placeholder="Titre H1"></td>
     <td class="col-cible"><select class="td-cible" data-f="audience" data-aud="${escapeAttr(t.audience||'')}"><option value="">—</option>${AUDIENCES.map(o=>`<option ${t.audience===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></td>

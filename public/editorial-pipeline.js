@@ -2,12 +2,19 @@
   const isPro = (article, space) => !space && article.audience === 'Professionnel';
   const isRewrite = (article, space) => space === 'strategie' && article.type === 'Réécriture';
   const PLANETE_STEPS = ['redaction', 'integration'];
+  // « Autre » : étiquette pour un rédacteur hors liste. Elle ne désigne personne de précis,
+  // donc aucune adresse mail ne lui est liée et aucun rappel ne part vers elle.
+  const OTHER_ASSIGNEE = 'Autre';
+  function withOther(options) {
+    const list = (Array.isArray(options) ? options : []).filter(o => typeof o === 'string' && o.trim());
+    return list.includes(OTHER_ASSIGNEE) ? list : [...list, OTHER_ASSIGNEE];
+  }
   // Parlons Planète: Rédaction (Aurorae) then Intégration (Geoffrey), nothing in between.
   function normalizePlanete(config) {
     const red = config.find(c => c.key === 'redaction') || { key:'redaction', label:'Rédaction', assignee:'', skippable:false };
     const int = config.find(c => c.key === 'integration') || { key:'integration', label:'Intégration', skippable:false };
     return [
-      { ...red, options: Array.isArray(red.options) && red.options.length ? red.options : ['Aurorae'] },
+      { ...red, options: withOther(Array.isArray(red.options) && red.options.length ? red.options : ['Aurorae']) },
       { ...int, assignee:'Geoffrey', options:[], emails:{ Geoffrey:'geoffrey.delabarre@alterna-energie.fr', ...(int.emails || {}) } },
     ];
   }
@@ -21,7 +28,7 @@
     result.splice(index < 0 ? result.length : index, 0,
       { ...image, key:'image', label:'Image', assignee:'Geoffrey', options:[], skippable:false, emails:{ Geoffrey:'geoffrey.delabarre@alterna-energie.fr' } },
       { ...(review || legacy), key:'relecture', label:'Relecture', assignee:'Service Communication', options:[], skippable:false, emails:{ 'Service Communication':'fannie.laurendin@soregies.fr, coraline.prono@soregies.fr' } });
-    return result;
+    return result.map(c => c.key === 'redaction' ? { ...c, options: withOther(c.options) } : c);
   }
   function configFor(article, config, space) {
     const pro = isPro(article, space);
@@ -172,5 +179,5 @@
   }
   // Kept for existing consumers; schedules both Blog audiences.
   const scheduleProIntegration = scheduleIntegration;
-  root.EditorialPipeline = { PLANETE_STEPS, isPro, isRewrite, normalizeConfig, configFor, sync, nextNotification, completeStep, addBusinessDays, applyAutoDeadline, scheduleIntegration, scheduleProIntegration, proPublicationDay };
+  root.EditorialPipeline = { PLANETE_STEPS, OTHER_ASSIGNEE, withOther, isPro, isRewrite, normalizeConfig, configFor, sync, nextNotification, completeStep, addBusinessDays, applyAutoDeadline, scheduleIntegration, scheduleProIntegration, proPublicationDay };
 })(globalThis);
