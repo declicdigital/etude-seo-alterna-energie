@@ -961,10 +961,10 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
   },
   {
     zone: "kit",
-    title: "Kit de communication : icônes",
-    keywords: ["icône", "icônes", "icone", "icones", "picto", "pictogramme", "visuel", "illustration"],
+    title: "Kit de communication : pictogrammes 2D",
+    keywords: ["icône", "icônes", "icone", "icones", "picto", "pictogramme", "pictogrammes", "visuel", "illustration"],
     answer:
-      "Le Kit de communication propose une section « Icônes » : un ZIP de 85 visuels PNG 1000×1000 (énergie, nature, réussite, gestes, objets…) à télécharger pour illustrer les contenus. Quatre aperçus sont visibles sur la page avant téléchargement.",
+      "Le Kit de communication propose une section « Pictogrammes 2D » : un ZIP de 85 visuels PNG 1000×1000 (énergie, nature, réussite, gestes, objets…) à télécharger pour illustrer les contenus. Quatre aperçus sont visibles sur la page avant téléchargement.",
   },
   // ——— Assistant ———
   {

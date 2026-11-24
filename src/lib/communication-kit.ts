@@ -31,6 +31,6 @@ export const kitResources = [
 {"key": "svg-3", "title": "Logo pour fond jaune", "group": "variants", "filename": "Logo Alterna pour fond jaune.svg", "size": 5404, url: a11.url },
 {"key": "svg-4", "title": "Logo pour fond vert clair", "group": "variants", "filename": "Logo Alterna pour fond vert clair.svg", "size": 8813, url: a12.url },
 {"key": "svg-5", "title": "Logo Principal", "group": "variants", "filename": "Logo Alterna Principal.svg", "size": 8865, url: a13.url },
-{"key": "icones", "title": "Icônes · 85 visuels PNG 1000×1000", "group": "icons", "filename": "Icones-Alterna.zip", "size": a16.size, url: a16.url },
+{"key": "icones", "title": "Pictogrammes 2D · 85 visuels PNG 1000×1000", "group": "icons", "filename": "Icones-Alterna.zip", "size": a16.size, url: a16.url },
 {"key": "complete", "title": "Kit complet", "group": "complete", "filename": "Kit-communication-Alterna.zip", "size": a14.size, url: a14.url }
 ];

@@ -58,7 +58,7 @@ export function CommunicationKitView() {
       <p className="mt-4 text-sm text-muted-foreground">Astuce : pensez à enregistrer ces HEX dans vos applications lorsque vous les utilisez la première fois !</p>
     </section>
     <section className="border-t border-border pt-8">
-      <h2 className="text-xl font-semibold flex items-center gap-2"><Shapes className="size-5 text-primary" /> Icônes</h2>
+      <h2 className="text-xl font-semibold flex items-center gap-2"><Shapes className="size-5 text-primary" /> Pictogrammes 2D</h2>
       <p className="mt-3 text-sm text-muted-foreground">85 visuels PNG 1000×1000 pour illustrer vos contenus : énergie, nature, réussite, gestes, objets…</p>
       <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">{iconPreviews.map(i => <div key={i.url} className="border border-border rounded-md p-4 flex items-center justify-center bg-card"><img src={i.url} alt={i.alt} className="h-24 w-24 object-contain" loading="lazy" /></div>)}</div>
       <div className="mt-4">{kitResources.filter(r => r.group === "icons").map(r => <Resource key={r.key} resource={r} />)}</div>
