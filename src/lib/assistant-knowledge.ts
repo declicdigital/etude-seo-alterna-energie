@@ -959,6 +959,13 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     answer:
       "Polices : Poppins SemiBold pour les titres et sous-titres, Inter Medium pour les textes (fichiers à installer), et Nordique Pro, la police du logo. Couleurs : Green renouvelable #003838, Green énergie #54D89C, Solaire #E1EC64, Hydraulique #639AFF, Beige / Blanc cassé #FFFBF4 (un clic copie le code). Documents : Charte graphique, Guide de marque et modèle d'en-tête et pied de page email.",
   },
+  {
+    zone: "kit",
+    title: "Kit de communication : icônes",
+    keywords: ["icône", "icônes", "icone", "icones", "picto", "pictogramme", "visuel", "illustration"],
+    answer:
+      "Le Kit de communication propose une section « Icônes » : un ZIP de 85 visuels PNG 1000×1000 (énergie, nature, réussite, gestes, objets…) à télécharger pour illustrer les contenus. Quatre aperçus sont visibles sur la page avant téléchargement.",
+  },
   // ——— Assistant ———
   {
     zone: "all",

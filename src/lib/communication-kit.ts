@@ -14,6 +14,7 @@ import a12 from "@/assets/communication-kit/svg-4.asset.json";
 import a13 from "@/assets/communication-kit/svg-5.asset.json";
 import a14 from "@/assets/communication-kit/complete-v3.asset.json";
 import a15 from "@/assets/communication-kit/brand-guidelines.asset.json";
+import a16 from "@/assets/communication-kit/icones.asset.json";
 export const kitResources = [
 {"key": "resource-0", "title": "Logos SVG · toutes les variantes", "group": "logos", "filename": "SVG.zip", "size": 39739, url: a0.url },
 {"key": "resource-1", "title": "Logo · PNG", "group": "logos", "filename": "Logo-alterna.png", "size": a1.size, url: a1.url },
@@ -30,5 +31,6 @@ export const kitResources = [
 {"key": "svg-3", "title": "Logo pour fond jaune", "group": "variants", "filename": "Logo Alterna pour fond jaune.svg", "size": 5404, url: a11.url },
 {"key": "svg-4", "title": "Logo pour fond vert clair", "group": "variants", "filename": "Logo Alterna pour fond vert clair.svg", "size": 8813, url: a12.url },
 {"key": "svg-5", "title": "Logo Principal", "group": "variants", "filename": "Logo Alterna Principal.svg", "size": 8865, url: a13.url },
+{"key": "icones", "title": "Icônes · 85 visuels PNG 1000×1000", "group": "icons", "filename": "Icones-Alterna.zip", "size": a16.size, url: a16.url },
 {"key": "complete", "title": "Kit complet", "group": "complete", "filename": "Kit-communication-Alterna.zip", "size": a14.size, url: a14.url }
 ];

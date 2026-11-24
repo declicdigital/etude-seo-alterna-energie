@@ -14,6 +14,11 @@ describe("communication kit", () => {
     expect(pdf?.group).toBe("documents");
     expect(pdf?.size).toBe(20440764);
   });
+  it("offers the 85-icon PNG pack as a downloadable ZIP", () => {
+    const icons = kitResources.find(r => r.group === "icons");
+    expect(icons?.filename).toBe("Icones-Alterna.zip");
+    expect(icons?.title).toContain("85");
+  });
   it("does not date the charte graphique title", () => {
     const charte = kitResources.find(r => r.filename === "12.24_-_Charte_graphique_Alterna_énergie.pdf");
     expect(charte?.title).toBe("Charte graphique");

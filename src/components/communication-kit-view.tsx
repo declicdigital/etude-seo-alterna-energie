@@ -1,7 +1,18 @@
 import { useState } from "react";
-import { Download, Copy, Check, FolderDown, FileText, Type, ShieldCheck } from "lucide-react";
+import { Download, Copy, Check, FolderDown, FileText, Type, ShieldCheck, Shapes } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { kitResources } from "@/lib/communication-kit";
+import iconeSolaire from "@/assets/communication-kit/icone-solaire.asset.json";
+import iconeBatterie from "@/assets/communication-kit/icone-batterie.asset.json";
+import iconeTerre from "@/assets/communication-kit/icone-terre.asset.json";
+import iconeCible from "@/assets/communication-kit/icone-cible.asset.json";
+
+const iconPreviews = [
+  { url: iconeSolaire.url, alt: "Icône panneau solaire" },
+  { url: iconeBatterie.url, alt: "Icône batterie" },
+  { url: iconeTerre.url, alt: "Icône planète Terre" },
+  { url: iconeCible.url, alt: "Icône cible" },
+];
 
 export const kitColors = [
   { name: "Green renouvelable", hex: "#003838", className: "bg-kit-renewable" },
@@ -45,6 +56,12 @@ export function CommunicationKitView() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-6">{kitColors.map(c => <div key={c.hex} className="border border-border rounded-md overflow-hidden"><div className={`h-24 ${c.className}`} /><div className="p-3"><p className="text-sm font-medium min-h-10">{c.name}</p><Button variant="ghost" size="sm" className="px-0 w-full justify-between font-mono" aria-label={`Copier ${c.hex}`} onClick={async () => { try { await navigator.clipboard.writeText(c.hex); setCopied(c.hex); setError(false); } catch { setError(true); } }}>{c.hex}{copied === c.hex ? <Check /> : <Copy />}</Button></div></div>)}</div>
       {error && <p role="alert" className="text-destructive text-sm mt-3">Copie indisponible : sélectionnez le code affiché.</p>}
       <p className="mt-4 text-sm text-muted-foreground">Astuce : pensez à enregistrer ces HEX dans vos applications lorsque vous les utilisez la première fois !</p>
+    </section>
+    <section className="border-t border-border pt-8">
+      <h2 className="text-xl font-semibold flex items-center gap-2"><Shapes className="size-5 text-primary" /> Icônes</h2>
+      <p className="mt-3 text-sm text-muted-foreground">85 visuels PNG 1000×1000 pour illustrer vos contenus : énergie, nature, réussite, gestes, objets…</p>
+      <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">{iconPreviews.map(i => <div key={i.url} className="border border-border rounded-md p-4 flex items-center justify-center bg-card"><img src={i.url} alt={i.alt} className="h-24 w-24 object-contain" loading="lazy" /></div>)}</div>
+      <div className="mt-4">{kitResources.filter(r => r.group === "icons").map(r => <Resource key={r.key} resource={r} />)}</div>
     </section>
     <section className="border-t border-border pt-8"><h2 className="text-xl font-semibold flex items-center gap-2"><FileText className="size-5 text-primary" /> Charte, guide de marque et modèle email</h2><div className="mt-3">{kitResources.filter(r => r.group === "documents").map(r => <Resource key={r.key} resource={r} />)}</div></section>
   </div>;
