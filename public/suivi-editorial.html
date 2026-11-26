@@ -1933,13 +1933,14 @@ function forgetArchivedAttachment(article, attachId){
 function renderImageSlots(article, step){
   const atts = step.attachments || [];
   const anyFilled = IMAGE_FORMATS.some(f => atts.some(x => imageFormat(x) === f.key));
-  // Une seule image, recadrée dans les deux formats. Hors équipe Digicom, seulement tant qu'aucun
-  // format n'est rempli (remplacer une image = la supprimer, ce qui leur est interdit).
-  const single = anyFilled && !canModerate() ? '' : `
+  const allFilled = IMAGE_FORMATS.every(f => atts.some(x => imageFormat(x) === f.key));
+  // Une seule image, recadrée dans les deux formats. Hors équipe Digicom, seulement pour les formats
+  // encore vides (remplacer une image = la supprimer, ce qui leur est interdit).
+  const single = allFilled && !canModerate() ? '' : `
     <label class="attach-image-label crop-drop" data-article-id="${article.id}" data-step-key="${step.key}" data-crop="1" title="Déposer une seule image : elle est recadrée dans les deux formats">
       <span class="attach-image-copy">
         <span>✂️ Une seule image pour les deux formats</span>
-        <small>Glisser l'image ici ou cliquer : elle est redimensionnée en ${IMAGE_FORMATS.map(f => f.label).join(' et ')}, tu choisis le cadrage avec un curseur${anyFilled ? ' (remplace les images actuelles)' : ''}.</small>
+        <small>Glisser l'image ici ou cliquer : elle est redimensionnée en ${IMAGE_FORMATS.map(f => f.label).join(' et ')}, tu choisis le cadrage avec un curseur${anyFilled && canModerate() ? ' (remplace les images actuelles)' : ''}.</small>
       </span>
       <input type="file" accept="image/*" class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" aria-label="Une seule image pour les deux formats">
     </label>`;
@@ -1955,7 +1956,7 @@ function renderImageSlots(article, step){
           <span class="slot-name">${escapeHtml(a.name || '')}</span>
           ${a.note ? `<span class="slot-note">💬 Relecture${a.noteBy ? ' (' + escapeHtml(a.noteBy) + ')' : ''} : ${escapeHtml(a.note)}</span>` : ''}
           ${canModerate() ? `<button type="button" class="slot-remove" data-action="remove-attachment" data-article-id="${article.id}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer l'image ${f.label}" aria-label="Retirer l'image ${f.label}">×</button>` : ''}`
-        : `<span class="attach-image-copy"><small>Glisser l'image ici ou cliquer pour choisir</small></span>`}
+        : `<span class="attach-image-copy"><small>Glisser l'image ici ou cliquer : elle sera recadrée dans les deux formats</small></span>`}
         ${a && !canModerate() ? '' : `<input type="file" accept="image/*" class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" aria-label="Image ${f.label}">`}
       </label>`;
   }).join('')}</div>`;
@@ -2541,8 +2542,9 @@ async function addImageAttachments(zone, files){
     const article = getArticle(zone.dataset.articleId);
     const step = article?.steps.find(s => s.key === zone.dataset.stepKey);
     if(!step) return;
-    if(zone.dataset.crop){
-      if(!canModerate() && (step.attachments || []).some(a => imageFormat(a))){
+    // Étape Image : toute image passe par le recadrage dans les deux formats (zone unique ou case).
+    if(zone.dataset.crop || zone.dataset.format){
+      if(!canModerate() && IMAGE_FORMATS.every(f => (step.attachments || []).some(a => imageFormat(a) === f.key))){
         alert("Seule l'équipe Digicom peut remplacer une image déjà déposée.");
         return;
       }
@@ -2629,15 +2631,19 @@ async function openImageCropper(article, step, file){
   try{ await img.decode(); }catch(e){ URL.revokeObjectURL(url); alert("Impossible de lire cette image."); return; }
   const W = img.naturalWidth, H = img.naturalHeight;
   if(!W || !H){ URL.revokeObjectURL(url); alert("Impossible de lire cette image."); return; }
+  // Hors équipe Digicom, un format déjà rempli n'est pas remplacé.
+  const targets = IMAGE_FORMATS.filter(f => canModerate() || !(step.attachments || []).some(a => imageFormat(a) === f.key));
+  if(!targets.length){ URL.revokeObjectURL(url); return; }
+  const saveLabel = targets.length > 1 ? 'Enregistrer les deux formats' : 'Enregistrer l\'image ' + targets[0].label;
   const pos = {};
-  IMAGE_FORMATS.forEach(f => { pos[f.key] = 0.5; });
+  targets.forEach(f => { pos[f.key] = 0.5; });
   const overlay = document.createElement('div');
   overlay.className = 'crop-overlay';
   overlay.innerHTML = `
     <div class="crop-box" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
-      <h3 id="cropTitle">Recadrer l'image dans les deux formats</h3>
+      <h3 id="cropTitle">Recadrer l'image ${targets.length > 1 ? 'dans les deux formats' : 'en ' + targets[0].label}</h3>
       <p class="crop-hint">Image d'origine : ${W} × ${H}. Déplace le curseur (ou fais glisser l'image) pour choisir la partie gardée dans chaque format.</p>
-      <div class="crop-formats">${IMAGE_FORMATS.map(f => {
+      <div class="crop-formats">${targets.map(f => {
         const size = formatSize(f.key);
         const r = cropRect(W, H, size.w, size.h, 0.5);
         const ends = r.axis === 'y' ? ['↑ Haut', 'Bas ↓'] : ['← Gauche', 'Droite →'];
@@ -2657,10 +2663,10 @@ async function openImageCropper(article, step, file){
           <canvas class="crop-result" width="${size.w}" height="${size.h}" aria-label="Aperçu final ${f.label}"></canvas>
         </div>`;
       }).join('')}</div>
-      <label class="crop-link"><input type="checkbox" class="crop-link-input" checked> Même cadrage pour les deux formats</label>
+      <label class="crop-link" ${targets.length > 1 ? '' : 'hidden'}><input type="checkbox" class="crop-link-input" checked> Même cadrage pour les deux formats</label>
       <div class="crop-actions">
         <button type="button" class="btn crop-cancel">Annuler</button>
-        <button type="button" class="btn btn-primary crop-save">Enregistrer les deux formats</button>
+        <button type="button" class="btn btn-primary crop-save">${saveLabel}</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -2681,14 +2687,14 @@ async function openImageCropper(article, step, file){
   }
   function setPos(key, value){
     const v = Math.min(1, Math.max(0, value));
-    const keys = linked() ? IMAGE_FORMATS.map(f => f.key) : [key];
+    const keys = linked() ? targets.map(f => f.key) : [key];
     for(const k of keys){
       const size = formatSize(k);
       if(!cropRect(W, H, size.w, size.h, 0).axis) continue;
       pos[k] = v; paint(k);
     }
   }
-  IMAGE_FORMATS.forEach(f => paint(f.key));
+  targets.forEach(f => paint(f.key));
   overlay.addEventListener('input', e => {
     if(e.target.type === 'range') setPos(e.target.dataset.format, e.target.value / 100);
   });
@@ -2725,7 +2731,7 @@ async function openImageCropper(article, step, file){
     save.textContent = 'Enregistrement…';
     try{
       const images = [];
-      for(const f of IMAGE_FORMATS){
+      for(const f of targets){
         const blob = await renderCrop(img, f.key, pos[f.key]);
         const ext = blob.type === 'image/webp' ? '.webp' : '.jpg';
         const out = new File([blob], croppedName(file.name, f.key, ext), { type: blob.type, lastModified: Date.now() });
@@ -2740,7 +2746,7 @@ async function openImageCropper(article, step, file){
       console.error('Erreur de recadrage', err);
       alert("Impossible d'enregistrer les images recadrées.");
       save.disabled = false;
-      save.textContent = 'Enregistrer les deux formats';
+      save.textContent = saveLabel;
     }
   });
 }
