@@ -176,6 +176,13 @@
       "when": 1795704247479,
       "tag": "0024_pilots_handle_new_user",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1795704513731,
+      "tag": "0025_lock_editorial_backup_20261126",
+      "breakpoints": true
     }
   ]
 }
