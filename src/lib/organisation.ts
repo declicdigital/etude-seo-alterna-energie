@@ -4,6 +4,8 @@
  * par can_use_organisation). Ce module ne contient que de la logique pure.
  */
 
+import { plainNote } from "@/lib/note-format";
+
 export const ORGANISATION_SHEET = "ORGANISATION";
 
 export type OrgColumn = { id: string; title: string; position: number };
@@ -148,7 +150,7 @@ export function matchesFilter(
 
 /** First lines of the note, for the card preview. */
 export function excerpt(content: string, max = 140): string {
-  const flat = content.replace(/\s+/g, " ").trim();
+  const flat = plainNote(content).replace(/\s+/g, " ").trim();
   return flat.length > max ? `${flat.slice(0, max - 1).trimEnd()}…` : flat;
 }
 

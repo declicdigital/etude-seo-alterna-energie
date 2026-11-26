@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toWebp } from "@/lib/webp";
 import {
   CalendarDays,
@@ -26,13 +26,14 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { NoteContent } from "@/components/note-content";
+import { NoteToolbar, onNoteKeyDown, onNotePaste } from "@/components/note-editor";
 import {
   attachmentsOf,
   avatarColour,
   dueState,
   formatSize,
   initials,
-  linkify,
   linkLabel,
   memberName,
   normalizeLink,
@@ -429,6 +430,7 @@ export function CardNote({
       <div className="mx-6 my-4 border-t border-dashed border-amber-900/15 sm:mx-10 dark:border-amber-100/15" />
 
       <div className="flex-1 cursor-text px-6 pb-8 sm:px-10" onClick={startEditing}>
+        {editing && <NoteToolbar textRef={textRef} />}
         {editing ? (
           <textarea
             ref={textRef}
@@ -439,6 +441,8 @@ export function CardNote({
               setEditing(false);
             }}
             onClick={(e) => e.stopPropagation()}
+            onPaste={(e) => onNotePaste(e, onContentChange)}
+            onKeyDown={onNoteKeyDown}
             placeholder="Écrivez ici : contexte, décisions, liens, compte rendu…"
             aria-label="Note"
             className={cn(
@@ -457,27 +461,12 @@ export function CardNote({
               }
             }}
             className={cn(
-              "min-h-[30vh] whitespace-pre-wrap break-words text-[17px] leading-[1.75] text-foreground/90 outline-none",
+              "min-h-[30vh] break-words text-[17px] leading-[1.75] text-foreground/90 outline-none",
               NOTE_FONT,
             )}
           >
             {content ? (
-              linkify(content).map((part, i) =>
-                part.href ? (
-                  <a
-                    key={i}
-                    href={part.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="break-all text-amber-800 underline decoration-amber-800/30 underline-offset-2 hover:decoration-amber-800 dark:text-amber-300 dark:decoration-amber-300/40"
-                  >
-                    {part.text}
-                  </a>
-                ) : (
-                  <Fragment key={i}>{part.text}</Fragment>
-                ),
-              )
+              <NoteContent text={content} />
             ) : (
               <span className="text-muted-foreground/60">
                 Écrivez ici : contexte, décisions, liens, compte rendu…

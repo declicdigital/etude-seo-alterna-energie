@@ -278,7 +278,8 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
     zone: "alienor",
     title: "Accéder à Aliénor",
     keywords: ["aliénor", "alienor", "soregies", "ia interne"],
-    answer: "La rubrique Aliénor propose le bouton « Ouvrir Aliénor », qui ouvre Soregies.ai dans sa propre fenêtre (ou « Ou dans un nouvel onglet »). Connecte-toi avec ton compte et ton mot de passe Soregies.ai : la connexion ne peut pas se faire à l'intérieur de la page Digicom. Digicom ne transmet ni ton mot de passe ni ta session. L'équipe Digicom peut ouvrir la rubrique dans tes accès ; cela ne crée pas de compte Soregies.ai.",
+    answer:
+      "La rubrique Aliénor propose le bouton « Ouvrir Aliénor », qui ouvre Soregies.ai dans sa propre fenêtre (ou « Ou dans un nouvel onglet »). Connecte-toi avec ton compte et ton mot de passe Soregies.ai : la connexion ne peut pas se faire à l'intérieur de la page Digicom. Digicom ne transmet ni ton mot de passe ni ta session. L'équipe Digicom peut ouvrir la rubrique dans tes accès ; cela ne crée pas de compte Soregies.ai.",
   },
   // ——— Général ———
   {
@@ -341,9 +342,10 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       if (z.has("blog-suivi"))
         lines.push("Pour un article Professionnel, un expert métier relit aussi le contenu.");
       if (z.has("planete-suivi"))
-        lines.push("Parlons Planète : Caroline et Elodie (Aurorae) rédigent, l'équipe Digicom intègre.");
-      if (z.has("faq-demandes"))
-        lines.push("FAQ : l'équipe Digicom valide les demandes.");
+        lines.push(
+          "Parlons Planète : Caroline et Elodie (Aurorae) rédigent, l'équipe Digicom intègre.",
+        );
+      if (z.has("faq-demandes")) lines.push("FAQ : l'équipe Digicom valide les demandes.");
       if (z.has("benchmark")) lines.push("Benchmark : l'équipe Digicom saisit les tarifs.");
       return lines.join(" ");
     },
@@ -892,7 +894,7 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "50 mo",
     ],
     answer:
-      "Une fiche contient : une note sans limite de texte (contexte, décisions, compte rendu ; les liens y deviennent cliquables), un responsable, des personnes taguées (uniquement celles qui ont accès à Organisation, elles reçoivent un mail), une échéance, une marque au choix (AE = Alterna Énergie ou PP = Parlons Planète, affichée en pastille sur la fiche et filtrable en haut du tableau), et « Fichiers et liens » : ajoute un lien nommé ou joins un fichier (50 Mo max, glisser-déposer possible) à ouvrir ou télécharger. Supprimer une fiche efface aussi sa note et ses fichiers.",
+      "Une fiche contient : une note sans limite de texte (contexte, décisions, compte rendu) mise en forme : listes à puces (« - » ou « * »), listes numérotées (« 1. »), sous-listes avec la touche Tab, **gras** et liens cliquables ([texte](adresse) ou une adresse seule, ils s'ouvrent dans un nouvel onglet) ; la barre au-dessus de la note pendant l'écriture propose Liste à puces, Liste numérotée, Gras et Lien, Entrée continue la liste, et un texte copié depuis une page web, ChatGPT ou un document garde ses listes et ses liens, un responsable, des personnes taguées (uniquement celles qui ont accès à Organisation, elles reçoivent un mail), une échéance, une marque au choix (AE = Alterna Énergie ou PP = Parlons Planète, affichée en pastille sur la fiche et filtrable en haut du tableau), et « Fichiers et liens » : ajoute un lien nommé ou joins un fichier (50 Mo max, glisser-déposer possible) à ouvrir ou télécharger. Supprimer une fiche efface aussi sa note et ses fichiers.",
   },
   // ——— Radar (ex-Planning intégré) ———
   {
@@ -967,7 +969,17 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
   {
     zone: "kit",
     title: "Kit de communication : pictogrammes 2D",
-    keywords: ["icône", "icônes", "icone", "icones", "picto", "pictogramme", "pictogrammes", "visuel", "illustration"],
+    keywords: [
+      "icône",
+      "icônes",
+      "icone",
+      "icones",
+      "picto",
+      "pictogramme",
+      "pictogrammes",
+      "visuel",
+      "illustration",
+    ],
     answer:
       "Le Kit de communication propose une section « Pictogrammes 2D » : un ZIP de 85 visuels PNG 1000×1000 (énergie, nature, réussite, gestes, objets…) à télécharger pour illustrer les contenus. Quatre aperçus sont visibles sur la page avant téléchargement.",
   },
@@ -1109,10 +1121,9 @@ const RUBRIQUE_WORDS: Record<string, RegExp> = {
  * (`isPublic` : définitions, questions sur l'entreprise) vont à tout le monde ; les autres
  * seulement si elles ne touchent aucune rubrique fermée pour elle.
  */
-export function correctionsFor<T extends { question: string; correction: string; isPublic?: boolean }>(
-  corrections: T[],
-  zones: AssistantZone[],
-): T[] {
+export function correctionsFor<
+  T extends { question: string; correction: string; isPublic?: boolean },
+>(corrections: T[], zones: AssistantZone[]): T[] {
   const open = rubriquesOf(zones);
   return corrections.filter((c) => {
     if (c.isPublic) return true;
@@ -1141,7 +1152,10 @@ export const TEAM_ROLES: Record<string, { name: string; role: string }> = {
     name: "Geoffrey",
     role: "service Communication d'Alterna Énergie, administrateur de Digicom (le pilotage est passé à Matthieu)",
   },
-  "geoffrey.delabarre@gmail.com": { name: "Geoffrey", role: "administrateur de Digicom (le pilotage est passé à Matthieu)" },
+  "geoffrey.delabarre@gmail.com": {
+    name: "Geoffrey",
+    role: "administrateur de Digicom (le pilotage est passé à Matthieu)",
+  },
   "caroline@aurorae-editorial.com": { name: "Caroline", role: "rédactrice (Aurorae)" },
   "elodie@aurorae-editorial.com": { name: "Elodie", role: "rédactrice (Aurorae)" },
   "contact@marinatravert.com": { name: "Marina", role: "rédactrice" },
