@@ -787,6 +787,7 @@ html:not(.no-cat) .col-brief{display:none!important}
       <button class="btn" id="todoAddBtn">+ Ajouter une ligne</button>
     </div>
     <p class="hint todo-hint">Dès que le lien du doc est collé, le bouton « Enregistrer » est actif, même si d'autres cases sont vides : l'article est alors créé dans le suivi (étape Rédaction) et l'équipe Digicom reçoit un mail. Les cases laissées vides se complètent ensuite dans la fiche de l'article. Choisis d'abord la cible (Particulier ou Professionnel) : la liste des catégories s'adapte. Les lignes sont classées de la deadline la plus proche à la plus lointaine ; un point rouge signale une deadline dans moins de 5 jours.</p>
+    <p class="hint todo-hint todo-paste-hint">Plusieurs sujets d'un coup : colle-les les uns sous les autres dans la case « Sujet » (ou « Titre H1 ») d'une ligne, chaque ligne collée devient une ligne du tableau.</p>
     <div class="todo-scroll"><table class="todo-table">
       <thead><tr><th>Sujet</th><th class="col-brief">Type</th><th class="col-brief">Catégorie</th><th>Édition</th><th>Date de rédaction</th><th>Nom de l'article (H1)</th><th class="col-cible">Cible</th><th class="col-cat">Catégorie</th><th class="col-subcat">Sous-catégorie</th><th class="col-energy">Énergie</th><th>Deadline</th><th class="col-brief">Lien du brief</th><th>Lien du doc</th><th></th></tr></thead>
       <tbody id="todoBody"></tbody>
@@ -2762,9 +2763,36 @@ async function maybeCreateFromTodo(t){
   await saveIndex();
   renderArticles();
 }
+function blankTodo(){
+  return { id: uid(), sujet:'', h1:'', editrice:'', audience: SPACE ? 'Particulier' : '', categorie:'', energie:'', deadline:'', docx:'', articleId:null };
+}
 document.getElementById('todoAddBtn').addEventListener('click', async () => {
   if(!canEditTodo()) return;
-  todos.push({ id: uid(), sujet:'', h1:'', editrice:'', audience: SPACE ? 'Particulier' : '', categorie:'', energie:'', deadline:'', docx:'', articleId:null });
+  todos.push(blankTodo());
+  await saveTodos(); renderTodos();
+});
+/* Coller plusieurs lignes (les unes sous les autres) dans une case texte :
+   la 1re va dans la ligne en cours, chacune des suivantes crée une nouvelle ligne. Les lignes vides sont ignorées. */
+const TODO_MULTI_FIELDS = ['sujet', 'h1', 'brief', 'docx'];
+document.getElementById('todoBody').addEventListener('paste', async (e) => {
+  const el = e.target;
+  const f = el && el.dataset && el.dataset.f;
+  if(!f || !TODO_MULTI_FIELDS.includes(f) || !canEditTodo()) return;
+  const text = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+  const lines = text.split(/\r\n|\r|\n/).map(l => l.trim()).filter(Boolean);
+  if(lines.length < 2) return;
+  const tr = el.closest('tr[data-todo-id]');
+  const t = tr && todos.find(x => x.id === tr.dataset.todoId);
+  if(!t || t.articleId) return;
+  e.preventDefault();
+  const before = el.value.slice(0, el.selectionStart ?? el.value.length);
+  const after = el.value.slice(el.selectionEnd ?? el.value.length);
+  t[f] = (before + lines[0] + after).trim();
+  for(const line of lines.slice(1)){
+    const row = blankTodo();
+    row[f] = line;
+    todos.push(row);
+  }
   await saveTodos(); renderTodos();
 });
 document.getElementById('todoBody').addEventListener('change', async (e) => {
