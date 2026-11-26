@@ -553,9 +553,14 @@ export const ASSISTANT_TOPICS: TopicDef[] = [
       "ajouter image",
       "remplacer",
       "format",
+      "recadrer",
+      "recadrage",
+      "redimensionner",
+      "curseur",
+      "centrer",
     ],
     answer:
-      "À l'étape Image (équipe Digicom), deux cases : « 1500 × 700 » et « 950 × 475 ». Toute image ajoutée dans Digicom (suivis, FAQ, Organisation, Le Radar) est convertie automatiquement en WebP, même taille, dès l'envoi : celle qu'on télécharge ensuite est donc déjà en WebP (les GIF et SVG restent tels quels). Glisse l'image dans la case ou clique dessus pour la choisir. Une case remplie se remplace de la même façon ; un clic sur l'aperçu télécharge l'image ; seule l'équipe Digicom peut la retirer (croix ×) ou la remplacer par une autre. Une fois l'étape validée, Fannie et Coraline reçoivent le mail de relecture.",
+      "À l'étape Image (équipe Digicom), deux cases : « 1500 × 700 » et « 950 × 475 ». Le plus simple : dépose une seule image dans la zone « ✂️ Une seule image pour les deux formats » au-dessus ; elle est redimensionnée et recadrée dans les deux formats, avec un curseur par format (ou en faisant glisser l'aperçu) pour choisir la partie gardée, et la case « Même cadrage pour les deux formats » à décocher pour les régler séparément. « Enregistrer les deux formats » remplit les deux cases. Toute image ajoutée dans Digicom (suivis, FAQ, Organisation, Le Radar) est convertie automatiquement en WebP, même taille, dès l'envoi : celle qu'on télécharge ensuite est donc déjà en WebP (les GIF et SVG restent tels quels). Glisse l'image dans la case ou clique dessus pour la choisir. Une case remplie se remplace de la même façon ; un clic sur l'aperçu télécharge l'image ; seule l'équipe Digicom peut la retirer (croix ×) ou la remplacer par une autre. Une fois l'étape validée, Fannie et Coraline reçoivent le mail de relecture.",
   },
   {
     zone: "blog-suivi",
