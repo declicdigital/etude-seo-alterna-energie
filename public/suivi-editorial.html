@@ -619,7 +619,10 @@ button{ font-family: inherit; cursor:pointer; }
 @media (prefers-reduced-motion:reduce){ .attach-image-label{ transition:none; } }
 .image-slots{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; margin-bottom:12px; }
 @media (max-width:640px){ .image-slots{ grid-template-columns:1fr; } }
-.image-slots .attach-image-label{ position:relative; flex-direction:column; gap:8px; min-height:150px; margin-bottom:0; }
+.image-slot{ position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; min-height:150px; padding:16px; border:2px dashed var(--line); border-radius:8px; background:var(--card); color:var(--ink); text-align:center; }
+.image-slot.slot-filled{ border:1.5px solid var(--lgreen); }
+.slot-empty{ font-size:0.8rem; color:var(--ink-60); }
+.slot-download{ font-size:0.8rem; font-weight:600; color:var(--ink); text-decoration:underline; }
 .slot-size{ font-size:1.15rem; font-weight:700; letter-spacing:.02em; }
 .attach-image-label.crop-drop{ min-height:84px; margin-bottom:12px; background:var(--blue-bg); border-color:var(--blue); }
 .attach-image-label.crop-drop:hover, .attach-image-label.crop-drop.drag-over{ background:var(--card); border-color:var(--ink); }
@@ -1940,25 +1943,26 @@ function renderImageSlots(article, step){
     <label class="attach-image-label crop-drop" data-article-id="${article.id}" data-step-key="${step.key}" data-crop="1" title="Déposer une seule image : elle est recadrée dans les deux formats">
       <span class="attach-image-copy">
         <span>✂️ Une seule image pour les deux formats</span>
-        <small>Glisser l'image ici ou cliquer : elle est redimensionnée en ${IMAGE_FORMATS.map(f => f.label).join(' et ')}, tu choisis le cadrage avec un curseur${anyFilled && canModerate() ? ' (remplace les images actuelles)' : ''}.</small>
+        <small>Glisser l'image ici ou cliquer : elle est redimensionnée en ${IMAGE_FORMATS.map(f => f.label).join(' et ')} (WebP), tu choisis le cadrage avec un curseur${anyFilled && canModerate() ? ' (remplace les images actuelles)' : ''}.</small>
       </span>
       <input type="file" accept="image/*" class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" aria-label="Une seule image pour les deux formats">
     </label>`;
+  // Les deux cases ne servent qu'à voir et télécharger les images : on dépose l'image une seule fois, au-dessus.
   return `${single}<div class="image-slots">${IMAGE_FORMATS.map(f => {
     const a = atts.find(x => imageFormat(x) === f.key);
     return `
-      <label class="attach-image-label ${a ? 'slot-filled' : ''} ${a && !canModerate() ? 'slot-locked' : ''}" data-article-id="${article.id}" data-step-key="${step.key}" data-format="${f.key}" title="${a ? (canModerate() ? 'Cliquer pour remplacer l\'image ' + f.label : 'Image ' + f.label + ' : seule l\'équipe Digicom peut la remplacer') : 'Ajouter l\'image ' + f.label}">
+      <div class="image-slot ${a ? 'slot-filled' : ''}">
         <span class="slot-size">${f.label}</span>
         ${a ? `
           <a class="slot-thumb" href="${escapeAttr(imgSrc(a))}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}" title="Télécharger l'image ${f.label}">
             <img loading="lazy" src="${escapeAttr(imgSrc(a))}" alt="Image ${f.label}">
           </a>
           <span class="slot-name">${escapeHtml(a.name || '')}</span>
+          <a class="slot-download" href="${escapeAttr(imgSrc(a))}" data-action="download-attachment" data-filename="${escapeAttr(a.name||'image')}">⬇ Télécharger</a>
           ${a.note ? `<span class="slot-note">💬 Relecture${a.noteBy ? ' (' + escapeHtml(a.noteBy) + ')' : ''} : ${escapeHtml(a.note)}</span>` : ''}
           ${canModerate() ? `<button type="button" class="slot-remove" data-action="remove-attachment" data-article-id="${article.id}" data-step-key="${step.key}" data-attach-id="${a.id}" title="Retirer l'image ${f.label}" aria-label="Retirer l'image ${f.label}">×</button>` : ''}`
-        : `<span class="attach-image-copy"><small>Glisser l'image ici ou cliquer : elle sera recadrée dans les deux formats</small></span>`}
-        ${a && !canModerate() ? '' : `<input type="file" accept="image/*" class="attach-file-input" data-article-id="${article.id}" data-step-key="${step.key}" aria-label="Image ${f.label}">`}
-      </label>`;
+        : `<span class="slot-empty">Pas encore d'image</span>`}
+      </div>`;
   }).join('')}</div>`;
 }
 
@@ -3220,7 +3224,7 @@ function openArticleFromHash(){
     renderArticles();
     const card = Array.from(document.querySelectorAll('.article-card')).find(c => c.dataset.articleId === id);
     if(!card) return;
-    target = focus === 'images' ? card.querySelector('.attach-image-label')
+    target = focus === 'images' ? card.querySelector('.attach-image-label, .image-slots')
       : focus === 'comments' ? card.querySelector('.comments-block')
       : step ? card.querySelector('.step-panel') : card;
     target = target || card;
