@@ -26,8 +26,8 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { NoteContent } from "@/components/note-content";
-import { NoteToolbar, onNoteKeyDown, onNotePaste } from "@/components/note-editor";
+import type { Editor } from "@tiptap/react";
+import { NoteEditor } from "@/components/note-editor";
 import {
   attachmentsOf,
   avatarColour,
@@ -160,16 +160,17 @@ export function CardNote({
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const dirty = useRef(false);
   const timer = useRef<number | null>(null);
-  const textRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<Editor | null>(null);
+  const latest = useRef(card.content);
   const titleRef = useRef<HTMLTextAreaElement>(null);
-  // The note reads with clickable links; a click on the text switches to editing.
-  const [editing, setEditing] = useState(() => !!autoFocus && !card.content);
   const files = useCardAttachments(card, me, onChange);
   const [dropping, setDropping] = useState(false);
 
   // Someone else edited this card: follow along unless I'm typing.
   useEffect(() => {
-    if (!dirty.current) setContent(card.content);
+    if (dirty.current) return;
+    latest.current = card.content;
+    setContent(card.content);
   }, [card.content]);
   useEffect(() => {
     if (document.activeElement !== titleRef.current) setTitle(card.title);
@@ -177,25 +178,11 @@ export function CardNote({
 
   // Grow the fields with their text: the page scrolls, not the fields.
   useLayoutEffect(() => {
-    for (const el of [textRef.current, titleRef.current]) {
-      if (!el) continue;
-      el.style.height = "auto";
-      el.style.height = `${el.scrollHeight}px`;
-    }
-  }, [content, title, editing]);
-
-  useEffect(() => {
-    const el = textRef.current;
-    if (!editing || !el || document.activeElement === el) return;
-    el.focus();
-    el.setSelectionRange(el.value.length, el.value.length);
-  }, [editing]);
-
-  function startEditing() {
-    // Selecting text to copy it should not switch to editing.
-    if (window.getSelection()?.toString()) return;
-    setEditing(true);
-  }
+    const el = titleRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [title]);
 
   async function flush() {
     if (timer.current) {
@@ -203,10 +190,10 @@ export function CardNote({
       timer.current = null;
     }
     if (!dirty.current) return;
-    const value = textRef.current?.value ?? content;
+    const value = latest.current;
     setSaveState("saving");
     const ok = await onChange(card.id, { content: value });
-    if (ok && (textRef.current?.value ?? value) === value) dirty.current = false;
+    if (ok && latest.current === value) dirty.current = false;
     setSaveState(ok ? "saved" : "error");
   }
 
@@ -231,6 +218,7 @@ export function CardNote({
   );
 
   function onContentChange(v: string) {
+    latest.current = v;
     setContent(v);
     dirty.current = true;
     setSaveState("saving");
@@ -309,7 +297,7 @@ export function CardNote({
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              textRef.current?.focus();
+              editorRef.current?.commands.focus("start");
             }
           }}
           className={cn(
@@ -429,51 +417,21 @@ export function CardNote({
 
       <div className="mx-6 my-4 border-t border-dashed border-amber-900/15 sm:mx-10 dark:border-amber-100/15" />
 
-      <div className="flex-1 cursor-text px-6 pb-8 sm:px-10" onClick={startEditing}>
-        {editing && <NoteToolbar textRef={textRef} />}
-        {editing ? (
-          <textarea
-            ref={textRef}
-            value={content}
-            onChange={(e) => onContentChange(e.target.value)}
-            onBlur={() => {
-              void flush();
-              setEditing(false);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            onPaste={(e) => onNotePaste(e, onContentChange)}
-            onKeyDown={onNoteKeyDown}
-            placeholder="Écrivez ici : contexte, décisions, liens, compte rendu…"
-            aria-label="Note"
-            className={cn(
-              "min-h-[30vh] w-full resize-none overflow-hidden bg-transparent text-[17px] leading-[1.75] text-foreground/90 outline-none placeholder:text-muted-foreground/60",
-              NOTE_FONT,
-            )}
-          />
-        ) : (
-          <div
-            tabIndex={0}
-            aria-label="Note, cliquer pour modifier"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && e.target === e.currentTarget) {
-                e.preventDefault();
-                setEditing(true);
-              }
-            }}
-            className={cn(
-              "min-h-[30vh] break-words text-[17px] leading-[1.75] text-foreground/90 outline-none",
-              NOTE_FONT,
-            )}
-          >
-            {content ? (
-              <NoteContent text={content} />
-            ) : (
-              <span className="text-muted-foreground/60">
-                Écrivez ici : contexte, décisions, liens, compte rendu…
-              </span>
-            )}
-          </div>
-        )}
+      <div
+        className="flex-1 cursor-text px-6 pb-8 sm:px-10"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) editorRef.current?.commands.focus("end");
+        }}
+      >
+        <NoteEditor
+          value={content}
+          onChange={onContentChange}
+          onBlur={() => void flush()}
+          autoFocus={!!autoFocus && !card.content}
+          editorRef={editorRef}
+          placeholder="Écrivez ici : contexte, décisions, liens, compte rendu…"
+          className={cn("text-[17px] leading-[1.75] text-foreground/90", NOTE_FONT)}
+        />
       </div>
 
       <footer className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 px-6 pb-5 text-xs text-muted-foreground sm:px-10">

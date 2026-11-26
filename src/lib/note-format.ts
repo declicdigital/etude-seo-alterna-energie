@@ -5,8 +5,9 @@
  * this module only parses them into a tree rendered with React elements, so no
  * HTML from a note is ever injected into the page.
  *
- * `htmlToMarkdown` turns rich clipboard content (web page, ChatGPT, Google
- * Docs, Word) into the same plain-text syntax when it is pasted.
+ * The visual editor (`src/components/note-editor.tsx`) loads a note with
+ * `noteToHtml` and saves it back with `htmlToMarkdown`, so people never see
+ * the Markdown signs.
  */
 import { normalizeLink } from "@/lib/organisation";
 
@@ -359,11 +360,11 @@ export function htmlToMarkdown(root: Node): string {
         const href = safeHref(el.getAttribute("href") ?? "");
         if (!href) return kids();
         if (!text) return "";
-        const same =
-          text === href ||
-          href.replace(/^https?:\/\//, "").replace(/\/$/, "") ===
-            text.replace(/^https?:\/\//, "").replace(/\/$/, "");
-        return same ? href : `[${text.replace(/[[\]]/g, "")}](${href})`;
+        // A bare address stays bare when it reads the same once parsed again.
+        const bare = text === href || safeHref(text) === href;
+        return bare && /^(https?:\/\/|www\.)/i.test(text)
+          ? text
+          : `[${text.replace(/[[\]]/g, "")}](${href})`;
       }
       case "STRONG":
       case "B":
@@ -455,14 +456,61 @@ function clean(text: string): string {
 }
 
 /* ------------------------------------------------------------------ */
-/* Editor helpers                                                       */
+/* Markdown → HTML for the visual editor                                */
 /* ------------------------------------------------------------------ */
 
-/** What Enter should insert to continue the list on `line`; `exit` when the item is empty. */
-export function continueList(line: string): { insert: string } | { exit: true } | null {
-  const m = /^( *)(?:(\d{1,4})([.)])|([-*+•–]))( +)(.*)$/.exec(line);
-  if (!m) return null;
-  if (!m[6].trim()) return { exit: true };
-  const marker = m[2] !== undefined ? `${Number(m[2]) + 1}${m[3]}` : m[4];
-  return { insert: `\n${m[1]}${marker}${m[5]}` };
+const esc = (t: string) =>
+  t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+function inlineHtml(nodes: Inline[]): string {
+  return nodes
+    .map((n) => {
+      switch (n.type) {
+        case "text":
+          return esc(n.text);
+        case "link":
+          return `<a href="${esc(n.href)}">${esc(n.text)}</a>`;
+        case "strong":
+          return `<strong>${inlineHtml(n.children)}</strong>`;
+        case "em":
+          return `<em>${inlineHtml(n.children)}</em>`;
+        case "code":
+          return `<code>${esc(n.text)}</code>`;
+      }
+    })
+    .join("");
+}
+
+const linesHtml = (lines: Inline[][]) => lines.map(inlineHtml).join("<br>");
+
+function blocksHtml(blocks: Block[]): string {
+  return blocks
+    .map((b) => {
+      switch (b.type) {
+        case "heading":
+          return `<h${b.level}>${inlineHtml(b.content)}</h${b.level}>`;
+        case "section":
+          return `<ol start="${b.number}"><li><p>${inlineHtml(b.content)}</p></li></ol>`;
+        case "para":
+          return `<p>${linesHtml(b.lines)}</p>`;
+        case "quote":
+          return `<blockquote><p>${linesHtml(b.lines)}</p></blockquote>`;
+        case "hr":
+          return "<hr>";
+        case "list": {
+          const first = b.items[0]?.number;
+          const start = b.ordered && first && first !== 1 ? ` start="${first}"` : "";
+          const items = b.items
+            .map((it) => `<li><p>${linesHtml(it.lines)}</p>${blocksHtml(it.children)}</li>`)
+            .join("");
+          return b.ordered ? `<ol${start}>${items}</ol>` : `<ul>${items}</ul>`;
+        }
+      }
+    })
+    .join("");
+}
+
+/** A stored note (light Markdown) as HTML for the visual editor; every text is escaped. */
+export function noteToHtml(source: string): string {
+  return blocksHtml(parseNote(source));
 }

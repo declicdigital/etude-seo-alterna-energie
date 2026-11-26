@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { continueList, decodeEntities, parseInline, parseNote, plainNote } from "@/lib/note-format";
+import { decodeEntities, parseInline, parseNote, plainNote } from "@/lib/note-format";
 
 const SAMPLE = `1. Sélection des images sur Magnific
 
@@ -94,11 +94,5 @@ describe("helpers", () => {
     expect(plainNote("Voir [le site](https://a.fr) **vite**\n- un")).toBe(
       "Voir le site vite\n• un",
     );
-  });
-  it("continues lists on Enter", () => {
-    expect(continueList("  3. trois")).toEqual({ insert: "\n  4. " });
-    expect(continueList("- un")).toEqual({ insert: "\n- " });
-    expect(continueList("- ")).toEqual({ exit: true });
-    expect(continueList("texte")).toBeNull();
   });
 });

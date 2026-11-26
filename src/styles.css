@@ -147,3 +147,105 @@
     color: var(--color-foreground);
   }
 }
+
+/* Organisation notes: visual editor (src/components/note-editor.tsx). */
+.note-rich {
+  min-height: 30vh;
+  overflow-wrap: break-word;
+}
+.note-rich > * + * {
+  margin-top: 0.75rem;
+}
+.note-rich ul,
+.note-rich ol {
+  padding-left: 1.75rem;
+}
+.note-rich ul {
+  list-style: disc;
+}
+.note-rich ul ul {
+  list-style: circle;
+}
+.note-rich ol {
+  list-style: decimal;
+}
+.note-rich li {
+  padding-left: 0.25rem;
+}
+.note-rich li + li,
+.note-rich li > ul,
+.note-rich li > ol {
+  margin-top: 0.25rem;
+}
+.note-rich li::marker {
+  color: color-mix(in oklab, #92400e 75%, transparent);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+.dark .note-rich li::marker {
+  color: color-mix(in oklab, #fcd34d 75%, transparent);
+}
+.note-rich h1,
+.note-rich h2,
+.note-rich h3 {
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--foreground);
+}
+.note-rich h1 {
+  font-size: 1.3em;
+}
+.note-rich h2 {
+  font-size: 1.15em;
+}
+.note-rich h3 {
+  font-size: 1.05em;
+}
+.note-rich * + h1,
+.note-rich * + h2,
+.note-rich * + h3 {
+  margin-top: 1.5rem;
+}
+.note-rich strong {
+  font-weight: 600;
+  color: var(--foreground);
+}
+.note-rich a {
+  color: #92400e;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, #92400e 30%, transparent);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.note-rich a:hover {
+  text-decoration-color: #92400e;
+}
+.dark .note-rich a {
+  color: #fcd34d;
+  text-decoration-color: color-mix(in oklab, #fcd34d 40%, transparent);
+}
+.note-rich code {
+  border-radius: 0.25rem;
+  background: color-mix(in oklab, #78350f 7%, transparent);
+  padding: 0.1em 0.3em;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+}
+.note-rich blockquote {
+  border-left: 2px solid color-mix(in oklab, #92400e 25%, transparent);
+  padding-left: 1rem;
+  font-style: italic;
+}
+.note-rich hr {
+  border: 0;
+  border-top: 1px dashed color-mix(in oklab, #78350f 15%, transparent);
+  margin: 1.25rem 0;
+}
+.note-rich p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: color-mix(in oklab, var(--muted-foreground) 60%, transparent);
+}

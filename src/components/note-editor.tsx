@@ -1,187 +1,282 @@
-import type { ClipboardEvent, KeyboardEvent, RefObject } from "react";
-import { Bold, Link2, List, ListOrdered } from "lucide-react";
-import { continueList, decodeEntities, htmlHasStructure, htmlToMarkdown } from "@/lib/note-format";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Placeholder from "@tiptap/extension-placeholder";
+import { Bold, Check, Link2, List, ListOrdered, Unlink, X } from "lucide-react";
+import { decodeEntities, htmlToMarkdown, noteToHtml } from "@/lib/note-format";
 import { normalizeLink } from "@/lib/organisation";
+import { cn } from "@/lib/utils";
+
+/** The editor's content back to the stored light Markdown. */
+function toMarkdown(editor: Editor): string {
+  if (editor.isEmpty) return "";
+  const doc = new DOMParser().parseFromString(editor.getHTML(), "text/html");
+  return htmlToMarkdown(doc.body);
+}
+
+/** Plain text that carries Markdown (links, lists, bold): shown formatted once pasted. */
+const looksLikeMarkdown = (t: string) =>
+  /\]\(\s*<?(https?:|mailto:|www\.)/i.test(t) ||
+  /^\s*(\d+[.)]|[-*+•]) \S/m.test(t) ||
+  /\*\*[^*\n]+\*\*/.test(t) ||
+  /&(#\d+|#x[0-9a-f]+|[a-z]+);/i.test(t);
+
+type Props = {
+  value: string;
+  onChange: (markdown: string) => void;
+  onBlur?: () => void;
+  placeholder?: string;
+  className?: string;
+  autoFocus?: boolean;
+  editorRef?: MutableRefObject<Editor | null>;
+};
 
 /**
- * Replaces the textarea selection with `text`, through the browser's own
- * editing command when possible so Ctrl+Z still works, and selects
- * [selStart, selEnd] (offsets inside `text`) afterwards.
+ * Visual note editor: lists, links and bold are shown as such while typing,
+ * never as Markdown signs. The note is still stored as light Markdown.
  */
-function insert(
-  el: HTMLTextAreaElement,
-  text: string,
-  onChange?: (v: string) => void,
-  sel?: [number, number],
-) {
-  const start = el.selectionStart;
-  el.focus();
-  let done = false;
-  try {
-    done =
-      text === ""
-        ? document.execCommand("delete", false)
-        : document.execCommand("insertText", false, text);
-  } catch {
-    done = false;
-  }
-  if (!done || el.value.slice(start, start + text.length) !== text) {
-    el.setRangeText(text, el.selectionStart, el.selectionEnd, "end");
-    // React picks the new value up from the input event.
-    if (onChange) onChange(el.value);
-    else el.dispatchEvent(new Event("input", { bubbles: true }));
-  }
-  if (sel) el.setSelectionRange(start + sel[0], start + sel[1]);
+export function NoteEditor({
+  value,
+  onChange,
+  onBlur,
+  placeholder,
+  className,
+  autoFocus,
+  editorRef,
+}: Props) {
+  const emitted = useRef(value);
+  const onChangeRef = useRef(onChange);
+  const onBlurRef = useRef(onBlur);
+  onChangeRef.current = onChange;
+  onBlurRef.current = onBlur;
+
+  const editor = useEditor({
+    immediatelyRender: false,
+    autofocus: autoFocus ? "end" : false,
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+        codeBlock: false,
+        link: {
+          openOnClick: true,
+          autolink: true,
+          linkOnPaste: true,
+          defaultProtocol: "https",
+          protocols: ["mailto"],
+          HTMLAttributes: { target: "_blank", rel: "noopener noreferrer", class: null },
+        },
+      }),
+      Placeholder.configure({ placeholder: placeholder ?? "" }),
+    ],
+    content: noteToHtml(value),
+    editorProps: {
+      attributes: { class: "note-rich outline-none", "aria-label": "Note" },
+      handlePaste(view, event) {
+        const data = event.clipboardData;
+        if (!data) return false;
+        const html = data.getData("text/html");
+        const plain = data.getData("text/plain");
+        // Raw Markdown (copied from a chat's text, a .md file…) is shown formatted.
+        const rawMarkdown = /\]\(\s*<?(https?:|mailto:|www\.)/i.test(plain);
+        if ((html && !rawMarkdown) || !plain || !looksLikeMarkdown(plain)) return false;
+        const ed = editorRef?.current ?? current.current;
+        if (!ed) return false;
+        event.preventDefault();
+        ed.commands.insertContent(noteToHtml(decodeEntities(plain).replace(/\r\n?/g, "\n")));
+        return true;
+      },
+    },
+    onUpdate({ editor }) {
+      const md = toMarkdown(editor);
+      if (md === emitted.current) return;
+      emitted.current = md;
+      onChangeRef.current(md);
+    },
+    onBlur() {
+      onBlurRef.current?.();
+    },
+  });
+
+  const current = useRef<Editor | null>(null);
+  useEffect(() => {
+    current.current = editor;
+    if (editorRef) editorRef.current = editor;
+  }, [editor, editorRef]);
+
+  // Someone else changed the note: show their version.
+  useEffect(() => {
+    if (!editor || value === emitted.current) return;
+    emitted.current = value;
+    editor.commands.setContent(noteToHtml(value), { emitUpdate: false });
+  }, [value, editor]);
+
+  return (
+    <div className={className}>
+      {editor && <NoteToolbar editor={editor} />}
+      <EditorContent editor={editor} />
+    </div>
+  );
 }
 
-/** Paste: rich content becomes lists / links; a URL over selected text becomes a link. */
-export function onNotePaste(e: ClipboardEvent<HTMLTextAreaElement>, onChange: (v: string) => void) {
-  const el = e.currentTarget;
-  const html = e.clipboardData.getData("text/html");
-  const plain = e.clipboardData.getData("text/plain");
-  const selected = el.value.slice(el.selectionStart, el.selectionEnd);
+function NoteToolbar({ editor }: { editor: Editor }) {
+  const state = useEditorState({
+    editor,
+    selector: ({ editor: e }) => ({
+      bullet: e.isActive("bulletList"),
+      ordered: e.isActive("orderedList"),
+      bold: e.isActive("bold"),
+      link: e.isActive("link"),
+      href: (e.getAttributes("link").href as string | undefined) ?? "",
+      focused: e.isFocused,
+    }),
+  });
+  const [linking, setLinking] = useState(false);
+  const [url, setUrl] = useState("");
+  const input = useRef<HTMLInputElement>(null);
 
-  const url = plain.trim();
-  if (selected.trim() && !selected.includes("\n") && normalizeLink(url) && !/\s/.test(url)) {
-    e.preventDefault();
-    insert(el, `[${selected.trim()}](${normalizeLink(url)})`, onChange);
-    return;
+  useEffect(() => {
+    if (linking) input.current?.focus();
+  }, [linking]);
+
+  function openLink() {
+    setUrl(state.href);
+    setLinking(true);
   }
 
-  let text: string | null = null;
-  // Plain text that already holds Markdown links (copied from a .md file or a
-  // chat's raw text) is kept as is; otherwise rich HTML is converted, so a
-  // linked word copied from a page keeps its address.
-  const plainIsMarkdown = /\]\(\s*<?(https?:|mailto:|www\.)/i.test(plain);
-  if (html && htmlHasStructure(html) && !plainIsMarkdown) {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const md = htmlToMarkdown(doc.body);
-    if (md.trim()) text = md;
-  }
-  if (text === null && /&(#\d+|#x[0-9a-f]+|[a-z]+);/i.test(plain)) text = decodeEntities(plain);
-  if (text === null) return;
-  e.preventDefault();
-  insert(el, text.replace(/\r\n?/g, "\n"), onChange);
-}
-
-const INDENT = "   ";
-
-/** Enter continues a list, Tab / Shift+Tab indent a list item. */
-export function onNoteKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
-  const el = e.currentTarget;
-  const { value, selectionStart: start, selectionEnd: end } = el;
-  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
-  const lineEndIdx = value.indexOf("\n", start);
-  const line = value.slice(lineStart, lineEndIdx === -1 ? value.length : lineEndIdx);
-
-  if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey && start === end) {
-    if (e.nativeEvent.isComposing) return;
-    const next = continueList(value.slice(lineStart, start));
-    if (!next) return;
-    e.preventDefault();
-    if ("exit" in next) {
-      // Enter on an empty item: leave the list.
-      el.setSelectionRange(lineStart, lineStart + line.length);
-      insert(el, "");
-    } else insert(el, next.insert);
-    return;
-  }
-
-  if (e.key === "Tab" && start === end && /^\s*(\d+[.)]|[-*+•–])(\s|$)/.test(line)) {
-    e.preventDefault();
-    const offset = start - lineStart;
-    if (e.shiftKey) {
-      const remove = Math.min(INDENT.length, /^ */.exec(line)![0].length);
-      if (!remove) return;
-      el.setSelectionRange(lineStart, lineStart + remove);
-      insert(el, "");
-      const pos = lineStart + Math.max(0, offset - remove);
-      el.setSelectionRange(pos, pos);
-    } else {
-      el.setSelectionRange(lineStart, lineStart);
-      insert(el, INDENT);
-      const pos = lineStart + offset + INDENT.length;
-      el.setSelectionRange(pos, pos);
+  function applyLink() {
+    const href = normalizeLink(url) ?? (/^mailto:\S+@\S+$/i.test(url.trim()) ? url.trim() : null);
+    setLinking(false);
+    if (!href) {
+      editor.commands.focus();
+      return;
     }
+    const chain = editor.chain().focus().extendMarkRange("link");
+    if (editor.state.selection.empty && !editor.isActive("link"))
+      chain
+        .insertContent({
+          type: "text",
+          text: url.trim(),
+          marks: [{ type: "link", attrs: { href } }],
+        })
+        .run();
+    else chain.setLink({ href }).run();
   }
-}
 
-/** Adds `prefix` at the start of each selected line (or the current one). */
-function prefixLines(el: HTMLTextAreaElement, make: (i: number) => string) {
-  const { value, selectionStart, selectionEnd } = el;
-  const from = value.lastIndexOf("\n", selectionStart - 1) + 1;
-  const endIdx = value.indexOf("\n", selectionEnd);
-  const to = endIdx === -1 ? value.length : endIdx;
-  const lines = value.slice(from, to).split("\n");
-  const out = lines
-    .map((l, i) => {
-      const m = /^(\s*)(?:(?:\d+[.)]|[-*+•–])\s+)?(.*)$/.exec(l)!;
-      return `${m[1]}${make(i)}${m[2]}`;
-    })
-    .join("\n");
-  el.setSelectionRange(from, to);
-  insert(el, out, undefined, [out.length, out.length]);
-}
+  const btn = (on: boolean) =>
+    cn(
+      "inline-flex h-7 items-center gap-1 rounded-md px-2 transition-colors",
+      on ? "bg-foreground/10 text-foreground" : "hover:bg-muted hover:text-foreground",
+    );
+  // Keep the focus (and the selection) in the note.
+  const keep = (e: React.MouseEvent) => e.preventDefault();
 
-/** Small formatting bar shown above the note while it is edited. */
-export function NoteToolbar({ textRef }: { textRef: RefObject<HTMLTextAreaElement | null> }) {
-  const run = (fn: (el: HTMLTextAreaElement) => void) => () => {
-    const el = textRef.current;
-    if (el) fn(el);
-  };
-  const actions = [
-    {
-      label: "Liste à puces",
-      icon: List,
-      fn: run((el) => prefixLines(el, () => "- ")),
-    },
-    {
-      label: "Liste numérotée",
-      icon: ListOrdered,
-      fn: run((el) => prefixLines(el, (i) => `${i + 1}. `)),
-    },
-    {
-      label: "Gras",
-      icon: Bold,
-      fn: run((el) => {
-        const sel = el.value.slice(el.selectionStart, el.selectionEnd) || "texte en gras";
-        insert(el, `**${sel}**`, undefined, [2, 2 + sel.length]);
-      }),
-    },
-    {
-      label: "Lien",
-      icon: Link2,
-      fn: run((el) => {
-        const sel = el.value.slice(el.selectionStart, el.selectionEnd).trim() || "texte du lien";
-        const text = `[${sel}](https://)`;
-        // The address placeholder is selected: paste the link right away.
-        insert(el, text, undefined, [sel.length + 3, text.length - 1]);
-      }),
-    },
-  ];
   return (
     <div
-      className="-mx-2 mb-2 flex flex-wrap items-center gap-1 px-0 py-1 font-sans text-xs text-muted-foreground"
-      onClick={(e) => e.stopPropagation()}
+      className="-mx-2 mb-2 flex min-h-9 flex-wrap items-center gap-1 px-0 py-1 font-sans text-xs text-muted-foreground"
+      role="toolbar"
+      aria-label="Mise en forme"
     >
-      {actions.map(({ label, icon: Icon, fn }) => (
-        <button
-          key={label}
-          type="button"
-          title={label}
-          aria-label={label}
-          // Keep the focus in the note: leaving it closes the editor.
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={fn}
-          className="inline-flex h-7 items-center gap-1 rounded-md px-2 hover:bg-muted hover:text-foreground"
+      {linking ? (
+        <form
+          className="flex flex-1 items-center gap-1"
+          onSubmit={(e) => {
+            e.preventDefault();
+            applyLink();
+          }}
         >
-          <Icon className="size-3.5" />
-          <span className="hidden sm:inline">{label}</span>
-        </button>
-      ))}
-      <span className="ml-auto hidden text-[11px] text-muted-foreground/80 md:inline">
-        « - » puce · « 1. » numéro · Tab pour décaler
-      </span>
+          <Link2 className="ml-2 size-3.5 shrink-0" />
+          <input
+            ref={input}
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                setLinking(false);
+                editor.commands.focus();
+              }
+            }}
+            placeholder="Colle l'adresse du lien puis Entrée"
+            aria-label="Adresse du lien"
+            className="h-7 min-w-0 flex-1 rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-amber-700/50"
+          />
+          <button type="submit" className={btn(false)} aria-label="Valider le lien">
+            <Check className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            className={btn(false)}
+            aria-label="Annuler"
+            onClick={() => {
+              setLinking(false);
+              editor.commands.focus();
+            }}
+          >
+            <X className="size-3.5" />
+          </button>
+        </form>
+      ) : (
+        <>
+          <button
+            type="button"
+            title="Liste à puces"
+            aria-pressed={state.bullet}
+            onMouseDown={keep}
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={btn(state.bullet)}
+          >
+            <List className="size-3.5" />
+            <span className="hidden sm:inline">Puces</span>
+          </button>
+          <button
+            type="button"
+            title="Liste numérotée"
+            aria-pressed={state.ordered}
+            onMouseDown={keep}
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={btn(state.ordered)}
+          >
+            <ListOrdered className="size-3.5" />
+            <span className="hidden sm:inline">Numéros</span>
+          </button>
+          <button
+            type="button"
+            title="Gras"
+            aria-pressed={state.bold}
+            onMouseDown={keep}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={btn(state.bold)}
+          >
+            <Bold className="size-3.5" />
+            <span className="hidden sm:inline">Gras</span>
+          </button>
+          <button
+            type="button"
+            title={state.link ? "Modifier le lien" : "Ajouter un lien"}
+            aria-pressed={state.link}
+            onMouseDown={keep}
+            onClick={openLink}
+            className={btn(state.link)}
+          >
+            <Link2 className="size-3.5" />
+            <span className="hidden sm:inline">Lien</span>
+          </button>
+          {state.link && (
+            <button
+              type="button"
+              title="Retirer le lien"
+              onMouseDown={keep}
+              onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()}
+              className={btn(false)}
+            >
+              <Unlink className="size-3.5" />
+            </button>
+          )}
+          <span className="ml-auto hidden text-[11px] text-muted-foreground/70 md:inline">
+            Tab : sous-liste · coller une adresse sur un mot : lien
+          </span>
+        </>
+      )}
     </div>
   );
 }
