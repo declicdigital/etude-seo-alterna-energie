@@ -6,6 +6,7 @@ import { authenticateRequest } from "@/lib/route-auth.server";
 import { cardHash, excerpt, ORGANISATION_SHEET } from "@/lib/organisation";
 import { ficheLink } from '@/lib/slugs';
 import { appUrl } from "@/lib/app-url";
+import { brevoRecipients } from "@/lib/digicom-team";
 
 /**
  * Prévient par mail les personnes nouvellement assignées ou taguées sur une
@@ -80,7 +81,7 @@ async function sendOne(to: string, subject: string, text: string, html: string):
     },
     body: JSON.stringify({
       sender: MAIL_SENDER,
-      to: [{ email: to }],
+      ...brevoRecipients([to]),
       subject,
       textContent: signText(text),
       htmlContent: signHtml(html),

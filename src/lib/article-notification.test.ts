@@ -56,8 +56,8 @@ describe("notificationCta", () => {
   });
 });
 describe('split notification recipients', () => {
-  it('sends Image only to Geoffrey even with a legacy Communication destination', () => {
-    expect(notificationRecipients('image', SERVICE_COMMUNICATION_EMAILS)).toEqual(['geoffrey.delabarre@alterna-energie.fr']);
+  it('sends Image only to Matthieu even with a legacy Communication destination', () => {
+    expect(notificationRecipients('image', SERVICE_COMMUNICATION_EMAILS)).toEqual(['matthieu.roux@alterna-energie.fr']);
   });
   it('sends Relecture only to Fannie and Coraline even with another configured recipient', () => {
     expect(notificationRecipients('relecture', ['other@example.org'])).toEqual([...SERVICE_COMMUNICATION_EMAILS]);

@@ -5,6 +5,7 @@ import { recapCc } from "@/lib/monthly-recap-cc";
 import { firstBusinessDay, parisToday } from "@/lib/business-days";
 import { sheetAllowed } from "@/lib/sections";
 import { newYearGreeting, type NewYearGreeting } from "@/lib/recap-greeting";
+import { brevoRecipients } from "@/lib/digicom-team";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = MAIL_SENDER;
 
@@ -86,8 +87,7 @@ async function sendBrevo(to: string[], subject: string, text: string, html: stri
     },
     body: JSON.stringify({
       sender: SENDER,
-      to: to.map((email) => ({ email })),
-      ...(cc.length ? { cc: cc.map((email) => ({ email })) } : {}),
+      ...brevoRecipients(to, cc),
       subject,
       textContent: signText(text),
       htmlContent: signHtml(html),

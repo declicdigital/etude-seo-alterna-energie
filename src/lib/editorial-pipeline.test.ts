@@ -151,10 +151,10 @@ describe('Blog Pro expert review', () => {
   });
 });
 describe('Separate Image and Relecture', () => {
-  it('routes writing to Geoffrey image, then Communication review, then Marick', () => {
+  it('routes writing to Matthieu image, then Communication review, then Marick', () => {
     for(const space of ['', 'strategie']) {
       const article = {audience:'Particulier',type:'Création'};
-      expect(pipeline.nextNotification(article,'redaction',space)).toMatchObject({kind:'image',next:'image',who:'Geoffrey'});
+      expect(pipeline.nextNotification(article,'redaction',space)).toMatchObject({kind:'image',next:'image',who:'Matthieu'});
       expect(pipeline.nextNotification(article,'image',space)).toMatchObject({kind:'relecture',next:'relecture'});
       expect(pipeline.nextNotification(article,'relecture',space)).toMatchObject({kind:'integration',next:'integration'});
     }

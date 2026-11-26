@@ -169,6 +169,13 @@
       "when": 1795451555762,
       "tag": "0023_guard_pipeline_config_emails",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1795704247479,
+      "tag": "0024_pilots_handle_new_user",
+      "breakpoints": true
     }
   ]
 }

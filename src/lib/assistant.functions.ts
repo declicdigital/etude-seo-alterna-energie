@@ -16,7 +16,7 @@ import {
 } from "./assistant-stats";
 import { buildEditsMap, type CellEdit } from "./workbook";
 import type { FaqRequest } from "./faq";
-import { GEOFFREY_EMAIL } from "./step-reminders";
+import { isPilot } from "./digicom-team";
 
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 /** Premier modèle disponible utilisé ; les suivants servent si un identifiant est refusé. */
@@ -78,8 +78,8 @@ async function accessOf(context: Ctx) {
     profile?.email ??
     ""
   ).toLowerCase();
-  // « Digipote » (historique des questions) : Geoffrey uniquement.
-  const isGeoffrey = isAdmin && email === GEOFFREY_EMAIL;
+  // « Digipote » (historique des questions) : pilotes uniquement.
+  const isGeoffrey = isPilot(isAdmin, email);
   const fullName = (profile?.full_name ?? "").trim() || email || null;
   return { isAdmin, approved, allowed, email, isGeoffrey, fullName };
 }
@@ -309,7 +309,7 @@ export const logAssistantExchange = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Historique « Digipote » (Geoffrey uniquement). */
+/** Historique « Digipote » (pilotes uniquement). */
 export const listAssistantExchanges = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ ok: boolean; items: AssistantExchange[] }> => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { canEditBenchmark } from "@/lib/benchmark";
-import { GEOFFREY_EMAIL } from "@/lib/step-reminders";
+const GEOFFREY_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 
 describe("canEditBenchmark", () => {
   it("autorise Geoffrey administrateur", () => {
@@ -17,6 +17,23 @@ describe("canEditBenchmark", () => {
 
   it("refuse Geoffrey sans rôle administrateur", () => {
     expect(canEditBenchmark(false, GEOFFREY_EMAIL)).toBe(false);
+  });
+
+  it("autorise Matthieu administrateur", () => {
+    expect(canEditBenchmark(true, "matthieu.roux@alterna-energie.fr")).toBe(true);
+  });
+
+  it("autorise Charlotte avec un compte approuvé, même sans rôle admin", () => {
+    expect(canEditBenchmark(false, "charlotte.places@alterna-energie.fr", true)).toBe(true);
+    expect(canEditBenchmark(false, "Charlotte.Places@alterna-energie.fr", true)).toBe(true);
+  });
+
+  it("refuse Charlotte sans compte approuvé", () => {
+    expect(canEditBenchmark(false, "charlotte.places@alterna-energie.fr", false)).toBe(false);
+  });
+
+  it("refuse un autre compte approuvé non admin", () => {
+    expect(canEditBenchmark(false, "fannie.laurendin@soregies.fr", true)).toBe(false);
   });
 
   it("refuse un utilisateur sans e-mail", () => {

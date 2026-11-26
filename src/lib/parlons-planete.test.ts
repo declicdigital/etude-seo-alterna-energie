@@ -20,11 +20,11 @@ const BLOG_CONFIG = [
 ];
 
 describe("Parlons Planète", () => {
-  it("only has Rédaction (Aurorae) then Intégration (Geoffrey)", () => {
+  it("only has Rédaction (Aurorae) then Intégration (Matthieu)", () => {
     const cfg = pipeline.normalizeConfig(BLOG_CONFIG, "planete");
     expect(cfg.map((c: { key: string }) => c.key)).toEqual(["redaction", "integration"]);
-    expect(cfg[1].assignee).toBe("Geoffrey");
-    expect(cfg[1].emails.Geoffrey).toBe("geoffrey.delabarre@alterna-energie.fr");
+    expect(cfg[1].assignee).toBe("Matthieu");
+    expect(cfg[1].emails.Matthieu).toBe("matthieu.roux@alterna-energie.fr");
     const fresh = pipeline.normalizeConfig([], "planete");
     expect(fresh[0].options).toEqual(["Aurorae", "Autre"]);
   });
@@ -62,11 +62,11 @@ describe("Parlons Planète", () => {
     pipeline.sync(article, BLOG_CONFIG, "planete");
     expect(article.steps.map((s) => `${s.key}:${s.assignee}:${s.status}`)).toEqual([
       "redaction:Aurorae:done",
-      "integration:Geoffrey:pending",
+      "integration:Matthieu:pending",
     ]);
   });
 
-  it("mails Geoffrey to integrate once written, and nobody after", () => {
+  it("mails Matthieu to integrate once written, and nobody after", () => {
     expect(pipeline.nextNotification({}, "redaction", "planete")).toMatchObject({
       kind: "integration",
       next: "integration",
@@ -86,7 +86,7 @@ describe("Parlons Planète", () => {
     expect(notificationLink("integration", "a1", undefined, "planete")).toContain("parlons-planete/suivi-editorial");
   });
 
-  it("sends integration reminders to Geoffrey", () => {
+  it("sends integration reminders (legacy « Geoffrey ») to Matthieu", () => {
     const reminder = buildStepReminder(
       { articleId: "a1", stepKey: "integration", space: "planete" },
       {
@@ -95,7 +95,7 @@ describe("Parlons Planète", () => {
       },
       [{ key: "integration", label: "Intégration", assignee: "Geoffrey" }],
     );
-    expect(reminder.recipients).toEqual(["geoffrey.delabarre@alterna-energie.fr"]);
+    expect(reminder.recipients).toEqual(["matthieu.roux@alterna-energie.fr"]);
     expect(() =>
       buildStepReminder(
         { articleId: "a1", stepKey: "relecture", space: "planete" },

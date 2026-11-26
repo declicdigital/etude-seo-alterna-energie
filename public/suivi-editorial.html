@@ -1187,10 +1187,10 @@ function isImageStep(key){ return key === 'image'; }
 
 const DEFAULT_CONFIG = PLANETE ? [
   { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae','Autre'], skippable:false },
-  { key:'integration', label:'Intégration', assignee:'Geoffrey', skippable:false }
+  { key:'integration', label:'Intégration', assignee:'Matthieu', skippable:false }
 ] : [
   { key:'redaction', label:'Rédaction', assignee:'', options:['Aurorae','Marina','Autre'], skippable:false },
-  { key:'image', label:'Image', assignee:'Geoffrey', skippable:false },
+  { key:'image', label:'Image', assignee:'Matthieu', skippable:false },
   { key:'relecture', label:'Relecture', assignee:'Service Communication', skippable:false },
   { key:'integration', label:'Intégration', assignee:'Marick', skippable:false }
 ];
@@ -1208,9 +1208,9 @@ function normalizeConfig(){
   // Adresses mail par défaut des responsables (modifiables dans les réglages).
   const DEFAULT_EMAILS = {
     redaction: { 'Aurorae': 'caroline@aurorae-editorial.com, elodie@aurorae-editorial.com', 'Marina': 'contact@marinatravert.com' },
-    image: { Geoffrey: 'geoffrey.delabarre@alterna-energie.fr' },
+    image: { Matthieu: 'matthieu.roux@alterna-energie.fr', Geoffrey: 'matthieu.roux@alterna-energie.fr' },
     relecture: { 'Service Communication': 'fannie.laurendin@soregies.fr, coraline.prono@soregies.fr' },
-    integration: PLANETE ? { Geoffrey: 'geoffrey.delabarre@alterna-energie.fr' } : { 'Marick': 'marick.navarro.ext@soregies.fr' },
+    integration: PLANETE ? { Matthieu: 'matthieu.roux@alterna-energie.fr', Geoffrey: 'matthieu.roux@alterna-energie.fr' } : { 'Marick': 'marick.navarro.ext@soregies.fr' },
   };
   for(const c of config){
     if(DEFAULT_EMAILS[c.key] && !c.emails){ c.emails = { ...DEFAULT_EMAILS[c.key] }; changed = true; }
@@ -2612,7 +2612,7 @@ document.getElementById('articlesContainer').addEventListener('input', async (e)
     clearTimeout(noteSaveTimers[article.id]);
     noteSaveTimers[article.id] = setTimeout(() => saveArticle(article), 700);
   }
-  /* Deadline par étape : réservée à Geoffrey ; le rappel part le jour de la deadline. */
+  /* Deadline par étape : réservée aux pilotes ; le rappel part le jour de la deadline. */
   if(action === 'edit-step-deadline' && canRemind){
     const article = getArticle(t.dataset.articleId);
     const step = article.steps.find(s => s.key === t.dataset.stepKey);
@@ -2651,7 +2651,7 @@ async function loadTodos(){
 async function saveTodos(){
   try{ await storage.set('todo-redaction', JSON.stringify(todos), false); showSaved(); }catch(e){ console.error(e); }
 }
-const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com'];
+const TODO_EDITORS = ['contact@marinatravert.com','elodie@aurorae-editorial.com','caroline@aurorae-editorial.com','geoffrey.delabarre@alterna-energie.fr','geoffrey.delabarre@gmail.com','matthieu.roux@alterna-energie.fr'];
 function canEditTodo(){ return TODO_EDITORS.includes((currentUserEmail()||'').trim().toLowerCase()); }
 let validating = false, validateCooldownUntil = 0;
 function stepDeadlineClass(deadline){

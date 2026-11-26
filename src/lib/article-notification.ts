@@ -1,5 +1,6 @@
-/** Relecture is handled by the Service Communication; Image belongs to Geoffrey. */
-export const IMAGE_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
+import { DIGICOM_TEAM_EMAIL } from "./digicom-team";
+/** Relecture is handled by the Service Communication; Image belongs to the Digicom team. */
+export const IMAGE_EMAIL = DIGICOM_TEAM_EMAIL;
 export const SERVICE_COMMUNICATION_EMAILS: readonly string[] = [
   "fannie.laurendin@soregies.fr",
   "coraline.prono@soregies.fr",

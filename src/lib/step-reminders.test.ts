@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildStepReminder, canSendStepReminder, GEOFFREY_EMAIL } from "./step-reminders";
+import { buildStepReminder, canSendStepReminder } from "./step-reminders";
+const GEOFFREY_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
+const MATTHIEU_EMAIL = "matthieu.roux@alterna-energie.fr";
 
 const config: Parameters<typeof buildStepReminder>[2] = [
   { key: "image", label: "Image", assignee: "Geoffrey" },
@@ -16,6 +18,9 @@ describe("manual reminders", () => {
   it("allows Geoffrey only when his verified account is admin", () => {
     expect(canSendStepReminder(true, GEOFFREY_EMAIL)).toBe(true);
     expect(canSendStepReminder(false, GEOFFREY_EMAIL)).toBe(false);
+    expect(canSendStepReminder(true, MATTHIEU_EMAIL)).toBe(true);
+    expect(canSendStepReminder(true, MATTHIEU_EMAIL.toUpperCase())).toBe(true);
+    expect(canSendStepReminder(false, MATTHIEU_EMAIL)).toBe(false);
     expect(canSendStepReminder(true, "fannie.laurendin@soregies.fr")).toBe(false);
     expect(canSendStepReminder(true, undefined)).toBe(false);
   });
@@ -47,13 +52,13 @@ describe("manual reminders", () => {
   it("does not substitute a different responsible person when their email is missing", () => {
     expect(() => buildStepReminder({ articleId: "test", stepKey: "redaction" }, { ...article, steps: [{ key: "redaction", assignee: "Unconfigured" }] }, config)).toThrow();
   });
-  it("routes brief reminders to Geoffrey", () => {
-    expect(buildStepReminder({ articleId: "test", stepKey: "brief", space: "strategie" }, article, config).recipients).toEqual([GEOFFREY_EMAIL]);
+  it("routes brief reminders to Matthieu", () => {
+    expect(buildStepReminder({ articleId: "test", stepKey: "brief", space: "strategie" }, article, config).recipients).toEqual([MATTHIEU_EMAIL]);
   });
 });
-it('routes Image reminders only to Geoffrey with the image destination', () => {
+it('routes Image reminders (legacy « Geoffrey » assignee) only to Matthieu with the image destination', () => {
   const mail = buildStepReminder({articleId:'test',stepKey:'image'},article,config);
-  expect(mail.recipients).toEqual([GEOFFREY_EMAIL]);
+  expect(mail.recipients).toEqual([MATTHIEU_EMAIL]);
   expect(mail.url).toContain('step=image&focus=images');
 });
 it('rejects Image reminders on PAC rewrites', () => {

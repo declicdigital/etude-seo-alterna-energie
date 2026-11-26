@@ -6,8 +6,7 @@ import { sheetAllowed } from "@/lib/sections";
 /**
  * Données de l'outil Benchmark Énergie (rubrique Benchmark de Digicom).
  * Lecture : tout compte Digicom validé ayant accès à la rubrique Benchmark.
- * Écriture : Geoffrey uniquement
- * (rôle admin + son e-mail), vérifié côté serveur à chaque requête.
+ * Écriture : pilotes admin (PILOT_EMAILS) ou éditeurs approuvés (BENCHMARK_EDITOR_EMAILS), vérifié côté serveur à chaque requête.
  */
 
 const SaveSchema = z.object({
@@ -51,7 +50,7 @@ async function authenticate(request: Request) {
   const { data: isAdmin } = await supabaseAdmin.rpc("has_role", { _user_id: user.id, _role: "admin" });
   // Same rule as the app's menu: admins see everything, others need Benchmark.
   if (isAdmin !== true && !sheetAllowed("BENCHMARK", profile.allowed_sections)) return "forbidden" as const;
-  return { user, editor: canEditBenchmark(isAdmin === true, user.email) };
+  return { user, editor: canEditBenchmark(isAdmin === true, user.email, true) };
 }
 
 export const Route = createFileRoute("/api/public/benchmark-months")({

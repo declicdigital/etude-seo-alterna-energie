@@ -3,15 +3,17 @@ import { editorialLink } from "./editorial-links";
 import { EDITORIAL_SPACES } from "./editorial-spaces";
 import { escapeHtml } from "./mail-layout";
 import { notificationCta, notificationDeadline, notificationRecipients } from "./article-notification";
+import { DIGICOM_TEAM_EMAIL, DIGICOM_TEAM_NAME, isPilot } from "./digicom-team";
 
-export const GEOFFREY_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
+/** @deprecated Destinataire équipe : utiliser DIGICOM_TEAM_EMAIL. */
+export const GEOFFREY_EMAIL = DIGICOM_TEAM_EMAIL;
 export const stepReminderSchema = z.object({
   articleId: z.string().min(1).max(200),
   stepKey: z.string().min(1).max(120),
   space: z.enum(EDITORIAL_SPACES).optional(),
 });
 export function canSendStepReminder(isAdmin: boolean, email: string | null | undefined) {
-  return isAdmin && email?.toLowerCase() === GEOFFREY_EMAIL;
+  return isPilot(isAdmin, email);
 }
 const stepSchema = z.object({ key: z.string(), assignee: z.string().optional(), status: z.string().optional(), deadline: z.string().optional() });
 export const reminderArticleSchema = z.object({
@@ -25,8 +27,8 @@ export const reminderConfigSchema = z.array(z.object({
 }));
 const defaults: Record<string, Record<string, string>> = {
   redaction: { Aurorae: "caroline@aurorae-editorial.com, elodie@aurorae-editorial.com", Marina: "contact@marinatravert.com" },
-  integration: { Marick: "marick.navarro.ext@soregies.fr", Geoffrey: GEOFFREY_EMAIL },
-  brief: { Geoffrey: GEOFFREY_EMAIL },
+  integration: { Marick: "marick.navarro.ext@soregies.fr", Matthieu: DIGICOM_TEAM_EMAIL, Geoffrey: DIGICOM_TEAM_EMAIL },
+  brief: { Matthieu: DIGICOM_TEAM_EMAIL, Geoffrey: DIGICOM_TEAM_EMAIL },
 };
 export function buildStepReminder(
   input: z.infer<typeof stepReminderSchema>,
@@ -43,10 +45,10 @@ export function buildStepReminder(
   const step = article.steps.find(s => s.key === input.stepKey);
   const cfg = config.find(c => c.key === input.stepKey);
   if (!step || !cfg) throw new Error("Cette étape n’existe plus. Rechargez la page.");
-  const assignee = step.assignee?.trim() || cfg.assignee?.trim() || (input.stepKey === "brief" || (planete && input.stepKey === "integration") ? "Geoffrey" : "");
+  const assignee = step.assignee?.trim() || cfg.assignee?.trim() || (input.stepKey === "brief" || (planete && input.stepKey === "integration") ? DIGICOM_TEAM_NAME : "");
   // « Autre » n'est qu'une étiquette : elle ne désigne personne de précis, donc aucun rappel ne peut partir.
   if (assignee === "Autre") throw new Error("« Autre » ne désigne personne de précis : choisis un rédacteur nommé pour envoyer un rappel.");
-  const raw = cfg.emails?.[assignee] || defaults[input.stepKey]?.[assignee] || "";
+  const raw = (assignee.toLowerCase() === "geoffrey" ? DIGICOM_TEAM_EMAIL : "") || cfg.emails?.[assignee] || defaults[input.stepKey]?.[assignee] || "";
   const configured = raw.split(/[,;\s]+/).filter(Boolean);
   const matched = users.filter(u => u.full_name?.trim().toLowerCase() === assignee.toLowerCase()).map(u => u.email);
   const kind = input.stepKey === "image" ? "image" : review ? "relecture" : undefined;

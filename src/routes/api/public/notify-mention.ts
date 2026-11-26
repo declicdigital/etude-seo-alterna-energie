@@ -5,6 +5,7 @@ import { editorialLink } from "@/lib/editorial-links";
 import { EDITORIAL_SPACES, spaceLabel } from "@/lib/editorial-spaces";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { authenticateRequest } from "@/lib/route-auth.server";
+import { brevoRecipients, DIGICOM_TEAM_EMAIL } from "@/lib/digicom-team";
 const BodySchema = z.object({
   space: z.enum(EDITORIAL_SPACES).optional(),
   articleId: z.string().max(200).optional(),
@@ -18,7 +19,6 @@ const BodySchema = z.object({
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = MAIL_SENDER;
-const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -59,8 +59,7 @@ async function sendBrevo(to: string[], subject: string, text: string, html: stri
     },
     body: JSON.stringify({
       sender: SENDER,
-      to: to.map((email) => ({ email })),
-      ...(to.some((e) => e.toLowerCase() === CC_EMAIL) ? {} : { cc: [{ email: CC_EMAIL }] }),
+      ...brevoRecipients(to, [DIGICOM_TEAM_EMAIL]),
       subject,
       textContent: signText(text),
       htmlContent: signHtml(html),

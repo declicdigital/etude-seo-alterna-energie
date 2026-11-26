@@ -49,3 +49,5 @@
 - [x] « Éditrice » remplacé par « Édition » : colonne de l'encart À rédiger (Blog et Stratégie PAC), ligne des mails de notification, guide et accueil.
 - [x] Accueil : rôle de Geoffrey affiché « Pilotage » sans « en copie ».
 - [x] Relecture + image = Service Communication (Fannie + Coraline) : accueil, guide, destinataires des mails et réglages par défaut ; 7 tests réussis.
+
+- [x] Passation Geoffrey → Matthieu : droits pilotes partagés, mails vers Matthieu, Geoffrey ne reçoit plus rien, Charlotte édite le Benchmark

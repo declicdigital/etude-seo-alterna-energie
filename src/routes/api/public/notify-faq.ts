@@ -4,6 +4,7 @@ import { z } from "zod";
 import { faqLink, type FaqRequest } from "@/lib/faq";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { authenticateRequest } from "@/lib/route-auth.server";
+import { brevoRecipients, DIGICOM_TEAM_EMAIL } from "@/lib/digicom-team";
 const BodySchema = z.object({
   kind: z.enum(["new", "mention"]),
   id: z.string().min(1).max(60),
@@ -23,7 +24,7 @@ const BodySchema = z.object({
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
 const SENDER = MAIL_SENDER;
-const GEOFFREY = "geoffrey.delabarre@alterna-energie.fr";
+const GEOFFREY = DIGICOM_TEAM_EMAIL;
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -136,8 +137,7 @@ export const Route = createFileRoute("/api/public/notify-faq")({
           headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": brevoKey, "Content-Type": "application/json" },
           body: JSON.stringify({
             sender: SENDER,
-            to: to.map((email) => ({ email })),
-            ...(to.some((e) => e.toLowerCase() === GEOFFREY) ? {} : { cc: [{ email: GEOFFREY }] }),
+            ...brevoRecipients(to, [GEOFFREY]),
             subject,
             textContent: signText(text),
             htmlContent: signHtml(buildHtml(intro, p)),

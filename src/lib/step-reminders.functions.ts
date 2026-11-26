@@ -4,7 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { MAIL_SENDER } from "./mail-sender";
 import { editorialMailHtml } from "./mail-layout";
 import { spaceLabel, spacePrefix } from "./editorial-spaces";
-import { buildStepReminder, canSendStepReminder, GEOFFREY_EMAIL, reminderArticleSchema, reminderConfigSchema, stepReminderSchema } from "./step-reminders";
+import { buildStepReminder, canSendStepReminder, reminderArticleSchema, reminderConfigSchema, stepReminderSchema } from "./step-reminders";
+import { brevoRecipients, DIGICOM_TEAM_EMAIL } from "./digicom-team";
 
 export const sendStepReminder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -28,7 +29,7 @@ export const sendStepReminder = createServerFn({ method: "POST" })
       const built = buildStepReminder(data, article, config, users ?? []);
       // Recipients must be approved Digicom accounts (or the fixed team addresses).
       const approved = new Set((users ?? []).map((u: { email: string }) => u.email.toLowerCase()));
-      approved.add(GEOFFREY_EMAIL.toLowerCase());
+      approved.add(DIGICOM_TEAM_EMAIL.toLowerCase());
       const reminder = { ...built, recipients: built.recipients.filter((m) => approved.has(m.toLowerCase())) };
       if (!reminder.recipients.length) return { ok: false, error: "Aucun destinataire valide pour ce rappel." };
       const lovableKey = process.env.LOVABLE_API_KEY;
@@ -56,8 +57,7 @@ export const sendStepReminder = createServerFn({ method: "POST" })
       const response = await fetch("https://connector-gateway.lovable.dev/brevo/smtp/email", {
         method: "POST",
         headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": brevoKey, "Content-Type": "application/json" },
-        body: JSON.stringify({ sender: MAIL_SENDER, to: reminder.recipients.map(email => ({ email })),
-          ...(!reminder.recipients.includes(GEOFFREY_EMAIL) ? { cc: [{ email: GEOFFREY_EMAIL }] } : {}),
+        body: JSON.stringify({ sender: MAIL_SENDER, ...brevoRecipients(reminder.recipients, [DIGICOM_TEAM_EMAIL]),
           subject: reminder.subject, textContent: signText(textContent), htmlContent: signHtml(htmlContent) }),
       });
       if (!response.ok) {

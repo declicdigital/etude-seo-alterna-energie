@@ -1134,9 +1134,9 @@ export function splitNoAnswer(raw: string): { text: string; unanswered: boolean 
 export const TEAM_ROLES: Record<string, { name: string; role: string }> = {
   "geoffrey.delabarre@alterna-energie.fr": {
     name: "Geoffrey",
-    role: "service Communication d'Alterna Énergie, pilote et administrateur de Digicom (étape Image, intégration Parlons Planète, validation des FAQ, saisie du Benchmark, deadlines et rappels)",
+    role: "service Communication d'Alterna Énergie, administrateur de Digicom (le pilotage est passé à Matthieu)",
   },
-  "geoffrey.delabarre@gmail.com": { name: "Geoffrey", role: "pilote et administrateur de Digicom" },
+  "geoffrey.delabarre@gmail.com": { name: "Geoffrey", role: "administrateur de Digicom (le pilotage est passé à Matthieu)" },
   "caroline@aurorae-editorial.com": { name: "Caroline", role: "rédactrice (Aurorae)" },
   "elodie@aurorae-editorial.com": { name: "Elodie", role: "rédactrice (Aurorae)" },
   "contact@marinatravert.com": { name: "Marina", role: "rédactrice" },
@@ -1158,7 +1158,7 @@ export const TEAM_ROLES: Record<string, { name: string; role: string }> = {
   },
   "matthieu.roux@alterna-energie.fr": {
     name: "Matthieu",
-    role: "service Communication d'Alterna Énergie (newsletters, validation des demandes FAQ)",
+    role: "service Communication d'Alterna Énergie, pilote et administrateur de Digicom (étape Image, intégration Parlons Planète, validation des FAQ, saisie du Benchmark, deadlines et rappels, newsletters)",
   },
 };
 

@@ -4,10 +4,9 @@ import { z } from "zod";
 import { MAIL_SENDER } from "@/lib/mail-sender";
 import { authenticateRequest } from "@/lib/route-auth.server";
 import { appUrl } from "@/lib/app-url";
+import { brevoRecipients, DIGICOM_TEAM_EMAIL } from "@/lib/digicom-team";
 const BodySchema = z.object({ userId: z.string().uuid() });
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/brevo";
-const ADMIN_EMAIL = "geoffrey.delabarre@gmail.com";
-const CC_EMAIL = "geoffrey.delabarre@alterna-energie.fr";
 const APP_URL = appUrl("demandes");
 const SENDER = MAIL_SENDER;
 const esc = (s: string) =>
@@ -57,8 +56,7 @@ ${profile.full_name ? `<strong>${esc(profile.full_name)}</strong><br>` : ""}${es
           headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": brevoKey, "Content-Type": "application/json" },
           body: JSON.stringify({
             sender: SENDER,
-            to: [{ email: ADMIN_EMAIL }],
-            cc: [{ email: CC_EMAIL }],
+            ...brevoRecipients([DIGICOM_TEAM_EMAIL]),
             subject,
             textContent: signText(text),
             htmlContent: signHtml(html),
