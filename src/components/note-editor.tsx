@@ -49,10 +49,10 @@ export function onNotePaste(e: ClipboardEvent<HTMLTextAreaElement>, onChange: (v
   }
 
   let text: string | null = null;
-  // Plain text that already looks like Markdown (copied from a chat, a .md file…)
-  // is kept as is; otherwise rich HTML is converted.
-  const plainIsMarkdown =
-    /\[[^\]\n]+\]\(https?:\/\//.test(plain) || /^\s*(\d+[.)]|[-*+]) /m.test(plain);
+  // Plain text that already holds Markdown links (copied from a .md file or a
+  // chat's raw text) is kept as is; otherwise rich HTML is converted, so a
+  // linked word copied from a page keeps its address.
+  const plainIsMarkdown = /\]\(\s*<?(https?:|mailto:|www\.)/i.test(plain);
   if (html && htmlHasStructure(html) && !plainIsMarkdown) {
     const doc = new DOMParser().parseFromString(html, "text/html");
     const md = htmlToMarkdown(doc.body);
